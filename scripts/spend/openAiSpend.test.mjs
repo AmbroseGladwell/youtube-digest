@@ -96,11 +96,13 @@ test("cost on a project that is not an environment, or on no project, is unattri
   assert.equal(find(rows, "2026-11-09", "unattributed", "generation").dollars, 0.5);
 });
 
-function fakeOpenAi({ status = 200 } = {}) {
+const fakeOpenAi = ({ status = 200 } = {}) => {
   const urls = [];
   const fetch = async (url, init) => {
     urls.push({ url: new URL(url), authorization: init.headers.Authorization });
-    if (status !== 200) return { ok: false, status };
+    if (status !== 200) {
+      return { ok: false, status };
+    }
     const { pathname, searchParams } = new URL(url);
     if (pathname.endsWith("/projects")) {
       return searchParams.get("after") === null
@@ -128,7 +130,7 @@ function fakeOpenAi({ status = 200 } = {}) {
         };
   };
   return { fetch, urls };
-}
+};
 
 test("every page of projects and costs is read, for whole UTC days, grouped by project and line item", async () => {
   const openAi = fakeOpenAi();

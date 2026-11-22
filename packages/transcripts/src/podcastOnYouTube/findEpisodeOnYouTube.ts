@@ -42,11 +42,11 @@ const MORE_PAGES = 5;
 // and length, or, where the upload was retitled, by its description and date. Null when the
 // episode isn't there or can't be told apart from its neighbours, since a confident wrong match
 // is worse than none (docs/features/podcast-on-youtube.md). At most 15 requests.
-export async function findEpisodeOnYouTube(
+export const findEpisodeOnYouTube = async (
   youTubeFetch: YouTubeFetch,
   episode: EpisodeToFind,
   { now = () => new Date(), client = DEFAULT_METADATA_CLIENT }: FindOptions = {},
-): Promise<EpisodeOnYouTube | null> {
+): Promise<EpisodeOnYouTube | null> => {
   const ask = async (endpoint: "search" | "browse", payload: Record<string, unknown>): Promise<unknown> => {
     const response = await youTubeFetch({
       url: `${ENDPOINT}${endpoint}`,
@@ -62,7 +62,9 @@ export async function findEpisodeOnYouTube(
         ...payload,
       }),
     });
-    if (response.status !== 200) throw innerTubeError(`YouTube's ${endpoint} answered ${response.status}`, httpFailure(response.status));
+    if (response.status !== 200) {
+      throw innerTubeError(`YouTube's ${endpoint} answered ${response.status}`, httpFailure(response.status));
+    }
     try {
       return JSON.parse(response.body);
     } catch (error) {
@@ -83,40 +85,56 @@ export async function findEpisodeOnYouTube(
   const today = now();
   const searched = videosIn(await ask("search", { query: `${episode.showName} ${episode.title}`, params: VIDEOS_FILTER }));
   const byVideo = searchedVideoMatch(episode, searched, (video) => listedNearItsDate(episode, video, today));
-  if (byVideo !== null) return { videoId: byVideo.videoId, channelTitle: byVideo.channelTitle, via: "title" };
+  if (byVideo !== null) {
+    return { videoId: byVideo.videoId, channelTitle: byVideo.channelTitle, via: "title" };
+  }
 
   const channels = channelsIn(await ask("search", { query: episode.showName, params: CHANNELS_FILTER })).slice(0, CHANNELS_TRIED);
   const firstPages: { channel: ListedChannel; uploads: ListedUpload[]; continuation: string | null }[] = [];
   for (const channel of channels) {
     const page = uploadsIn(await ask("browse", { browseId: channel.channelId, params: VIDEOS_TAB }));
     const byTitle = titleMatch(episode, page.uploads);
-    if (byTitle !== null) return found(byTitle, channel, "title");
+    if (byTitle !== null) {
+      return found(byTitle, channel, "title");
+    }
     firstPages.push({ channel, ...page });
   }
 
   const showChannel = firstPages.find(({ channel }) => namesTheShow(channel.title, episode.showName));
-  if (showChannel === undefined) return null;
+  if (showChannel === undefined) {
+    return null;
+  }
   const uploads = [...showChannel.uploads];
   let continuation = showChannel.continuation;
   for (let page = 0; page < MORE_PAGES && continuation !== null; page += 1) {
     const next = uploadsIn(await ask("browse", { continuation }));
     const byTitle = titleMatch(episode, next.uploads);
-    if (byTitle !== null) return found(byTitle, showChannel.channel, "title");
+    if (byTitle !== null) {
+      return found(byTitle, showChannel.channel, "title");
+    }
     uploads.push(...next.uploads);
     continuation = next.continuation;
   }
 
-  if (episode.keywords.length < FEWEST_KEYWORDS || episode.publishedAt === null) return null;
+  if (episode.keywords.length < FEWEST_KEYWORDS || episode.publishedAt === null) {
+    return null;
+  }
   const scored: { upload: ListedUpload; share: number }[] = [];
   for (const upload of retitledCandidates(episode, uploads, today).slice(0, MOST_DESCRIPTIONS_READ)) {
     const player = await requestPlayerResponse(youTubeFetch, upload.videoId, client).catch(() => null);
     const published = player?.microformat?.playerMicroformatRenderer?.publishDate;
-    if (!publishedNearItsDate(episode, published ?? null, today)) continue;
+    if (!publishedNearItsDate(episode, published ?? null, today)) {
+      continue;
+    }
     scored.push({ upload, share: descriptionShare(episode.keywords, player?.videoDetails?.shortDescription ?? "") });
   }
   scored.sort((a, b) => b.share - a.share);
   const [best, runnerUp] = scored;
-  if (best === undefined || best.share < DESCRIPTION_WORDS_SHARED) return null;
-  if (runnerUp !== undefined && runnerUp.share > best.share - DESCRIPTION_LEAD) return null;
+  if (best === undefined || best.share < DESCRIPTION_WORDS_SHARED) {
+    return null;
+  }
+  if (runnerUp !== undefined && runnerUp.share > best.share - DESCRIPTION_LEAD) {
+    return null;
+  }
   return found(best.upload, showChannel.channel, "description");
-}
+};

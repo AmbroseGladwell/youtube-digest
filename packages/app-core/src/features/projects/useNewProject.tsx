@@ -15,9 +15,16 @@ interface Adding {
   onDone: ((created: { name: string } | null) => void) | null;
 }
 
+const addsOf = (overviews: Adding["overviews"]) => {
+  if (overviews.length === 0) {
+    return null;
+  }
+  return overviews.length === 1 ? { title: overviews[0]!.title } : { count: overviews.length };
+};
+
 // The create dialog and what follows it: from the rail or the index it opens the new
 // project's page; from a picker it adds the overviews and stays where it is (168x).
-export function useNewProject(takenNames: string[]) {
+export const useNewProject = (takenNames: string[]) => {
   const [adding, setAdding] = useState<Adding | null>(null);
   const create = useCreateProjectMutation();
   const analytics = useAnalytics();
@@ -32,13 +39,7 @@ export function useNewProject(takenNames: string[]) {
   const dialog =
     adding === null ? null : (
       <NewProjectDialog
-        adds={
-          adding.overviews.length === 0
-            ? null
-            : adding.overviews.length === 1
-              ? { title: adding.overviews[0]!.title }
-              : { count: adding.overviews.length }
-        }
+        adds={addsOf(adding.overviews)}
         assistantConnected={assistants.any}
         takenNames={takenNames}
         busy={create.isPending}
@@ -53,7 +54,9 @@ export function useNewProject(takenNames: string[]) {
                 }
                 setAdding(null);
                 adding.onDone?.({ name: project.name });
-                if (adding.from === "rail" || adding.from === "index") void navigate(Routes.project(project.id));
+                if (adding.from === "rail" || adding.from === "index") {
+                  void navigate(Routes.project(project.id));
+                }
               },
             },
           )
@@ -67,4 +70,4 @@ export function useNewProject(takenNames: string[]) {
     );
 
   return { open, dialog };
-}
+};

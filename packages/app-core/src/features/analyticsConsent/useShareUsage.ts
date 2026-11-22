@@ -15,7 +15,7 @@ export interface ShareUsage {
 // signed in it is the account's opt-out, which syncs and the server enforces. Turning it off
 // sends the switch's own event first, so what was recorded under the yes goes out before the
 // id is deleted (docs/features/analytics-consent.md, "Settings › Privacy").
-export function useShareUsageState(): ShareUsageState {
+export const useShareUsageState = (): ShareUsageState => {
   const { connected } = useSync();
   const { consent } = useAnalyticsConsent();
   const settings = useSettingsQuery().data;
@@ -26,21 +26,25 @@ export function useShareUsageState(): ShareUsageState {
         changedAt: settings?.analyticsOptOutChangedAt ?? null,
       }
     : { signedIn: false, consent, outdated: consentOutdated(consent) };
-}
+};
 
-export function useShareUsage(): ShareUsage {
+export const useShareUsage = (): ShareUsage => {
   const state = useShareUsageState();
   const updateSettings = useUpdateSettingsMutation();
   const analytics = useAnalytics();
 
   const switchTo = async (on: boolean): Promise<void> => {
-    if (on === shareUsageOn(state)) return;
+    if (on === shareUsageOn(state)) {
+      return;
+    }
     if (!on) {
       analytics.analyticsConsent.settings.switched({ on });
       await analytics.flush();
     }
     const switchedOn = () => {
-      if (on) analytics.analyticsConsent.settings.switched({ on });
+      if (on) {
+        analytics.analyticsConsent.settings.switched({ on });
+      }
     };
     if (state.signedIn) {
       updateSettings.mutate({ analyticsOptOut: !on, analyticsOptOutChangedAt: new Date().toISOString() }, { onSuccess: switchedOn });
@@ -51,4 +55,4 @@ export function useShareUsage(): ShareUsage {
   };
 
   return { state, switchTo };
-}
+};

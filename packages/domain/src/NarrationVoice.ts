@@ -36,14 +36,14 @@ const LANGUAGE_BY_ACCENT: Record<NarrationAccent, string> = {
   british: "en-gb",
 };
 
-export function narrationVoiceName(voice: NarrationVoice): string {
+export const narrationVoiceName = (voice: NarrationVoice): string => {
   return NARRATION_VOICES[voice].name;
-}
+};
 
-export function narrationAccent(voice: NarrationVoice): NarrationAccent {
+export const narrationAccent = (voice: NarrationVoice): NarrationAccent => {
   return NARRATION_VOICES[voice].accent;
-}
+};
 
-export function narrationLanguage(voice: NarrationVoice): string {
+export const narrationLanguage = (voice: NarrationVoice): string => {
   return LANGUAGE_BY_ACCENT[narrationAccent(voice)];
-}
+};

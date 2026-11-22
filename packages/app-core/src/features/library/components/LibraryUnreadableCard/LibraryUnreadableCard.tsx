@@ -16,7 +16,7 @@ export interface LibraryUnreadableCardProps {
 // is made of survive, and it carries no read or favourite control, because marking read
 // something that cannot be read is absurd. It links to the reader like any other card, so
 // the path needs no special case (docs/features/record-migrations.md).
-export function LibraryUnreadableCard({ record, entering = false, onOpen, readerState }: LibraryUnreadableCardProps) {
+export const LibraryUnreadableCard = ({ record, entering = false, onOpen, readerState }: LibraryUnreadableCardProps) => {
   const heldBack = record.reason === "future-version";
   const readerPath = Routes.overview(record.id);
 
@@ -47,4 +47,4 @@ export function LibraryUnreadableCard({ record, entering = false, onOpen, reader
       </p>
     </article>
   );
-}
+};

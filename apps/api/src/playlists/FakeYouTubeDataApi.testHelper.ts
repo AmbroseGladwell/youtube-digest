@@ -28,7 +28,7 @@ const PAGE_SIZE = 50;
 // The two Data API calls and the oEmbed check, answered in the shapes YouTube sends: a
 // private playlist is invisible to an API key and refused by oEmbed as unauthorised; a
 // missing one is invisible to both.
-export function makeFakeYouTubeDataApi(playlists: FakePlaylist[]): FakeYouTubeDataApi {
+export const makeFakeYouTubeDataApi = (playlists: FakePlaylist[]): FakeYouTubeDataApi => {
   const requests: YouTubeFetchRequest[] = [];
   const json = (status: number, body: unknown) => ({ status, body: JSON.stringify(body) });
 
@@ -38,7 +38,9 @@ export function makeFakeYouTubeDataApi(playlists: FakePlaylist[]): FakeYouTubeDa
     if (url.hostname === "www.youtube.com" && url.pathname === "/oembed") {
       const listId = new URL(url.searchParams.get("url")!).searchParams.get("list");
       const playlist = playlists.find((candidate) => candidate.id === listId);
-      if (playlist === undefined) return { status: 404, body: "Not Found" };
+      if (playlist === undefined) {
+        return { status: 404, body: "Not Found" };
+      }
       return playlist.privacyStatus === "private" ? { status: 401, body: "Unauthorized" } : json(200, { title: playlist.title });
     }
     if (request.headers["x-goog-api-key"] !== FAKE_API_KEY || url.searchParams.has("key")) {
@@ -100,4 +102,4 @@ export function makeFakeYouTubeDataApi(playlists: FakePlaylist[]): FakeYouTubeDa
   };
 
   return { youTubeFetch, requests };
-}
+};

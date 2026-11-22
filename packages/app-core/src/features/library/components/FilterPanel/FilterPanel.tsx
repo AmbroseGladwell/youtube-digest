@@ -33,14 +33,16 @@ const moreSummary = (filters: LibraryFilters): string => {
   ].join(" · ");
 };
 
-export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onManageTags, projects = null }: FilterPanelProps) {
+export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onManageTags, projects = null }: FilterPanelProps) => {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
   // A tag arriving from a note opens the group the tag is in (84g).
   const [moreShown, setMoreShown] = useState(filters.tag !== null);
   const [shownForTag, setShownForTag] = useState(filters.tag);
   if (shownForTag !== filters.tag) {
     setShownForTag(filters.tag);
-    if (filters.tag !== null) setMoreShown(true);
+    if (filters.tag !== null) {
+      setMoreShown(true);
+    }
   }
   const [allTagsShown, setAllTagsShown] = useState(false);
   const analytics = useAnalytics();
@@ -245,21 +247,17 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
       </div>
     </div>
   );
-}
+};
 
-function Toggle({
-  active,
-  count,
-  onClick,
-  testId,
-  children,
-}: {
+interface ToggleProps {
   active: boolean;
   count: number;
   onClick: () => void;
   testId: string;
   children: string;
-}) {
+}
+
+const Toggle = ({ active, count, onClick, testId, children }: ToggleProps) => {
   return (
     <button type="button" className={`${styles.option} ${styles.toggle}`} onClick={onClick} aria-pressed={active} data-testid={testId}>
       <span className={styles.optionLabel}>
@@ -271,23 +269,18 @@ function Toggle({
       <span className={styles.count}>{count}</span>
     </button>
   );
-}
+};
 
-function ListOption({
-  active,
-  count,
-  accent,
-  onClick,
-  testId,
-  children,
-}: {
+interface ListOptionProps {
   active: boolean;
   count: number;
   accent?: boolean;
   onClick: () => void;
   testId: string;
   children: string;
-}) {
+}
+
+const ListOption = ({ active, count, accent, onClick, testId, children }: ListOptionProps) => {
   return (
     <button
       type="button"
@@ -307,4 +300,4 @@ function ListOption({
       <span className={styles.count}>{count}</span>
     </button>
   );
-}
+};

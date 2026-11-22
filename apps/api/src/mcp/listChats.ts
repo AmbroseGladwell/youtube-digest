@@ -11,6 +11,16 @@ import { isProject, resolveProject } from "./resolveProject.js";
 const CHATS_PAGE_SIZE = 50;
 const FIRST_QUESTION_LENGTH = 160;
 
+const noChatsText = (filtered: boolean, onlyLibrary: boolean): string => {
+  if (!filtered) {
+    return "The reader has no conversations yet. They ask questions about an overview inside it, on a project's page or over their library, in the app.";
+  }
+  if (onlyLibrary) {
+    return "No conversations over the whole library.";
+  }
+  return "No conversations about these overviews.";
+};
+
 export const listChats = mcpTool({
   name: "list_chats",
   title: "List the reader's conversations",
@@ -33,7 +43,9 @@ export const listChats = mcpTool({
     }
     if (nameOrId !== undefined) {
       const project = resolveProject(library, nameOrId);
-      if (!isProject(project)) return project;
+      if (!isProject(project)) {
+        return project;
+      }
       const inProject = new Set<string>(projectOverviews(library, project.id).map(({ overview }) => overview.id));
       const before = wanted;
       wanted = (chat) =>
@@ -54,20 +66,18 @@ export const listChats = mcpTool({
       .sort((left, right) => lastMessageAt(right).localeCompare(lastMessageAt(left)));
     if (chats.length === 0) {
       return {
-        text: filtered
-          ? overLibrary === true && overviewId === undefined && nameOrId === undefined
-            ? "No conversations over the whole library."
-            : "No conversations about these overviews."
-          : "The reader has no conversations yet. They ask questions about an overview inside it, on a project's page or over their library, in the app.",
+        text: noChatsText(filtered, overLibrary === true && overviewId === undefined && nameOrId === undefined),
       };
     }
     const about = (chat: Chat): string => {
       const owner = chatOwner(chat);
-      return owner.kind === "overview"
-        ? `about "${titles.get(owner.id)}" (overview id ${owner.id})`
-        : owner.kind === "project"
-          ? `on the project "${projectNames.get(owner.id)}" (project id ${owner.id})`
-          : "over the whole library";
+      if (owner.kind === "overview") {
+        return `about "${titles.get(owner.id)}" (overview id ${owner.id})`;
+      }
+      if (owner.kind === "project") {
+        return `on the project "${projectNames.get(owner.id)}" (project id ${owner.id})`;
+      }
+      return "over the whole library";
     };
     const page = pageOf(chats, cursor, CHATS_PAGE_SIZE);
     const lines = page.items.map((chat) => {

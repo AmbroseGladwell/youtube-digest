@@ -12,12 +12,20 @@ const seconds = (value: unknown): number | null => (typeof value === "number" &&
 // The endpoint's refusals that are waits or states, not failures: each limit with when it
 // lifts, a conversation at its length, and an overview with nothing to answer from
 // (docs/features/chats.md, "Asking"). Anything else is null and is a failure.
-export function chatWaitOf(error: unknown): ChatWait | null {
-  if (!(error instanceof SyncRequestError)) return null;
+export const chatWaitOf = (error: unknown): ChatWait | null => {
+  if (!(error instanceof SyncRequestError)) {
+    return null;
+  }
   const details = error.details ?? {};
-  if (error.code === "transcript_unavailable" && details.chat === "no-source") return { kind: "noSource" };
-  if (error.code === "invalid_request" && details.conversation === "full") return { kind: "conversationFull" };
-  if (error.code !== "too_many_requests") return null;
+  if (error.code === "transcript_unavailable" && details.chat === "no-source") {
+    return { kind: "noSource" };
+  }
+  if (error.code === "invalid_request" && details.conversation === "full") {
+    return { kind: "conversationFull" };
+  }
+  if (error.code !== "too_many_requests") {
+    return null;
+  }
   switch (details.quota) {
     case "chat-month":
       return { kind: "month", resetsOn: typeof details.resetsOn === "string" ? details.resetsOn : null };
@@ -28,4 +36,4 @@ export function chatWaitOf(error: unknown): ChatWait | null {
     default:
       return null;
   }
-}
+};

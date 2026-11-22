@@ -73,10 +73,17 @@ export interface NewOverviewRunController {
   commitCaptureReason: () => void;
 }
 
+const noteKindOf = (overview: Overview): "recipe" | "process" | "default" => {
+  if (overview.recipe != null) {
+    return "recipe";
+  }
+  return overview.sourceSteps != null ? "process" : "default";
+};
+
 // Owned by the AppShell, which is the one component that stays mounted across every
 // navigation: that is what lets a generation outlive the dialog it was started from
 // without a second app-wide context (docs/conventions/frontend-architecture-guide.md 4.1).
-export function useNewOverviewRun(): NewOverviewRunController {
+export const useNewOverviewRun = (): NewOverviewRunController => {
   const { apiKeys } = useApiKeys();
   const { overviewStore } = useStores();
   const { mutate } = useGenerateOverviewMutation(apiKeys);
@@ -113,9 +120,13 @@ export function useNewOverviewRun(): NewOverviewRunController {
   // (docs/features/one-overview-per-video.md).
   const alreadyHeld = useCallback(
     async (url: string, options: StartOverviewRunOptions): Promise<AlreadyHeld | null> => {
-      if (options.overviewId !== undefined) return null;
+      if (options.overviewId !== undefined) {
+        return null;
+      }
       const videoId = extractYouTubeVideoId(url);
-      if (videoId === null) return null;
+      if (videoId === null) {
+        return null;
+      }
       const found = await heldOverviewOf(overviewStore, videoId).catch(() => null);
       return found === null ? null : { url, overviewId: OverviewId.parse(found.id), readable: found.readable };
     },
@@ -193,18 +204,22 @@ export function useNewOverviewRun(): NewOverviewRunController {
         captureReason: draftRef.current,
       });
 
-      const what =
-        podcastRequest !== null
-          ? { podcast: podcastRequest }
-          : articleRequest === null
-            ? { url }
-            : {
-                readArticle: async (): Promise<ArticleRead> => {
-                  const allowed = await articleRequest.access;
-                  updateArticle({ asking: false });
-                  return allowed ? articleRequest.read() : { status: "failed", reason: "declined" };
-                },
-              };
+      const whatToRead = () => {
+        if (podcastRequest !== null) {
+          return { podcast: podcastRequest };
+        }
+        if (articleRequest === null) {
+          return { url };
+        }
+        return {
+          readArticle: async (): Promise<ArticleRead> => {
+            const allowed = await articleRequest.access;
+            updateArticle({ asking: false });
+            return allowed ? articleRequest.read() : { status: "failed", reason: "declined" };
+          },
+        };
+      };
+      const what = whatToRead();
 
       mutate(
         {
@@ -311,7 +326,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 personalised,
                 recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
                 recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
-                noteKind: saved.recipe != null ? "recipe" : saved.sourceSteps != null ? "process" : "default",
+                noteKind: noteKindOf(saved),
                 ...noteBudgetProps(saved, sourceWords, sourceHeadings),
                 articleLinks,
                 articleResources: articleLinks === undefined ? undefined : (saved.article?.resources?.length ?? 0),
@@ -373,7 +388,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
       const isCurrent = () => runIdRef.current === runId;
       setHeld(null);
       void alreadyHeld(url, options).then((found) => {
-        if (!isCurrent()) return;
+        if (!isCurrent()) {
+          return;
+        }
         if (found !== null) {
           analytics.capture.newOverview.alreadyHeld({ from: options.from, overviewId: found.overviewId });
           setHeld(found);
@@ -410,7 +427,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
   );
 
   const transcribePodcast = useCallback(() => {
-    if (lastPodcast.current === null) return;
+    if (lastPodcast.current === null) {
+      return;
+    }
     const asked = latestRun.current?.error?.kind === "podcastNeedsTranscribing";
     startPodcast({ ...lastPodcast.current, transcribe: asked ? "asked" : "retried" });
   }, [startPodcast]);
@@ -467,4 +486,4 @@ export function useNewOverviewRun(): NewOverviewRunController {
     setCaptureReason,
     commitCaptureReason,
   };
-}
+};

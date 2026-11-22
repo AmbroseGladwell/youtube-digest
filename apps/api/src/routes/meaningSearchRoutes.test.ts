@@ -6,11 +6,11 @@ import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { breadNote, conceptEmbedder, foundersNote, noteAbout } from "../testing/meaningFixtures.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 
-async function search(account: TestAccount, query: string): Promise<MeaningSearchResponse> {
+const search = async (account: TestAccount, query: string): Promise<MeaningSearchResponse> => {
   const response = await account.inject({ method: "GET", url: `/api/search/meaning?query=${encodeURIComponent(query)}` });
   assert.equal(response.statusCode, 200, response.body);
   return MeaningSearchResponse.parse(response.json());
-}
+};
 
 const matchedIds = (result: MeaningSearchResponse) => (result.available ? result.matches.map((match) => match.overviewId) : null);
 

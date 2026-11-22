@@ -160,25 +160,36 @@ export type Chat = z.infer<typeof Chat>;
 
 export type ChatOwner = { kind: "overview"; id: string } | { kind: "project"; id: string } | { kind: "library" };
 
-export const chatOwner = (chat: Pick<Chat, "overviewId" | "projectId">): ChatOwner =>
-  chat.overviewId !== undefined
-    ? { kind: "overview", id: chat.overviewId }
-    : chat.projectId !== undefined
-      ? { kind: "project", id: chat.projectId }
-      : { kind: "library" };
+export const chatOwner = (chat: Pick<Chat, "overviewId" | "projectId">): ChatOwner => {
+  if (chat.overviewId !== undefined) {
+    return { kind: "overview", id: chat.overviewId };
+  }
+  if (chat.projectId !== undefined) {
+    return { kind: "project", id: chat.projectId };
+  }
+  return { kind: "library" };
+};
 
 // An overview's chats start with its id, as they always have; a project's and the library's with
 // a word no overview id can be, so each owner's chats are found by the start of their ids.
-export const chatOwnerPrefix = (owner: ChatOwner): string =>
-  owner.kind === "overview" ? `${owner.id}:` : owner.kind === "project" ? `project:${owner.id}:` : "library:";
+export const chatOwnerPrefix = (owner: ChatOwner): string => {
+  if (owner.kind === "overview") {
+    return `${owner.id}:`;
+  }
+  return owner.kind === "project" ? `project:${owner.id}:` : "library:";
+};
 
 export const chatRecordId = (owner: ChatOwner | string, conversationId: string): string =>
   `${chatOwnerPrefix(typeof owner === "string" ? { kind: "overview", id: owner } : owner)}${conversationId}`;
 
 export const chatOwnerOfId = (id: string): ChatOwner | null => {
   const [first, second] = id.split(":");
-  if (first === "library" && second !== undefined) return { kind: "library" };
-  if (first === "project" && second !== undefined && id.split(":").length === 3) return { kind: "project", id: second };
+  if (first === "library" && second !== undefined) {
+    return { kind: "library" };
+  }
+  if (first === "project" && second !== undefined && id.split(":").length === 3) {
+    return { kind: "project", id: second };
+  }
   return first !== undefined && second !== undefined && id.split(":").length === 2 ? { kind: "overview", id: first } : null;
 };
 

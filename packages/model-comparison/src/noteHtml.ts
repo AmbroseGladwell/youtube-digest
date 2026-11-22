@@ -13,7 +13,7 @@ h3 { margin: 0; font-size: 14px; } .meta, .label { color: var(--muted); font-siz
 .label { text-transform: uppercase; letter-spacing: .04em; } p { margin: 0 0 4px; }
 .checks, .error, .dubious { color: var(--flag); } ol, ul { padding-left: 20px; margin: 0; }`;
 
-export function noteHtml(overview: Overview): string {
+export const noteHtml = (overview: Overview): string => {
   const verdict = overview.verdict;
   return `<p class="label">In one line</p><p>${escapeHtml(overview.inOneLine)}</p>
 <p class="label">Core claim</p><p>${escapeHtml(overview.coreClaim)}</p>
@@ -28,4 +28,4 @@ ${overview.watchAnyway ? `<p class="label">Watch anyway: ${escapeHtml(overview.w
 <p class="label">Chapters</p><ol class="chapters">${(overview.chapters ?? [])
     .map((chapter) => `<li><b>${formatTimestamp(chapter.startMs)} ${escapeHtml(chapter.title)}</b><br>${escapeHtml(chapter.summary)}</li>`)
     .join("")}</ol>`;
-}
+};

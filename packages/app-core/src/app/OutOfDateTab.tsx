@@ -5,7 +5,7 @@ import { ErrorState } from "../components/shared/ErrorState/ErrorState.js";
 // store call from here on would throw. It replaces the whole tree rather than sitting
 // inside the shell, because there is no working app left to sit in — and it offers only a
 // reload, which is the one thing that does fix it (docs/features/error-state.md).
-export function OutOfDateTab() {
+export const OutOfDateTab = () => {
   return (
     <ErrorState
       screen="outOfDateTab"
@@ -14,4 +14,4 @@ export function OutOfDateTab() {
       action={{ label: "Reload", onSelect: () => globalThis.location.reload() }}
     />
   );
-}
+};

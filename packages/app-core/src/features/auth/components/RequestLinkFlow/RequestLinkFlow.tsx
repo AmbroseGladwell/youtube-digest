@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router";
 import { MAGIC_LINK_TTL_MINUTES, type AuthIntent } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
@@ -22,7 +22,7 @@ import type { PendingSignIn } from "../../types/PendingSignIn.js";
 import { usePendingSignIn } from "../../usePendingSignIn.js";
 import { isFromStart } from "../../fromStart.js";
 import { authFailureMessage, CODE_SPENT, LINK_SPENT } from "../../util/authFailureMessage.js";
-import { savedOverviewsNote } from "../../util/savedOverviewsNote.js";
+import { savedOverviewsNote, type LibraryPlace } from "../../util/savedOverviewsNote.js";
 import { AuthScreen } from "../AuthScreen/AuthScreen.js";
 import { CheckEmail } from "../CheckEmail/CheckEmail.js";
 import { EmailLinkForm, type EmailLinkFormValues } from "../EmailLinkForm/EmailLinkForm.js";
@@ -61,7 +61,59 @@ const sharedAnonymousId = (): { anonymousId?: string } => {
   return consentAllowsSharing(consent) && consent?.anonymousId != null ? { anonymousId: consent.anonymousId } : {};
 };
 
-export function RequestLinkFlow({ intent, expired = false, returnTo = null, onboarding }: RequestLinkFlowProps) {
+const askForServerOf = (inExtension: boolean, knownServer: string | null, serverSwitchable: boolean): "never" | "always" | "onRequest" => {
+  if (!inExtension) {
+    return "never";
+  }
+  if (knownServer === null) {
+    return "always";
+  }
+  return serverSwitchable ? "onRequest" : "never";
+};
+
+interface LeadFlags {
+  expired: boolean;
+  inExtension: boolean;
+  creating: boolean;
+  here: string;
+}
+
+const requestLeadOf = ({ expired, inExtension, creating, here }: LeadFlags): string => {
+  if (expired) {
+    return `Sign-in links work once, for ${MAGIC_LINK_TTL_MINUTES} minutes. Ask for a new one and use it straight away.`;
+  }
+  if (inExtension) {
+    return creating
+      ? "We'll email you a link. Open it in this browser for a code to type in here."
+      : "We'll email you a link. Open it in this browser and it shows a code to type in here.";
+  }
+  return creating
+    ? "We'll email you a link to confirm it's you. There's no password."
+    : `We'll email you a link. Open it on ${here} and you're in. There's no password.`;
+};
+
+const libraryPlaceOf = (inExtension: boolean, isPhone: boolean): LibraryPlace => {
+  if (inExtension) {
+    return "extension";
+  }
+  return isPhone ? "phone" : "browser";
+};
+
+const requestTitleOf = (expired: boolean, creating: boolean): string => {
+  if (expired) {
+    return "That link has expired";
+  }
+  return creating ? "Create your account" : "Sign in";
+};
+
+const requestSubmitLabelOf = (expired: boolean, creating: boolean): string => {
+  if (expired) {
+    return "Email me a new link";
+  }
+  return creating ? "Create account" : "Email me a link";
+};
+
+export const RequestLinkFlow = ({ intent, expired = false, returnTo = null, onboarding }: RequestLinkFlowProps) => {
   const surface = useSurface();
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
@@ -106,7 +158,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
   // A build with no server of its own must always be able to name one. One built for a
   // server offers to change it only where that is of any use: loaded unpacked against a
   // local API, never in a build installed from the Web Store.
-  const askForServer = !inExtension ? "never" : knownServer === null ? "always" : serverSwitchable ? "onRequest" : "never";
+  const askForServer = askForServerOf(inExtension, knownServer, serverSwitchable);
 
   const analytics = useAnalytics();
 
@@ -184,7 +236,9 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
       { apiUrl: pending.apiUrl, email: pending.email, code },
       {
         onSuccess: (signedIn) => {
-          if (signedIn.surface === "web") land(pending.apiUrl, signedIn, returnTo);
+          if (signedIn.surface === "web") {
+            land(pending.apiUrl, signedIn, returnTo);
+          }
         },
         onError: (error) => setCodeRefused(authFailureMessage(error, CODE_SPENT)),
       },
@@ -272,7 +326,9 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
         initialServerUrl={knownServer}
         onConnect={(code, serverUrl) => {
           const apiUrl = serverUrl ?? knownServer;
-          if (apiUrl !== null) connectWithCode(apiUrl, code);
+          if (apiUrl !== null) {
+            connectWithCode(apiUrl, code);
+          }
         }}
       />
     );
@@ -280,17 +336,67 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
 
   const creating = intent === "createAccount";
   const here = isPhone ? "this phone" : "this device";
-  const lead = expired
-    ? `Sign-in links work once, for ${MAGIC_LINK_TTL_MINUTES} minutes. Ask for a new one and use it straight away.`
-    : inExtension
-      ? creating
-        ? "We'll email you a link. Open it in this browser for a code to type in here."
-        : "We'll email you a link. Open it in this browser and it shows a code to type in here."
-      : creating
-        ? "We'll email you a link to confirm it's you. There's no password."
-        : `We'll email you a link. Open it on ${here} and you're in. There's no password.`;
-  const place = inExtension ? "extension" : isPhone ? "phone" : "browser";
+  const lead = requestLeadOf({ expired, inExtension, creating, here });
+  const place = libraryPlaceOf(inExtension, isPhone);
   const shortSwitch = isPanel || isPhone;
+
+  const switchLinkFor = (): ReactNode => {
+    if (expired) {
+      return undefined;
+    }
+    if (creating) {
+      return (
+        <>
+          {shortSwitch ? "Have an account?" : "Already have an account?"}{" "}
+          <PageLink
+            to={Routes.signIn()}
+            replace
+            onClick={() => analytics.account.signIn.switchChosen({ to: "signIn" })}
+            data-testid={requestLinkFlowTestIds.switchLink}
+          >
+            Sign in
+          </PageLink>
+        </>
+      );
+    }
+    return (
+      <>
+        {/* 205g-4: there is no Create account on the signed-out panel. The first
+            overview makes the account, and the line says so in a link's place. */}
+        {isPanel ? (
+          "New here? Your first overview sets up your account."
+        ) : (
+          <>
+            New here?{" "}
+            <PageLink
+              to={Routes.createAccount()}
+              replace
+              onClick={() => analytics.account.signIn.switchChosen({ to: "createAccount" })}
+              data-testid={requestLinkFlowTestIds.switchLink}
+            >
+              Create an account
+            </PageLink>
+          </>
+        )}
+        {offersWebAppCode && (
+          <>
+            <br />
+            Signed in on the web app?{" "}
+            <button
+              type="button"
+              onClick={() => {
+                analytics.account.signIn.webAppCodeChosen();
+                setCodeFromWebApp(true);
+              }}
+              data-testid={requestLinkFlowTestIds.webAppCodeButton}
+            >
+              Enter a code
+            </button>
+          </>
+        )}
+      </>
+    );
+  };
 
   if (onboarding !== undefined) {
     return (
@@ -327,7 +433,9 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
           refused={refused}
           onSubmit={({ email, firstName, serverUrl }: EmailLinkFormValues) => {
             const apiUrl = serverUrl ?? knownServer;
-            if (apiUrl !== null) ask(apiUrl, email, intent, firstName, false);
+            if (apiUrl !== null) {
+              ask(apiUrl, email, intent, firstName, false);
+            }
           }}
         />
       </AuthScreen>
@@ -335,78 +443,26 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
   }
 
   return (
-    <AuthScreen
-      testId={requestLinkFlowTestIds.root}
-      title={expired ? "That link has expired" : creating ? "Create your account" : "Sign in"}
-      lead={lead}
-    >
+    <AuthScreen testId={requestLinkFlowTestIds.root} title={requestTitleOf(expired, creating)} lead={lead}>
       <EmailLinkForm
         intent={intent}
-        submitLabel={expired ? "Email me a new link" : creating ? "Create account" : "Email me a link"}
+        submitLabel={requestSubmitLabelOf(expired, creating)}
         initialEmail={lastEmail}
         askForServer={askForServer}
         initialServerUrl={knownServer}
         note={expired ? null : savedOverviewsNote(overviewCount, intent, place)}
         {...(creating && !expired ? { aboveSubmit: <AccountTermsLine /> } : {})}
-        switchLink={
-          expired ? undefined : creating ? (
-            <>
-              {shortSwitch ? "Have an account?" : "Already have an account?"}{" "}
-              <PageLink
-                to={Routes.signIn()}
-                replace
-                onClick={() => analytics.account.signIn.switchChosen({ to: "signIn" })}
-                data-testid={requestLinkFlowTestIds.switchLink}
-              >
-                Sign in
-              </PageLink>
-            </>
-          ) : (
-            <>
-              {/* 205g-4: there is no Create account on the signed-out panel. The first
-                  overview makes the account, and the line says so in a link's place. */}
-              {isPanel ? (
-                "New here? Your first overview sets up your account."
-              ) : (
-                <>
-                  New here?{" "}
-                  <PageLink
-                    to={Routes.createAccount()}
-                    replace
-                    onClick={() => analytics.account.signIn.switchChosen({ to: "createAccount" })}
-                    data-testid={requestLinkFlowTestIds.switchLink}
-                  >
-                    Create an account
-                  </PageLink>
-                </>
-              )}
-              {offersWebAppCode && (
-                <>
-                  <br />
-                  Signed in on the web app?{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      analytics.account.signIn.webAppCodeChosen();
-                      setCodeFromWebApp(true);
-                    }}
-                    data-testid={requestLinkFlowTestIds.webAppCodeButton}
-                  >
-                    Enter a code
-                  </button>
-                </>
-              )}
-            </>
-          )
-        }
+        switchLink={switchLinkFor()}
         sending={requestLink.isPending}
         refused={refused}
         onSubmit={({ email, firstName, serverUrl }: EmailLinkFormValues) => {
           const apiUrl = serverUrl ?? knownServer;
-          if (apiUrl !== null) ask(apiUrl, email, intent, firstName, false);
+          if (apiUrl !== null) {
+            ask(apiUrl, email, intent, firstName, false);
+          }
         }}
       />
       {!creating && <PolicyLinks />}
     </AuthScreen>
   );
-}
+};

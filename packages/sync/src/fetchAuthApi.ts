@@ -7,7 +7,7 @@ export type FetchAuthApiOptions = ApiRequesterOptions;
 
 const Accepted = z.object({ accepted: z.literal(true) });
 
-export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
+export const createFetchAuthApi = (options: FetchAuthApiOptions): AuthApi => {
   const request = createApiRequester(options);
 
   return {
@@ -35,4 +35,4 @@ export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
       await request("DELETE", "/session/account", z.never());
     },
   };
-}
+};

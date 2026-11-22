@@ -10,12 +10,14 @@ export type OverviewInWebApp = { href: string } | { reason: string } | null;
 
 // The server a device syncs with also serves the web app (docs/architecture/deploy.md), so
 // a note's address there is known once the server holds it (docs/features/extension-panel.md).
-export function useOverviewInWebApp(overviewId: OverviewId): OverviewInWebApp {
+export const useOverviewInWebApp = (overviewId: OverviewId): OverviewInWebApp => {
   const sync = useSync();
   const { connection } = useSyncConnection();
   const synced = useOverviewSyncedQuery(overviewId, sync.connected);
 
-  if (!sync.available) return null;
+  if (!sync.available) {
+    return null;
+  }
   if (!sync.connected || connection.apiUrl === null) {
     return { reason: "Sign in to see it in the web app" };
   }
@@ -23,4 +25,4 @@ export function useOverviewInWebApp(overviewId: OverviewId): OverviewInWebApp {
     return { reason: "Not in the web app until it syncs" };
   }
   return { href: new URL(Routes.overview(overviewId), connection.apiUrl).href };
-}
+};

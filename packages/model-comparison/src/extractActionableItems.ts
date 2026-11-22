@@ -56,13 +56,13 @@ anything. Never add a
 step the source does not give. A source that tells the reader to do nothing gives an empty list,
 which is common and correct.`;
 
-export function actionableItemsPrompt(source: StepsSource) {
+export const actionableItemsPrompt = (source: StepsSource) => {
   return {
     systemPrompt: SYSTEM_PROMPT,
     userMessage: `Title: ${source.title}\n\n${source.units.map((text, index) => `[${index}] ${text}`).join("\n")}`,
     schema: ExtractedItems,
   };
-}
+};
 
 // An item whose place doesn't fit the source is kept without a place rather than guessed.
 const placed =
@@ -78,13 +78,13 @@ export interface ExtractActionableItemsOptions {
   now?: () => number;
 }
 
-export async function extractActionableItems({
+export const extractActionableItems = async ({
   source,
   judge,
   keys,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: ExtractActionableItemsOptions): Promise<ActionableItemsRecord> {
+}: ExtractActionableItemsOptions): Promise<ActionableItemsRecord> => {
   const metered = meteredFetch(judge.provider, http, now);
   const client = createGenerationClient({ ...judge, apiKey: keys[judge.provider] ?? "", http: metered.http });
   const began = now();
@@ -93,7 +93,9 @@ export async function extractActionableItems({
   let items: ActionableItem[] | null = null;
   try {
     const parsed = ExtractedItems.safeParse(await client(actionableItemsPrompt(source)));
-    if (!parsed.success) throw new Error(`the judge's answer broke its schema: ${parsed.error.message}`);
+    if (!parsed.success) {
+      throw new Error(`the judge's answer broke its schema: ${parsed.error.message}`);
+    }
     items = parsed.data.items.map(placed(source));
   } catch (thrown) {
     outcome =
@@ -111,4 +113,4 @@ export async function extractActionableItems({
     latencyMs: Math.round(now() - began),
     costDollars: measuredCost(judge, metered.calls),
   };
-}
+};

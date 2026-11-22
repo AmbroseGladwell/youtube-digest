@@ -14,15 +14,21 @@ const HEADING_ID = "FollowPlaylistDialog-heading";
 
 // Settings' Look up opens the same preview as the New dialog (27c), as a dialog on a wide
 // screen and a sheet on a phone.
-export function FollowPlaylistDialog({ pasted, onClose }: FollowPlaylistDialogProps) {
+export const FollowPlaylistDialog = ({ pasted, onClose }: FollowPlaylistDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const phone = useIsPhone();
 
   useEffect(() => {
     const element = dialog.current;
-    if (!element) return;
-    if (pasted !== null && !element.open) element.showModal();
-    if (pasted === null && element.open) element.close();
+    if (!element) {
+      return;
+    }
+    if (pasted !== null && !element.open) {
+      element.showModal();
+    }
+    if (pasted === null && element.open) {
+      element.close();
+    }
   }, [pasted]);
 
   return (
@@ -66,4 +72,4 @@ export function FollowPlaylistDialog({ pasted, onClose }: FollowPlaylistDialogPr
       )}
     </dialog>
   );
-}
+};

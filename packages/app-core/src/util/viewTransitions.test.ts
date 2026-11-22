@@ -4,14 +4,14 @@ import { navigationDirection, shouldAnimateNavigation } from "./viewTransitions.
 
 const OVERVIEW = Routes.overview("abc");
 
-function stubEnvironment({ supported, reducedMotion }: { supported: boolean; reducedMotion: boolean }) {
+const stubEnvironment = ({ supported, reducedMotion }: { supported: boolean; reducedMotion: boolean }) => {
   if (supported) {
     vi.stubGlobal("document", { ...globalThis.document, startViewTransition: () => undefined });
   } else {
     vi.stubGlobal("document", { ...globalThis.document });
   }
   vi.stubGlobal("matchMedia", () => ({ matches: reducedMotion }));
-}
+};
 
 afterEach(() => {
   vi.unstubAllGlobals();

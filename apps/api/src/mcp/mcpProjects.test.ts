@@ -18,22 +18,22 @@ interface Connected {
   client: McpClient;
 }
 
-async function connected(scope?: string): Promise<Connected> {
+const connected = async (scope?: string): Promise<Connected> => {
   const testApp = await createTestApp();
   const reader = await makeAccount(testApp);
   const library = sampleLibrary();
   await seedLibrary(reader, library);
   return { testApp, reader, library, client: await connectMcpClient(testApp, reader, scope) };
-}
+};
 
-async function readerProject(reader: TestAccount, overrides: Record<string, unknown> = {}) {
+const readerProject = async (reader: TestAccount, overrides: Record<string, unknown> = {}) => {
   const project = { ...makeProject(), schemaVersion: CURRENT_SCHEMA_VERSIONS.project, updatedAt: UPDATED_AT, ...overrides };
   const response = await reader.inject({ method: "POST", url: "/api/projects", body: project });
   assert.equal(response.statusCode, 201, response.body);
   return project;
-}
+};
 
-async function readerAdds(reader: TestAccount, projectId: string, overviewIds: string[]) {
+const readerAdds = async (reader: TestAccount, projectId: string, overviewIds: string[]) => {
   for (const overviewId of overviewIds) {
     const response = await reader.inject({
       method: "PUT",
@@ -42,7 +42,7 @@ async function readerAdds(reader: TestAccount, projectId: string, overviewIds: s
     });
     assert.equal(response.statusCode, 200, response.body);
   }
-}
+};
 
 const ids = (library: SampleLibrary) => library.notes.map(({ overview }) => overview.id);
 
@@ -189,7 +189,9 @@ test("create_project makes a project and its first overviews, marked as this ass
     members.map((change) => change.id).sort(),
     [projectMemberId(project.id, first!), projectMemberId(project.id, second!)].sort(),
   );
-  for (const member of members) assert.equal((member.body!.addedBy as { name: string }).name, "Claude");
+  for (const member of members) {
+    assert.equal((member.body!.addedBy as { name: string }).name, "Claude");
+  }
   await testApp.close();
 });
 
@@ -265,7 +267,9 @@ test("change_project_members needs something to change, at most the cap, and ids
   const over = await client.callTool("change_project_members", { project: "Kitchen renovation", add: tooMany });
   const strangers = await client.callTool("change_project_members", { project: "Kitchen renovation", add: [storedOverview().id] });
 
-  for (const result of [nothing, over, strangers]) assert.equal(result.isError, true);
+  for (const result of [nothing, over, strangers]) {
+    assert.equal(result.isError, true);
+  }
   assert.match(strangers.text, /search_overviews gives each overview's id/);
   assert.deepEqual(await liveMembers(reader), []);
   await testApp.close();
@@ -335,7 +339,8 @@ test("reading or making one project logs its id and whether it has a purpose, an
   );
   assert.equal(called[0]!.projectId, withPurpose.id);
   const logged = JSON.stringify(lines);
-  for (const secret of ["Kitchen renovation", "Choosing a layout", "Garden", "Launching my app"])
+  for (const secret of ["Kitchen renovation", "Choosing a layout", "Garden", "Launching my app"]) {
     assert.ok(!logged.includes(secret), secret);
+  }
   await testApp.close();
 });

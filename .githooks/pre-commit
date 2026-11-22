@@ -1,8 +1,39 @@
 #!/usr/bin/env bash
-# Refuses a commit that stages a secret value. Only ever reads what is staged
-# (docs/conventions/secrets.md).
+# Refuses a commit that stages a secret value, a lint error or an unformatted file
+# (docs/conventions/secrets.md, docs/conventions/lint-and-format.md).
+set -euo pipefail
+
 if ! command -v gitleaks > /dev/null 2>&1; then
   echo "pre-commit: gitleaks is not on the path; enter the dev shell (direnv allow, or nix develop) or commit with --no-verify" >&2
   exit 1
 fi
-exec gitleaks git --pre-commit --staged --redact --no-banner
+gitleaks git --pre-commit --staged --redact --no-banner
+
+root="$(git rev-parse --show-toplevel)"
+if [ ! -x "$root/node_modules/.bin/oxlint" ] || [ ! -x "$root/node_modules/.bin/oxfmt" ]; then
+  echo "pre-commit: Oxlint and Oxfmt aren't installed; run task install" >&2
+  exit 1
+fi
+
+staged=()
+while IFS= read -r -d '' file; do
+  staged+=("$file")
+done < <(git diff --cached --name-only --diff-filter=ACMR -z -- '*.ts' '*.tsx' '*.mts' '*.cts' '*.js' '*.mjs' '*.cjs')
+
+if [ "${#staged[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+cd "$root"
+if ! node_modules/.bin/oxlint --deny-warnings "${staged[@]}"; then
+  echo "pre-commit: fix the lint errors above (docs/conventions/lint-and-format.md)" >&2
+  exit 1
+fi
+if ! node_modules/.bin/oxfmt --check --no-error-on-unmatched-pattern "${staged[@]}"; then
+  echo "pre-commit: unformatted files above; run task format, then stage the result" >&2
+  exit 1
+fi
+if ! node scripts/oxlint/lintChangedLines.mjs; then
+  echo "pre-commit: fix the problems above on the lines you added (docs/conventions/lint-and-format.md)" >&2
+  exit 1
+fi

@@ -46,7 +46,7 @@ export interface NarrationVoicePickerProps {
 
 // Design OV-43, 43a–43d and 43f: a radio group of voices by accent, each with a sample of
 // the same passage. Choosing saves at once; there is no Save button.
-export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: NarrationVoicePickerProps) {
+export const NarrationVoicePicker = ({ scrollToChosen = false, labelledBy }: NarrationVoicePickerProps) => {
   const api = useNarrationApi();
   const settings = useSettingsQuery().data;
   const updateSettings = useUpdateSettingsMutation();
@@ -61,14 +61,18 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
   const settingsLoaded = settings !== undefined;
 
   useEffect(() => {
-    if (!scrollToChosen || !settingsLoaded || scrolled.current) return;
+    if (!scrollToChosen || !settingsLoaded || scrolled.current) {
+      return;
+    }
     scrolled.current = true;
     chosenRow.current?.scrollIntoView({ block: "center" });
   }, [scrollToChosen, settingsLoaded]);
 
   const analytics = useAnalytics();
 
-  if (api === null) return null;
+  if (api === null) {
+    return null;
+  }
 
   const sampleFor = (voice: NarrationVoice): VoiceSample | null => samples.data?.find((sample) => sample.voice === voice) ?? null;
 
@@ -158,7 +162,7 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
       ))}
     </section>
   );
-}
+};
 
 interface VoiceRowProps {
   voice: NarrationVoice;
@@ -171,14 +175,16 @@ interface VoiceRowProps {
   onStop: () => void;
 }
 
-function VoiceRow({ voice, chosen, rowRef, sample, playback, onChoose, onPlay, onStop }: VoiceRowProps) {
+const secondLineOf = (playback: SamplePlayback | null, chosen: boolean): string | null => {
+  if (playback !== null) {
+    return `Playing · ${formatClock(playback.seconds)} of ${formatClock(playback.durationSeconds)}`;
+  }
+  return chosen ? "Your voice" : null;
+};
+
+const VoiceRow = ({ voice, chosen, rowRef, sample, playback, onChoose, onPlay, onStop }: VoiceRowProps) => {
   const name = narrationVoiceName(voice);
-  const second =
-    playback !== null
-      ? `Playing · ${formatClock(playback.seconds)} of ${formatClock(playback.durationSeconds)}`
-      : chosen
-        ? "Your voice"
-        : null;
+  const second = secondLineOf(playback, chosen);
   const progress = playback === null ? 0 : Math.min(1, playback.seconds / playback.durationSeconds);
 
   return (
@@ -250,4 +256,4 @@ function VoiceRow({ voice, chosen, rowRef, sample, playback, onChoose, onPlay, o
         ))}
     </div>
   );
-}
+};

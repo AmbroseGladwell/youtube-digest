@@ -45,8 +45,14 @@ export interface FollowUpAssistantMenuProps {
 
 type Option = "here" | FollowUpAssistant;
 
-function OptionDetail({ assistant, connected, continueIn }: { assistant: FollowUpAssistant; connected: boolean; continueIn: boolean }) {
-  if (connected && FOLLOW_UP_ASSISTANTS[assistant].prefillParam !== null)
+interface OptionDetailProps {
+  assistant: FollowUpAssistant;
+  connected: boolean;
+  continueIn: boolean;
+}
+
+const OptionDetail = ({ assistant, connected, continueIn }: OptionDetailProps) => {
+  if (connected && FOLLOW_UP_ASSISTANTS[assistant].prefillParam !== null) {
     return (
       <>
         <span className={styles.connected}>
@@ -56,19 +62,44 @@ function OptionDetail({ assistant, connected, continueIn }: { assistant: FollowU
         · reads this note and its transcript
       </>
     );
-  if (continueIn)
+  }
+  if (continueIn) {
     return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
       ? "Copies this conversation; you paste it in"
       : "Opens with this conversation filled in";
+  }
   return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
     ? "Copies the question and this note; you paste it in"
     : "Gets this note in the link";
+};
+
+interface MenuTitleFlags {
+  continueIn: boolean;
+  firstTap: boolean;
+  offerHere: boolean;
 }
+
+const menuTitleOf = ({ continueIn, firstTap, offerHere }: MenuTitleFlags): string => {
+  if (continueIn) {
+    return CONTINUE_IN_TITLE;
+  }
+  if (firstTap) {
+    return ASK_IN_TITLE;
+  }
+  return offerHere ? ANSWER_QUESTIONS_TITLE : CHANGE_TITLE;
+};
+
+const menuPlacementClassOf = (asSheet: boolean, align: "centre" | "end"): string | undefined => {
+  if (asSheet) {
+    return styles.inSheet;
+  }
+  return align === "end" ? styles.alignEnd : "";
+};
 
 // Design 266s–266v: a menu under the tapped question, or a sheet on a phone and in the panel.
 // The assistants are a radio group with focus managed as ChoicePicker's; Escape or a tap
 // outside closes it with nothing remembered.
-export function FollowUpAssistantMenu({
+export const FollowUpAssistantMenu = ({
   firstTap,
   continueIn = false,
   align = "centre",
@@ -85,8 +116,8 @@ export function FollowUpAssistantMenu({
   onCopyQuestion,
   onSetUpFollowed,
   onClose,
-}: FollowUpAssistantMenuProps) {
-  const title = continueIn ? CONTINUE_IN_TITLE : firstTap ? ASK_IN_TITLE : offerHere ? ANSWER_QUESTIONS_TITLE : CHANGE_TITLE;
+}: FollowUpAssistantMenuProps) => {
+  const title = menuTitleOf({ continueIn, firstTap, offerHere });
   const choices: readonly Option[] = offerHere ? ["here", ...FollowUpAssistant.options] : FollowUpAssistant.options;
   const checked: Option | null = offerHere && hereChosen ? "here" : chosen;
   const titleId = useId();
@@ -98,14 +129,20 @@ export function FollowUpAssistantMenu({
   useDismissOnOutside(!asSheet, onClose, menu, inside);
 
   useEffect(() => {
-    if (asSheet && sheet.current !== null && !sheet.current.open) sheet.current.showModal();
+    if (asSheet && sheet.current !== null && !sheet.current.open) {
+      sheet.current.showModal();
+    }
     options.current[focusedAt]?.focus({ preventScroll: true });
-    if (!asSheet) menu.current?.scrollIntoView?.({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    if (!asSheet) {
+      menu.current?.scrollIntoView?.({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    }
   }, [asSheet, focusedAt]);
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
     const current = options.current.indexOf(document.activeElement as HTMLButtonElement);
-    if (current === -1) return;
+    if (current === -1) {
+      return;
+    }
     const last = choices.length - 1;
     const target = {
       ArrowDown: current === last ? 0 : current + 1,
@@ -115,14 +152,16 @@ export function FollowUpAssistantMenu({
       Home: 0,
       End: last,
     }[event.key];
-    if (target === undefined) return;
+    if (target === undefined) {
+      return;
+    }
     event.preventDefault();
     options.current[target]?.focus();
   };
 
   const body = (
     <div
-      className={`${styles.menu} ${asSheet ? styles.inSheet : align === "end" ? styles.alignEnd : ""}`}
+      className={`${styles.menu} ${menuPlacementClassOf(asSheet, align)}`}
       ref={menu}
       role={asSheet ? undefined : "dialog"}
       aria-labelledby={titleId}
@@ -145,7 +184,13 @@ export function FollowUpAssistantMenu({
               options.current[index] = element;
             }}
             className={styles.option}
-            onClick={() => (option === "here" ? onChooseHere() : onChoose(option))}
+            onClick={() => {
+              if (option === "here") {
+                onChooseHere();
+              } else {
+                onChoose(option);
+              }
+            }}
             data-testid={followUpAssistantMenuTestIds.option(option)}
           >
             <span className={`${styles.dot} ${option === checked ? styles.dotOn : ""}`} aria-hidden="true" />
@@ -207,7 +252,9 @@ export function FollowUpAssistantMenu({
     </div>
   );
 
-  if (!asSheet) return body;
+  if (!asSheet) {
+    return body;
+  }
   return createPortal(
     <dialog
       ref={sheet}
@@ -218,7 +265,9 @@ export function FollowUpAssistantMenu({
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === sheet.current) onClose();
+        if (event.target === sheet.current) {
+          onClose();
+        }
       }}
       data-testid={followUpAssistantMenuTestIds.sheet}
     >
@@ -226,4 +275,4 @@ export function FollowUpAssistantMenu({
     </dialog>,
     document.body,
   );
-}
+};

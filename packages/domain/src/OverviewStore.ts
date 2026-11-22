@@ -15,6 +15,11 @@ export interface ClaimSummary {
   claim: string;
 }
 
+export interface CreateTopicOptions {
+  name: string;
+  description?: string;
+}
+
 export interface OverviewStore {
   // Null means no such record. A record that is present and cannot be read throws an
   // UnreadableRecordError instead, because those are different things
@@ -37,7 +42,7 @@ export interface OverviewStore {
   listClaims(): Promise<ClaimSummary[]>;
 
   listTopics(): Promise<Topic[]>;
-  createTopic(input: { name: string; description?: string }): Promise<Topic>;
+  createTopic(input: CreateTopicOptions): Promise<Topic>;
 
   getOverviewState(overviewId: OverviewId): Promise<OverviewState>;
   setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>): Promise<void>;

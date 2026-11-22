@@ -25,18 +25,33 @@ const stretch = (videoUrl: string | null, range: TimeRange) =>
 
 const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n");
 
+const authorFactOf = (source: Overview["source"]): string | null => {
+  if (source.kind !== "web") {
+    return null;
+  }
+  return source.author === null ? null : `by ${source.author}`;
+};
+
+const lengthFactOf = (overview: Overview): string | null => {
+  const { source } = overview;
+  if (source.kind === "youtube") {
+    return source.durationMs === null ? null : formatTimestamp(source.durationMs);
+  }
+  return noteSourceLength(overview);
+};
+
 // The note as it reads outside the app: every section the reader sees, with each moment
 // a link into the video, and never the spoken script (docs/features/mcp-connector.md). With
 // partIds, each item a chat answer can cite starts with its id, as overviewParts lists them.
-export function overviewMarkdown(overview: Overview, { partIds = false, partIdPrefix = "" } = {}): string {
+export const overviewMarkdown = (overview: Overview, { partIds = false, partIdPrefix = "" } = {}): string => {
   const id = (part: OverviewPart, index = 0) => (partIds ? `[${partIdPrefix}${overviewPartId(part, index)}] ` : "");
   const { source: video } = overview;
   const link = sourceUrl(video);
   const timed = video.kind === "podcast" ? null : link;
   const facts = [
     sourceName(video),
-    video.kind === "web" ? (video.author === null ? null : `by ${video.author}`) : null,
-    video.kind === "youtube" ? (video.durationMs === null ? null : formatTimestamp(video.durationMs)) : noteSourceLength(overview),
+    authorFactOf(video),
+    lengthFactOf(overview),
     video.publishedAt === null ? null : `published ${video.publishedAt.slice(0, 10)}`,
     `saved ${overview.savedAt.slice(0, 10)}`,
   ].filter((fact) => fact !== null);
@@ -193,4 +208,4 @@ export function overviewMarkdown(overview: Overview, { partIds = false, partIdPr
   chaptersSection();
 
   return finished();
-}
+};

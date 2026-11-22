@@ -49,7 +49,27 @@ export const initialScale = (recipe: Pick<Recipe, "yield">): RecipeScale => {
 
 const factorOf = (scale: RecipeScale): number => (scale.kind === "servings" ? scale.count / scale.base : scale.times);
 
-export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, scale: RecipeScale, units: RecipeUnits): RecipeAdjustment {
+const sizedPhrase = (recipe: Pick<Recipe, "yield">, scale: RecipeScale, factor: number): string | null => {
+  if (factor === 1) {
+    return null;
+  }
+  return scale.kind === "servings" ? `for ${recipeYield(servingsLabel(recipe.yield!, scale.count)).amount}` : MULTIPLIER_WORD[scale.times];
+};
+
+const whatPhrase = (sized: string | null, scale: RecipeScale, unitsPhrase: string): string => {
+  if (sized === null) {
+    return `In ${unitsPhrase}.`;
+  }
+  return scale.kind === "servings"
+    ? `Adjusted ${sized}${unitsPhrase === "" ? "" : ` in ${unitsPhrase}`}.`
+    : `${sized}${unitsPhrase === "" ? "" : `, in ${unitsPhrase}`}.`;
+};
+
+export const recipeAdjustment = (
+  recipe: Pick<Recipe, "ingredients" | "yield">,
+  scale: RecipeScale,
+  units: RecipeUnits,
+): RecipeAdjustment => {
   const factor = factorOf(scale);
   const ingredients = recipe.ingredients.map(tidyIngredient);
   const lines = ingredients.map((line) => adjustIngredient(line, factor, units));
@@ -70,18 +90,8 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
 
   const unread = lines.filter(({ kind }) => kind === "unreadable").length;
   const unitsPhrase = UNITS_PHRASE[units];
-  const sized =
-    factor === 1
-      ? null
-      : scale.kind === "servings"
-        ? `for ${recipeYield(servingsLabel(recipe.yield!, scale.count)).amount}`
-        : MULTIPLIER_WORD[scale.times];
-  const what =
-    sized === null
-      ? `In ${unitsPhrase}.`
-      : scale.kind === "servings"
-        ? `Adjusted ${sized}${unitsPhrase === "" ? "" : ` in ${unitsPhrase}`}.`
-        : `${sized}${unitsPhrase === "" ? "" : `, in ${unitsPhrase}`}.`;
+  const sized = sizedPhrase(recipe, scale, factor);
+  const what = whatPhrase(sized, scale, unitsPhrase);
   const unreadNote = unread === 0 ? "" : ` ${pluralise(unread, "line has", "lines have")} no amount to adjust.`;
   const status = `${what}${unreadNote}`;
   const done = what.slice(0, -1);
@@ -98,4 +108,4 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
     cookingNote: `${done}, and so is the method.${unreadNote}`,
     servings,
   };
-}
+};

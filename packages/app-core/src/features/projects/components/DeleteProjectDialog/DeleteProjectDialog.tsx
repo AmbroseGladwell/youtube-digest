@@ -12,7 +12,7 @@ export interface DeleteProjectDialogProps {
 
 // Overviews stay, the assistant loses the brief, and archiving is offered instead; Cancel
 // takes the focus ("OV-168 3 Adding and Making" 168z).
-export function DeleteProjectDialog({ name, overviews, assistantConnected, onDelete, onClose }: DeleteProjectDialogProps) {
+export const DeleteProjectDialog = ({ name, overviews, assistantConnected, onDelete, onClose }: DeleteProjectDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const cancel = useRef<HTMLButtonElement | null>(null);
   const headingId = useId();
@@ -40,7 +40,9 @@ export function DeleteProjectDialog({ name, overviews, assistantConnected, onDel
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={deleteProjectDialogTestIds.root}
     >
@@ -70,4 +72,4 @@ export function DeleteProjectDialog({ name, overviews, assistantConnected, onDel
       </div>
     </dialog>
   );
-}
+};

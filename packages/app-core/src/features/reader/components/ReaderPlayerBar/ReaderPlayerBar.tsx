@@ -48,7 +48,7 @@ const ACTION_LABELS: Record<PlayerBarAction, string> = {
   signIn: "Sign in for audio",
 };
 
-function MainIcon({ kind }: { kind: PlayerBarView["main"]["kind"] }) {
+const MainIcon = ({ kind }: { kind: PlayerBarView["main"]["kind"] }) => {
   switch (kind) {
     case "cancel":
     case "buffering":
@@ -62,12 +62,12 @@ function MainIcon({ kind }: { kind: PlayerBarView["main"]["kind"] }) {
     default:
       return <PlayPauseIcon playing={kind === "pause"} />;
   }
-}
+};
 
 // Design Player.dc.html 1a–1l: the floating card on the web reader, and the same parts
 // as grid areas in the panel and on a phone. The label line is the only live region; the
 // clock beside it is not announced, or a screen reader would read it four times a second.
-export function ReaderPlayerBar({
+export const ReaderPlayerBar = ({
   view,
   status,
   time,
@@ -83,7 +83,7 @@ export function ReaderPlayerBar({
   onAction,
   onReRecord,
   onCookFromHere,
-}: ReaderPlayerBarProps) {
+}: ReaderPlayerBarProps) => {
   const actions = view.actions.filter((action) => action !== "signIn" || canSignIn);
   const analytics = useOverviewPageAnalytics();
   const player = usePlayer();
@@ -297,4 +297,4 @@ export function ReaderPlayerBar({
       </button>
     </div>
   );
-}
+};

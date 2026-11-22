@@ -18,7 +18,7 @@ export interface Embedded {
   tokens: number;
 }
 
-export async function embedTexts(apiKey: string, texts: readonly string[]): Promise<Embedded> {
+export const embedTexts = async (apiKey: string, texts: readonly string[]): Promise<Embedded> => {
   const vectors: number[][] = [];
   let tokens = 0;
   for (let start = 0; start < texts.length; start += BATCH) {
@@ -28,12 +28,14 @@ export async function embedTexts(apiKey: string, texts: readonly string[]): Prom
       body: JSON.stringify({ model: EMBEDDING.model, input: texts.slice(start, start + BATCH) }),
       signal: AbortSignal.timeout(60_000),
     });
-    if (!response.ok) throw new Error(`OpenAI embeddings answered ${response.status}: ${await response.text()}`);
+    if (!response.ok) {
+      throw new Error(`OpenAI embeddings answered ${response.status}: ${await response.text()}`);
+    }
     const parsed = EmbeddingsResponse.parse(await response.json());
     tokens += parsed.usage.total_tokens;
     vectors.push(...parsed.data.sort((left, right) => left.index - right.index).map((item) => item.embedding));
   }
   return { vectors, tokens };
-}
+};
 
 export const embeddingDollars = (tokens: number): number => (tokens * EMBEDDING.dollarsPerMillionTokens) / 1_000_000;

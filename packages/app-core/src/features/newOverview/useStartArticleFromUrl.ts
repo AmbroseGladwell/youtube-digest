@@ -15,7 +15,7 @@ export interface ArticleFromUrlOptions {
 
 // An article we hold only the link to, read again by our server inside the run
 // (docs/features/pasted-article-links.md). Null where there's no account on a server to fetch through.
-export function useStartArticleFromUrl() {
+export const useStartArticleFromUrl = () => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const { startArticle } = useNewOverviewRunController();
@@ -41,4 +41,4 @@ export function useStartArticleFromUrl() {
   );
 
   return available ? start : null;
-}
+};

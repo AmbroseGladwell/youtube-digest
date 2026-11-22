@@ -13,6 +13,6 @@ const AppUpdateContext = createContext<AppUpdate | null>(null);
 
 export const AppUpdateProvider = AppUpdateContext.Provider;
 
-export function useAppUpdate(): AppUpdate | null {
+export const useAppUpdate = (): AppUpdate | null => {
   return useContext(AppUpdateContext);
-}
+};

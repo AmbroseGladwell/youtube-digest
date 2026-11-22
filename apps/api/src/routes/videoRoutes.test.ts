@@ -130,7 +130,9 @@ test("signed out, a video is read on the trial's reads, and the video id is neve
   const device = await makeTrialDevice(testApp);
 
   const read = [];
-  for (let n = 0; n < TRIAL_READS; n += 1) read.push((await device.readVideo(FIXTURE_VIDEO_ID)).statusCode);
+  for (let n = 0; n < TRIAL_READS; n += 1) {
+    read.push((await device.readVideo(FIXTURE_VIDEO_ID)).statusCode);
+  }
   const next = await device.readVideo(FIXTURE_VIDEO_ID);
 
   assert.deepEqual(

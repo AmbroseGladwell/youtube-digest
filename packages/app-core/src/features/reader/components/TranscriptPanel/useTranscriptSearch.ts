@@ -12,7 +12,7 @@ export interface TranscriptSearch {
   matchesInBlock: (blockIndex: number) => TranscriptMatch[];
 }
 
-export function useTranscriptSearch(blocks: TranscriptBlock[]): TranscriptSearch {
+export const useTranscriptSearch = (blocks: TranscriptBlock[]): TranscriptSearch => {
   const [query, setQueryState] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -21,8 +21,11 @@ export function useTranscriptSearch(blocks: TranscriptBlock[]): TranscriptSearch
     const grouped = new Map<number, TranscriptMatch[]>();
     for (const match of matches) {
       const existing = grouped.get(match.blockIndex);
-      if (existing) existing.push(match);
-      else grouped.set(match.blockIndex, [match]);
+      if (existing) {
+        existing.push(match);
+      } else {
+        grouped.set(match.blockIndex, [match]);
+      }
     }
     return grouped;
   }, [matches]);
@@ -40,4 +43,4 @@ export function useTranscriptSearch(blocks: TranscriptBlock[]): TranscriptSearch
     step: (delta) => setCurrentIndex((index) => (matches.length === 0 ? 0 : (index + delta + matches.length) % matches.length)),
     matchesInBlock: (blockIndex) => byBlock.get(blockIndex) ?? [],
   };
-}
+};

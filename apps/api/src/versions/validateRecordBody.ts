@@ -7,7 +7,7 @@ import { RECORD_KINDS } from "../records/recordKinds.js";
 // record?" of a version it knows. A version it does not know yet is stored as given,
 // because the shape it would check against does not exist here
 // (docs/features/sync-api.md).
-export function validateRecordBody(kind: RecordKind, body: Record<string, unknown>, schemaVersion: number): void {
+export const validateRecordBody = (kind: RecordKind, body: Record<string, unknown>, schemaVersion: number): void => {
   if (schemaVersion > CURRENT_SCHEMA_VERSIONS[kind]) {
     return;
   }
@@ -20,4 +20,4 @@ export function validateRecordBody(kind: RecordKind, body: Record<string, unknow
       detail: read.detail,
     });
   }
-}
+};

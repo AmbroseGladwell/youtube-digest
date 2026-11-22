@@ -12,14 +12,17 @@ export interface ArticleMetadata {
 const isArticleNode = (node: JsonObject): boolean => typesOf(node).some((type) => /(Article|BlogPosting)$/.test(type));
 
 const nameOf = (value: unknown): string | null => {
-  if (typeof value === "string") return value.trim() || null;
-  if (Array.isArray(value))
+  if (typeof value === "string") {
+    return value.trim() || null;
+  }
+  if (Array.isArray(value)) {
     return (
       value
         .map(nameOf)
         .filter((name) => name !== null)
         .join(", ") || null
     );
+  }
   return isObject(value) ? nameOf(value.name) : null;
 };
 
@@ -27,19 +30,27 @@ const metaContent = (document: Document, selector: string): string | null =>
   document.querySelector(selector)?.getAttribute("content")?.trim() || null;
 
 const isoDate = (value: unknown): string | null => {
-  if (typeof value !== "string") return null;
+  if (typeof value !== "string") {
+    return null;
+  }
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 };
 
 const imageOf = (value: unknown): string | null => {
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) return value.map(imageOf).find((image) => image !== null) ?? null;
+  if (typeof value === "string") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(imageOf).find((image) => image !== null) ?? null;
+  }
   return isObject(value) ? imageOf(value.url) : null;
 };
 
 const secureImage = (href: string | null, pageUrl: string): string | null => {
-  if (href === null) return null;
+  if (href === null) {
+    return null;
+  }
   try {
     const url = new URL(href, pageUrl);
     return url.protocol === "https:" ? url.href : null;
@@ -48,7 +59,7 @@ const secureImage = (href: string | null, pageUrl: string): string | null => {
   }
 };
 
-export function articleMetadata(document: Document, pageUrl: string): ArticleMetadata {
+export const articleMetadata = (document: Document, pageUrl: string): ArticleMetadata => {
   const article = linkedData(document).find(isArticleNode);
   const free = article?.isAccessibleForFree;
   return {
@@ -63,4 +74,4 @@ export function articleMetadata(document: Document, pageUrl: string): ArticleMet
       secureImage(imageOf(article?.image), pageUrl),
     declaredPaywalled: free === false || (typeof free === "string" && free.toLowerCase() === "false"),
   };
-}
+};

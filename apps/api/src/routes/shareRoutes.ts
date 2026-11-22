@@ -13,7 +13,7 @@ export const MAX_LIVE_SHARES_PER_ACCOUNT = 50;
 
 const Params = z.object({ token: ShareToken });
 
-export function shareRoutes(app: FastifyInstance, shares: SharesRepository, appUrl: string): void {
+export const shareRoutes = (app: FastifyInstance, shares: SharesRepository, appUrl: string): void => {
   const describe = (share: ShareRow) => ({ ...share, url: shareUrl(appUrl, share.token) });
 
   app.post("/shares", { bodyLimit: SHARE_BODY_LIMIT_BYTES }, async (request, reply) => {
@@ -51,4 +51,4 @@ export function shareRoutes(app: FastifyInstance, shares: SharesRepository, appU
     request.log.info(apiLogLines.shares.revoked());
     return reply.status(204).send();
   });
-}
+};

@@ -30,15 +30,21 @@ const playerFor = (videoId: string, answer: YouTubeAnswer): PlayerResponse => {
   if (answer === "bot-check") {
     return { playabilityStatus: { status: "LOGIN_REQUIRED", reason: "Sign in to confirm you're not a bot" } };
   }
-  if (answer === "removed") return { playabilityStatus: { status: "ERROR", reason: "This video has been removed" } };
-  if (answer === "no-captions") return { ...base, videoDetails, captions: { playerCaptionsTracklistRenderer: { captionTracks: [] } } };
-  if (answer === "another-video") return { ...base, videoDetails: { ...videoDetails, videoId: "notTheOne1" } };
+  if (answer === "removed") {
+    return { playabilityStatus: { status: "ERROR", reason: "This video has been removed" } };
+  }
+  if (answer === "no-captions") {
+    return { ...base, videoDetails, captions: { playerCaptionsTracklistRenderer: { captionTracks: [] } } };
+  }
+  if (answer === "another-video") {
+    return { ...base, videoDetails: { ...videoDetails, videoId: "notTheOne1" } };
+  }
   return { ...base, videoDetails };
 };
 
 // YouTube as our server sees it, from our own address and through the proxy, answering
 // each route as the test says (docs/conventions/backend-testing-guide.md).
-export function makeFakeYouTube(answers: FakeYouTube["answers"] = { direct: "captions", proxy: "captions" }): FakeYouTube {
+export const makeFakeYouTube = (answers: FakeYouTube["answers"] = { direct: "captions", proxy: "captions" }): FakeYouTube => {
   const fake: FakeYouTube = { fetches: undefined!, requests: [], answers, sessionsClosed: 0 };
   let sessions = 0;
 
@@ -47,8 +53,12 @@ export function makeFakeYouTube(answers: FakeYouTube["answers"] = { direct: "cap
     (request: YouTubeFetchRequest) => {
       const videoId = request.body === undefined ? null : ((JSON.parse(request.body) as { videoId?: string }).videoId ?? null);
       fake.requests.push({ route: name, session, url: request.url, videoId });
-      if (request.url.includes("timedtext")) return Promise.resolve(ok(JSON3_WRITTEN));
-      if (request.headers["X-YouTube-Client-Name"] === "WEB") return Promise.resolve(ok(makeMetadataResponse()));
+      if (request.url.includes("timedtext")) {
+        return Promise.resolve(ok(JSON3_WRITTEN));
+      }
+      if (request.headers["X-YouTube-Client-Name"] === "WEB") {
+        return Promise.resolve(ok(makeMetadataResponse()));
+      }
       return Promise.resolve(ok(playerFor(videoId ?? "", fake.answers[name])));
     };
 
@@ -64,4 +74,4 @@ export function makeFakeYouTube(answers: FakeYouTube["answers"] = { direct: "cap
     newSession: () => `session-${(sessions += 1)}`,
   };
   return fake;
-}
+};

@@ -12,7 +12,9 @@ export const innerTubeTranscriptSource = (youTubeFetch: YouTubeFetch): Transcrip
   resolve: async (url) => {
     const videoId = extractYouTubeVideoId(url);
     // Not a YouTube url, so this rung was never able to answer for it.
-    if (videoId === null) return null;
+    if (videoId === null) {
+      return null;
+    }
 
     const fetched = await fetchInnerTubeTranscript(youTubeFetch, videoId, url);
     return { video: fetched.video, transcript: fetched.transcript, generated: fetched.generated };

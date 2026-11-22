@@ -27,7 +27,9 @@ export class IndexedDbCaptureQueueStore implements CaptureQueueStore {
     const transaction = this.#db.transaction(CAPTURE_QUEUE_STORE, "readwrite");
     const store = transaction.objectStore(CAPTURE_QUEUE_STORE);
     for (const capture of captures) {
-      if ((await promisifyRequest(store.getKey(capture.videoId))) === undefined) store.put(capture);
+      if ((await promisifyRequest(store.getKey(capture.videoId))) === undefined) {
+        store.put(capture);
+      }
     }
     await promisifyTransaction(transaction);
   }
@@ -49,7 +51,9 @@ export class IndexedDbCaptureQueueStore implements CaptureQueueStore {
     const store = transaction.objectStore(CAPTURE_QUEUE_STORE);
     for (const raw of await promisifyRequest<unknown[]>(store.getAll())) {
       const parsed = QueuedCapture.safeParse(raw);
-      if (!parsed.success) continue;
+      if (!parsed.success) {
+        continue;
+      }
       const capture = parsed.data;
       if (capture.status === "waiting" && (fromPlaylist === undefined || capture.fromPlaylist.id === fromPlaylist)) {
         store.delete(capture.videoId);

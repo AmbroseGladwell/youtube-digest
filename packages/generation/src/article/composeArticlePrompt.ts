@@ -69,7 +69,9 @@ const keyPointsCoverThePiece = (input: ArticleGenerationInput) => (output: Recor
 
 const readAnywayNamesRealChapters = (output: Record<string, unknown>, ctx: z.RefinementCtx) => {
   const read = output.readAnyway as ReadAnywayOutput | undefined;
-  if (read === undefined) return;
+  if (read === undefined) {
+    return;
+  }
   const path = ["readAnyway", "chapterIndexes"];
   if (read.answer === "partial" && read.chapterIndexes.length === 0) {
     ctx.addIssue({ code: "custom", path, message: "a partial answer names the chapters worth reading" });
@@ -79,7 +81,7 @@ const readAnywayNamesRealChapters = (output: Record<string, unknown>, ctx: z.Ref
   }
 };
 
-function contextBlock(input: ArticleGenerationInput): string {
+const contextBlock = (input: ArticleGenerationInput): string => {
   const { article } = input;
   let heading: string | null = null;
   const numbered = articleParagraphs(article);
@@ -107,9 +109,9 @@ ${paragraphs.join("\n")}
 </article>
 
 Why they saved it: ${input.captureReason ?? "not said"}`;
-}
+};
 
-export function composeArticlePrompt(input: ArticleGenerationInput): ComposedPrompt {
+export const composeArticlePrompt = (input: ArticleGenerationInput): ComposedPrompt => {
   const sections = REGISTRY.filter(
     (section) =>
       (section !== articleSourceStepsSection || input.sectionsEnabled.steps) &&
@@ -133,4 +135,4 @@ export function composeArticlePrompt(input: ArticleGenerationInput): ComposedPro
     userMessage: contextBlock(input),
     schema: z.object(shape).superRefine(readAnywayNamesRealChapters).superRefine(keyPointsCoverThePiece(input)),
   };
-}
+};

@@ -48,16 +48,27 @@ export interface GenerateOverviewFormProps {
 
 // What a link means once it is complete: a playlist to look up, or one to refuse. Null
 // for a video, or a link that is neither.
-export function playlistTargetOf(url: string): PlaylistTarget | null {
+export const playlistTargetOf = (url: string): PlaylistTarget | null => {
   const link = youTubeLink(url);
-  if (link?.kind === "playlist") return { kind: "playlist", playlistId: link.playlistId };
-  if (link?.kind === "unfollowable") return { kind: "unfollowable", list: link.list, videoUrl: link.videoUrl };
+  if (link?.kind === "playlist") {
+    return { kind: "playlist", playlistId: link.playlistId };
+  }
+  if (link?.kind === "unfollowable") {
+    return { kind: "unfollowable", list: link.list, videoUrl: link.videoUrl };
+  }
   return null;
-}
+};
 
 const canReadClipboard = (): boolean => typeof navigator.clipboard?.readText === "function";
 
-export function GenerateOverviewForm({
+const urlPlaceholder = (articleAvailable: boolean, playlistsAvailable: boolean): string => {
+  if (articleAvailable) {
+    return "Paste a YouTube, podcast or article link";
+  }
+  return playlistsAvailable ? "Paste a YouTube video or playlist link" : "Paste a YouTube link";
+};
+
+export const GenerateOverviewForm = ({
   url,
   onUrlChange,
   onSubmit,
@@ -65,7 +76,7 @@ export function GenerateOverviewForm({
   onPlaylist,
   generationError = null,
   active = false,
-}: GenerateOverviewFormProps) {
+}: GenerateOverviewFormProps) => {
   const playlistsAvailable = usePlaylistApi() !== null;
   const phone = useIsPhone();
   const link = youTubeLink(url);
@@ -73,7 +84,9 @@ export function GenerateOverviewForm({
   const takeLink = (value: string) => {
     onUrlChange(value);
     const target = playlistsAvailable ? playlistTargetOf(value) : null;
-    if (target !== null) onPlaylist(target, value);
+    if (target !== null) {
+      onPlaylist(target, value);
+    }
   };
   const activeVideoUrl = useActiveVideoUrl();
   const watchedTranscript = useWatchedTranscriptQuery();
@@ -155,16 +168,57 @@ export function GenerateOverviewForm({
   const offersWatchedVideo = activeVideoUrl !== null && !isWatchedVideo;
   const watchedCaptionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 
+  const pastedLink = () => {
+    if (podcast.link.status === "found") {
+      return { kicker: `${podcast.link.episode.showName} · Podcast`, title: podcast.link.episode.title };
+    }
+    if (article.link.status === "found") {
+      return {
+        kicker: `${article.link.article.siteName ?? domainOf(url)} · ${article.link.article.recipe === null ? "Article" : "Recipe"}`,
+        title: article.link.article.title,
+      };
+    }
+    return { kicker: isYouTubeUrl(url) ? "YouTube · Video" : null, title: url.trim() };
+  };
+
+  const readsWhat = () => {
+    if (podcastShown) {
+      return "Finds the episode’s transcript";
+    }
+    if (article.link.status === "none") {
+      return "Fetches the transcript";
+    }
+    return article.link.status === "found" && article.link.article.recipe !== null ? "Reads the recipe" : "Reads the article";
+  };
+
+  const limitOrNote = () => {
+    if (limit !== null && walled === null) {
+      return (
+        <LimitMessageNote
+          message={limit}
+          from="dialog"
+          testIds={generateOverviewFormTestIds.limitMessage}
+          takeFocus={active}
+          onFollowed={onCancel}
+        />
+      );
+    }
+    if (keysReady) {
+      return <p className={styles.note}>{readsWhat()}, then writes the overview. Nothing is saved to your library unless both succeed.</p>;
+    }
+    return (
+      <KeyPromptNote
+        testIds={generateOverviewFormTestIds.keyPrompt}
+        readiness={readiness}
+        detail={keyPromptDetail(readiness)}
+        from="dialog"
+        onFollowed={onCancel}
+      />
+    );
+  };
+
   if (wallShown && walled !== null) {
-    const pasted =
-      podcast.link.status === "found"
-        ? { kicker: `${podcast.link.episode.showName} · Podcast`, title: podcast.link.episode.title }
-        : article.link.status === "found"
-          ? {
-              kicker: `${article.link.article.siteName ?? domainOf(url)} · ${article.link.article.recipe === null ? "Article" : "Recipe"}`,
-              title: article.link.article.title,
-            }
-          : { kicker: isYouTubeUrl(url) ? "YouTube · Video" : null, title: url.trim() };
+    const pasted = pastedLink();
     return (
       <>
         <SoftWall
@@ -196,13 +250,7 @@ export function GenerateOverviewForm({
           autoCorrect="off"
           spellCheck={false}
           className={styles.urlInput}
-          placeholder={
-            article.available
-              ? "Paste a YouTube, podcast or article link"
-              : playlistsAvailable
-                ? "Paste a YouTube video or playlist link"
-                : "Paste a YouTube link"
-          }
+          placeholder={urlPlaceholder(article.available, playlistsAvailable)}
           value={url}
           onChange={(event) => onUrlChange(event.target.value)}
           onPaste={(event) => {
@@ -258,34 +306,7 @@ export function GenerateOverviewForm({
         </button>
       )}
 
-      {limit !== null && walled === null ? (
-        <LimitMessageNote
-          message={limit}
-          from="dialog"
-          testIds={generateOverviewFormTestIds.limitMessage}
-          takeFocus={active}
-          onFollowed={onCancel}
-        />
-      ) : keysReady ? (
-        <p className={styles.note}>
-          {podcastShown
-            ? "Finds the episode’s transcript"
-            : article.link.status === "none"
-              ? "Fetches the transcript"
-              : article.link.status === "found" && article.link.article.recipe !== null
-                ? "Reads the recipe"
-                : "Reads the article"}
-          , then writes the overview. Nothing is saved to your library unless both succeed.
-        </p>
-      ) : (
-        <KeyPromptNote
-          testIds={generateOverviewFormTestIds.keyPrompt}
-          readiness={readiness}
-          detail={keyPromptDetail(readiness)}
-          from="dialog"
-          onFollowed={onCancel}
-        />
-      )}
+      {limitOrNote()}
 
       {validationError && (
         <p className={styles.error} data-testid={generateOverviewFormTestIds.validationError}>
@@ -335,4 +356,4 @@ export function GenerateOverviewForm({
       {keysReady && limit === null && <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />}
     </form>
   );
-}
+};

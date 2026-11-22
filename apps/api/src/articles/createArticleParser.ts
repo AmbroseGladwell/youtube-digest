@@ -18,16 +18,23 @@ export interface ArticleParserOptions {
 
 export type ArticleParser = (html: string, url: string) => Promise<ArticleRead>;
 
+export interface ParsedArticleMessage {
+  id: number;
+  read: ArticleRead;
+}
+
 // One warm worker, one page at a time, replaced whenever a page outruns the limit or the
 // worker fails (docs/features/pasted-article-links.md, "Parsing").
-export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: ArticleParserOptions): ArticleParser {
+export const createArticleParser = ({ workerUrl, timeoutMs, heapLimitMb }: ArticleParserOptions): ArticleParser => {
   const waiting: Job[] = [];
   let worker: Worker | null = null;
   let current: { job: Job; timer: NodeJS.Timeout } | null = null;
   let nextId = 0;
 
   const settle = (read: ArticleRead) => {
-    if (current === null) return;
+    if (current === null) {
+      return;
+    }
     clearTimeout(current.timer);
     current.job.resolve(read);
     current = null;
@@ -42,16 +49,22 @@ export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: Artic
 
   const startWorker = (): Worker => {
     const started = new Worker(workerUrl, { resourceLimits: { maxOldGenerationSizeMb: heapLimitMb } });
-    started.on("message", ({ id, read }: { id: number; read: ArticleRead }) => {
-      if (started === worker && current?.job.id === id) settle(read);
+    started.on("message", ({ id, read }: ParsedArticleMessage) => {
+      if (started === worker && current?.job.id === id) {
+        settle(read);
+      }
     });
     started.on("error", () => {
-      if (started !== worker) return;
+      if (started !== worker) {
+        return;
+      }
       replaceWorker();
       settle(UNFINISHED);
     });
     started.on("exit", () => {
-      if (started !== worker) return;
+      if (started !== worker) {
+        return;
+      }
       worker = null;
       settle(UNFINISHED);
     });
@@ -60,9 +73,13 @@ export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: Artic
   };
 
   const next = () => {
-    if (current !== null) return;
+    if (current !== null) {
+      return;
+    }
     const job = waiting.shift();
-    if (job === undefined) return;
+    if (job === undefined) {
+      return;
+    }
     worker ??= startWorker();
     const timer = setTimeout(() => {
       replaceWorker();
@@ -78,4 +95,4 @@ export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: Artic
       waiting.push({ id: nextId, html, url, resolve });
       next();
     });
-}
+};

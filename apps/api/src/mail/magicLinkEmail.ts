@@ -11,14 +11,14 @@ export interface EmailContent {
 // link opens is not the thing that asked (docs/features/sign-in.md).
 // A web mail also carries a code, for when the mail is read somewhere other than the browser
 // that asked (docs/features/sign-in.md, "A code in the web mail").
-export function magicLinkEmail(mail: MagicLinkMail): EmailContent {
+export const magicLinkEmail = (mail: MagicLinkMail): EmailContent => {
   return mail.code !== null && mail.surface === "web" ? codeFirstEmail({ ...mail, code: mail.code }) : linkFirstEmail(mail);
-}
+};
 
 // Design 327l-3: the code in the subject, so it can be read from the notification, then first in
 // the mail, selectable in one tap, and the link as the backup (docs/features/sign-in.md, "A code
 // in the web mail").
-function codeFirstEmail({ link, code, purpose, firstName }: MagicLinkMail & { code: string }): EmailContent {
+const codeFirstEmail = ({ link, code, purpose, firstName }: MagicLinkMail & { code: string }): EmailContent => {
   const creating = purpose === "createAccount";
   const siteUrl = new URL(link).origin;
   const subject = `Your code: ${code}`;
@@ -66,9 +66,9 @@ function codeFirstEmail({ link, code, purpose, firstName }: MagicLinkMail & { co
       siteUrl,
     }),
   };
-}
+};
 
-function linkFirstEmail({ link, code, surface, purpose, firstName }: MagicLinkMail): EmailContent {
+const linkFirstEmail = ({ link, code, surface, purpose, firstName }: MagicLinkMail): EmailContent => {
   const creating = purpose === "createAccount";
   const siteUrl = new URL(link).origin;
   const subject = creating ? "Finish creating your account on The Overview" : "Sign in to The Overview";
@@ -121,4 +121,4 @@ function linkFirstEmail({ link, code, surface, purpose, firstName }: MagicLinkMa
       siteUrl,
     }),
   };
-}
+};

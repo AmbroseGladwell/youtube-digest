@@ -25,16 +25,26 @@ export interface OverviewMinutes {
   passages: Passage[];
 }
 
+export interface KeywordMinutesDeps {
+  passages: TranscriptPassagesRepository;
+  records: RecordsRepository;
+}
+
+export interface KeywordMinutesFilter {
+  except?: readonly string[];
+  within?: readonly string[] | null;
+}
+
 // The 8 best minutes for a question's words across the account's transcripts, each with its
 // neighbours, grouped by the live overview they belong to, best first (OV-352). Search failing never
 // stops the answer: it goes on without minutes, and the log says so.
-export async function keywordMinutes(
-  { passages, records }: { passages: TranscriptPassagesRepository; records: RecordsRepository },
+export const keywordMinutes = async (
+  { passages, records }: KeywordMinutesDeps,
   accountId: AccountId,
   question: string,
-  { except = [], within = null }: { except?: readonly string[]; within?: readonly string[] | null },
+  { except = [], within = null }: KeywordMinutesFilter,
   log: FastifyBaseLogger,
-): Promise<OverviewMinutes[]> {
+): Promise<OverviewMinutes[]> => {
   let hits;
   try {
     await passages.backfill(accountId);
@@ -48,32 +58,44 @@ export async function keywordMinutes(
   for (const record of live) {
     const read = readStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), Overview, OVERVIEW_MIGRATIONS);
     const key = read.status === "read" ? sourceKey(read.record.source) : null;
-    if (read.status === "read" && key !== null && !overviewOf.has(key)) overviewOf.set(key, read.record);
+    if (read.status === "read" && key !== null && !overviewOf.has(key)) {
+      overviewOf.set(key, read.record);
+    }
   }
   const grouped = new Map<string, OverviewMinutes>();
   for (const hit of hits) {
     const overview = overviewOf.get(hit.videoId);
-    if (overview === undefined) continue;
+    if (overview === undefined) {
+      continue;
+    }
     const held = grouped.get(overview.id) ?? { overviewId: overview.id as OverviewId, overview, passages: [] };
-    for (const passage of hit.around) if (!held.passages.some((other) => other.id === passage.id)) held.passages.push(passage);
+    for (const passage of hit.around) {
+      if (!held.passages.some((other) => other.id === passage.id)) {
+        held.passages.push(passage);
+      }
+    }
     grouped.set(overview.id, held);
   }
   return [...grouped.values()].map((minutes) => ({ ...minutes, passages: minutes.passages.sort((a, b) => a.startMs - b.startMs) }));
-}
+};
 
 // Every minute of these overviews' transcripts, cut again, so an earlier question's minutes rebuild
 // as they were sent. A transcript gone since leaves its overview out.
-export async function transcriptMinutes(
+export const transcriptMinutes = async (
   transcripts: TranscriptsRepository,
   accountId: AccountId,
   overviews: ReadonlyArray<Overview>,
-): Promise<Map<string, Passage[]>> {
+): Promise<Map<string, Passage[]>> => {
   const cut = new Map<string, Passage[]>();
   for (const overview of overviews) {
     const key = sourceKey(overview.source);
-    if (key === null || cut.has(overview.id)) continue;
+    if (key === null || cut.has(overview.id)) {
+      continue;
+    }
     const stored = StoredTranscript.safeParse(await transcripts.get(accountId, key as never));
-    if (stored.success) cut.set(overview.id, transcriptPassages(stored.data.segments));
+    if (stored.success) {
+      cut.set(overview.id, transcriptPassages(stored.data.segments));
+    }
   }
   return cut;
-}
+};

@@ -31,7 +31,7 @@ export interface ErrorStateProps {
 // other and a one-action screen doesn't read as having lost its pair. Which actions a
 // case offers is the caller's to say, because offering the wrong one is the harm this
 // screen exists to avoid (docs/features/error-state.md).
-export function ErrorState({ screen, title, body, action, back = false, error }: ErrorStateProps) {
+export const ErrorState = ({ screen, title, body, action, back = false, error }: ErrorStateProps) => {
   const isPanel = useIsPanel();
   const analytics = useAnalytics();
   useReportError(error, isSyncRequestError(error) || isSyncTransportError(error) ? "failedRequest" : "errorState");
@@ -96,4 +96,4 @@ export function ErrorState({ screen, title, body, action, back = false, error }:
       )}
     </div>
   );
-}
+};

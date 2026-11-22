@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode, type Ref } from "react";
 import {
   recipeStepGroups,
   sourceName,
@@ -45,10 +45,29 @@ export interface RecipeCooking {
   onCarryOn: () => void;
 }
 
+const stepRef = (
+  active: boolean,
+  reached: boolean,
+  spokenLine: Ref<HTMLLIElement>,
+  reachedLine: Ref<HTMLLIElement>,
+): Ref<HTMLLIElement> | undefined => {
+  if (active) {
+    return spokenLine;
+  }
+  return reached ? reachedLine : undefined;
+};
+
+const stepTestId = (active: boolean, reached: boolean): string => {
+  if (reached) {
+    return recipeMethodTestIds.reachedStep;
+  }
+  return active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step;
+};
+
 // Designs 144g and 144u: a numbered list whose numbering carries on through the page's own
 // groups, so "step 9" means one thing. Where the method stayed on the page, a copy shared before
 // OV-159 and one saved from it, the heading keeps its count and the page is one link away.
-export function RecipeMethod({
+export const RecipeMethod = ({
   recipe,
   actions,
   source,
@@ -60,7 +79,7 @@ export function RecipeMethod({
   methodAmounts,
   renderMoment,
   playingStep = null,
-}: RecipeMethodProps) {
+}: RecipeMethodProps) => {
   const headingId = useId();
   const cited = useCitedOverviewPart();
   const from = sourceName(source);
@@ -70,7 +89,9 @@ export function RecipeMethod({
   const reachedLine = useRef<HTMLLIElement | null>(null);
   const reachedStep = cooking?.reachedStep ?? null;
   useEffect(() => {
-    if (reachedStep !== null) reachedLine.current?.scrollIntoView({ block: "center", behavior: "instant" });
+    if (reachedStep !== null) {
+      reachedLine.current?.scrollIntoView({ block: "center", behavior: "instant" });
+    }
   }, [reachedStep]);
   const cookable = cooking !== null && recipe.steps.length > 0;
   const placeStep = cooking?.placeStep ?? null;
@@ -179,14 +200,12 @@ export function RecipeMethod({
                   return (
                     <li
                       key={number}
-                      ref={active ? spokenLine : reached ? reachedLine : undefined}
+                      ref={stepRef(active, reached, spokenLine, reachedLine)}
                       className={`${styles.step} ${voice === null ? "" : styles.stepChoosable} ${active ? styles.stepActive : ""} ${reached ? styles.stepReached : ""} ${playing ? styles.stepPlaying : ""}`}
                       aria-current={playing ? "step" : (voice === null && active) || undefined}
                       {...citedPartProps(cited, "method", number - 1)}
                       onClick={voice === null ? undefined : () => choose(number - 1)}
-                      data-testid={
-                        reached ? recipeMethodTestIds.reachedStep : active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step
-                      }
+                      data-testid={stepTestId(active, reached)}
                     >
                       <i className={styles.number} aria-hidden="true">
                         {number}
@@ -211,4 +230,4 @@ export function RecipeMethod({
       )}
     </section>
   );
-}
+};

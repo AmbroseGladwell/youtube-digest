@@ -6,7 +6,7 @@ const LEAVE_MS = 200;
 
 // When the "Saved you" chip is on screen. On a row it leaves by itself after a few seconds;
 // in an overview it stays until the page goes (docs/features/time-saved.md, "Every day").
-export function useSavedMoment(autoHideMs: number | null) {
+export const useSavedMoment = (autoHideMs: number | null) => {
   const [phase, setPhase] = useState<SavedMomentPhase>("hidden");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -38,4 +38,4 @@ export function useSavedMoment(autoHideMs: number | null) {
       setPhase("hidden");
     },
   };
-}
+};

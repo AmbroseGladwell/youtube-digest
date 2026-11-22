@@ -22,7 +22,7 @@ const notPending = () => new ApiError("not_found", "This request has expired or 
 
 // The reader's half of connecting an assistant: the consent screen and Settings. Everything
 // but reading a request is on the reader's own session (docs/features/mcp-connector.md).
-export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: ConnectionRoutesOptions): void {
+export const connectionRoutes = (app: FastifyInstance, { sql, clock, urls }: ConnectionRoutesOptions): void => {
   app.get<{ Params: { id: string } }>("/oauth/requests/:id", PUBLIC, async (request) => {
     const pending = await findPendingAuthorization(sql, request.params.id, clock());
     if (pending === null) {
@@ -71,4 +71,4 @@ export function connectionRoutes(app: FastifyInstance, { sql, clock, urls }: Con
     request.log.info(apiLogLines.mcp.connectionRevoked({ connectionId: request.params.id, by: "reader" }));
     return reply.status(204).send();
   });
-}
+};

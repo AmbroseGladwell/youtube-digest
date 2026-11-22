@@ -19,13 +19,30 @@ export interface PlayerScrubberProps {
 }
 
 // Design 2a: the line a drag will land on, named the way the note names it.
-function landingLabel(lines: NoteLine[], index: number, seconds: number): string {
+const landingLabel = (lines: NoteLine[], index: number, seconds: number): string => {
   const heading = sectionHeadingAt(lines, index);
-  if (lines[index]?.heading) return `${heading} · ${formatClock(seconds)}`;
+  if (lines[index]?.heading) {
+    return `${heading} · ${formatClock(seconds)}`;
+  }
   let within = 0;
-  for (let at = index; at >= 0 && !lines[at]!.heading; at -= 1) within += 1;
+  for (let at = index; at >= 0 && !lines[at]!.heading; at -= 1) {
+    within += 1;
+  }
   return `${heading} · line ${within} · ${formatClock(seconds)}`;
-}
+};
+
+const unseekableAccessibility = (fill: PlayerBarView["track"]["fill"], percent: number) => {
+  if (fill === "sweep") {
+    return { role: "progressbar", "aria-label": "Preparing audio" };
+  }
+  return {
+    role: "progressbar",
+    "aria-label": "Progress",
+    "aria-valuemin": 0,
+    "aria-valuemax": 100,
+    "aria-valuenow": Math.round(fill === "none" ? 0 : percent),
+  };
+};
 
 const keyTarget = (key: string, time: number, durationSeconds: number): number | null => {
   switch (key) {
@@ -46,7 +63,7 @@ const keyTarget = (key: string, time: number, durationSeconds: number): number |
 
 // Design 1e and 2a: a thumb, a notch where each section starts, and a drag that snaps to
 // the nearest line start. From the keyboard it is a slider that moves five seconds a step.
-export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds, onSeek }: PlayerScrubberProps) {
+export const PlayerScrubber = ({ view, time, lines, lineStarts, durationSeconds, onSeek }: PlayerScrubberProps) => {
   const track = useRef<HTMLDivElement | null>(null);
   const [landing, setLanding] = useState<{ index: number; seconds: number } | null>(null);
   const { fill, tone, thumb } = view.track;
@@ -68,20 +85,28 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (!view.seekable) return;
+    if (!view.seekable) {
+      return;
+    }
     event.currentTarget.setPointerCapture?.(event.pointerId);
     setLanding(landingAt(event.clientX));
   };
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (landing !== null) setLanding(landingAt(event.clientX));
+    if (landing !== null) {
+      setLanding(landingAt(event.clientX));
+    }
   };
   const onPointerUp = () => {
-    if (landing !== null) onSeek(landing.seconds);
+    if (landing !== null) {
+      onSeek(landing.seconds);
+    }
     setLanding(null);
   };
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const target = keyTarget(event.key, time, durationSeconds);
-    if (target === null) return;
+    if (target === null) {
+      return;
+    }
     event.preventDefault();
     onSeek(target);
   };
@@ -100,15 +125,7 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
         )}`,
         onKeyDown,
       }
-    : fill === "sweep"
-      ? { role: "progressbar", "aria-label": "Preparing audio" }
-      : {
-          role: "progressbar",
-          "aria-label": "Progress",
-          "aria-valuemin": 0,
-          "aria-valuemax": 100,
-          "aria-valuenow": Math.round(fill === "none" ? 0 : percent),
-        };
+    : unseekableAccessibility(fill, percent);
 
   return (
     <div
@@ -148,4 +165,4 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
       </div>
     </div>
   );
-}
+};

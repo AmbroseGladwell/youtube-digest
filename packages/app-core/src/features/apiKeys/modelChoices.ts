@@ -32,7 +32,7 @@ export interface ModelChoices {
   source: "live" | "known";
 }
 
-export function modelChoices(provider: Provider, catalogue: ModelCatalogue | undefined): ModelChoices {
+export const modelChoices = (provider: Provider, catalogue: ModelCatalogue | undefined): ModelChoices => {
   const recommended = KNOWN_MODELS[provider].map((model) => asChoice(provider, model));
 
   if (catalogue === undefined) {
@@ -46,7 +46,7 @@ export function modelChoices(provider: Provider, catalogue: ModelCatalogue | und
     unusable: catalogue.unusable,
     source: "live",
   };
-}
+};
 
 // Search covers both groups (design 110e, third frame): a reader typing "mini" is looking
 // for a model, not for a group.

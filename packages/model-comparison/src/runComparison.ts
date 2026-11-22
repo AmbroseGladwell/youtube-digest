@@ -29,11 +29,11 @@ export interface ComparisonOutcome {
 const runKey = (provider: string, model: string, videoId: string) => `${provider}:${model}:${videoId}`;
 const videoIdOf = (fetched: FetchedTranscript) => fetched.video.id ?? fetched.video.url;
 
-export function runnableModels(
+export const runnableModels = (
   models: readonly ComparedModel[],
   keys: Partial<Record<Provider, string>>,
   log: (line: string) => void,
-): ComparedModel[] {
+): ComparedModel[] => {
   return models.filter((model) => {
     if (priceOf(model) === undefined) {
       log(`skipping ${comparedModelName(model)}: no price in modelPrices.ts, so its spend cannot be capped`);
@@ -45,9 +45,9 @@ export function runnableModels(
     }
     return true;
   });
-}
+};
 
-export async function runComparison(options: RunComparisonOptions): Promise<ComparisonOutcome> {
+export const runComparison = async (options: RunComparisonOptions): Promise<ComparisonOutcome> => {
   const previous = await options.store.all();
   const settled = new Set(
     previous.filter((record) => record.outcome !== "errored").map((record) => runKey(record.provider, record.model, record.videoId)),
@@ -58,7 +58,9 @@ export async function runComparison(options: RunComparisonOptions): Promise<Comp
     options.transcripts
       .filter((fetched) => {
         const done = settled.has(runKey(model.provider, model.model, videoIdOf(fetched)));
-        if (done) skipped += 1;
+        if (done) {
+          skipped += 1;
+        }
         return !done;
       })
       .map((fetched) => () => {
@@ -80,4 +82,4 @@ export async function runComparison(options: RunComparisonOptions): Promise<Comp
     log: options.log,
   });
   return { ...outcome, skipped };
-}
+};

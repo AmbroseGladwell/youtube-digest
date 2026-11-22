@@ -14,20 +14,14 @@ import { secondsToNextUsageMonth } from "../usage/usageMonth.js";
 
 const Params = z.object({ videoId: VideoId });
 
-export function serviceTranscriptRoutes(
-  app: FastifyInstance,
-  {
-    service,
-    usage,
-    sql,
-    clock,
-  }: {
-    service: ServiceTranscripts | null;
-    usage: OverviewUsageRepository;
-    sql: SqlClient;
-    clock: () => Date;
-  },
-): void {
+export interface ServiceTranscriptRoutesOptions {
+  service: ServiceTranscripts | null;
+  usage: OverviewUsageRepository;
+  sql: SqlClient;
+  clock: () => Date;
+}
+
+export const serviceTranscriptRoutes = (app: FastifyInstance, { service, usage, sql, clock }: ServiceTranscriptRoutesOptions): void => {
   app.get("/service-transcripts", { config: { public: true } }, async () => {
     const status: ServiceTranscriptStatus = { available: service !== null };
     return status;
@@ -78,4 +72,4 @@ export function serviceTranscriptRoutes(
       }
     },
   );
-}
+};

@@ -19,7 +19,7 @@ export interface LibraryFilterCounts {
 // and means 30 is the prototype's eleven missing notes with a new address
 // (docs/features/record-migrations.md). The counts that read a field of the overview
 // cannot include one, which is why byTopic stops summing to total.
-export function libraryFilterCounts(entries: LibraryEntry[]): LibraryFilterCounts {
+export const libraryFilterCounts = (entries: LibraryEntry[]): LibraryFilterCounts => {
   const byTopic: Record<string, number> = {};
   const byNovelty: Record<string, number> = {};
   const bySource: Partial<Record<LibrarySource, number>> = {};
@@ -29,24 +29,32 @@ export function libraryFilterCounts(entries: LibraryEntry[]): LibraryFilterCount
   let unreadable = 0;
 
   for (const entry of entries) {
-    if (!entry.state.read) unread += 1;
-    if (entry.state.favourite) favourite += 1;
+    if (!entry.state.read) {
+      unread += 1;
+    }
+    if (entry.state.favourite) {
+      favourite += 1;
+    }
     if (entry.kind === "unreadable") {
       unreadable += 1;
       continue;
     }
     const { overview } = entry;
-    if (overview.verdict?.dubious) dubious += 1;
+    if (overview.verdict?.dubious) {
+      dubious += 1;
+    }
     const source = librarySourceOf(overview);
     bySource[source] = (bySource[source] ?? 0) + 1;
     for (const topicId of overview.topicIds as TopicId[]) {
       byTopic[topicId] = (byTopic[topicId] ?? 0) + 1;
     }
     const novelty: Novelty | undefined = overview.verdict?.novelty;
-    if (novelty) byNovelty[novelty] = (byNovelty[novelty] ?? 0) + 1;
+    if (novelty) {
+      byNovelty[novelty] = (byNovelty[novelty] ?? 0) + 1;
+    }
   }
 
   const byTag = tagUsage(entries.map((entry) => [...(entry.kind === "unreadable" ? [] : entry.overview.tags), ...entry.state.userTags]));
 
   return { total: entries.length, unread, favourite, dubious, unreadable, byTopic, byNovelty, byTag, bySource };
-}
+};

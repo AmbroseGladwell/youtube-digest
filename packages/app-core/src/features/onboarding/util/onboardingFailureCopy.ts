@@ -33,7 +33,7 @@ const isFrontPage = (url: string): boolean => {
 // Designs 154l–154n: say why, then ask for another link. Never "nothing counted", since a trial
 // read counts whether or not the page could be read; the free overview is what's untouched. A
 // new reader isn't sent to the extension mid-onboarding, only told of it for afterwards.
-export function onboardingFailureCopy(failure: OnboardingFailure, link: string, place: ReaderPlace): OnboardingFailureCopy {
+export const onboardingFailureCopy = (failure: OnboardingFailure, link: string, place: ReaderPlace): OnboardingFailureCopy => {
   switch (failure.kind) {
     case "trialReads":
       return failed(
@@ -117,4 +117,4 @@ export function onboardingFailureCopy(failure: OnboardingFailure, link: string, 
             "The page didn't give us its text. Some sites build their pages in a way we can't read yet.",
           );
   }
-}
+};

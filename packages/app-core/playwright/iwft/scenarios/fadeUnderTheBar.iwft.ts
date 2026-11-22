@@ -1,5 +1,4 @@
-import { ShareToken, shareSnapshot, type Overview, type SharePayload, type TranscriptSegment } from "@overview/domain";
-import { VideoId } from "@overview/domain";
+import { ShareToken, shareSnapshot, type Overview, type SharePayload, type TranscriptSegment, VideoId } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";

@@ -11,7 +11,7 @@ import { sharedPageHeaderTestIds } from "./SharedPageHeaderTestIds.js";
 // no library behind them — just the way in, or for a reader who is signed in, the way back
 // to their own overviews. It stays put as the page scrolls, the way the app's own masthead
 // does, and the tab strip rests against its measured height (docs/features/sharing.md).
-export function SharedPageHeader({ ref }: { ref?: Ref<HTMLElement> }) {
+export const SharedPageHeader = ({ ref }: { ref?: Ref<HTMLElement> }) => {
   const analytics = useAnalytics();
   const { signedIn } = useSharedPageReader();
 
@@ -59,4 +59,4 @@ export function SharedPageHeader({ ref }: { ref?: Ref<HTMLElement> }) {
       </span>
     </header>
   );
-}
+};

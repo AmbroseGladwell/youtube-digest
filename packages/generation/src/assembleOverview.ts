@@ -25,9 +25,12 @@ import { resolvedBigPicture } from "./sections/bigPicturePrompt.js";
 import { resolvedFollowUpQuestions } from "./sections/followUpQuestionsSection.js";
 import { transcriptBudget } from "./sections/transcriptBudget.js";
 
-type Meta = { id: OverviewId; savedAt: string };
+interface Meta {
+  id: OverviewId;
+  savedAt: string;
+}
 
-function commonFields(input: GenerationInput, output: GeneratedRecipeVideoOutput | GeneratedOutput, meta: Meta) {
+const commonFields = (input: GenerationInput, output: GeneratedRecipeVideoOutput | GeneratedOutput, meta: Meta) => {
   const topicIds = input.existingTopics.filter((topic) => output.matchedTopicNames.includes(topic.name)).map((topic) => topic.id);
   return {
     id: meta.id,
@@ -46,13 +49,15 @@ function commonFields(input: GenerationInput, output: GeneratedRecipeVideoOutput
     article: null,
     followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions, output.readerQuestions),
   };
-}
+};
 
 // A recipe video's note is its recipe, with the chapters a video has (docs/features/recipe-notes.md).
 // Null when no ingredient survives the amount check, so the video gets its ordinary note.
-export function assembleRecipeVideoOverview(input: GenerationInput, output: GeneratedRecipeVideoOutput, meta: Meta): Overview | null {
+export const assembleRecipeVideoOverview = (input: GenerationInput, output: GeneratedRecipeVideoOutput, meta: Meta): Overview | null => {
   const recipe = output.recipe === null ? null : videoRecipe(input, output.recipe);
-  if (recipe === null || output.recipe === null) return null;
+  if (recipe === null || output.recipe === null) {
+    return null;
+  }
   return Overview.parse({
     ...commonFields(input, output, meta),
     bigPicture: null,
@@ -66,9 +71,9 @@ export function assembleRecipeVideoOverview(input: GenerationInput, output: Gene
     watchAnyway: null,
     recipe: recipeNote(recipe, output.recipe.summary),
   });
-}
+};
 
-export function assembleOverview(input: GenerationInput, output: GeneratedOutput, meta: Meta): Overview {
+export const assembleOverview = (input: GenerationInput, output: GeneratedOutput, meta: Meta): Overview => {
   const common = commonFields(input, output, meta);
 
   const verdict =
@@ -119,30 +124,37 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
     watchAnyway,
     recipe: null,
   });
-}
+};
 
 // docs/features/novelty-scale.md, "What stands out".
-function resolveStandsOut(input: GenerationInput, novelty: Novelty, standsOut: GeneratedTimedText | null): StandsOut | null {
+const resolveStandsOut = (input: GenerationInput, novelty: Novelty, standsOut: GeneratedTimedText | null): StandsOut | null => {
   const text = standsOut?.text.trim() ?? "";
   if (novelty === "common_knowledge" || text === "") {
     return null;
   }
   return { text, range: resolveOptionalRange(input, standsOut === null ? null : segmentRangeOf(standsOut)) };
+};
+
+interface SegmentRange {
+  startSegmentIndex: number;
+  endSegmentIndex: number;
+}
+
+interface MsRange {
+  startMs: number;
+  endMs: number;
 }
 
 // A stretch a line merely points at: one that doesn't fit the transcript loses its jump
 // rather than failing the overview (docs/features/novelty-scale.md).
-function resolveOptionalRange(
-  input: GenerationInput,
-  range: { startSegmentIndex: number; endSegmentIndex: number } | null,
-): { startMs: number; endMs: number } | null {
+const resolveOptionalRange = (input: GenerationInput, range: SegmentRange | null): MsRange | null => {
   const fits = range !== null && range.startSegmentIndex <= range.endSegmentIndex && range.endSegmentIndex < input.transcript.length;
   return fits ? resolveRange(input, range) : null;
-}
+};
 
 // Each chapter ends where the next begins, and the last where the words do, not where
 // the video does (docs/features/chapters.md).
-function resolveChapters(input: GenerationInput, chapters: ChapterShape[]): Chapter[] {
+const resolveChapters = (input: GenerationInput, chapters: ChapterShape[]): Chapter[] => {
   const segmentAt = (index: number) => {
     const segment = input.transcript[index];
     if (!segment) {
@@ -163,9 +175,9 @@ function resolveChapters(input: GenerationInput, chapters: ChapterShape[]): Chap
       endMs: next ? segmentAt(next.startSegmentIndex).startMs : lastCaptionEndsMs,
     };
   });
-}
+};
 
-function resolveDubiousClaims(input: GenerationInput, dubiousClaims: DubiousClaimShape[]): DubiousClaim[] {
+const resolveDubiousClaims = (input: GenerationInput, dubiousClaims: DubiousClaimShape[]): DubiousClaim[] => {
   return dubiousClaims.map(({ segmentIndex, ...dubiousClaim }) => {
     if (segmentIndex === null) {
       return { ...dubiousClaim, startMs: null };
@@ -179,13 +191,12 @@ function resolveDubiousClaims(input: GenerationInput, dubiousClaims: DubiousClai
     }
     return { ...dubiousClaim, startMs: segment.startMs };
   });
-}
+};
 
-function resolveRange(
-  input: GenerationInput,
-  range: { startSegmentIndex: number; endSegmentIndex: number } | null,
-): { startMs: number; endMs: number } | null {
-  if (!range) return null;
+const resolveRange = (input: GenerationInput, range: SegmentRange | null): MsRange | null => {
+  if (!range) {
+    return null;
+  }
   const start = input.transcript[range.startSegmentIndex];
   const end = input.transcript[range.endSegmentIndex];
   if (!start || !end) {
@@ -196,4 +207,4 @@ function resolveRange(
     );
   }
   return { startMs: start.startMs, endMs: end.endMs };
-}
+};

@@ -51,16 +51,18 @@ const loadedUnpacked = (): boolean => chrome.runtime.getManifest().update_url ==
 
 // A hash router, not a browser one: an extension document is a packaged file, so a pushed
 // path like /overviews/<id> resolves to nothing and the panel 404s on reload.
-export async function mountApp({
+export const mountApp = async ({
   layout = "full",
   activeVideo = null,
   articlePages = null,
   playback = null,
   runBridge = null,
   youTubeFetch = null,
-}: MountOptions = {}): Promise<void> {
+}: MountOptions = {}): Promise<void> => {
   const container = document.getElementById("root");
-  if (!container) throw new Error("the extension document is missing its #root element");
+  if (!container) {
+    throw new Error("the extension document is missing its #root element");
+  }
 
   const root = createRoot(container);
 
@@ -69,7 +71,9 @@ export async function mountApp({
       accountId,
       ...(shown ? { onSuperseded: () => root.render(<OutOfDateTab />) } : {}),
     });
-    if (shown) await writeLibraryAccount(accountId);
+    if (shown) {
+      await writeLibraryAccount(accountId);
+    }
     return { accountId, stores, close };
   };
 
@@ -122,4 +126,4 @@ export async function mountApp({
       />
     </StrictMode>,
   );
-}
+};

@@ -6,15 +6,17 @@ import { declineAnalyticsConsent } from "./useAnalyticsConsent.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 
 // docs/features/analytics-consent.md, "A no is counted with no id".
-export function useAnalyticsDecline(): () => void {
+export const useAnalyticsDecline = (): (() => void) => {
   const apiUrl = useKnownApiUrl();
   const surface = useClientSurface();
   const context = useAnalyticsContext();
   return useCallback(() => {
     const { declined } = declineAnalyticsConsent();
-    if (!declined || apiUrl === null) return;
+    if (!declined || apiUrl === null) {
+      return;
+    }
     void createFetchEventsApi({ baseUrl: apiUrl, token: null, surface })
       .declined(context)
       .catch(() => undefined);
   }, [apiUrl, surface, context]);
-}
+};

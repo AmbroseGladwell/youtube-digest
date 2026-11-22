@@ -299,6 +299,8 @@ test("the log says how long the reader waited and what it cost, and never the fe
   assert.equal(finished?.dollars, (30 / 3600) * 0.59);
   assert.equal(typeof lines.find((line) => line.msg === "episode transcription started")?.waitedSeconds, "number");
   const logged = JSON.stringify(lines);
-  for (const secret of ["feeds.example", "media.example", "Welcome back"]) assert.ok(!logged.includes(secret), secret);
+  for (const secret of ["feeds.example", "media.example", "Welcome back"]) {
+    assert.ok(!logged.includes(secret), secret);
+  }
   await testApp.close();
 });

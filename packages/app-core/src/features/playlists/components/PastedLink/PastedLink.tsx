@@ -2,7 +2,7 @@ import styles from "./PastedLink.module.scss";
 import { pastedLinkTestIds } from "./PastedLinkTestIds.js";
 
 // The link the reader gave, kept in view above what the app made of it (design 27b, 27g).
-export function PastedLink({ url }: { url: string }) {
+export const PastedLink = ({ url }: { url: string }) => {
   return (
     <div className={styles.root}>
       <p className={styles.label}>YouTube link</p>
@@ -11,4 +11,4 @@ export function PastedLink({ url }: { url: string }) {
       </p>
     </div>
   );
-}
+};

@@ -1,5 +1,5 @@
 import type { FastifyBaseLogger } from "fastify";
-import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overview/domain";
+import { type StoredTranscript, apiLogLines, type Plan, type VideoId } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { AccountCostsRepository, CostPayer } from "../costs/AccountCostsRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
@@ -45,7 +45,10 @@ export class QuotaSpentError extends Error {
   }
 }
 
-export type ServiceAnswer = { transcript: StoredTranscript; via: ServiceFetchResult["via"] };
+export interface ServiceAnswer {
+  transcript: StoredTranscript;
+  via: ServiceFetchResult["via"];
+}
 
 export const callerKey = (caller: ServiceCaller): string =>
   "accountId" in caller ? `account:${caller.accountId}` : `address:${hashedAddress(caller.address)}`;
@@ -76,7 +79,9 @@ export class ServiceTranscripts {
 
     const now = clock();
     const missing = this.#missing.get(videoId);
-    if (missing !== undefined && missing.until > now.getTime()) throw missing.error;
+    if (missing !== undefined && missing.until > now.getTime()) {
+      throw missing.error;
+    }
 
     // A fetch already under way for this video is joined for free, never kept afterwards,
     // and only the caller who started it holds a slot. Its cap is its own, so a joiner it
@@ -86,7 +91,9 @@ export class ServiceTranscripts {
       try {
         return await running;
       } catch (error) {
-        if (error instanceof QuotaSpentError) return this.resolve(videoId, caller, log);
+        if (error instanceof QuotaSpentError) {
+          return this.resolve(videoId, caller, log);
+        }
         throw error;
       }
     }

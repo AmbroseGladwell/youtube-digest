@@ -28,7 +28,7 @@ import { CONVERSATION_STATE, conversationFromLocation } from "../util/conversati
 import { timedSource } from "../util/timedSource.js";
 import { useEpisodeEngine } from "../episode/useEpisodeEngine.js";
 import { EpisodePlayer } from "../components/EpisodePlayer/EpisodePlayer.js";
-import { PlaybackProvider } from "../../../app/PlaybackContext.js";
+import { PlaybackProvider, useSeekPlayback } from "../../../app/PlaybackContext.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { prefersReducedMotion } from "../../../util/prefersReducedMotion.js";
@@ -71,7 +71,7 @@ import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
 import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
 import { useShowOnPage } from "../useShowOnPage.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
-import { CookingMode } from "../components/CookingMode/CookingMode.js";
+import { CookingMode, type CookingSurface } from "../components/CookingMode/CookingMode.js";
 import { RecipeIngredients } from "../components/RecipeIngredients/RecipeIngredients.js";
 import { RecipeMethod } from "../components/RecipeMethod/RecipeMethod.js";
 import { RecipePageLink } from "../components/RecipePageLink/RecipePageLink.js";
@@ -90,7 +90,6 @@ import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableO
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
 import { LineRangeTag, noteLineRange } from "../components/LineRangeTag/LineRangeTag.js";
 import { usePlayingStep } from "./usePlayingStep.js";
-import { useSeekPlayback } from "../../../app/PlaybackContext.js";
 import { RelatedByTag } from "../components/RelatedByTag/RelatedByTag.js";
 import { OnboardingNextSteps } from "../../onboarding/components/OnboardingNextSteps/OnboardingNextSteps.js";
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
@@ -128,10 +127,24 @@ const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
 
 const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
+const cookingSurfaceOf = (isPanel: boolean, isPhone: boolean): CookingSurface => {
+  if (isPanel) {
+    return "panel";
+  }
+  return isPhone ? "phone" : "web";
+};
+
+const projectsWebAppOf = (isPanel: boolean, connected: boolean, apiUrl: string | null): string | null => {
+  if (!isPanel) {
+    return "here";
+  }
+  return connected ? apiUrl : null;
+};
+
 const tabId = (tab: ReaderTab) => `reader-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `reader-panel-${tab.toLowerCase()}`;
 
-export function ReaderPage() {
+export const ReaderPage = () => {
   const params = useParams();
   const parsedId = OverviewId.safeParse(params[RouteParams.overviewId]);
 
@@ -139,14 +152,14 @@ export function ReaderPage() {
     return <ReaderNotFound />;
   }
   return <ReaderPageForOverview overviewId={parsedId.data} />;
-}
+};
 
 const CHAT_OPEN_MS = 320;
 // How long following a citation waits for its part to appear: a tab switch, the folded steps or
 // the dubious reasons opening. Past it, the part's section, if any, is brought into view.
 const MAX_FRAMES_TO_FIND = 20;
 
-function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
+const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const overviewQuery = useOverviewWithStateQuery(overviewId);
   const libraryQuery = useOverviewsWithStateQuery();
   const setOverviewState = useSetOverviewStateMutation();
@@ -205,16 +218,16 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const recipePage = overview?.source.kind === "web" && recipe !== null ? { source: overview.source, recipe } : null;
   const recipeNote = overview !== null && recipe !== null ? { source: overview.source, recipe } : null;
   const webPage = webArticle?.source ?? recipePage?.source ?? null;
-  const tabsShown =
-    recipePage !== null
-      ? ["Overview" as const]
-      : webArticle === null
-        ? recipeNote !== null && !overview?.chapters?.length
-          ? UNCHAPTERED_RECIPE_VIDEO_TABS
-          : READER_TABS
-        : webArticle.article.chapters.length > 1
-          ? ARTICLE_TABS
-          : ["Overview" as const];
+  const tabsShownFor = () => {
+    if (recipePage !== null) {
+      return ["Overview" as const];
+    }
+    if (webArticle === null) {
+      return recipeNote !== null && !overview?.chapters?.length ? UNCHAPTERED_RECIPE_VIDEO_TABS : READER_TABS;
+    }
+    return webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
+  };
+  const tabsShown = tabsShownFor();
   useEffect(() => setRecipeScale(null), [overviewId]);
   const scale = recipeScale ?? (recipe === null ? null : initialScale(recipe));
   const adjustment = useMemo(
@@ -271,37 +284,43 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   // A video can be remade from anywhere. We keep no copy of an article, so it is read again:
   // from the page beside the panel, where the reader may be signed in, or else by our server
   // from its link; with neither, the menu explains (docs/features/article-panel.md, "Regenerating").
-  const regenerate =
-    webPage !== null
-      ? {
-          asksFirst: onPage === null && startArticleFromUrl === null,
-          onChoose: () => {
-            if (onPage !== null) {
-              startArticleRun(onPage.beside, { from: "regenerate", overviewId, captureReason, willAsk: true });
-            } else if (startArticleFromUrl !== null) {
-              startArticleFromUrl(webPage.url, { from: "regenerate", title: webPage.title, overviewId, captureReason });
-            } else {
-              setExplainingRegenerate(true);
-              return;
-            }
-            void navigate(Routes.home(), { viewTransition: animateNavigation });
-          },
-        }
-      : video !== null
-        ? {
-            asksFirst: false,
-            onChoose: () => {
-              startRun(video.url, { from: "regenerate", overviewId, captureReason });
-              void navigate(Routes.home(), { viewTransition: animateNavigation });
-            },
+  const regenerateFor = () => {
+    if (webPage !== null) {
+      return {
+        asksFirst: onPage === null && startArticleFromUrl === null,
+        onChoose: () => {
+          if (onPage !== null) {
+            startArticleRun(onPage.beside, { from: "regenerate", overviewId, captureReason, willAsk: true });
+          } else if (startArticleFromUrl !== null) {
+            startArticleFromUrl(webPage.url, { from: "regenerate", title: webPage.title, overviewId, captureReason });
+          } else {
+            setExplainingRegenerate(true);
+            return;
           }
-        : null;
+          void navigate(Routes.home(), { viewTransition: animateNavigation });
+        },
+      };
+    }
+    if (video !== null) {
+      return {
+        asksFirst: false,
+        onChoose: () => {
+          startRun(video.url, { from: "regenerate", overviewId, captureReason });
+          void navigate(Routes.home(), { viewTransition: animateNavigation });
+        },
+      };
+    }
+    return null;
+  };
+  const regenerate = regenerateFor();
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
   const episode = useEpisodeEngine(overview?.source ?? null);
   useEffect(() => {
-    if (!recipeCopied) return;
+    if (!recipeCopied) {
+      return;
+    }
     const hide = window.setTimeout(() => setRecipeCopied(false), 4000);
     return () => window.clearTimeout(hide);
   }, [recipeCopied]);
@@ -311,7 +330,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const webApp = useOverviewInWebApp(overviewId);
   const { connection } = useSyncConnection();
   const accountNeeded = useAccountNeeded();
-  const projects = useOverviewProjects(overview, !isPanel ? "here" : sync.connected ? connection.apiUrl : null);
+  const projects = useOverviewProjects(overview, projectsWebAppOf(isPanel, sync.connected, connection.apiUrl));
   const overviewShare = useOverviewShare(overview);
   const shareOverview = useShareOverviewMutation();
   const stopSharing = useStopSharingMutation();
@@ -332,7 +351,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const opened = useRef<string | null>(null);
   const loaded = overviewQuery.data ?? null;
   useEffect(() => {
-    if (loaded === null || opened.current === overviewId) return;
+    if (loaded === null || opened.current === overviewId) {
+      return;
+    }
     opened.current = overviewId;
     reader.page.opened({
       answer: loaded.overview.watchAnyway?.answer ?? "none",
@@ -357,16 +378,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       return;
     }
     setPlayerDocked(true);
-    if (!notePlayer.playing) notePlayer.play("masthead");
+    if (!notePlayer.playing) {
+      notePlayer.play("masthead");
+    }
   };
 
   // Design 2: [ and ] step a line, now that the transport's arrows move fifteen seconds.
   const { stepLine } = notePlayer;
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "[" && event.key !== "]") return;
+      if (event.key !== "[" && event.key !== "]") {
+        return;
+      }
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) {
+        return;
+      }
       event.preventDefault();
       reader.page.lineStepped({ direction: event.key === "]" ? "next" : "previous" });
       stepLine(event.key === "]" ? 1 : -1);
@@ -394,12 +421,19 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }, [chat.open]);
   // F6 moves between the note and the chat beside it, which isn't modal (310aq).
   useEffect(() => {
-    if (!chat.open) return;
+    if (!chat.open) {
+      return;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "F6" || chatColumn.current === null) return;
+      if (event.key !== "F6" || chatColumn.current === null) {
+        return;
+      }
       event.preventDefault();
-      if (chatColumn.current.contains(document.activeElement)) noteMain.current?.focus();
-      else chat.field.current?.focus();
+      if (chatColumn.current.contains(document.activeElement)) {
+        noteMain.current?.focus();
+      } else {
+        chat.field.current?.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -408,7 +442,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [sheetRest, setSheetRest] = useState<SheetRest>("raised");
   const [sheetLine, setSheetLine] = useState<{ text: string; icon: StrokeIconName | null } | null>(null);
   useEffect(() => {
-    if (!chat.open) return;
+    if (!chat.open) {
+      return;
+    }
     setSheetRest("raised");
     setSheetLine(null);
   }, [chat.open]);
@@ -433,7 +469,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   // The part is found once the note has switched tab, opened its folded steps or the reasons
   // it's dubious, and brought to just below the top with focus, the tint its only mark.
   useEffect(() => {
-    if (citedFollowed === null) return;
+    if (citedFollowed === null) {
+      return;
+    }
     let frames = 0;
     let frame = 0;
     const bring = () => {
@@ -460,15 +498,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const arrivedAt = overview === null ? null : citedPlaceFromLocation(location.state);
   const arrivalTaken = useRef<string | null>(null);
   useEffect(() => {
-    if (overview === null || arrivedAt === null || arrivalTaken.current === location.key) return;
+    if (overview === null || arrivedAt === null || arrivalTaken.current === location.key) {
+      return;
+    }
     arrivalTaken.current = location.key;
     const found = citedOverviewPart(overview, arrivedAt);
     const history = window.history.state as { usr?: Record<string, unknown> } | null;
-    if (history?.usr !== undefined)
+    if (history?.usr !== undefined) {
       window.history.replaceState({ ...history, usr: { ...history.usr, [CITED_PLACE_STATE]: undefined } }, "");
-    if (found === null) return;
+    }
+    if (found === null) {
+      return;
+    }
     const onTab: ReaderTab = found.part === "chapter" ? "Chapters" : "Overview";
-    if (tab !== onTab && tabsShown.includes(onTab)) changeTab(onTab);
+    if (tab !== onTab && tabsShown.includes(onTab)) {
+      changeTab(onTab);
+    }
     setCitedPart({ part: found.part, index: found.index, followed: 1 });
   }, [overview === null, arrivedAt?.part, arrivedAt?.index]);
   // Escape on the part returns to the pill that led there, raising the sheet first on a phone
@@ -477,14 +522,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     const pill = citedPill.current;
     setSheetRest("raised");
     setSheetLine(null);
-    if (pill !== null && pill.isConnected) requestAnimationFrame(() => pill.focus());
+    if (pill !== null && pill.isConnected) {
+      requestAnimationFrame(() => pill.focus());
+    }
   };
   useEffect(() => {
-    if (citedFollowed === null) return;
+    if (citedFollowed === null) {
+      return;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       const focused = document.activeElement;
-      if (event.key !== "Escape" || !(focused instanceof HTMLElement) || focused.closest(CITED_PART_SELECTOR) === null) return;
-      if (citedPill.current === null || !citedPill.current.isConnected) return;
+      if (event.key !== "Escape" || !(focused instanceof HTMLElement) || focused.closest(CITED_PART_SELECTOR) === null) {
+        return;
+      }
+      if (citedPill.current === null || !citedPill.current.isConnected) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       backToAnswer();
@@ -501,9 +554,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   // reload or Back doesn't open it again (OV-363).
   const arrivedConversation = conversationFromLocation(location.state);
   useEffect(() => {
-    if (arrivedConversation === null || !chatAvailable) return;
+    if (arrivedConversation === null || !chatAvailable) {
+      return;
+    }
     const found = chat.chats.find((each) => each.id === chatRecordId(overviewId, arrivedConversation));
-    if (found === undefined) return;
+    if (found === undefined) {
+      return;
+    }
     navigate(`${location.pathname}${location.search}`, {
       replace: true,
       state: { ...(location.state as object), [CONVERSATION_STATE]: undefined },
@@ -572,7 +629,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     setOverviewState.mutate({ overviewId, patch: { favourite: !state.favourite } });
   };
   const toggleRead = (from: "masthead" | "actionsMenu" | "noteEnd") => {
-    if (!state.read) setReadAtNoteEnd(from === "noteEnd");
+    if (!state.read) {
+      setReadAtNoteEnd(from === "noteEnd");
+    }
     reader.overview.readSwitched({ read: !state.read, from });
     setOverviewState.mutate({ overviewId, patch: { read: !state.read } });
   };
@@ -639,9 +698,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const chatSheet = chatAvailable && (isPanel || isPhone);
   // Beside the note, a question asked from it travels into the chat as it opens (310a-4).
   const askFrom = (question: string, from: "question" | "typed", element: HTMLElement | null) => {
-    if (question === "") return;
+    if (question === "") {
+      return;
+    }
     chat.ask(question, from);
-    if (chatBeside && element !== null) bubbleTravel(element, question);
+    if (chatBeside && element !== null) {
+      bubbleTravel(element, question);
+    }
   };
   const lowerSheet = (text: string, icon: StrokeIconName | null = null) => {
     setSheetRest("lowered");
@@ -649,16 +712,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   };
   const chatTranscriptAt = (positionMs: number) => {
     openTranscriptAt(positionMs);
-    if (chatSheet) lowerSheet(`Reading the transcript from ${formatTimestamp(positionMs)}`);
+    if (chatSheet) {
+      lowerSheet(`Reading the transcript from ${formatTimestamp(positionMs)}`);
+    }
   };
   const sourceWord = chatWords(chatSourceKind(overview)).noun;
   const chatPage = overview.source.kind === "web" ? { url: overview.source.url, onPage } : null;
   const followCitation = (range: TimeRange) => {
     reader.chat.citationFollowed({ to: "source" });
     setCitedPart(null);
-    if (tab !== "Overview") changeTab("Overview");
+    if (tab !== "Overview") {
+      changeTab("Overview");
+    }
     setCitedIndex(citedLineIndex(summaryLines, range.startMs));
-    if (chatSheet && seekVideo !== null) lowerSheet(`Playing ${formatTimeRange(range.startMs, range.endMs)} from the answer`);
+    if (chatSheet && seekVideo !== null) {
+      lowerSheet(`Playing ${formatTimeRange(range.startMs, range.endMs)} from the answer`);
+    }
   };
 
   const followOverviewPart = (view: Exclude<OverviewCitationView, { kind: "gone" }>, pill: HTMLButtonElement) => {
@@ -666,11 +735,15 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     reader.chat.citationFollowed({ to: "overview", part: view.part, ...(index === null ? {} : { index }) });
     setCitedIndex(null);
     const onTab: ReaderTab = view.part === "chapter" ? "Chapters" : "Overview";
-    if (tab !== onTab && tabsShown.includes(onTab)) changeTab(onTab);
+    if (tab !== onTab && tabsShown.includes(onTab)) {
+      changeTab(onTab);
+    }
     citedPill.current = pill;
     setCitedPart({ part: view.part, index, followed: (citedPart?.followed ?? 0) + 1 });
     setCitedSaid(`Showing ${view.label} in the overview. Escape returns to the answer.`);
-    if (chatSheet) lowerSheet(`Showing ${view.label} from the answer`, "fileText");
+    if (chatSheet) {
+      lowerSheet(`Showing ${view.label} from the answer`, "fileText");
+    }
   };
 
   // An episode's note moves its own player: every time in it plays the episode (design 106p).
@@ -993,7 +1066,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               steps={recipeNote.recipe.steps}
               actions={methodActions}
               actionNote={adjustment.actionNote}
-              surface={isPanel ? "panel" : isPhone ? "phone" : "web"}
+              surface={cookingSurfaceOf(isPanel, isPhone)}
               usTemperatures={recipeUnits === "us"}
               methodAmounts={adjustment.methodAmounts}
               videoId={video?.id ?? null}
@@ -1095,9 +1168,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             playing={sheetLine !== null}
             underMasthead={isPanel}
             onRestChange={(rest) => {
-              if (rest === "raised" && sheetLine?.icon === "fileText") backToAnswer();
+              if (rest === "raised" && sheetLine?.icon === "fileText") {
+                backToAnswer();
+              }
               setSheetRest(rest);
-              if (rest === "raised") setSheetLine(null);
+              if (rest === "raised") {
+                setSheetLine(null);
+              }
             }}
           >
             <ChatPanel
@@ -1119,9 +1196,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       </div>
     </OverviewAnalyticsProvider>,
   );
-}
+};
 
-function ReaderNotFound() {
+const ReaderNotFound = () => {
   return (
     <div className={styles.state}>
       <p className={styles.error} data-testid={readerPageTestIds.notFound}>
@@ -1130,4 +1207,4 @@ function ReaderNotFound() {
       <PageLink to={Routes.home()}>← All overviews</PageLink>
     </div>
   );
-}
+};

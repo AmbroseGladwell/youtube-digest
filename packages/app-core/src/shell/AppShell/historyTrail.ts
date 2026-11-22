@@ -15,7 +15,7 @@ export interface HistoryTrail {
 
 export const EMPTY_HISTORY_TRAIL: HistoryTrail = { entries: [], index: -1 };
 
-export function advanceHistoryTrail(trail: HistoryTrail, move: HistoryMove, entry: HistoryEntry): HistoryTrail {
+export const advanceHistoryTrail = (trail: HistoryTrail, move: HistoryMove, entry: HistoryEntry): HistoryTrail => {
   switch (move) {
     case "PUSH":
       return { entries: [...trail.entries.slice(0, trail.index + 1), entry], index: trail.index + 1 };
@@ -28,8 +28,8 @@ export function advanceHistoryTrail(trail: HistoryTrail, move: HistoryMove, entr
       return index < 0 ? { entries: [...trail.entries, entry], index: trail.entries.length } : { ...trail, index };
     }
   }
-}
+};
 
-export function previousPathname(trail: HistoryTrail): string | null {
+export const previousPathname = (trail: HistoryTrail): string | null => {
   return trail.entries[trail.index - 1]?.pathname ?? null;
-}
+};

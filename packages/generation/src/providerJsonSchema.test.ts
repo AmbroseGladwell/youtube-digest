@@ -5,7 +5,7 @@ import { providerJsonSchema, type JsonSchema } from "./providerJsonSchema.js";
 
 // The schemas here are nested a few levels and every lookup is an index access, so one
 // reader that fails loudly beats a hundred non-null assertions.
-function at(schema: JsonSchema, ...path: string[]): JsonSchema {
+const at = (schema: JsonSchema, ...path: string[]): JsonSchema => {
   let node = schema;
   for (const step of path) {
     const next = step === "items" ? node.items : (node.properties as JsonSchema | undefined)?.[step];
@@ -13,7 +13,7 @@ function at(schema: JsonSchema, ...path: string[]): JsonSchema {
     node = next as JsonSchema;
   }
   return node;
-}
+};
 
 test("every object is closed and every property required, which is what strict mode asks for", () => {
   const schema = providerJsonSchema(z.object({ a: z.string(), b: z.object({ c: z.number() }) }));

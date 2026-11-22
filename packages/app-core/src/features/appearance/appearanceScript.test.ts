@@ -9,7 +9,9 @@ const script = readFileSync(publicFile("extension", "appearance.js"), "utf8");
 
 const run = (saved: string | null) => {
   localStorage.clear();
-  if (saved !== null) localStorage.setItem("overview.appearance.v1", saved);
+  if (saved !== null) {
+    localStorage.setItem("overview.appearance.v1", saved);
+  }
   new Function(script)();
 };
 
@@ -25,7 +27,9 @@ describe("the script that runs before first paint", () => {
   });
 
   it("knows every accent", () => {
-    for (const accentColour of ACCENT_COLOURS) expect(script).toContain(`"${accentColour}"`);
+    for (const accentColour of ACCENT_COLOURS) {
+      expect(script).toContain(`"${accentColour}"`);
+    }
   });
 
   it("sets the saved theme, accent and favicon", () => {

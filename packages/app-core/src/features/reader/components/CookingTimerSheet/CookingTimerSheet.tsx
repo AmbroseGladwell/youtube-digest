@@ -20,7 +20,7 @@ export interface CookingTimerSheetProps {
 
 // Designs 284q and 284r (owner, 12 Nov 2026): a running timer's own sheet, with Pause or Resume,
 // −1 min and +1 min in one row, and Cancel timer set apart under them.
-export function CookingTimerSheet({
+export const CookingTimerSheet = ({
   timer,
   now,
   onPause,
@@ -30,15 +30,21 @@ export function CookingTimerSheet({
   onClose,
   recipeTitle = null,
   wayBack = null,
-}: CookingTimerSheetProps) {
+}: CookingTimerSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const open = timer !== null;
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   const left = timer === null ? 0 : timeLeftMs(timer, now);
@@ -55,10 +61,14 @@ export function CookingTimerSheet({
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       onKeyDown={(event) => {
-        if (event.key !== "Escape") return;
+        if (event.key !== "Escape") {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         onClose();
@@ -91,7 +101,13 @@ export function CookingTimerSheet({
             <button
               type="button"
               className={styles.control}
-              onClick={() => (paused ? onResume(timer.id) : onPause(timer.id))}
+              onClick={() => {
+                if (paused) {
+                  onResume(timer.id);
+                } else {
+                  onPause(timer.id);
+                }
+              }}
               data-testid={cookingTimerSheetTestIds.pause}
             >
               <StrokeIcon name={paused ? "play" : "pause"} size={18} />
@@ -124,4 +140,4 @@ export function CookingTimerSheet({
       )}
     </dialog>
   );
-}
+};

@@ -20,7 +20,7 @@ ${recipe.steps.map(({ text }, index) => `${index + 1}. ${asPageContent(text)}`).
 </method>
 </recipe>`;
 
-function contextBlock(input: ArticleGenerationInput, recipe: Recipe): string {
+const contextBlock = (input: ArticleGenerationInput, recipe: Recipe): string => {
   const { article } = input;
   return `
 <page>
@@ -36,11 +36,11 @@ ${recipeBlock(recipe)}
 </page>
 
 Why they saved it: ${input.captureReason ?? "not said"}`;
-}
+};
 
 // A recipe's note is one paragraph of ours before the page's own recipe, which code copies
 // across: the model never restates a step, an amount or a time (docs/features/recipe-notes.md).
-export function composeRecipePrompt(input: ArticleGenerationInput, recipe: Recipe): ComposedPrompt {
+export const composeRecipePrompt = (input: ArticleGenerationInput, recipe: Recipe): ComposedPrompt => {
   const sections = [recipeCoreSection, articleFilingSection, recipePageFollowUpQuestionsSection];
   return {
     systemPrompt:
@@ -51,4 +51,4 @@ export function composeRecipePrompt(input: ArticleGenerationInput, recipe: Recip
     userMessage: contextBlock(input, recipe),
     schema: z.object(Object.assign({}, ...sections.map((section) => section.schemaShape(input)))),
   };
-}
+};

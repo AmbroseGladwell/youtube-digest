@@ -17,13 +17,20 @@ export interface OverviewThumbnailProps {
   carriesIntoHead?: boolean | undefined;
 }
 
+const pictureClass = (kind: string, to: string | undefined, className: string | undefined) => {
+  if (kind === "podcast") {
+    return styles.art;
+  }
+  return to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`;
+};
+
 // Renders nothing at all when there is no usable image, rather than leaving an empty
 // frame behind — CLAUDE.md's degrade-visibly rule. IndexedDB reads aren't re-validated
 // against the schema (docs/architecture/v1-architecture-decisions.md's swappable-store
 // model reads whatever was saved), so an overview saved before thumbnailUrl existed has
 // no such key at all, i.e. undefined, not null. Boolean(...) treats every falsy case
 // (undefined, null, "") the same, rather than only the one the current schema can produce.
-export function OverviewThumbnail({ video, className, to, state, onOpen, carriesIntoHead = false }: OverviewThumbnailProps) {
+export const OverviewThumbnail = ({ video, className, to, state, onOpen, carriesIntoHead = false }: OverviewThumbnailProps) => {
   const [failed, setFailed] = useState(false);
   const morph = useOverviewImageMorph<HTMLAnchorElement>(to ?? "", carriesIntoHead);
 
@@ -58,7 +65,7 @@ export function OverviewThumbnail({ video, className, to, state, onOpen, carries
 
   const picture = (
     <img
-      className={kind === "podcast" ? styles.art : to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`}
+      className={pictureClass(kind, to, className)}
       src={imageUrl!}
       alt=""
       loading="lazy"
@@ -96,4 +103,4 @@ export function OverviewThumbnail({ video, className, to, state, onOpen, carries
       {image}
     </PageLink>
   );
-}
+};

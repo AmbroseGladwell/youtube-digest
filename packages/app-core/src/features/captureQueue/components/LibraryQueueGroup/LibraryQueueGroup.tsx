@@ -15,7 +15,7 @@ const SHOWN_WAITING = 2;
 
 // Design 27i: pending videos together in a recessed group above the finished tiles, showing
 // what is being made and the next two. Folded, it lives in the strip instead (27i-2).
-export function LibraryQueueGroup() {
+export const LibraryQueueGroup = () => {
   const queue = useCaptureQueueController();
   const analytics = useAnalytics();
   const phone = useIsPhone();
@@ -24,7 +24,9 @@ export function LibraryQueueGroup() {
   const paced = pacedSummary(queue);
 
   // Folded only while the strip is there to unfold it from.
-  if ((queue.folded && queue.strip !== null) || (waitingCount === 0 && queue.attention.length === 0)) return null;
+  if ((queue.folded && queue.strip !== null) || (waitingCount === 0 && queue.attention.length === 0)) {
+    return null;
+  }
 
   return (
     <section className={styles.root} id={GROUP_ID} aria-labelledby={`${GROUP_ID}-heading`} data-testid={libraryQueueGroupTestIds.root}>
@@ -115,4 +117,4 @@ export function LibraryQueueGroup() {
       )}
     </section>
   );
-}
+};

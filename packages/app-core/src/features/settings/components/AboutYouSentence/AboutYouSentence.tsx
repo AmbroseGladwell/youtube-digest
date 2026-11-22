@@ -14,9 +14,16 @@ export interface AboutYouSentenceProps {
   onOpen: (section: AboutYouSection) => void;
 }
 
+const sectionStateClass = (open: boolean, text: string): string | undefined => {
+  if (open) {
+    return styles.open;
+  }
+  return text === "" ? styles.empty : styles.filled;
+};
+
 // Design 141a: a whole sentence at every step. An empty section holds a phrase that reads
 // naturally, and a hidden status line repeats the sentence as it changes.
-export function AboutYouSentence({ aboutYou, size, openSection, settling, rising, sectionRef, onOpen }: AboutYouSentenceProps) {
+export const AboutYouSentence = ({ aboutYou, size, openSection, settling, rising, sectionRef, onOpen }: AboutYouSentenceProps) => {
   const said = aboutYouSentence(aboutYou);
   return (
     <>
@@ -24,7 +31,7 @@ export function AboutYouSentence({ aboutYou, size, openSection, settling, rising
         {ABOUT_YOU_SECTIONS.map((section) => {
           const copy = ABOUT_YOU_SECTION_COPY[section];
           const text = aboutYouSectionText(section, aboutYou[section]);
-          const state = openSection === section ? styles.open : text === "" ? styles.empty : styles.filled;
+          const state = sectionStateClass(openSection === section, text);
           return (
             <span key={section}>
               {copy.lead}
@@ -50,4 +57,4 @@ export function AboutYouSentence({ aboutYou, size, openSection, settling, rising
       </p>
     </>
   );
-}
+};

@@ -32,6 +32,20 @@ interface PendingRow {
 
 const asVector = (vector: number[]) => `[${vector.join(",")}]`;
 
+export interface SaveEmbeddedOptions {
+  model: string;
+  tokens: number;
+  claims: EmbeddedClaim[];
+  now: Date;
+}
+
+export interface RecordFailureOptions {
+  attempts: number;
+  notBefore: Date | null;
+  error: string;
+  now: Date;
+}
+
 // Embeddings are derived data kept apart from the record, never on the changes feed, and
 // keyed to the rev they were made from, so a regenerated overview is re-embedded rather
 // than kept stale (docs/features/search-by-meaning.md, "Storage").
@@ -78,10 +92,7 @@ export class ClaimEmbeddingsRepository {
     return rows.map((row) => ({ textHash: row.text_hash, vector: JSON.parse(row.embedding) as number[] }));
   }
 
-  async saveEmbedded(
-    pending: PendingOverview,
-    { model, tokens, claims, now }: { model: string; tokens: number; claims: EmbeddedClaim[]; now: Date },
-  ): Promise<void> {
+  async saveEmbedded(pending: PendingOverview, { model, tokens, claims, now }: SaveEmbeddedOptions): Promise<void> {
     await this.#sql.transaction(async (tx) => {
       await tx.query(
         `insert into overview_embeddings (account_id, overview_id, embedded_rev, model, tokens, attempted_rev, attempts, not_before, last_error, updated_at)
@@ -103,10 +114,7 @@ export class ClaimEmbeddingsRepository {
     });
   }
 
-  async recordFailure(
-    pending: PendingOverview,
-    { attempts, notBefore, error, now }: { attempts: number; notBefore: Date | null; error: string; now: Date },
-  ): Promise<void> {
+  async recordFailure(pending: PendingOverview, { attempts, notBefore, error, now }: RecordFailureOptions): Promise<void> {
     await this.#sql.query(
       `insert into overview_embeddings (account_id, overview_id, attempted_rev, attempts, not_before, last_error, updated_at)
        values ($1, $2, $3, $4, $5::timestamptz, $6, $7::timestamptz)

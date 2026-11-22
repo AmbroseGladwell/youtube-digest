@@ -11,11 +11,13 @@ const FoundRenders = z.object({ renders: z.array(NarrationRender) });
 const ListedSamples = z.object({ samples: z.array(z.unknown()) });
 
 const ignoringNotFound = (error: unknown) => {
-  if (isSyncRequestError(error) && error.code === "not_found") return;
+  if (isSyncRequestError(error) && error.code === "not_found") {
+    return;
+  }
   throw error;
 };
 
-export function createFetchNarrationApi(options: FetchNarrationApiOptions): NarrationApi {
+export const createFetchNarrationApi = (options: FetchNarrationApiOptions): NarrationApi => {
   const request = createApiRequester(options);
   const root = options.baseUrl.replace(/\/+$/, "");
   const status = (key: string) => answered(request("GET", `/audio/${key}`, NarrationRender));
@@ -41,4 +43,4 @@ export function createFetchNarrationApi(options: FetchNarrationApiOptions): Narr
       }),
     fileUrl: ({ fileUrl }) => `${root}${fileUrl}`,
   };
-}
+};

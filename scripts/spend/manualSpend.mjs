@@ -2,15 +2,19 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 export class ManualEntriesError extends Error {}
 
-export function parseManualEntries(json) {
-  if (json === undefined || json.trim() === "") return [];
+export const parseManualEntries = (json) => {
+  if (json === undefined || json.trim() === "") {
+    return [];
+  }
   let entries;
   try {
     entries = JSON.parse(json);
   } catch {
     throw new ManualEntriesError("SPEND_MANUAL_ENTRIES is not JSON");
   }
-  if (!Array.isArray(entries)) throw new ManualEntriesError("SPEND_MANUAL_ENTRIES is not a list");
+  if (!Array.isArray(entries)) {
+    throw new ManualEntriesError("SPEND_MANUAL_ENTRIES is not a list");
+  }
   return entries.map((entry, index) => {
     const { provider, environment, area, monthlyDollars, from, to = null, waived = null } = entry ?? {};
     const valid =
@@ -21,18 +25,19 @@ export function parseManualEntries(json) {
       DAY.test(from) &&
       (to === null || (typeof to === "string" && DAY.test(to))) &&
       (waived === null || (typeof waived === "string" && waived.length > 0));
-    if (!valid)
+    if (!valid) {
       throw new ManualEntriesError(`SPEND_MANUAL_ENTRIES entry ${index} needs provider, environment, area, monthlyDollars and from`);
+    }
     return { provider, environment, area, monthlyDollars, from, to, waived };
   });
-}
+};
 
-function daysInMonthOf(date) {
+const daysInMonthOf = (date) => {
   const [year, month] = date.split("-").map(Number);
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
-}
+};
 
-export function manualRowsFor(entries, date) {
+export const manualRowsFor = (entries, date) => {
   return entries
     .filter((entry) => entry.from <= date && (entry.to === null || date <= entry.to))
     .map(({ provider, environment, area, monthlyDollars, waived }) => ({
@@ -44,4 +49,4 @@ export function manualRowsFor(entries, date) {
       source: waived === null ? "manual" : "waived",
       ...(waived === null ? {} : { reason: waived }),
     }));
-}
+};

@@ -36,7 +36,7 @@ export interface FollowedPlaylistRowProps {
 // 95x–95z: its pace, the order it is made in and what waits on them, in ink, with both
 // beside Unfollow; a change says once, in the row, what it did. One that can't be checked has
 // neither to set.
-export function FollowedPlaylistRow({
+export const FollowedPlaylistRow = ({
   playlist,
   check,
   overviews,
@@ -48,7 +48,7 @@ export function FollowedPlaylistRow({
   onPaceChange,
   onOrderChange,
   onUnfollow,
-}: FollowedPlaylistRowProps) {
+}: FollowedPlaylistRowProps) => {
   const analytics = useAnalytics();
   const [confirming, setConfirming] = useState(false);
   const [said, setSaid] = useState<string | null>(null);
@@ -60,8 +60,11 @@ export function FollowedPlaylistRow({
   const titleId = `followed-${playlist.id}-unfollow`;
 
   useEffect(() => {
-    if (confirming) confirmTitle.current?.focus();
-    else if (returned) unfollowButton.current?.focus();
+    if (confirming) {
+      confirmTitle.current?.focus();
+    } else if (returned) {
+      unfollowButton.current?.focus();
+    }
   }, [confirming, returned]);
 
   if (confirming) {
@@ -209,4 +212,4 @@ export function FollowedPlaylistRow({
       </span>
     </li>
   );
-}
+};

@@ -8,19 +8,25 @@ const DAY_MS = 24 * HOUR_MS;
 
 const count = (value: number, one: string, many: string) => `${value.toLocaleString("en-GB")} ${value === 1 ? one : many}`;
 
-export function checkedAgo(checkedAt: string, now: Date): string {
+export const checkedAgo = (checkedAt: string, now: Date): string => {
   const elapsed = now.getTime() - new Date(checkedAt).getTime();
-  if (elapsed < MINUTE_MS) return "Checked just now";
+  if (elapsed < MINUTE_MS) {
+    return "Checked just now";
+  }
   const format = new Intl.RelativeTimeFormat("en", { numeric: "always" });
-  if (elapsed < HOUR_MS) return `Checked ${format.format(-Math.floor(elapsed / MINUTE_MS), "minute")}`;
-  if (elapsed < DAY_MS) return `Checked ${format.format(-Math.floor(elapsed / HOUR_MS), "hour")}`;
+  if (elapsed < HOUR_MS) {
+    return `Checked ${format.format(-Math.floor(elapsed / MINUTE_MS), "minute")}`;
+  }
+  if (elapsed < DAY_MS) {
+    return `Checked ${format.format(-Math.floor(elapsed / HOUR_MS), "hour")}`;
+  }
   return `Checked ${format.format(-Math.floor(elapsed / DAY_MS), "day")}`;
-}
+};
 
 // Design 27p: owner, public or unlisted, how many videos this device last saw in it, and how
 // many overviews it has given. The video count is this device's last check, so it is left
 // out where this device has never checked.
-export function followedPlaylistMeta(playlist: FollowedPlaylist, check: PlaylistCheck | null, overviews: number): string {
+export const followedPlaylistMeta = (playlist: FollowedPlaylist, check: PlaylistCheck | null, overviews: number): string => {
   return [
     playlist.owner,
     playlist.privacy === "unlisted" ? "Unlisted" : "Public",
@@ -29,23 +35,27 @@ export function followedPlaylistMeta(playlist: FollowedPlaylist, check: Playlist
   ]
     .filter((part): part is string => part !== null)
     .join(" · ");
-}
+};
 
 // Design 95x: a followed playlist's pace, the order it is made in, and what waits on both.
-export function followedPlaylistFacts(playlist: FollowedPlaylist, waiting: number): string {
+export const followedPlaylistFacts = (playlist: FollowedPlaylist, waiting: number): string => {
   return [
     PACE_LABEL[playlist.pace],
     orderInASentence(playlist.order),
     waiting === 0 ? "nothing waiting" : count(waiting, "waiting", "waiting"),
   ].join(" · ");
-}
+};
 
-export function unavailableLine(playlist: FollowedPlaylist): string | null {
-  if (playlist.unavailable === "private") return "Now private on YouTube, so we can’t check it for new videos.";
-  if (playlist.unavailable === "gone") return "Gone from YouTube, so we can’t check it for new videos.";
+export const unavailableLine = (playlist: FollowedPlaylist): string | null => {
+  if (playlist.unavailable === "private") {
+    return "Now private on YouTube, so we can’t check it for new videos.";
+  }
+  if (playlist.unavailable === "gone") {
+    return "Gone from YouTube, so we can’t check it for new videos.";
+  }
   return null;
-}
+};
 
-export function followingRowValue(following: number): string {
+export const followingRowValue = (following: number): string => {
   return following === 0 ? "None" : `Following ${following.toLocaleString("en-GB")}`;
-}
+};

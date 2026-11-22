@@ -8,12 +8,12 @@ export const MEANING_RESULTS = 5;
 
 // After the word matches, the closest few that no word found, each still inside the other
 // filters (docs/features/search-by-meaning.md, "Word and meaning together").
-export function meaningEntries(
+export const meaningEntries = (
   entries: LibraryEntry[],
   filters: LibraryFilters,
   result: MeaningSearchResponse | undefined,
   shownIds: ReadonlySet<string>,
-): Array<{ kind: "overview" } & OverviewWithState> {
+): Array<{ kind: "overview" } & OverviewWithState> => {
   if (result === undefined || !result.available || filters.query.trim() === "") {
     return [];
   }
@@ -27,4 +27,4 @@ export function meaningEntries(
     .filter(({ overviewId }) => !shownIds.has(overviewId))
     .flatMap(({ overviewId }) => byId.get(overviewId) ?? [])
     .slice(0, MEANING_RESULTS);
-}
+};

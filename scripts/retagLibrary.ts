@@ -23,31 +23,40 @@ if (!baseUrl || !token) {
   process.exit(1);
 }
 
-async function pullLibrary(api: SyncApi): Promise<{ overviews: Overview[]; aliases: TagAliases }> {
+const pullLibrary = async (api: SyncApi): Promise<{ overviews: Overview[]; aliases: TagAliases }> => {
   const latest = new Map<string, RecordChange>();
   let since = 0;
   for (;;) {
     const page = await api.changes(since);
-    for (const change of page.changes) latest.set(`${change.kind}:${change.id}`, change);
+    for (const change of page.changes) {
+      latest.set(`${change.kind}:${change.id}`, change);
+    }
     since = page.next;
-    if (!page.more) break;
+    if (!page.more) {
+      break;
+    }
   }
 
   const overviews: Overview[] = [];
   let aliases: TagAliases = {};
   for (const change of latest.values()) {
-    if (change.deleted || change.body === undefined) continue;
+    if (change.deleted || change.body === undefined) {
+      continue;
+    }
     if (change.kind === "settings") {
       aliases = TagAliases.catch({}).parse(change.body.tagAliases);
     }
     if (change.kind === "overview") {
       const read = readStoredRecord(stampSchemaVersion(change.body, change.schemaVersion), Overview, OVERVIEW_MIGRATIONS);
-      if (read.status === "read") overviews.push(read.record);
-      else console.error(`skipped ${change.id}: ${read.detail}`);
+      if (read.status === "read") {
+        overviews.push(read.record);
+      } else {
+        console.error(`skipped ${change.id}: ${read.detail}`);
+      }
     }
   }
   return { overviews: overviews.sort((left, right) => left.savedAt.localeCompare(right.savedAt)), aliases };
-}
+};
 
 const api = createFetchSyncApi({ baseUrl, token });
 const client = generationClientFromEnv();
@@ -61,11 +70,15 @@ for (const overview of overviews) {
   retaggedSoFar.push(tags);
   const same = tags.join(",") === overview.tags.join(",");
   console.log(`${same ? "=" : "~"} ${overview.video.title}\n    ${overview.tags.join(", ")}\n  → ${tags.join(", ")}`);
-  if (!same) changed.set(overview.id, tags);
+  if (!same) {
+    changed.set(overview.id, tags);
+  }
 }
 
 console.log("\nTags after re-tagging, most used first:");
-for (const { tag, count } of tagUsage(retaggedSoFar)) console.log(`  ${tag}: ${count}`);
+for (const { tag, count } of tagUsage(retaggedSoFar)) {
+  console.log(`  ${tag}: ${count}`);
+}
 
 if (!write) {
   console.error(`\n${changed.size} overviews would change. Nothing written: run again with --write.`);

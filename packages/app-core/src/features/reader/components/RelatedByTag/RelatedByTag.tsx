@@ -22,7 +22,7 @@ export interface RelatedByTagProps {
 
 // The note's last section: its tags as the heading row, each opening the library filtered to
 // it, and under them the overviews sharing most of them ("OV-84 1 On the Note" 84a–84e).
-export function RelatedByTag({ tags, related, tagsLink, onTagFollowed, onOverviewOpened, onMoreShown }: RelatedByTagProps) {
+export const RelatedByTag = ({ tags, related, tagsLink, onTagFollowed, onOverviewOpened, onMoreShown }: RelatedByTagProps) => {
   const [allShown, setAllShown] = useState(false);
   const headingId = useId();
   const shown = allShown ? related : related.slice(0, SHOWN_AT_FIRST);
@@ -78,9 +78,15 @@ export function RelatedByTag({ tags, related, tagsLink, onTagFollowed, onOvervie
       )}
     </section>
   );
+};
+
+interface TagListProps {
+  tags: string[];
+  link: boolean;
+  onFollowed?: (() => void) | undefined;
 }
 
-function TagList({ tags, link, onFollowed }: { tags: string[]; link: boolean; onFollowed?: (() => void) | undefined }) {
+const TagList = ({ tags, link, onFollowed }: TagListProps) => {
   return (
     <ul className={styles.tags} aria-label="Tags">
       {tags.map((tag) => (
@@ -104,4 +110,4 @@ function TagList({ tags, link, onFollowed }: { tags: string[]; link: boolean; on
       ))}
     </ul>
   );
-}
+};

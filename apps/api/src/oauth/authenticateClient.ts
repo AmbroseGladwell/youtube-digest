@@ -12,7 +12,7 @@ interface PresentedCredentials {
   clientSecret: string | null;
 }
 
-function presented(authorization: string | undefined, body: Record<string, unknown>): PresentedCredentials {
+const presented = (authorization: string | undefined, body: Record<string, unknown>): PresentedCredentials => {
   const basic = authorization === undefined ? null : BASIC.exec(authorization)?.[1];
   if (basic !== null && basic !== undefined) {
     const decoded = Buffer.from(basic, "base64").toString("utf8");
@@ -31,17 +31,17 @@ function presented(authorization: string | undefined, body: Record<string, unkno
   }
   const text = (value: unknown) => (typeof value === "string" && value !== "" ? value : null);
   return { clientId: text(body.client_id), clientSecret: text(body.client_secret) };
-}
+};
 
 const sameHash = (secret: string, hash: string): boolean => timingSafeEqual(Buffer.from(hashToken(secret)), Buffer.from(hash));
 
 // A public client proves nothing here and PKCE does that job instead; a confidential one
 // must present the secret it was given, by either transport (docs/features/mcp-connector.md).
-export async function authenticateClient(
+export const authenticateClient = async (
   sql: SqlClient,
   authorization: string | undefined,
   body: Record<string, unknown>,
-): Promise<OAuthClient> {
+): Promise<OAuthClient> => {
   const { clientId, clientSecret } = presented(authorization, body);
   const client = clientId === null ? null : await findClient(sql, clientId);
   if (client === null) {
@@ -53,4 +53,4 @@ export async function authenticateClient(
     throw new OAuthError("invalid_client", "Client authentication failed");
   }
   return client;
-}
+};

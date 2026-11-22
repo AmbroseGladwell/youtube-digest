@@ -61,17 +61,27 @@ interface CookingModeInput {
 }
 
 const voiceOf = ({ status, source }: PlayerSnapshot, canNarrate: boolean, paused: boolean, muted: boolean): CookingVoice => {
-  if (!canNarrate || source === "pacer") return "textOnly";
-  if (muted) return "muted";
-  if (status === "failed" || status === "busy") return "stopped";
-  if (status === "preparing") return "loading";
-  if (status === "playing" || status === "buffering") return "reading";
+  if (!canNarrate || source === "pacer") {
+    return "textOnly";
+  }
+  if (muted) {
+    return "muted";
+  }
+  if (status === "failed" || status === "busy") {
+    return "stopped";
+  }
+  if (status === "preparing") {
+    return "loading";
+  }
+  if (status === "playing" || status === "buffering") {
+    return "reading";
+  }
   return paused ? "paused" : "waiting";
 };
 
 // Cooking a recipe step by step (OV-150, designs 150a–150au): one action on screen, read once,
 // and then the voice waits for the reader. docs/features/recipe-notes.md, "Cooking step by step".
-export function useCookingMode({ overviewId, title, steps, actions, recipeVoice, snapshot, analytics }: CookingModeInput): CookingMode {
+export const useCookingMode = ({ overviewId, title, steps, actions, recipeVoice, snapshot, analytics }: CookingModeInput): CookingMode => {
   const engine = usePlayer();
   const [open, setOpen] = useState(false);
   const [at, setAt] = useState(0);
@@ -112,8 +122,11 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
       setAt(target);
       setPaused(false);
       heard.current.add(target);
-      if (!mutedRef.current && engine.canNarrate() && engine.getSnapshot().source !== "pacer") recipeVoice?.readAction(target);
-      else recipeVoice?.holdAt(target);
+      if (!mutedRef.current && engine.canNarrate() && engine.getSnapshot().source !== "pacer") {
+        recipeVoice?.readAction(target);
+      } else {
+        recipeVoice?.holdAt(target);
+      }
     },
     [engine, last, recipeVoice],
   );
@@ -135,7 +148,9 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
     heard.current = new Set();
     const hints = readCookingHints();
     setHint(hints < COOKING_HINT_ENTRIES);
-    if (hints < COOKING_HINT_ENTRIES) writeCookingHints(hints + 1);
+    if (hints < COOKING_HINT_ENTRIES) {
+      writeCookingHints(hints + 1);
+    }
     setFinished(false);
     setMoves(0);
     setReachedStep(null);
@@ -150,7 +165,9 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
   const startRef = useRef(start);
   startRef.current = start;
   useEffect(() => {
-    if (request === null || request.recipe !== overviewId || actions.length === 0) return;
+    if (request === null || request.recipe !== overviewId || actions.length === 0) {
+      return;
+    }
     timersRef.current.takeCookRequest();
     startRef.current("timer", actions[request.action]?.text === request.actionText ? request.action : 0);
   }, [request, overviewId, actions]);
@@ -187,7 +204,9 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
   const group = action === undefined ? null : (steps[action.step]?.group ?? null);
   const mediaTitle = action === undefined ? "" : `Step ${action.step + 1} of ${steps.length}${group === null ? "" : ` · ${group}`}`;
   useEffect(() => {
-    if (!open || finished) return;
+    if (!open || finished) {
+      return;
+    }
     return overrideMediaSession({
       title: mediaTitle,
       artist: title,
@@ -207,7 +226,9 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
           timersRef.current.dismissAll();
           return;
         }
-        if (mediaRef.current.voice !== "reading") return;
+        if (mediaRef.current.voice !== "reading") {
+          return;
+        }
         engine.pause();
         setPaused(true);
       },
@@ -275,4 +296,4 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
       writeCookingHints(COOKING_HINT_ENTRIES);
     },
   };
-}
+};

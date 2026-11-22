@@ -58,17 +58,14 @@ const INTERACTIVE = "button, a, input, select, textarea, [contenteditable]";
 
 const placeOf = (action: RecipeAction) => `Step ${action.step + 1}${action.count === 1 ? "" : ` · ${action.index + 1} of ${action.count}`}`;
 
-function VoiceLine({
-  voice,
-  step,
-  firstScreen,
-  onTryAgain,
-}: {
+interface VoiceLineProps {
   voice: CookingVoice;
   step: number;
   firstScreen: boolean;
   onTryAgain: () => void;
-}) {
+}
+
+const VoiceLine = ({ voice, step, firstScreen, onTryAgain }: VoiceLineProps) => {
   if (voice === "reading") {
     return (
       <>
@@ -116,14 +113,16 @@ function VoiceLine({
       </>
     );
   }
-  if (voice === "paused") return <span>Paused</span>;
+  if (voice === "paused") {
+    return <span>Paused</span>;
+  }
   return (
     <>
       <StrokeIcon name="check" size={14} />
       <span>Waiting for you</span>
     </>
   );
-}
+};
 
 interface TimedTextProps {
   text: string;
@@ -135,14 +134,18 @@ interface TimedTextProps {
 }
 
 // Design 284a: each time in the action is underlined in orange, and tapping it does what its pill does.
-function TimedText({ text, offset, times, us, amounts, onTime }: TimedTextProps) {
+const TimedText = ({ text, offset, times, us, amounts, onTime }: TimedTextProps) => {
   const parts: ReactNode[] = [];
   let from = 0;
   times.forEach((time, index) => {
     const start = Math.max(time.start - offset, 0);
     const end = Math.min(time.end - offset, text.length);
-    if (end <= from || start >= text.length) return;
-    if (start > from) parts.push(<OvenText key={`text${from}`} text={text.slice(from, start)} us={us} amounts={amounts} />);
+    if (end <= from || start >= text.length) {
+      return;
+    }
+    if (start > from) {
+      parts.push(<OvenText key={`text${from}`} text={text.slice(from, start)} us={us} amounts={amounts} />);
+    }
     parts.push(
       <span
         key={`time${index}`}
@@ -156,9 +159,11 @@ function TimedText({ text, offset, times, us, amounts, onTime }: TimedTextProps)
     );
     from = end;
   });
-  if (from < text.length) parts.push(<OvenText key={`text${from}`} text={text.slice(from)} us={us} amounts={amounts} />);
+  if (from < text.length) {
+    parts.push(<OvenText key={`text${from}`} text={text.slice(from)} us={us} amounts={amounts} />);
+  }
   return <>{parts}</>;
-}
+};
 
 interface ActionTextProps {
   action: RecipeAction;
@@ -168,8 +173,10 @@ interface ActionTextProps {
   onTime: (index: number) => void;
 }
 
-function ActionText({ action, times, us, amounts, onTime }: ActionTextProps) {
-  if (action.condition === null) return <TimedText text={action.text} offset={0} times={times} us={us} amounts={amounts} onTime={onTime} />;
+const ActionText = ({ action, times, us, amounts, onTime }: ActionTextProps) => {
+  if (action.condition === null) {
+    return <TimedText text={action.text} offset={0} times={times} us={us} amounts={amounts} onTime={onTime} />;
+  }
   return (
     <>
       <b className={styles.condition} data-testid={cookingModeTestIds.condition}>
@@ -185,20 +192,33 @@ function ActionText({ action, times, us, amounts, onTime }: ActionTextProps) {
       />
     </>
   );
-}
+};
 
 const wakeLineFor = (awake: boolean, timing: boolean, web: boolean): string | null => {
-  if (!timing) return awake ? "Screen stays on while you cook" : null;
-  if (isAppleMobile()) return awake ? "Screen stays on. Keep it open to hear your timer" : "Keep this screen on to hear your timer";
-  if (web) return awake ? "Screen stays on. Keep this tab in front to hear your timer" : "Keep this tab in front to hear your timer";
+  if (!timing) {
+    return awake ? "Screen stays on while you cook" : null;
+  }
+  if (isAppleMobile()) {
+    return awake ? "Screen stays on. Keep it open to hear your timer" : "Keep this screen on to hear your timer";
+  }
+  if (web) {
+    return awake ? "Screen stays on. Keep this tab in front to hear your timer" : "Keep this tab in front to hear your timer";
+  }
   return awake ? "Screen stays on while you cook" : "Keep this screen on to hear your timer";
+};
+
+const arrivalClassOf = (from: "below" | "above" | null): string | undefined => {
+  if (from === "below") {
+    return styles.fromBelow;
+  }
+  return from === "above" ? styles.fromAbove : "";
 };
 
 // Designs 150c–150au: the action being cooked, large, with the next one under it, and Next the
 // biggest thing on the screen. The phone is the main case; the panel is taken over, and the wide
 // web is a full-screen takeover with each control's key on it, where the ingredients open as a
 // column beside the step (190a–190k) (docs/features/recipe-notes.md, "Cooking step by step").
-export function CookingMode({
+export const CookingMode = ({
   mode,
   title,
   from,
@@ -211,7 +231,7 @@ export function CookingMode({
   methodAmounts,
   videoId = null,
   seekVideo = null,
-}: CookingModeProps) {
+}: CookingModeProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const ingredientsButton = useRef<HTMLButtonElement | null>(null);
   const drawerId = useId();
@@ -239,13 +259,21 @@ export function CookingMode({
   const swipe = useActionSwipe(mode.next, () => mode.at > 0 && mode.back(), mode.open && !mode.finished);
   const column = useCookingColumnScale(web && ingredientsOpen);
   const [arrival, setArrival] = useState<{ at: number; from: "below" | "above" | null }>({ at: mode.at, from: null });
-  if (arrival.at !== mode.at) setArrival({ at: mode.at, from: mode.at > arrival.at ? "below" : "above" });
+  if (arrival.at !== mode.at) {
+    setArrival({ at: mode.at, from: mode.at > arrival.at ? "below" : "above" });
+  }
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (mode.open && !element.open) element.showModal();
-    if (!mode.open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (mode.open && !element.open) {
+      element.showModal();
+    }
+    if (!mode.open && element.open) {
+      element.close();
+    }
   }, [mode.open]);
 
   useEffect(() => {
@@ -264,12 +292,16 @@ export function CookingMode({
 
   const drawerWasOpen = useRef(false);
   useEffect(() => {
-    if (web && drawerWasOpen.current && !ingredientsOpen) ingredientsButton.current?.focus({ preventScroll: true });
+    if (web && drawerWasOpen.current && !ingredientsOpen) {
+      ingredientsButton.current?.focus({ preventScroll: true });
+    }
     drawerWasOpen.current = web && ingredientsOpen;
   }, [web, ingredientsOpen]);
 
   useEffect(() => {
-    if (!asking) setLeaving(false);
+    if (!asking) {
+      setLeaving(false);
+    }
   }, [asking]);
 
   const toggleIngredients = () => {
@@ -283,13 +315,27 @@ export function CookingMode({
   };
 
   const leaveNow = () => (mode.finished ? mode.close() : mode.done());
-  const leave = () => (asking ? setLeaving(true) : leaveNow());
-  const backToRecipe = () => (asking ? setLeaving(true) : mode.close());
+  const leave = () => {
+    if (asking) {
+      setLeaving(true);
+    } else {
+      leaveNow();
+    }
+  };
+  const backToRecipe = () => {
+    if (asking) {
+      setLeaving(true);
+    } else {
+      mode.close();
+    }
+  };
   const times = action === undefined ? [] : methodTimes(action.text);
   const shownTimer = timers.running.find((timer) => timer.id === timerShown) ?? null;
 
   const startTimer = (time: MethodTime, index: number, seconds: number) => {
-    if (action === undefined) return;
+    if (action === undefined) {
+      return;
+    }
     timers.start({
       name: time.name,
       step: action.step,
@@ -302,18 +348,27 @@ export function CookingMode({
 
   const onTime = (index: number) => {
     const time = times[index];
-    if (time === undefined) return;
+    if (time === undefined) {
+      return;
+    }
     const only = time.seconds.length === 1 ? time.seconds[0]! : null;
     const running = only === null ? undefined : timers.runningFrom({ recipe: mode.recipe, action: mode.at, time: index, seconds: only });
-    if (running !== undefined) setTimerShown(running.id);
-    else if (only !== null) startTimer(time, index, only);
-    else firstPill.current?.focus();
+    if (running !== undefined) {
+      setTimerShown(running.id);
+    } else if (only !== null) {
+      startTimer(time, index, only);
+    } else {
+      firstPill.current?.focus();
+    }
   };
 
   const timerKey = () => {
     const only = times.length === 1 && times[0]!.seconds.length === 1;
-    if (only) firstPill.current?.click();
-    else firstPill.current?.focus();
+    if (only) {
+      firstPill.current?.click();
+    } else {
+      firstPill.current?.focus();
+    }
   };
 
   const drawerHasTheKey = (event: KeyboardEvent<HTMLDialogElement>) => {
@@ -322,13 +377,26 @@ export function CookingMode({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
-    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || stepsOpen || watching || leaving || shownTimer !== null)
+    if (
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey ||
+      stepsOpen ||
+      watching ||
+      leaving ||
+      shownTimer !== null
+    ) {
       return;
+    }
     const key = event.key;
     if (key === "Escape") {
       event.preventDefault();
-      if (ingredientsOpen && ingredientsAsked) closeIngredients();
-      else leave();
+      if (ingredientsOpen && ingredientsAsked) {
+        closeIngredients();
+      } else {
+        leave();
+      }
       return;
     }
     if (key === "i" || key === "I") {
@@ -341,8 +409,12 @@ export function CookingMode({
       mode.toggleMute("key");
       return;
     }
-    if (mode.finished || (ingredientsOpen && !web) || drawerHasTheKey(event)) return;
-    if ((key === " " || key === "Enter") && (event.target as HTMLElement).closest("[data-cooking-own-keys] button") !== null) return;
+    if (mode.finished || (ingredientsOpen && !web) || drawerHasTheKey(event)) {
+      return;
+    }
+    if ((key === " " || key === "Enter") && (event.target as HTMLElement).closest("[data-cooking-own-keys] button") !== null) {
+      return;
+    }
     if ((key === "t" || key === "T") && times.length > 0) {
       event.preventDefault();
       timerKey();
@@ -353,7 +425,9 @@ export function CookingMode({
       mode.next();
     } else if (key === "ArrowLeft") {
       event.preventDefault();
-      if (mode.at > 0) mode.back();
+      if (mode.at > 0) {
+        mode.back();
+      }
     } else if ((key === "r" || key === "R") && voiced) {
       event.preventDefault();
       mode.again();
@@ -390,10 +464,16 @@ export function CookingMode({
       tabIndex={-1}
       onCancel={(event) => {
         event.preventDefault();
-        if (event.target !== dialog.current) return;
-        if (stepsOpen) setStepsOpen(false);
-        else if (ingredientsOpen && ingredientsAsked) closeIngredients();
-        else leave();
+        if (event.target !== dialog.current) {
+          return;
+        }
+        if (stepsOpen) {
+          setStepsOpen(false);
+        } else if (ingredientsOpen && ingredientsAsked) {
+          closeIngredients();
+        } else {
+          leave();
+        }
       }}
       onKeyDown={onKeyDown}
       data-testid={cookingModeTestIds.root}
@@ -514,7 +594,7 @@ export function CookingMode({
                 <div className={styles.stage}>
                   <div
                     key={mode.at}
-                    className={`${styles.main} ${arrival.from === "below" ? styles.fromBelow : arrival.from === "above" ? styles.fromAbove : ""} ${swipe.dragging ? styles.dragging : ""}`}
+                    className={`${styles.main} ${arrivalClassOf(arrival.from)} ${swipe.dragging ? styles.dragging : ""}`}
                     style={swipe.dragY === 0 ? undefined : { transform: `translateY(${swipe.dragY}px)` }}
                     {...swipe.handlers}
                     data-testid={cookingModeTestIds.swipeArea}
@@ -572,7 +652,13 @@ export function CookingMode({
                       type="button"
                       className={styles.watch}
                       aria-label={`Watch step ${action.step + 1} in the video, from ${formatTimestamp(moment.startMs)}`}
-                      onClick={() => (seekVideo === null ? setWatching(true) : seekVideo(moment.startMs))}
+                      onClick={() => {
+                        if (seekVideo === null) {
+                          setWatching(true);
+                        } else {
+                          seekVideo(moment.startMs);
+                        }
+                      }}
                       data-testid={cookingModeTestIds.watchStep}
                     >
                       <StrokeIcon name="play" size={13} />
@@ -682,21 +768,24 @@ export function CookingMode({
               onKeep={() => {
                 const kept = ourRunning.length + ourRinging.length;
                 setLeaving(false);
-                if (kept > 0) mode.timersKept(kept, ourRunning.length === 0);
+                if (kept > 0) {
+                  mode.timersKept(kept, ourRunning.length === 0);
+                }
                 leaveNow();
               }}
               onStop={() => {
                 setLeaving(false);
-                if (ourRunning.length > 0)
+                if (ourRunning.length > 0) {
                   timers.stop(
                     [...ourRunning, ...ourRinging].map((timer) => timer.id),
                     "left",
                   );
-                else
+                } else {
                   timers.stop(
                     ourRinging.map((timer) => timer.id),
                     "dismissed",
                   );
+                }
                 leaveNow();
               }}
             />
@@ -734,4 +823,4 @@ export function CookingMode({
       )}
     </dialog>
   );
-}
+};

@@ -18,7 +18,7 @@ export interface ChatCitationPillProps {
 // player can seek (the video beside the extension's panel, an episode's own audio) it plays
 // from there; on the web it offers the video at that time or the transcript, as a note's moment
 // does. Either way the note shows the key point that holds it.
-export function ChatCitationPill({ range, video, onFollowed, onOpenTranscriptAt }: ChatCitationPillProps) {
+export const ChatCitationPill = ({ range, video, onFollowed, onOpenTranscriptAt }: ChatCitationPillProps) => {
   const seek = useSeekPlayback(video.id);
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLSpanElement | null>(null);
@@ -34,13 +34,18 @@ export function ChatCitationPill({ range, video, onFollowed, onOpenTranscriptAt 
   useDismissOnOutside(open, close, root, menu);
 
   useEffect(() => {
-    if (open) menu.current?.querySelector<HTMLElement>("[data-citation-item]")?.focus();
+    if (open) {
+      menu.current?.querySelector<HTMLElement>("[data-citation-item]")?.focus();
+    }
   }, [open]);
 
   const follow = () => {
     onFollowed(range);
-    if (seek !== null) seek(range.startMs);
-    else setOpen(!open);
+    if (seek !== null) {
+      seek(range.startMs);
+    } else {
+      setOpen(!open);
+    }
   };
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -53,7 +58,9 @@ export function ChatCitationPill({ range, video, onFollowed, onOpenTranscriptAt 
       return;
     }
     const target = { ArrowDown: (current + 1) % items.length, ArrowUp: (current - 1 + items.length) % items.length }[event.key];
-    if (target === undefined) return;
+    if (target === undefined) {
+      return;
+    }
     event.preventDefault();
     items[target]?.focus();
   };
@@ -115,4 +122,4 @@ export function ChatCitationPill({ range, video, onFollowed, onOpenTranscriptAt 
       )}
     </span>
   );
-}
+};

@@ -21,7 +21,9 @@ const STANDS_ALONE = new Set(["retired", "mid-career", "between jobs", "new in t
 const HAS_ITS_OWN_START = /^(a|an|the|my|our) /i;
 
 const withArticle = (section: AboutYouSection, entry: string): string => {
-  if (section !== "who" || STANDS_ALONE.has(entry) || HAS_ITS_OWN_START.test(entry)) return entry;
+  if (section !== "who" || STANDS_ALONE.has(entry) || HAS_ITS_OWN_START.test(entry)) {
+    return entry;
+  }
   return `${/^[aeiou]/i.test(entry) ? "an" : "a"} ${entry}`;
 };
 
@@ -44,27 +46,34 @@ const CLAUSES: readonly { section: AboutYouSection; lead: string }[] = [
   { section: "focus", lead: "right now I'm focusing on" },
 ];
 
+const joinerOf = (index: number, count: number): string => {
+  if (index === 0) {
+    return "";
+  }
+  return index === count - 1 ? ", and " : ", ";
+};
+
 // Empty sections are left out, so what is read back and what is sent are always a whole
 // sentence: "I'm a dad, and right now I'm focusing on sleep."
-export function aboutYouSentenceParts(aboutYou: AboutYou): AboutYouSentencePart[] {
+export const aboutYouSentenceParts = (aboutYou: AboutYou): AboutYouSentencePart[] => {
   const clauses = CLAUSES.filter(({ section }) => aboutYou[section].length > 0);
   const parts = clauses.flatMap(({ section, lead }, index) => {
     const opening = index === 0 ? `${lead.charAt(0).toUpperCase()}${lead.slice(1)}` : lead;
-    const joiner = index === 0 ? "" : index === clauses.length - 1 ? ", and " : ", ";
+    const joiner = joinerOf(index, clauses.length);
     return [
       { text: `${joiner}${opening} `, filled: false },
       { text: aboutYouSectionText(section, aboutYou[section]), filled: true },
     ];
   });
   return parts.length === 0 ? [] : [...parts, { text: ".", filled: false }];
-}
+};
 
 export const aboutYouSentence = (aboutYou: AboutYou): string =>
   aboutYouSentenceParts(aboutYou)
     .map(({ text }) => text)
     .join("");
 
-export function firstAboutYouText(aboutYou: AboutYou): string | null {
+export const firstAboutYouText = (aboutYou: AboutYou): string | null => {
   const section = ABOUT_YOU_SECTIONS.find((candidate) => aboutYou[candidate].length > 0);
   return section === undefined ? null : aboutYouSectionText(section, aboutYou[section]);
-}
+};

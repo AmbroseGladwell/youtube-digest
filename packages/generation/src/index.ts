@@ -5,6 +5,8 @@ export * from "./PromptSection.js";
 export * from "./composePrompt.js";
 export * from "./assembleOverview.js";
 export * from "./generateOverview.js";
+export * from "./requestGeneratedOutput.js";
+export * from "./OverviewMeta.js";
 export * from "./ProviderAdapter.js";
 export * from "./providerJsonSchema.js";
 export * from "./adapterFor.js";

@@ -15,7 +15,7 @@ const SYNCING_LINE = "Overviews you make here will sync to your account, and be 
 
 // Design 10e: the panel's one moment of saying the code worked, and 47e's place in the
 // extension for saying what came into the account with it.
-export function SignedInWelcome({ firstName, move, onDone }: SignedInWelcomeProps) {
+export const SignedInWelcome = ({ firstName, move, onDone }: SignedInWelcomeProps) => {
   const copy = move === null ? null : libraryMoveCopy(move);
   return (
     <AuthScreen
@@ -36,4 +36,4 @@ export function SignedInWelcome({ firstName, move, onDone }: SignedInWelcomeProp
       </div>
     </AuthScreen>
   );
-}
+};

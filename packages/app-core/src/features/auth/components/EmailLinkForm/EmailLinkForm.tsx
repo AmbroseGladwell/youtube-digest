@@ -38,7 +38,7 @@ export interface EmailLinkFormProps {
 
 // Checked here before anything is sent (design 9i); what the server refuses is said in
 // the same place.
-export function EmailLinkForm({
+export const EmailLinkForm = ({
   intent,
   submitLabel,
   initialEmail = "",
@@ -52,7 +52,7 @@ export function EmailLinkForm({
   refused,
   onSubmit,
   onboarding = false,
-}: EmailLinkFormProps) {
+}: EmailLinkFormProps) => {
   const analytics = useAnalytics();
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
@@ -87,8 +87,15 @@ export function EmailLinkForm({
     });
   };
 
+  const messageFor = (field: "email" | "server") => {
+    if (problem?.field === field) {
+      return problem.message;
+    }
+    return field === "email" ? refused : null;
+  };
+
   const errorFor = (field: "email" | "server") => {
-    const message = problem?.field === field ? problem.message : field === "email" ? refused : null;
+    const message = messageFor(field);
     return message === null ? null : (
       <span className={styles.error} id={`${ids}-${field}-error`} data-testid={emailLinkFormTestIds.fieldError}>
         <StrokeIcon name="alertCircle" size={14} />
@@ -105,19 +112,27 @@ export function EmailLinkForm({
     </button>
   );
   const [noteLead, ...noteRest] = note === null ? [] : note.split(/(?<=\.) /);
-  const noteLine =
-    note === null ? null : onboarding ? (
-      <p className={styles.noteTicked} data-testid={emailLinkFormTestIds.savedOverviewsNote}>
-        <StrokeIcon name="check" size={15} />
-        <span>
-          <strong>{noteLead}</strong> {noteRest.join(" ")}
-        </span>
-      </p>
-    ) : (
+  const noteParagraph = () => {
+    if (note === null) {
+      return null;
+    }
+    if (onboarding) {
+      return (
+        <p className={styles.noteTicked} data-testid={emailLinkFormTestIds.savedOverviewsNote}>
+          <StrokeIcon name="check" size={15} />
+          <span>
+            <strong>{noteLead}</strong> {noteRest.join(" ")}
+          </span>
+        </p>
+      );
+    }
+    return (
       <p className={styles.note} data-testid={emailLinkFormTestIds.savedOverviewsNote}>
         {note}
       </p>
     );
+  };
+  const noteLine = noteParagraph();
   const switchLine =
     switchLink === undefined ? null : (
       <p className={styles.switch} data-testid={emailLinkFormTestIds.switchLine}>
@@ -239,4 +254,4 @@ export function EmailLinkForm({
       )}
     </form>
   );
-}
+};

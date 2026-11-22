@@ -45,11 +45,13 @@ const SPENT_QUOTAS = new Set(["ours", "own"]);
 
 // Why a key couldn't make the overview, when that is a reason to try the next one. Null is
 // a failure the reader has to see, such as a refused key (design 110f).
-export function fallbackCauseOf(error: unknown): FallbackCause | null {
+export const fallbackCauseOf = (error: unknown): FallbackCause | null => {
   if (isSyncRequestError(error)) {
     switch (error.code) {
       case "too_many_requests":
-        if (error.details?.quota === "our-key-daily") return "busy";
+        if (error.details?.quota === "our-key-daily") {
+          return "busy";
+        }
         return SPENT_QUOTAS.has(String(error.details?.quota)) ? "quota-spent" : null;
       case "generation_failed":
         return FallbackCause.safeParse(error.details?.fallback).data ?? null;
@@ -60,17 +62,17 @@ export function fallbackCauseOf(error: unknown): FallbackCause | null {
     }
   }
   return fallbackReasonOf(error);
-}
+};
 
 // The overview made on the first key that can, saying which one and why any before it were
 // passed over (docs/architecture/tiers.md, "Which key an overview uses"). Each attempt
 // counts on its own key and gives its slot back when it fails, so a fallback counts once,
 // on the key that made it.
-export async function makeOverviewOnKeys(
+export const makeOverviewOnKeys = async (
   { order, own, api, ourModel = null }: OverviewKeys,
   input: OverviewInput,
   meta: OverviewMeta,
-): Promise<Overview> {
+): Promise<Overview> => {
   let passedOver: MadeOn["fallback"] = null;
   for (const [index, key] of order.entries()) {
     meta.onAttempt?.(
@@ -90,27 +92,31 @@ export async function makeOverviewOnKeys(
     }
   }
   throw new Error("There is no key to make this overview with.");
-}
+};
 
-async function onOurKey(api: Pick<GenerationApi, "generate"> | null, input: OverviewInput, meta: OverviewMeta): Promise<Overview> {
-  if (api === null) throw new Error("An overview is made on us only with an account.");
+const onOurKey = async (api: Pick<GenerationApi, "generate"> | null, input: OverviewInput, meta: OverviewMeta): Promise<Overview> => {
+  if (api === null) {
+    throw new Error("An overview is made on us only with an account.");
+  }
   const { filedProjectIds, ...overview } = await api.generate({ overviewId: meta.id, input });
   meta.onProjectsFiled?.(filedProjectIds);
   return overview;
-}
+};
 
-async function onOwnKey(
+const onOwnKey = async (
   own: NonNullable<OverviewKeys["own"]>,
   api: GenerationApi | null,
   input: OverviewInput,
   meta: OverviewMeta,
-): Promise<Overview> {
+): Promise<Overview> => {
   // Only a spent quota stops the reader's own key. Offline, or with the server down, the
   // overview is made anyway and its push reserves when it goes (docs/features/sync-client.md).
   try {
     await api?.reserve(meta.id);
   } catch (error) {
-    if (fallbackCauseOf(error) === "quota-spent") throw error;
+    if (fallbackCauseOf(error) === "quota-spent") {
+      throw error;
+    }
   }
   try {
     return await generateOverviewOf(own.client, input, meta, meta.onProjectsFiled ? { projectsFiled: meta.onProjectsFiled } : {});
@@ -118,4 +124,4 @@ async function onOwnKey(
     await api?.release(meta.id).catch(() => undefined);
     throw error;
   }
-}
+};

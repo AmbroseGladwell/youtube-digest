@@ -2,6 +2,7 @@ import { Fragment, useRef, useState, type ReactNode } from "react";
 import {
   articlePlaceUrl,
   formatTimestamp,
+  holdsCodeBlock,
   type ArticlePlace,
   type ChatAnswerSections,
   type ChatCitation,
@@ -30,6 +31,16 @@ import { overviewCitationViews } from "../../util/overviewCitationView.js";
 import styles from "./ChatAnswer.module.scss";
 import { chatAnswerTestIds } from "./ChatAnswerTestIds.js";
 
+export interface ConversationSummary {
+  date: string;
+  firstQuestion: string;
+}
+
+export interface OverviewImage {
+  url: string | null;
+  wide: boolean;
+}
+
 export interface ChatAnswerProps {
   text: string;
   inSource: boolean;
@@ -45,7 +56,7 @@ export interface ChatAnswerProps {
   onOverviewPartFollowed: ChatOverviewCitationProps["onFollowed"];
   onOpenTranscriptAt: (positionMs: number) => void;
   // Another conversation about the overview an answer drew on, or null once it is deleted.
-  conversationOf: (chatId: string) => { date: string; firstQuestion: string } | null;
+  conversationOf: (chatId: string) => ConversationSummary | null;
   onConversationFollowed: (chatId: string, message: number) => void;
   // Another of the reader's overviews an answer drew on (OV-355): whether it is still in the library.
   holdsOverview: (overviewId: string) => boolean;
@@ -53,7 +64,7 @@ export interface ChatAnswerProps {
   // The answer in sections (OV-354, page 4): every scope's answers share this one shape.
   sections?: ChatAnswerSections | undefined;
   // A mini thumbnail for another overview's chip, when it's still in the library.
-  imageOf?: ((overviewId: string) => { url: string | null; wide: boolean }) | undefined;
+  imageOf?: ((overviewId: string) => OverviewImage) | undefined;
   onSourcesOpened?: ((count: number) => void) | undefined;
   // Copy, under each answer (design 324x), with the Sources menu beside it when there is one.
   actions?: ((sources: ReactNode) => ReactNode) | undefined;
@@ -92,7 +103,7 @@ const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
 // (319c). One the source doesn't cover says so in a label above it, its text as plain as any
 // other: an answer, not an error. One from the overview has no label: its pills and its wording
 // say so (319k). One that has just arrived fades in what streaming didn't show (OV-341).
-export function ChatAnswer({
+export const ChatAnswer = ({
   text,
   inSource,
   citations,
@@ -112,7 +123,7 @@ export function ChatAnswer({
   imageOf,
   onSourcesOpened,
   actions,
-}: ChatAnswerProps) {
+}: ChatAnswerProps) => {
   const stretches = video === null ? [] : stretchesOf(citations);
   const parts = overviewCitationViews(overview, citations);
   const others = otherOverviewsOf(citations);
@@ -196,13 +207,14 @@ export function ChatAnswer({
       )}
       {conversationsOf(citations).map(({ chatId, message }) => {
         const cited = conversationOf(chatId);
-        if (cited === null)
+        if (cited === null) {
           return (
             <p key={chatId} className={styles.deletedConversation} data-testid={chatAnswerTestIds.deletedConversation}>
               <StrokeIcon name="chat" size={14} />
               From a conversation you deleted
             </p>
           );
+        }
         return (
           <button
             key={chatId}
@@ -251,18 +263,29 @@ export function ChatAnswer({
       {actions?.(sourcesMenu)}
     </div>
   );
+};
+
+// A list item's text, inline, or as paragraphs and code blocks when it holds a fence (OV-372).
+const ChatItemText = ({ text }: { text: string }) => {
+  if (!holdsCodeBlock(text)) {
+    return <ChatMarkedText text={text} />;
+  }
+  return (
+    <div className={styles.itemBlocks} data-testid={chatAnswerTestIds.itemBlocks}>
+      <ChatAnswerText text={text} />
+    </div>
+  );
+};
+
+export interface ChatAnswerSectionsViewProps {
+  sections: Pick<ChatAnswerSections, "intro" | "introSources" | "sections"> & { takeaway?: string };
+  // The chips for what a section cites; none while it streams in an overview's chat.
+  chipsOf?: ((cited: readonly ChatCitation[]) => ChatChip[]) | undefined;
 }
 
 // OV-354, page 4: the intro, then each section as a heading, its paragraphs and lists and its
 // sources grouped by relation, then the takeaway. One that only needs an intro is the intro alone.
-export function ChatAnswerSectionsView({
-  sections,
-  chipsOf,
-}: {
-  sections: Pick<ChatAnswerSections, "intro" | "introSources" | "sections"> & { takeaway?: string };
-  // The chips for what a section cites; none while it streams in an overview's chat.
-  chipsOf?: ((cited: readonly ChatCitation[]) => ChatChip[]) | undefined;
-}) {
+export const ChatAnswerSectionsView = ({ sections, chipsOf }: ChatAnswerSectionsViewProps) => {
   const row = (cited: readonly ChatCitation[]) => {
     const chips = chipsOf?.(cited) ?? [];
     return <ChatChipRow chips={chips.map((each) => each.chip)} hiddenLabels={chips.slice(VISIBLE_CHIPS).map((each) => each.label)} />;
@@ -292,7 +315,7 @@ export function ChatAnswerSectionsView({
             <ol className={styles.list}>
               {section.numbered.map((item, at) => (
                 <li key={at}>
-                  <ChatMarkedText text={item.text} />
+                  <ChatItemText text={item.text} />
                   {chipsOf !== undefined && item.sources.length > 0 && (
                     <span className={styles.itemChips} data-testid={chatAnswerTestIds.itemSources}>
                       {row(item.sources)}
@@ -306,7 +329,7 @@ export function ChatAnswerSectionsView({
             <ul className={styles.list}>
               {section.bullets.map((item, at) => (
                 <li key={at}>
-                  <ChatMarkedText text={item.text} />
+                  <ChatItemText text={item.text} />
                   {chipsOf !== undefined && item.sources.length > 0 && (
                     <span className={styles.itemChips} data-testid={chatAnswerTestIds.itemSources}>
                       {row(item.sources)}
@@ -327,19 +350,17 @@ export function ChatAnswerSectionsView({
       )}
     </>
   );
+};
+
+export interface ChatSourcesMenuProps {
+  count: number;
+  onOpened?: ((count: number) => void) | undefined;
+  children: ReactNode;
 }
 
 // OV-354, page 2: "Sources N" beside Copy, a menu of everything the answer cites, its own
 // moments first. N is counted by code.
-export function ChatSourcesMenu({
-  count,
-  onOpened,
-  children,
-}: {
-  count: number;
-  onOpened?: ((count: number) => void) | undefined;
-  children: ReactNode;
-}) {
+export const ChatSourcesMenu = ({ count, onOpened, children }: ChatSourcesMenuProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
@@ -349,7 +370,9 @@ export function ChatSourcesMenu({
       className={styles.sourcesHost}
       ref={root}
       onKeyDown={(event) => {
-        if (event.key !== "Escape" || !open) return;
+        if (event.key !== "Escape" || !open) {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         setOpen(false);
@@ -360,7 +383,9 @@ export function ChatSourcesMenu({
         className={styles.sourcesButton}
         aria-expanded={open}
         onClick={() => {
-          if (!open) onOpened?.(count);
+          if (!open) {
+            onOpened?.(count);
+          }
           setOpen(!open);
         }}
         data-testid={chatAnswerTestIds.sources}
@@ -380,14 +405,21 @@ export function ChatSourcesMenu({
       )}
     </div>
   );
+};
+
+interface ShowOnPageLinkProps {
+  page: ChatPage;
+  place: ArticlePlace;
 }
 
 // Design 319 for OV-320: a plain link beside an article's key point or chapter. Beside the
 // article it moves the page; anywhere else it opens the page at that place in a new tab.
-function ShowOnPageLink({ page, place }: { page: ChatPage; place: ArticlePlace }) {
+const ShowOnPageLink = ({ page, place }: ShowOnPageLinkProps) => {
   if (page.onPage !== null) {
     const { onPage } = page;
-    if (onPage.statusOf(place) === "missing") return null;
+    if (onPage.statusOf(place) === "missing") {
+      return null;
+    }
     return (
       <button type="button" className={styles.onPage} onClick={() => onPage.show(place)} data-testid={chatAnswerTestIds.showOnPage}>
         Show on the page
@@ -406,4 +438,4 @@ function ShowOnPageLink({ page, place }: { page: ChatPage; place: ArticlePlace }
       <StrokeIcon name="openOut" size={13} />
     </a>
   );
-}
+};

@@ -48,11 +48,11 @@ export type Source = z.infer<typeof Source>;
 
 // A hash of the canonical address, so the id is short, safe in a path, and the same for every
 // reader of the page (docs/features/source-identity.md).
-export async function articleSourceId(url: string): Promise<SourceKey> {
+export const articleSourceId = async (url: string): Promise<SourceKey> => {
   const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(url));
   const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
   return hex.slice(0, 32) as SourceKey;
-}
+};
 
 export const webSource = (article: ExtractedArticle, id: SourceKey): WebSource => ({
   kind: "web",
@@ -78,16 +78,20 @@ const SHARER_PARAMETERS = /^(si|utm_.+|context|nd|_branch_match_id|_branch_refer
 // account that shared it, and a shared overview shows its sharer's link, so it and the campaign
 // parameters are dropped. A `spotify:` address becomes the web page it names
 // (docs/features/podcast-screens.md).
-export function keptSharedLink(link: string): string {
+export const keptSharedLink = (link: string): string => {
   const uri = /^spotify:(episode|show):([A-Za-z0-9]{22})$/.exec(link.trim());
-  if (uri !== null) return `https://open.spotify.com/${uri[1]}/${uri[2]}`;
+  if (uri !== null) {
+    return `https://open.spotify.com/${uri[1]}/${uri[2]}`;
+  }
   const url = new URL(link.trim());
   for (const name of [...url.searchParams.keys()]) {
-    if (SHARER_PARAMETERS.test(name)) url.searchParams.delete(name);
+    if (SHARER_PARAMETERS.test(name)) {
+      url.searchParams.delete(name);
+    }
   }
   url.hash = "";
   return url.toString();
-}
+};
 
 export const podcastSource = (episode: PodcastEpisode, id: SourceKey, sharedFrom: string): PodcastSource => ({
   kind: "podcast",

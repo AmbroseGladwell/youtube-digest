@@ -10,7 +10,7 @@ export interface ConsentNoteProps {
 
 // Which device a link should be opened on, before it is sent and after it has landed
 // (design 58e, 58f).
-export function ConsentNote({ icon, title, body }: ConsentNoteProps) {
+export const ConsentNote = ({ icon, title, body }: ConsentNoteProps) => {
   return (
     <div className={styles.root} data-testid={consentNoteTestIds.root}>
       <span className={styles.icon}>
@@ -24,4 +24,4 @@ export function ConsentNote({ icon, title, body }: ConsentNoteProps) {
       </div>
     </div>
   );
-}
+};

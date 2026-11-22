@@ -3,7 +3,7 @@ import type { SqlClient } from "../db/SqlClient.js";
 
 // A snapshot's hash is taken over its keys, so it moves with them, or every link would read as
 // edited since it was shared (docs/features/source-identity.md).
-export async function moveSharesToSource(sql: SqlClient): Promise<void> {
+export const moveSharesToSource = async (sql: SqlClient): Promise<void> => {
   const shares = await sql.query<{ token: string; snapshot: { note: unknown } }>(
     "select token, snapshot from shares where snapshot -> 'note' -> 'video' is not null",
   );
@@ -15,4 +15,4 @@ export async function moveSharesToSource(sql: SqlClient): Promise<void> {
       await shareContentHash(note),
     ]);
   }
-}
+};

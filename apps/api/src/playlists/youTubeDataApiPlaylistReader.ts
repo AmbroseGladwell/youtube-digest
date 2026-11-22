@@ -47,17 +47,19 @@ const query = (params: Record<string, string>) => new URLSearchParams(params).to
 
 // YouTube keeps a private or deleted video in the playlist with its title replaced, and
 // says which only through these two markers (docs/features/playlists.md).
-function availabilityOf(title: string, privacyStatus: string | undefined): PlaylistEntryAvailability {
-  if (privacyStatus === "private") return "private";
+const availabilityOf = (title: string, privacyStatus: string | undefined): PlaylistEntryAvailability => {
+  if (privacyStatus === "private") {
+    return "private";
+  }
   if (title === "Deleted video" || privacyStatus === undefined || privacyStatus === "privacyStatusUnspecified") {
     return "deleted";
   }
   return "available";
-}
+};
 
 // The Data API answers a private playlist and a missing one alike, as nothing. oEmbed does
 // not: it refuses a private one as unauthorised (docs/features/playlists.md).
-async function whyUnavailable(youTubeFetch: YouTubeFetch, playlistId: string): Promise<"private" | "gone"> {
+const whyUnavailable = async (youTubeFetch: YouTubeFetch, playlistId: string): Promise<"private" | "gone"> => {
   const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
   const response = await youTubeFetch({
     url: `https://www.youtube.com/oembed?${query({ format: "json", url: playlistUrl })}`,
@@ -65,9 +67,14 @@ async function whyUnavailable(youTubeFetch: YouTubeFetch, playlistId: string): P
     headers: {},
   });
   return response.status === 401 || response.status === 403 ? "private" : "gone";
+};
+
+export interface YouTubeDataApiPlaylistReaderOptions {
+  apiKey: string;
+  youTubeFetch: YouTubeFetch;
 }
 
-export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): PlaylistReader {
+export const youTubeDataApiPlaylistReader = ({ apiKey, youTubeFetch }: YouTubeDataApiPlaylistReaderOptions): PlaylistReader => {
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
 
   return {
@@ -94,7 +101,9 @@ export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey:
           },
           PlaylistItemsResponse,
         );
-        if (items === null) break;
+        if (items === null) {
+          break;
+        }
         for (const { snippet, status } of items.items) {
           const thumbnails = snippet.thumbnails ?? {};
           entries.push({
@@ -107,7 +116,9 @@ export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey:
           });
         }
         pageToken = items.nextPageToken;
-        if (pageToken === undefined) break;
+        if (pageToken === undefined) {
+          break;
+        }
       }
 
       log.info(apiLogLines.playlists.read({ units, entries: entries.length }));
@@ -121,4 +132,4 @@ export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey:
       return lookup;
     },
   };
-}
+};

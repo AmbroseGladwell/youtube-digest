@@ -15,7 +15,9 @@ const cite = (part: Extract<ChatCitation, { part: string }>["part"], index: numb
 });
 
 const pageUrl = (overview: Overview): string => {
-  if (overview.source.kind !== "web") throw new Error("not a web page");
+  if (overview.source.kind !== "web") {
+    throw new Error("not a web page");
+  }
   return overview.source.url;
 };
 

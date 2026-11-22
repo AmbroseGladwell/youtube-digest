@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 export const PROJECTS = ["overview-dev", "overview-prod", "overview-evals"];
 
-export function compareSecretProjects(secretsByProject) {
+export const compareSecretProjects = (secretsByProject) => {
   const projects = Object.keys(secretsByProject);
   const keys = [...new Set(projects.flatMap((project) => secretsByProject[project].map((secret) => secret.key)))].sort();
   return keys.map((key) => {
@@ -17,9 +17,9 @@ export function compareSecretProjects(secretsByProject) {
     const present = digests.filter((digest) => digest !== null).length;
     return { key, labels, shared: distinct.length < present };
   });
-}
+};
 
-export function formatComparison(projects, rows) {
+export const formatComparison = (projects, rows) => {
   const width = Math.max(...rows.map((row) => row.key.length), 3);
   const header = ["key".padEnd(width), ...projects].join("  ");
   const lines = rows.map((row) =>
@@ -28,11 +28,11 @@ export function formatComparison(projects, rows) {
       .trimEnd(),
   );
   return [header, ...lines].join("\n");
-}
+};
 
-function bwsJson(args) {
+const bwsJson = (args) => {
   return JSON.parse(execFileSync("bws", args, { encoding: "utf-8", stdio: ["ignore", "pipe", "inherit"] }));
-}
+};
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const visible = bwsJson(["project", "list"]);
@@ -47,5 +47,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   const rows = compareSecretProjects(secretsByProject);
   console.log(formatComparison(Object.keys(secretsByProject), rows));
-  if (rows.some((row) => row.shared)) process.exitCode = 1;
+  if (rows.some((row) => row.shared)) {
+    process.exitCode = 1;
+  }
 }

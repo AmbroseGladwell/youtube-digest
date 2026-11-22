@@ -13,19 +13,15 @@ import { personalisationSectionTestIds } from "./PersonalisationSectionTestIds.j
 export const PERSONALISATION_STANDFIRST =
   "Turns each overview's How to apply into steps that fit your life. Overviews you already have stay as they are.";
 
-function SettingSwitch({
-  testId,
-  label,
-  hint,
-  on,
-  onSwitch,
-}: {
+interface SettingSwitchProps {
   testId: string;
   label: string;
   hint: string;
   on: boolean;
   onSwitch: () => void;
-}) {
+}
+
+const SettingSwitch = ({ testId, label, hint, on, onSwitch }: SettingSwitchProps) => {
   const labelId = useId();
   const hintId = useId();
 
@@ -53,11 +49,11 @@ function SettingSwitch({
       </button>
     </div>
   );
-}
+};
 
 // What we know about you, the sections an overview can leave out, then filing into projects (design 141k;
 // docs/features/personalisation.md).
-export function PersonalisationSection() {
+export const PersonalisationSection = () => {
   const settings = useSettingsQuery().data;
   const sectionsEnabled = settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED;
   const fileIntoProjects = settings?.fileIntoProjects ?? DEFAULT_SETTINGS.fileIntoProjects;
@@ -133,4 +129,4 @@ export function PersonalisationSection() {
       </div>
     </div>
   );
-}
+};

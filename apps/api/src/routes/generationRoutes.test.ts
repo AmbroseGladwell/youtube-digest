@@ -15,10 +15,10 @@ import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 
 const OUR_KEY = "sk-test-ours";
 
-async function ourKeyApp(
+const ourKeyApp = async (
   openAi: FakeOpenAi,
   { dailyGenerations = 300, logger }: { dailyGenerations?: number; logger?: ReturnType<typeof recordingLogger>["logger"] } = {},
-) {
+) => {
   return createTestApp(
     {},
     {
@@ -26,7 +26,7 @@ async function ourKeyApp(
       ...(logger === undefined ? {} : { logger }),
     },
   );
-}
+};
 
 const generate = (account: TestAccount) =>
   account.inject({ method: "POST", url: "/api/generations", body: generationRequest(randomUUID()) });
@@ -134,7 +134,9 @@ test("regenerating counts again, because it costs the same again", async () => {
 test("the 6th on our key in a month on Free is refused with which quota and the reset date", async () => {
   const testApp = await ourKeyApp(makeFakeOpenAi());
   const account = await makeAccount(testApp);
-  for (let made = 0; made < overviewQuotas.free.ours; made += 1) await generate(account);
+  for (let made = 0; made < overviewQuotas.free.ours; made += 1) {
+    await generate(account);
+  }
 
   const sixth = await generate(account);
 
@@ -358,9 +360,9 @@ test("making an overview on our key needs an account, and a trial token makes no
   await testApp.close();
 });
 
-function sortedByDetail<Cost extends { detail: string }>(costs: Cost[]): Cost[] {
+const sortedByDetail = <Cost extends { detail: string }>(costs: Cost[]): Cost[] => {
   return [...costs].sort((a, b) => a.detail.localeCompare(b.detail));
-}
+};
 
 test("a server with no key of its own still issues trials, which only read", async () => {
   const testApp = await createTestApp();
@@ -528,12 +530,16 @@ test("a trial has a few topic suggestions a day, and an address a few more acros
   const testApp = await ourKeyApp(makeFakeOpenAi(suggestionAnswer));
   const first = await makeTrialDevice(testApp);
   const answered = [];
-  for (let n = 0; n < 6; n += 1) answered.push((await first.suggestTopics()).statusCode);
+  for (let n = 0; n < 6; n += 1) {
+    answered.push((await first.suggestTopics()).statusCode);
+  }
   assert.deepEqual(answered, [200, 200, 200, 200, 200, 429]);
 
   for (let n = 0; n < 3; n += 1) {
     const another = await makeTrialDevice(testApp);
-    for (let m = 0; m < 5; m += 1) assert.equal((await another.suggestTopics()).statusCode, 200);
+    for (let m = 0; m < 5; m += 1) {
+      assert.equal((await another.suggestTopics()).statusCode, 200);
+    }
   }
   const privateWindow = await makeTrialDevice(testApp);
   assert.equal((await privateWindow.suggestTopics()).statusCode, 429);

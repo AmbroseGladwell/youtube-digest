@@ -7,13 +7,15 @@ const isUnknownTrial = (error: unknown): boolean =>
 // Signed out, a call made on this device's trial: its token is asked for before the first such
 // call and kept, and asked for again when the server no longer knows it
 // (docs/architecture/tiers.md, "Counting").
-export async function withTrialToken<T>(
+export const withTrialToken = async <T>(
   options: Omit<ApiRequesterOptions, "token" | "trialToken">,
   call: (trialToken: string) => Promise<T>,
-): Promise<T> {
+): Promise<T> => {
   const tokenNow = async (): Promise<string> => {
     const held = currentSignedOutTrial().token;
-    if (held !== null) return held;
+    if (held !== null) {
+      return held;
+    }
     const { token } = await createFetchGenerationApi(options).startTrial();
     rememberTrialToken(token);
     return token;
@@ -21,8 +23,10 @@ export async function withTrialToken<T>(
   try {
     return await call(await tokenNow());
   } catch (error) {
-    if (!isUnknownTrial(error)) throw error;
+    if (!isUnknownTrial(error)) {
+      throw error;
+    }
     forgetTrialToken();
     return call(await tokenNow());
   }
-}
+};

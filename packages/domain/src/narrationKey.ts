@@ -10,20 +10,20 @@ export const NARRATION_KEY_PATTERN = /^[0-9a-f]{64}$/;
 // What the key is a hash of. The server hashes it with node:crypto; a client that wants to
 // ask whether narration exists without queueing any hashes the same text with WebCrypto
 // (docs/features/tts-pre-rendered-speech.md, "The API side").
-export function narrationKeySource(
+export const narrationKeySource = (
   lines: readonly string[],
   voice: NarrationVoice | string,
   renderVersion: number = NARRATION_RENDER_VERSION,
-): string {
+): string => {
   return JSON.stringify([renderVersion, voice, lines]);
-}
+};
 
-export async function narrationKey(
+export const narrationKey = async (
   lines: readonly string[],
   voice: NarrationVoice | string,
   renderVersion: number = NARRATION_RENDER_VERSION,
-): Promise<string> {
+): Promise<string> => {
   const bytes = new TextEncoder().encode(narrationKeySource(lines, voice, renderVersion));
   const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
+};

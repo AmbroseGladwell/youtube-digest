@@ -13,6 +13,7 @@ import {
   overviewNoteLines,
   recipeActions,
   type SharePayload,
+  type Source,
   openPodcastLabel,
   sourceName,
   sourceUrl,
@@ -87,7 +88,7 @@ export interface SharedOverviewPageProps {
 
 // Design 30e–30k: the reader's own layout, with none of the owner's controls, over a copy
 // that arrived in the document (docs/features/sharing.md).
-export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
+export const SharedOverviewPage = ({ payload }: SharedOverviewPageProps) => {
   if (payload.state !== "shared") {
     return (
       <div className={styles.page}>
@@ -103,24 +104,54 @@ export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
       </CookingTimersRuntime>
     </SharedPlayerRuntime>
   );
+};
+
+interface SaveAction {
+  label: string;
+  onChoose: () => void;
 }
 
-function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "shared" }> }) {
+const tabsShownFor = (recipePage: boolean, articleChapterCount: number | null, unchapteredRecipeVideo: boolean): readonly ReaderTab[] => {
+  if (recipePage) {
+    return ["Overview"];
+  }
+  if (articleChapterCount === null) {
+    return unchapteredRecipeVideo ? UNCHAPTERED_RECIPE_VIDEO_TABS : READER_TABS;
+  }
+  return articleChapterCount > 1 ? ARTICLE_TABS : ["Overview"];
+};
+
+const channelLine = (source: Source, recipeVideo: boolean, recipePage: boolean): string => {
+  if (source.kind === "youtube") {
+    return recipeVideo ? `An overview of a recipe video from ${sourceName(source)}` : sourceName(source);
+  }
+  if (source.kind === "podcast") {
+    return `An overview of an episode of ${source.showName}`;
+  }
+  return `An overview of ${recipePage ? "a recipe" : "an article"} from ${sourceName(source)}`;
+};
+
+const sourceLinkLabel = (source: Source, recipeVideo: boolean, recipePage: boolean): string => {
+  if (source.kind === "youtube") {
+    return recipeVideo ? "Open the video on YouTube" : "Watch on YouTube";
+  }
+  if (source.kind === "podcast") {
+    return openPodcastLabel(source.sharedFrom);
+  }
+  return `${recipePage ? "Open the recipe" : "Read the article"} on ${sourceName(source)}`;
+};
+
+const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "shared" }> }) => {
   const { note, transcript } = payload.snapshot;
   const video = useMemo(() => timedSource(note.source), [note.source]);
   const webArticle = note.source.kind === "web" && note.article != null ? { source: note.source, article: note.article } : null;
   const recipePage = note.source.kind === "web" && note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
   const recipeNote = note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
-  const tabsShown =
-    recipePage !== null
-      ? ["Overview" as const]
-      : webArticle === null
-        ? recipeNote !== null && !note?.chapters?.length
-          ? UNCHAPTERED_RECIPE_VIDEO_TABS
-          : READER_TABS
-        : webArticle.article.chapters.length > 1
-          ? ARTICLE_TABS
-          : ["Overview" as const];
+  const tabsShown = tabsShownFor(
+    recipePage !== null,
+    webArticle?.article.chapters.length ?? null,
+    recipeNote !== null && !note?.chapters?.length,
+  );
   // Adjusted on the visitor's device, never in the copy, as on the reader's own page (OV-244).
   const [recipeScale, setRecipeScale] = useState<RecipeScale | null>(null);
   const [recipeUnits, setRecipeUnits] = useState<RecipeUnits>(readRecipeUnits);
@@ -172,7 +203,11 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   useEffect(() => {
     const own = adjusted && signedIn;
     player.setVoice(own ? accountVoice : (narration?.voice ?? DEFAULT_NARRATION_VOICE));
-    player.setApi(!adjusted ? sharedApi : own ? accountApi : null);
+    if (adjusted) {
+      player.setApi(own ? accountApi : null);
+    } else {
+      player.setApi(sharedApi);
+    }
   }, [player, adjusted, signedIn, sharedApi, accountApi, accountVoice, narration]);
   const navigate = useNavigate();
   const { overviewStore } = useStores();
@@ -193,23 +228,28 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     startOnboardingFromShare(payload.token, payload.snapshot);
     void navigate(Routes.onboarding());
   };
-  const saveAction = !signedIn
-    ? { label: "Save to my overviews", onChoose: createAccount }
-    : held.data != null
-      ? {
-          label: "Open in my overviews",
-          onChoose: () => {
-            analytics.sharedPage.actions.openChosen();
-            void navigate(Routes.overview(note.id));
-          },
-        }
-      : {
-          label: saving ? "Saving…" : "Save to my overviews",
-          onChoose: () => {
-            analytics.sharedPage.actions.saveChosen();
-            void saveIntoAccount();
-          },
-        };
+  const saveActionNow = (): SaveAction => {
+    if (!signedIn) {
+      return { label: "Save to my overviews", onChoose: createAccount };
+    }
+    if (held.data != null) {
+      return {
+        label: "Open in my overviews",
+        onChoose: () => {
+          analytics.sharedPage.actions.openChosen();
+          void navigate(Routes.overview(note.id));
+        },
+      };
+    }
+    return {
+      label: saving ? "Saving…" : "Save to my overviews",
+      onChoose: () => {
+        analytics.sharedPage.actions.saveChosen();
+        void saveIntoAccount();
+      },
+    };
+  };
+  const saveAction = saveActionNow();
   // Owner's option C (OV-288): a visitor's timers stay while they stay on this page, and going
   // into the app warns first, since they don't come along (designs 288ac–288af).
   const willStop = useTimersWillStop();
@@ -221,7 +261,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   );
   const { ask } = willStop;
   useEffect(() => {
-    if (blocker.state !== "blocked") return;
+    if (blocker.state !== "blocked") {
+      return;
+    }
     ask(
       {
         sentence: "Going on opens The Overview, and timers on this shared page don’t come with you.",
@@ -362,13 +404,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               )}
               <div className={styles.chips} ref={chips}>
                 <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
-                  {note.source.kind === "youtube"
-                    ? recipeNote === null
-                      ? sourceName(note.source)
-                      : `An overview of a recipe video from ${sourceName(note.source)}`
-                    : note.source.kind === "podcast"
-                      ? `An overview of an episode of ${note.source.showName}`
-                      : `An overview of ${recipePage === null ? "an article" : "a recipe"} from ${sourceName(note.source)}`}
+                  {channelLine(note.source, recipeNote !== null, recipePage !== null)}
                 </span>
                 {note.verdict !== null && (
                   <span className={styles.chip} data-testid={sharedOverviewPageTestIds.noveltyChip}>
@@ -410,13 +446,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               onClick={() => analytics.sharedPage.actions.watchOnYouTubeChosen()}
               data-testid={sharedOverviewPageTestIds.watchButton}
             >
-              {note.source.kind === "youtube"
-                ? recipeNote === null
-                  ? "Watch on YouTube"
-                  : "Open the video on YouTube"
-                : note.source.kind === "podcast"
-                  ? openPodcastLabel(note.source.sharedFrom)
-                  : `${recipePage === null ? "Read the article" : "Open the recipe"} on ${sourceName(note.source)}`}
+              {sourceLinkLabel(note.source, recipeNote !== null, recipePage !== null)}
               <StrokeIcon name="openOut" size={16} />
             </a>
           </div>
@@ -615,7 +645,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           if (action === "readAlong" || action === "readAlongInstead" || action === "readAlongMeanwhile") {
             player.readAlong();
           }
-          if (action === "tryAgain") notePlayer.play("playerBar");
+          if (action === "tryAgain") {
+            notePlayer.play("playerBar");
+          }
         }}
         onReRecord={() => undefined}
       />
@@ -623,4 +655,4 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       {willStop.dialog}
     </div>,
   );
-}
+};

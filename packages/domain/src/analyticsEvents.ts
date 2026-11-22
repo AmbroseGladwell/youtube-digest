@@ -60,11 +60,10 @@ const CodeRefusal = z.enum(["wrong", "expired", "limited"]);
 const EmailChangeRefusal = z.enum(["sameAddress", "wrong", "expired", "taken", "limited"]);
 const DeleteAccountRefusal = z.enum(["notVerified", "limited", "failed"]);
 
-function event(description: string): AnalyticsEventDefinition<{}>;
-function event<P extends AnalyticsProps>(description: string, props: P): AnalyticsEventDefinition<P>;
-function event(description: string, props: AnalyticsProps = {}): AnalyticsEventDefinition {
-  return { description, props };
-}
+const event = <P extends AnalyticsProps = {}>(description: string, props?: P): AnalyticsEventDefinition<NoInfer<P>> => ({
+  description,
+  props: props ?? ({} as P),
+});
 
 type ScreenEvents = Record<string, Record<string, AnalyticsEventDefinition>>;
 

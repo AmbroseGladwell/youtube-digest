@@ -29,7 +29,7 @@ export const winRate = (tally: Tally): number | null => {
   return total === 0 ? null : (tally.win + tally.tie / 2) / total;
 };
 
-export function summariseJudging(judgments: readonly JudgeRecord[], picks: readonly BlindPick[]): CandidateJudging[] {
+export const summariseJudging = (judgments: readonly JudgeRecord[], picks: readonly BlindPick[]): CandidateJudging[] => {
   const candidates = [...new Set([...judgments.map((record) => record.candidate), ...picks.map((pick) => pick.candidate)])].sort();
   const overallByPair = new Map<string, CandidateResult>(
     judgments
@@ -43,14 +43,18 @@ export function summariseJudging(judgments: readonly JudgeRecord[], picks: reado
     const byDimension = Object.fromEntries(
       [...JUDGE_DIMENSIONS, "overall" as const].map((dimension) => {
         const tally = emptyTally();
-        for (const record of judged) tally[record.results![dimension]] += 1;
+        for (const record of judged) {
+          tally[record.results![dimension]] += 1;
+        }
         return [dimension, tally];
       }),
     ) as CandidateJudging["byDimension"];
 
     const myPicks = picks.filter((pick) => pick.candidate === candidate);
     const pickTally = emptyTally();
-    for (const pick of myPicks) pickTally[pick.result] += 1;
+    for (const pick of myPicks) {
+      pickTally[pick.result] += 1;
+    }
     const compared = myPicks.filter((pick) => overallByPair.has(pairKey(pick.videoId, pick.candidate)));
 
     return {
@@ -68,4 +72,4 @@ export function summariseJudging(judgments: readonly JudgeRecord[], picks: reado
       },
     };
   });
-}
+};

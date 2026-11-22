@@ -28,7 +28,11 @@ const widestThumbnail = (response: PlayerResponse): string | null => {
   return widest?.url || null;
 };
 
-export function mapPlayerResponseToVideoSource(response: PlayerResponse, url: string, metadata?: PlayerResponse | undefined): VideoSource {
+export const mapPlayerResponseToVideoSource = (
+  response: PlayerResponse,
+  url: string,
+  metadata?: PlayerResponse | undefined,
+): VideoSource => {
   const details = response.videoDetails;
   if (!details?.videoId) {
     throw innerTubeError("the player response carried no video id", TranscriptFetchFailure.MALFORMED_RESPONSE);
@@ -47,4 +51,4 @@ export function mapPlayerResponseToVideoSource(response: PlayerResponse, url: st
     publishedAt: publishedAt(microformat?.publishDate ?? microformat?.uploadDate),
     thumbnailUrl: widestThumbnail(response),
   });
-}
+};

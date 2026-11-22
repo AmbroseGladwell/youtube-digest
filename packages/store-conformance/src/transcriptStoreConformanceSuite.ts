@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { VideoId, type TranscriptStore } from "@overview/domain";
 import { makeStoredTranscript } from "./makeStoredTranscript.js";
 
-export function defineTranscriptStoreConformanceSuite(label: string, createStore: () => TranscriptStore | Promise<TranscriptStore>): void {
+export const defineTranscriptStoreConformanceSuite = (
+  label: string,
+  createStore: () => TranscriptStore | Promise<TranscriptStore>,
+): void => {
   const behaviour = (description: string) => `${label} TranscriptStore: ${description}`;
 
   test(behaviour("saveTranscript then getTranscript round-trips the segments and their timings"), async () => {
@@ -76,4 +79,4 @@ export function defineTranscriptStoreConformanceSuite(label: string, createStore
     const store = await createStore();
     await assert.doesNotReject(() => store.deleteTranscript(VideoId.parse("never-fetched")));
   });
-}
+};

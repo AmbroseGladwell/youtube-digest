@@ -44,17 +44,39 @@ const BRACKETED = /\s*\([^)]*\)/g;
 const parseDigits = (text: string): number => {
   const trimmed = text.trim();
   const vulgarTail = trimmed.match(new RegExp(`^(\\d+(?:\\.\\d+)?)?\\s*([${VULGAR_CLASS}])$`));
-  if (vulgarTail) return Number(vulgarTail[1] ?? 0) + VULGAR[vulgarTail[2]!]!;
+  if (vulgarTail) {
+    return Number(vulgarTail[1] ?? 0) + VULGAR[vulgarTail[2]!]!;
+  }
   const mixed = trimmed.match(/^(\d+)(?:\s+|-)(\d+)\/(\d+)$/);
-  if (mixed) return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+  if (mixed) {
+    return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+  }
   const fraction = trimmed.match(/^(\d+)\/(\d+)$/);
-  if (fraction) return Number(fraction[1]) / Number(fraction[2]);
+  if (fraction) {
+    return Number(fraction[1]) / Number(fraction[2]);
+  }
   return Number(trimmed);
+};
+
+const wholeStated = (
+  matched: string,
+  tens: string | undefined,
+  tensUnit: string | undefined,
+  unit: string | undefined,
+  dozenArticle: string | undefined,
+): number => {
+  if (tens !== undefined) {
+    return TENS_WORDS[tens.toLowerCase()]! + (tensUnit === undefined ? 0 : UNITS_WORDS[tensUnit.toLowerCase()]!);
+  }
+  if (unit !== undefined) {
+    return UNITS_WORDS[unit.toLowerCase()]!;
+  }
+  return matched.toLowerCase().includes("dozen") || dozenArticle !== undefined ? 12 : 100;
 };
 
 // Every number a text states, in digits or in words, so "two and a half cups" and "2½ cups" state
 // the same amount. Read in code, never by a model (docs/prototype/constraints.md).
-export function numbersStated(text: string): number[] {
+export const numbersStated = (text: string): number[] => {
   const found: number[] = [];
   for (const match of text.matchAll(DIGITS)) {
     const value = parseDigits(match[0].replace(/\s+and\s+a\s+half$/i, ""));
@@ -66,19 +88,15 @@ export function numbersStated(text: string): number[] {
       found.push(FRACTION_WORDS[lone.toLowerCase()]!);
       continue;
     }
-    const whole =
-      tens !== undefined
-        ? TENS_WORDS[tens.toLowerCase()]! + (tensUnit === undefined ? 0 : UNITS_WORDS[tensUnit.toLowerCase()]!)
-        : unit !== undefined
-          ? UNITS_WORDS[unit.toLowerCase()]!
-          : match[0].toLowerCase().includes("dozen") || dozenArticle !== undefined
-            ? 12
-            : 100;
-    if (fraction !== undefined) found.push(whole * FRACTION_WORDS[fraction.toLowerCase()]!);
-    else found.push(andAHalf === undefined ? whole : whole + 0.5);
+    const whole = wholeStated(match[0], tens, tensUnit, unit, dozenArticle);
+    if (fraction !== undefined) {
+      found.push(whole * FRACTION_WORDS[fraction.toLowerCase()]!);
+    } else {
+      found.push(andAHalf === undefined ? whole : whole + 0.5);
+    }
   }
   return found;
-}
+};
 
 const sameNumber = (a: number, b: number) => Math.abs(a - b) < 1e-6;
 
@@ -93,17 +111,26 @@ export const statedNumbersIn = (sources: readonly string[]): StatedNumbers => {
 
 const unstatedIn = (text: string, stated: StatedNumbers): number => numbersStated(text).filter((value) => !stated.has(value)).length;
 
+export interface StatedAmounts {
+  ingredients: string[];
+  amountsDropped: number;
+}
+
 // A line whose amount nobody stated keeps its name and loses the amount: "1 tsp salt" becomes
 // "salt" (docs/features/recipe-notes.md, "Recipe videos").
-export function withStatedAmounts(lines: readonly string[], stated: StatedNumbers): { ingredients: string[]; amountsDropped: number } {
+export const withStatedAmounts = (lines: readonly string[], stated: StatedNumbers): StatedAmounts => {
   let amountsDropped = 0;
   const ingredients = lines.flatMap((line) => {
-    if (unstatedIn(line, stated) === 0) return [line];
+    if (unstatedIn(line, stated) === 0) {
+      return [line];
+    }
     amountsDropped += 1;
     let kept = line.replace(BRACKETED, (bracket) => (unstatedIn(bracket, stated) > 0 ? "" : bracket));
     for (let tries = 0; tries < 2; tries += 1) {
       const leading = LEADING_AMOUNT.exec(kept)?.[0] ?? "";
-      if (unstatedIn(leading, stated) === 0) break;
+      if (unstatedIn(leading, stated) === 0) {
+        break;
+      }
       kept = kept.slice(leading.length);
     }
     if (unstatedIn(kept, stated) > 0) {
@@ -116,4 +143,4 @@ export function withStatedAmounts(lines: readonly string[], stated: StatedNumber
     return kept === "" ? [] : [kept];
   });
   return { ingredients, amountsDropped };
-}
+};

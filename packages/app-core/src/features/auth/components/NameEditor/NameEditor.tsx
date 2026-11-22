@@ -15,7 +15,7 @@ export interface NameEditorProps {
 // Design 14b: opens with the field focused and the current name selected. Emptying it is
 // how a name is removed, and the hint says so before saving; there is no separate Remove
 // (docs/features/account-changes.md).
-export function NameEditor({ initialName, saving, refused, onSave, onCancel }: NameEditorProps) {
+export const NameEditor = ({ initialName, saving, refused, onSave, onCancel }: NameEditorProps) => {
   const ids = useId();
   const [name, setName] = useState(initialName ?? "");
   const [tooLong, setTooLong] = useState(false);
@@ -86,4 +86,4 @@ export function NameEditor({ initialName, saving, refused, onSave, onCancel }: N
       </div>
     </form>
   );
-}
+};

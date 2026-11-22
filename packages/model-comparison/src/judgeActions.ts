@@ -91,7 +91,7 @@ export const blindOrder = (videoId: string, readers: readonly ReaderActions[]): 
     return key(left.name).localeCompare(key(right.name));
   });
 
-export function actionJudgePrompt(fetched: FetchedTranscript, readers: readonly ReaderActions[]) {
+export const actionJudgePrompt = (fetched: FetchedTranscript, readers: readonly ReaderActions[]) => {
   const blocks = readers.map((reader, index) =>
     [
       `=== ${readerLabel(index)} ===`,
@@ -106,11 +106,14 @@ export function actionJudgePrompt(fetched: FetchedTranscript, readers: readonly 
     userMessage: `${transcriptForJudging(fetched)}\n\n${blocks.join("\n\n")}`,
     schema: ActionJudgeAnswer,
   };
-}
+};
 
 // Every action labelled exactly once and every empty reader answered, or the answer is a
 // failure: a count that skipped some actions would read as a rate over all of them.
-export function resolveAnswer(readers: readonly ReaderActions[], answer: ActionJudgeAnswer): Pick<ActionJudgeRecord, "actions" | "empty"> {
+export const resolveAnswer = (
+  readers: readonly ReaderActions[],
+  answer: ActionJudgeAnswer,
+): Pick<ActionJudgeRecord, "actions" | "empty"> => {
   const wanted = new Map<string, { reader: ReaderActions; action: string }>(
     readers.flatMap((reader, index) => reader.actions.map((action, item) => [`${index + 1}.${item + 1}`, { reader, action }] as const)),
   );
@@ -122,7 +125,9 @@ export function resolveAnswer(readers: readonly ReaderActions[], answer: ActionJ
   const emptyReaders = readers.flatMap((reader, index) => (reader.actions.length === 0 ? [[readerLabel(index), reader] as const] : []));
   const empty = emptyReaders.map(([label, reader]) => {
     const found = answer.empty.find((entry) => entry.reader.trim() === label);
-    if (found === undefined) throw new JudgeAnswerError(`no verdict for ${label}, given no actions`);
+    if (found === undefined) {
+      throw new JudgeAnswerError(`no verdict for ${label}, given no actions`);
+    }
     return { reader: reader.name, verdict: found.verdict, reason: found.reason };
   });
   return {
@@ -132,19 +137,22 @@ export function resolveAnswer(readers: readonly ReaderActions[], answer: ActionJ
     }),
     empty,
   };
-}
+};
 
 export class JudgeAnswerError extends Error {
   override name = "JudgeAnswerError";
 }
 
-export function actionJudgeFor(writer: ComparedModel, chosen: ComparedModel | null = null): ComparedModel {
-  if (chosen !== null && chosen.provider === writer.provider)
+export const actionJudgeFor = (writer: ComparedModel, chosen: ComparedModel | null = null): ComparedModel => {
+  if (chosen !== null && chosen.provider === writer.provider) {
     throw new Error(`a judge from ${writer.provider} would be judging its own provider's actions`);
+  }
   const judge = chosen ?? JUDGES.map(parseComparedModel).find((model) => model.provider !== writer.provider);
-  if (judge === undefined) throw new Error(`no judge outside ${writer.provider}`);
+  if (judge === undefined) {
+    throw new Error(`no judge outside ${writer.provider}`);
+  }
   return judge;
-}
+};
 
 export interface JudgeActionsOptions {
   fetched: FetchedTranscript;
@@ -156,7 +164,7 @@ export interface JudgeActionsOptions {
   now?: () => number;
 }
 
-export async function judgeActions({
+export const judgeActions = async ({
   fetched,
   readers,
   writer,
@@ -164,7 +172,7 @@ export async function judgeActions({
   keys,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: JudgeActionsOptions): Promise<ActionJudgeRecord> {
+}: JudgeActionsOptions): Promise<ActionJudgeRecord> => {
   const videoId = fetched.video.id ?? fetched.video.url;
   const judge = actionJudgeFor(writer, chosen);
   const ordered = blindOrder(videoId, readers);
@@ -177,7 +185,9 @@ export async function judgeActions({
   let resolved: Pick<ActionJudgeRecord, "actions" | "empty"> = { actions: [], empty: [] };
   try {
     const parsed = ActionJudgeAnswer.safeParse(await client(actionJudgePrompt(fetched, ordered)));
-    if (!parsed.success) throw new JudgeAnswerError(`the judge's answer broke its schema: ${parsed.error.message}`);
+    if (!parsed.success) {
+      throw new JudgeAnswerError(`the judge's answer broke its schema: ${parsed.error.message}`);
+    }
     resolved = resolveAnswer(ordered, parsed.data);
   } catch (thrown) {
     outcome = thrown instanceof JudgeAnswerError || isTheModelsDoing(thrown) ? "failed" : "errored";
@@ -195,4 +205,4 @@ export async function judgeActions({
     latencyMs: Math.round(now() - began),
     costDollars: measuredCost(judge, metered.calls),
   };
-}
+};

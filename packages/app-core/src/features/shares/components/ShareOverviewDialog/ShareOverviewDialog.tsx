@@ -25,7 +25,7 @@ const HEADING_ID = "ShareOverviewDialog-heading";
 const SHARED = ["The whole overview, with its audio", "Transcript and chapters", "Video title, channel and link"];
 const PRIVATE = ["Your reason", "Your topics", "Questions to ask next", "Read and favourite state"];
 
-export function ShareOverviewDialog({
+export const ShareOverviewDialog = ({
   share,
   edited,
   audioMissing,
@@ -36,7 +36,7 @@ export function ShareOverviewDialog({
   onStop,
   onSignIn,
   onClose,
-}: ShareOverviewDialogProps) {
+}: ShareOverviewDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const initialFocus = useRef<HTMLButtonElement | null>(null);
   const [confirmingStop, setConfirmingStop] = useState(false);
@@ -53,12 +53,16 @@ export function ShareOverviewDialog({
   // Stopping leaves no link to confirm about, so the dialog goes back to its first state
   // rather than asking the question again (design 30c·4).
   useEffect(() => {
-    if (share === null) setConfirmingStop(false);
+    if (share === null) {
+      setConfirmingStop(false);
+    }
   }, [share]);
 
   // The label goes back to "Copy link" on its own, so a second copy still reads as one.
   useEffect(() => {
-    if (!copied) return;
+    if (!copied) {
+      return;
+    }
     const timer = setTimeout(() => setCopied(false), 2000);
     return () => clearTimeout(timer);
   }, [copied]);
@@ -71,10 +75,56 @@ export function ShareOverviewDialog({
   };
 
   const copy = () => {
-    if (share === null) return;
+    if (share === null) {
+      return;
+    }
     analytics.shareDialog.linkCopied();
     void navigator.clipboard?.writeText(share.url);
     setCopied(true);
+  };
+
+  const notice = () => {
+    if (edited) {
+      return (
+        <div className={styles.notice} data-testid={shareOverviewDialogTestIds.editedNotice}>
+          <p>You’ve edited this overview since sharing it. The link still shows the earlier copy.</p>
+          <button
+            type="button"
+            className={styles.noticeAction}
+            onClick={() => {
+              analytics.shareDialog.updated();
+              onCreate();
+            }}
+            disabled={busy}
+            data-testid={shareOverviewDialogTestIds.updateButton}
+          >
+            {busy ? "Updating…" : "Update shared copy"}
+          </button>
+        </div>
+      );
+    }
+    if (audioMissing) {
+      return (
+        <div className={styles.notice} data-testid={shareOverviewDialogTestIds.audioMissingNotice}>
+          <p>The shared copy has no audio yet. Add yours, and anyone who opens the link can listen too.</p>
+          <button
+            type="button"
+            className={styles.noticeAction}
+            onClick={() => {
+              analytics.shareDialog.audioAdded();
+              onCreate();
+            }}
+            disabled={busy}
+            data-testid={shareOverviewDialogTestIds.addAudioButton}
+          >
+            {busy ? "Adding audio…" : "Add audio"}
+          </button>
+        </div>
+      );
+    }
+    return (
+      <p className={styles.body}>Anyone with this link can read and listen to the shared copy. Your reason and topics aren’t in it.</p>
+    );
   };
 
   const body = () => {
@@ -245,41 +295,7 @@ export function ShareOverviewDialog({
           </button>
         </div>
 
-        {edited ? (
-          <div className={styles.notice} data-testid={shareOverviewDialogTestIds.editedNotice}>
-            <p>You’ve edited this overview since sharing it. The link still shows the earlier copy.</p>
-            <button
-              type="button"
-              className={styles.noticeAction}
-              onClick={() => {
-                analytics.shareDialog.updated();
-                onCreate();
-              }}
-              disabled={busy}
-              data-testid={shareOverviewDialogTestIds.updateButton}
-            >
-              {busy ? "Updating…" : "Update shared copy"}
-            </button>
-          </div>
-        ) : audioMissing ? (
-          <div className={styles.notice} data-testid={shareOverviewDialogTestIds.audioMissingNotice}>
-            <p>The shared copy has no audio yet. Add yours, and anyone who opens the link can listen too.</p>
-            <button
-              type="button"
-              className={styles.noticeAction}
-              onClick={() => {
-                analytics.shareDialog.audioAdded();
-                onCreate();
-              }}
-              disabled={busy}
-              data-testid={shareOverviewDialogTestIds.addAudioButton}
-            >
-              {busy ? "Adding audio…" : "Add audio"}
-            </button>
-          </div>
-        ) : (
-          <p className={styles.body}>Anyone with this link can read and listen to the shared copy. Your reason and topics aren’t in it.</p>
-        )}
+        {notice()}
 
         <div className={styles.footSplit}>
           <button
@@ -351,4 +367,4 @@ export function ShareOverviewDialog({
       </div>
     </dialog>
   );
-}
+};

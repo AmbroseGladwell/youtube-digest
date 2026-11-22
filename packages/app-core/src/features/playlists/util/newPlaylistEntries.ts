@@ -10,12 +10,12 @@ export interface NewPlaylistEntries {
 // a date, because a playlist can be reordered by hand. A device checking a playlist it never
 // has (one followed on another device) counts what was added after the follow
 // (docs/features/playlists.md, "New entries").
-export function newPlaylistEntries(
+export const newPlaylistEntries = (
   lookup: PlaylistLookup,
   playlist: FollowedPlaylist,
   check: PlaylistCheck | null,
   known: ReadonlySet<string>,
-): NewPlaylistEntries {
+): NewPlaylistEntries => {
   const seenBefore = new Set<string>(check?.seenVideoIds ?? []);
   const isNew = (entry: PlaylistEntry) =>
     check === null ? entry.addedAt !== null && entry.addedAt > playlist.followedAt : !seenBefore.has(entry.videoId);
@@ -23,4 +23,4 @@ export function newPlaylistEntries(
     fresh: placedEntries(lookup.entries).filter((entry) => isNew(entry) && !known.has(entry.videoId)),
     seen: lookup.entries.map((entry) => entry.videoId),
   };
-}
+};

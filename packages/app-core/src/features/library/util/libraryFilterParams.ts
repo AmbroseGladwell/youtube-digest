@@ -6,7 +6,7 @@ import type { LibraryView } from "../types/LibraryView.js";
 const STATUS_VALUES = new Set(["all", "read", "unread"]);
 const LIBRARY_VIEW_PARAMS = ["source", "topic", "verdict", "status", "fav", "dubious", "tag", "q", "sort"];
 
-export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilters {
+export const parseLibraryFilters = (searchParams: URLSearchParams): LibraryFilters => {
   const topicParam = searchParams.get("topic");
   const noveltyParam = searchParams.get("verdict");
   const statusParam = searchParams.get("status");
@@ -26,54 +26,70 @@ export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilte
     tag: tagParam !== null && Tag.safeParse(tagParam).success ? tagParam : NO_LIBRARY_FILTERS.tag,
     query: searchParams.get("q") ?? NO_LIBRARY_FILTERS.query,
   };
-}
+};
 
-export function applyLibraryFilterPatch(current: URLSearchParams, patch: Partial<LibraryFilters>): URLSearchParams {
+export const applyLibraryFilterPatch = (current: URLSearchParams, patch: Partial<LibraryFilters>): URLSearchParams => {
   const next = new URLSearchParams(current);
 
-  if ("source" in patch) setOrDelete(next, "source", patch.source === "all" ? undefined : patch.source);
-  if ("topicId" in patch) setOrDelete(next, "topic", patch.topicId === "all" ? undefined : patch.topicId);
-  if ("novelty" in patch) setOrDelete(next, "verdict", patch.novelty === "all" ? undefined : patch.novelty);
-  if ("status" in patch) setOrDelete(next, "status", patch.status === "all" ? undefined : patch.status);
-  if ("favourite" in patch) setOrDelete(next, "fav", patch.favourite ? "1" : undefined);
-  if ("dubious" in patch) setOrDelete(next, "dubious", patch.dubious ? "1" : undefined);
-  if ("tag" in patch) setOrDelete(next, "tag", patch.tag ?? undefined);
-  if ("query" in patch) setOrDelete(next, "q", patch.query || undefined);
+  if ("source" in patch) {
+    setOrDelete(next, "source", patch.source === "all" ? undefined : patch.source);
+  }
+  if ("topicId" in patch) {
+    setOrDelete(next, "topic", patch.topicId === "all" ? undefined : patch.topicId);
+  }
+  if ("novelty" in patch) {
+    setOrDelete(next, "verdict", patch.novelty === "all" ? undefined : patch.novelty);
+  }
+  if ("status" in patch) {
+    setOrDelete(next, "status", patch.status === "all" ? undefined : patch.status);
+  }
+  if ("favourite" in patch) {
+    setOrDelete(next, "fav", patch.favourite ? "1" : undefined);
+  }
+  if ("dubious" in patch) {
+    setOrDelete(next, "dubious", patch.dubious ? "1" : undefined);
+  }
+  if ("tag" in patch) {
+    setOrDelete(next, "tag", patch.tag ?? undefined);
+  }
+  if ("query" in patch) {
+    setOrDelete(next, "q", patch.query || undefined);
+  }
 
   return next;
-}
+};
 
-export function parseLibrarySort(searchParams: URLSearchParams): LibrarySort {
+export const parseLibrarySort = (searchParams: URLSearchParams): LibrarySort => {
   const sortParam = searchParams.get("sort");
   return LIBRARY_SORTS.find((sort) => sort === sortParam) ?? DEFAULT_LIBRARY_SORT;
-}
+};
 
-export function applyLibrarySort(current: URLSearchParams, sort: LibrarySort): URLSearchParams {
+export const applyLibrarySort = (current: URLSearchParams, sort: LibrarySort): URLSearchParams => {
   const next = new URLSearchParams(current);
   setOrDelete(next, "sort", sort === DEFAULT_LIBRARY_SORT ? undefined : sort);
   return next;
-}
+};
 
-export function hasLibraryViewParams(searchParams: URLSearchParams): boolean {
+export const hasLibraryViewParams = (searchParams: URLSearchParams): boolean => {
   return LIBRARY_VIEW_PARAMS.some((param) => searchParams.has(param));
-}
+};
 
-export function parseLibraryView(searchParams: URLSearchParams): LibraryView {
+export const parseLibraryView = (searchParams: URLSearchParams): LibraryView => {
   return { filters: parseLibraryFilters(searchParams), sort: parseLibrarySort(searchParams) };
-}
+};
 
-export function applyLibraryView(current: URLSearchParams, view: LibraryView): URLSearchParams {
+export const applyLibraryView = (current: URLSearchParams, view: LibraryView): URLSearchParams => {
   return applyLibrarySort(applyLibraryFilterPatch(current, view.filters), view.sort);
-}
+};
 
-export function isSameLibraryView(left: LibraryView, right: LibraryView): boolean {
+export const isSameLibraryView = (left: LibraryView, right: LibraryView): boolean => {
   return applyLibraryView(new URLSearchParams(), left).toString() === applyLibraryView(new URLSearchParams(), right).toString();
-}
+};
 
-function setOrDelete(params: URLSearchParams, key: string, value: string | undefined): void {
+const setOrDelete = (params: URLSearchParams, key: string, value: string | undefined): void => {
   if (value) {
     params.set(key, value);
   } else {
     params.delete(key);
   }
-}
+};

@@ -22,7 +22,9 @@ export interface ArmCost {
 const TWENTY_MINUTES_MS = 20 * 60_000;
 
 const median = (values: number[]): number => {
-  if (values.length === 0) return 0;
+  if (values.length === 0) {
+    return 0;
+  }
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 === 1 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;
@@ -30,11 +32,11 @@ const median = (values: number[]): number => {
 
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 
-export function armCost(
+export const armCost = (
   records: readonly RunRecord[],
   videoIds: ReadonlySet<string>,
   transcripts: ReadonlyMap<string, FetchedTranscript>,
-): ArmCost {
+): ArmCost => {
   const counted = records.filter((record) => videoIds.has(record.videoId) && record.costDollars !== null);
   const answered = (record: RunRecord) => record.calls.filter((call) => call.usage !== null).map((call) => call.usage!);
   const totalCost = sum(counted.map((record) => record.costDollars!));
@@ -46,7 +48,7 @@ export function armCost(
     medianPromptTokens: median(counted.map((record) => sum(answered(record).map(promptTokensOf)))),
     medianOutputTokens: median(counted.map((record) => sum(answered(record).map((usage) => usage.outputTokens)))),
   };
-}
+};
 
 export const breakEvenReaders = (stageOne: number, personal: number, single: number): number | null =>
   single <= personal ? null : stageOne / (single - personal);
@@ -55,7 +57,7 @@ export const hybridCostPerReader = (stageOne: number, personal: number, readers:
 
 const dollars = (value: number) => `$${value.toFixed(4)}`;
 
-function judgingTable(judgments: readonly PersonalJudgeRecord[], candidate: string): string {
+const judgingTable = (judgments: readonly PersonalJudgeRecord[], candidate: string): string => {
   const judged = judgments.filter((record) => record.candidate === candidate && record.results !== null);
   const rows = [...PERSONAL_DIMENSIONS, "overall" as const].map((dimension) => {
     const results = judged.map((record) => record.results![dimension]);
@@ -63,13 +65,13 @@ function judgingTable(judgments: readonly PersonalJudgeRecord[], candidate: stri
     return `| ${dimension} | ${count("win")} | ${count("tie")} | ${count("loss")} |`;
   });
   return [`${judged.length} pairs judged.`, "", "| Dimension | Wins | Ties | Losses |", "|---|---|---|---|", ...rows].join("\n");
-}
+};
 
-export function costModelMarkdown(
+export const costModelMarkdown = (
   arms: CostModelArms,
   judgments: readonly PersonalJudgeRecord[],
   transcripts: ReadonlyMap<string, FetchedTranscript>,
-): string {
+): string => {
   const passedIds = (records: readonly RunRecord[]) => new Set(records.filter(isPassed).map((record) => record.videoId));
   const inAll = [...passedIds(arms.single)].filter(
     (id) => passedIds(arms.stageOne).has(id) && passedIds(arms.personalFromNote).has(id) && passedIds(arms.personalWithTranscript).has(id),
@@ -135,4 +137,4 @@ ${judgingTable(judgments, "personal-from-note")}
 
 ${judgingTable(judgments, "personal-with-transcript")}
 `;
-}
+};

@@ -17,8 +17,10 @@ export interface ChatDrewOnProps {
 // Found for you below it, left-aligned, up to three, absent when empty. Two chips show, then "+N"
 // (OV-362). A sent question keeps its
 // sources, so these chips have no ×: they only open their overview.
-export function ChatDrewOn({ how, sources, overviewOf, onFollow }: ChatDrewOnProps) {
-  if (sources.length === 0) return null;
+export const ChatDrewOn = ({ how, sources, overviewOf, onFollow }: ChatDrewOnProps) => {
+  if (sources.length === 0) {
+    return null;
+  }
   return (
     <li
       className={`${styles.root} ${how === "pinned" ? styles.pinned : styles.found}`}
@@ -49,4 +51,4 @@ export function ChatDrewOn({ how, sources, overviewOf, onFollow }: ChatDrewOnPro
       />
     </li>
   );
-}
+};

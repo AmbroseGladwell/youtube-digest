@@ -20,11 +20,13 @@ const FATAL_LINES = {
 
 // What Node does with an error nothing caught, which is stop, but reported before it does
 // (docs/architecture/errors-and-logs.md, "The server's own errors").
-export function reportProcessErrors({ errorSink, log, clock, exit, process: emitter = process }: ProcessErrorReporting): void {
+export const reportProcessErrors = ({ errorSink, log, clock, exit, process: emitter = process }: ProcessErrorReporting): void => {
   let exiting = false;
   const onFatal = (caughtBy: Exclude<ServerError["caughtBy"], "request">) => (error: unknown) => {
     log.fatal(FATAL_LINES[caughtBy]({ err: error }));
-    if (exiting) return;
+    if (exiting) {
+      return;
+    }
     exiting = true;
     const sent =
       errorSink === null
@@ -36,4 +38,4 @@ export function reportProcessErrors({ errorSink, log, clock, exit, process: emit
   };
   emitter.on("uncaughtException", onFatal("uncaughtException"));
   emitter.on("unhandledRejection", onFatal("unhandledRejection"));
-}
+};

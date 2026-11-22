@@ -155,11 +155,11 @@ export type SpeechToTextConfig = { url: string; token: string; concurrency: numb
 // deleted account's records there is on exactly when the personal key is set, so the project
 // id can ship in fly.toml ahead of the secret rather than refusing startup, as R2's bucket
 // does (docs/features/account-deletion.md, "Erasure at PostHog").
-export type AnalyticsConfig = {
+export interface AnalyticsConfig {
   environment: "development" | "production";
   postHog: { apiKey: string; host: string } | null;
   erasure: { personalApiKey: string; projectId: string; host: string } | null;
-};
+}
 
 export interface Config {
   databaseUrl: string;
@@ -199,7 +199,7 @@ export interface PodcastIndexKey {
 
 export class ConfigError extends Error {}
 
-export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
+export const loadConfig = (env: Record<string, string | undefined> = process.env): Config => {
   const parsed = ConfigEnv.safeParse(env);
   if (!parsed.success) {
     throw new ConfigError(z.prettifyError(parsed.error));
@@ -210,7 +210,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   try {
     logs = otlpLogsConfig(data, { postHog, environment: data.ANALYTICS_ENVIRONMENT });
   } catch (error) {
-    if (error instanceof OtlpLogsConfigError) throw new ConfigError(error.message);
+    if (error instanceof OtlpLogsConfigError) {
+      throw new ConfigError(error.message);
+    }
     throw error;
   }
   return {
@@ -276,4 +278,4 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     },
     logs,
   };
-}
+};

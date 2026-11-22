@@ -30,11 +30,31 @@ export interface PlaylistPreviewProps {
 
 const Figure = ({ value }: { value: number }) => <span className={styles.figure}>{formatCount(value)}</span>;
 
+interface FootFacts {
+  alreadyFollowing: boolean;
+  title: string;
+  pace: PlaylistPace | null;
+  toMake: number;
+}
+
+const footOf = ({ alreadyFollowing, title, pace, toMake }: FootFacts): string => {
+  if (alreadyFollowing) {
+    return `You already follow ${title}: videos added to it later are queued each time you open The Overview.`;
+  }
+  if (pace === null) {
+    return "Following means videos added to it later are made as they arrive. If it grows, give it a pace in Settings › YouTube playlists.";
+  }
+  if (toMake === 0) {
+    return "Following means videos added to it later are queued each time you open The Overview. Change the pace and the order any time in Settings.";
+  }
+  return `Both follow ${title}, at this pace and in this order. Change them any time in Settings › YouTube playlists.`;
+};
+
 // Design 27c–27f: title, owner and how it's shared, then the numbers as sentences and the
 // token estimate labelled as one, every figure counted in code. Both main actions follow;
 // Cancel follows nothing. Focus moves to the actions when it opens. The pace and the order sit
 // behind one line each with Change, because the defaults need no attention (95t–95v).
-export function PlaylistPreview({
+export const PlaylistPreview = ({
   lookup,
   preview,
   alreadyFollowing,
@@ -48,7 +68,7 @@ export function PlaylistPreview({
   onOrderChange,
   onFollow,
   onCancel,
-}: PlaylistPreviewProps) {
+}: PlaylistPreviewProps) => {
   const firstAction = useRef<HTMLButtonElement>(null);
   const toMake = preview.toMake.length;
   const month = useLeftThisMonth();
@@ -83,13 +103,7 @@ export function PlaylistPreview({
   ].filter(Boolean);
 
   const backfillLabel = toMake === 1 ? "Make its overview" : `Make overviews for all ${formatCount(toMake)}`;
-  const foot = alreadyFollowing
-    ? `You already follow ${lookup.title}: videos added to it later are queued each time you open The Overview.`
-    : pace === null
-      ? "Following means videos added to it later are made as they arrive. If it grows, give it a pace in Settings › YouTube playlists."
-      : toMake === 0
-        ? "Following means videos added to it later are queued each time you open The Overview. Change the pace and the order any time in Settings."
-        : `Both follow ${lookup.title}, at this pace and in this order. Change them any time in Settings › YouTube playlists.`;
+  const foot = footOf({ alreadyFollowing, title: lookup.title, pace, toMake });
 
   return (
     <div className={styles.root} data-testid={playlistPreviewTestIds.root}>
@@ -205,4 +219,4 @@ export function PlaylistPreview({
       </div>
     </div>
   );
-}
+};

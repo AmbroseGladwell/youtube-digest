@@ -27,7 +27,7 @@ export interface ChoicePickerProps<Choice extends string> {
 // Design 95x–95z: a pill naming the choice, which opens the options with what each would do.
 // Choosing saves straight away; there is nothing to confirm. Built for a playlist's pace, and
 // used for its order too (docs/features/playlists.md, "An order for each playlist").
-export function ChoicePicker<Choice extends string>({
+export const ChoicePicker = <Choice extends string>({
   choice,
   choices,
   labelOf,
@@ -41,7 +41,7 @@ export function ChoicePicker<Choice extends string>({
   sheetFoot,
   stacked,
   onChange,
-}: ChoicePickerProps<Choice>) {
+}: ChoicePickerProps<Choice>) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -57,18 +57,28 @@ export function ChoicePicker<Choice extends string>({
   useDismissOnOutside(open && !asSheet, close, root);
 
   useEffect(() => {
-    if (open && !asSheet) options.current[choices.indexOf(choice)]?.focus();
+    if (open && !asSheet) {
+      options.current[choices.indexOf(choice)]?.focus();
+    }
   }, [open, asSheet, choice, choices]);
 
   useEffect(() => {
     const element = sheet.current;
-    if (element === null) return;
-    if (open && asSheet && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && asSheet && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open, asSheet]);
 
   const choose = (next: Choice) => {
-    if (next !== choice) onChange(next);
+    if (next !== choice) {
+      onChange(next);
+    }
   };
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -146,7 +156,9 @@ export function ChoicePicker<Choice extends string>({
             close();
           }}
           onClick={(event) => {
-            if (event.target === sheet.current) close();
+            if (event.target === sheet.current) {
+              close();
+            }
           }}
           data-testid={choicePickerTestIds.sheet(name)}
         >
@@ -185,4 +197,4 @@ export function ChoicePicker<Choice extends string>({
       )}
     </div>
   );
-}
+};

@@ -19,7 +19,9 @@ const makeQueue = (options: Partial<ErrorQueueOptions> = {}) => {
   const queue = new ErrorQueue({
     canSend: () => reachable,
     send: async (batch, { keepalive }) => {
-      if (failing) throw new Error("Simulated: offline");
+      if (failing) {
+        throw new Error("Simulated: offline");
+      }
       sent.push({ ...batch, keepalive });
     },
     ...options,
@@ -59,7 +61,9 @@ describe("ErrorQueue", () => {
   it("drops past ten a minute, so a render loop can't flood the tracker, and counts how many", async () => {
     const { queue, sent } = makeQueue();
 
-    for (let i = 0; i < 12; i++) queue.record(error(`e${i}`));
+    for (let i = 0; i < 12; i++) {
+      queue.record(error(`e${i}`));
+    }
     await vi.advanceTimersByTimeAsync(1_000);
     vi.advanceTimersByTime(60_000);
     queue.record(error("later"));

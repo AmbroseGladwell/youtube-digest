@@ -1,6 +1,6 @@
 import type { Overview } from "@overview/domain";
 
-export function topicCounts(overviews: Overview[]): Record<string, number> {
+export const topicCounts = (overviews: Overview[]): Record<string, number> => {
   const counts: Record<string, number> = {};
   for (const overview of overviews) {
     for (const topicId of overview.topicIds) {
@@ -8,6 +8,6 @@ export function topicCounts(overviews: Overview[]): Record<string, number> {
     }
   }
   return counts;
-}
+};
 
 export const unsortedOverviews = (overviews: Overview[]): Overview[] => overviews.filter((overview) => overview.topicIds.length === 0);

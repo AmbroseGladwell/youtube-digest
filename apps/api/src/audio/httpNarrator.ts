@@ -14,7 +14,7 @@ const RenderResponse = z.object({
 
 const ErrorResponse = z.object({ error: z.object({ code: z.string(), message: z.string() }) });
 
-export function createHttpNarrator(baseUrl: string, fetchImpl: typeof fetch = fetch): Narrator {
+export const createHttpNarrator = (baseUrl: string, fetchImpl: typeof fetch = fetch): Narrator => {
   return {
     async narrate(request, requestId) {
       const response = await fetchImpl(`${baseUrl.replace(/\/+$/, "")}/render`, {
@@ -47,4 +47,4 @@ export function createHttpNarrator(baseUrl: string, fetchImpl: typeof fetch = fe
       };
     },
   };
-}
+};

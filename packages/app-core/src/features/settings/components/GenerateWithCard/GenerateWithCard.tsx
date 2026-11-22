@@ -21,7 +21,7 @@ const pairLabel = (provider: Provider, models: ModelByProvider) =>
 // What generation runs on, above the list rather than marked inside it, so that the split
 // the feature introduces is visible: the choice follows the reader between devices and the
 // keys do not (design 110b, Q2).
-export function GenerateWithCard({ provider, models, held, onChoose, onAddKeyFor }: GenerateWithCardProps) {
+export const GenerateWithCard = ({ provider, models, held, onChoose, onAddKeyFor }: GenerateWithCardProps) => {
   const surface = useSurface();
   const here = deviceWord(surface, useIsPhone());
   const hasKeyHere = held.includes(provider);
@@ -100,4 +100,4 @@ export function GenerateWithCard({ provider, models, held, onChoose, onAddKeyFor
       )}
     </section>
   );
-}
+};

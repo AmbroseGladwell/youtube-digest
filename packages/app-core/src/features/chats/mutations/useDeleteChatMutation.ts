@@ -11,7 +11,7 @@ export interface DeleteChatVariables {
 
 // Gone from the list at once; the store journals the delete and sync takes it to the server
 // and every other device (docs/features/chats.md, "Deleting").
-export function useDeleteChatMutation() {
+export const useDeleteChatMutation = () => {
   const { chatStore } = useStores();
   const queryClient = useQueryClient();
   return useMutation<void, Error, DeleteChatVariables, { previous: Chat[] | undefined }>({
@@ -23,14 +23,18 @@ export function useDeleteChatMutation() {
       return { previous };
     },
     onError: (_error, { listKey }, context) => {
-      if (context !== undefined) queryClient.setQueryData(listKey, context.previous);
+      if (context !== undefined) {
+        queryClient.setQueryData(listKey, context.previous);
+      }
     },
     // An overview's conversation is in both its own list and the Ask drawer's (OV-363).
     onSettled: (_data, _error, { listKey, chatId }) => {
       void queryClient.invalidateQueries({ queryKey: listKey });
       void queryClient.invalidateQueries({ queryKey: chatKeys.asked() });
       const owner = chatOwnerOfId(chatId);
-      if (owner?.kind === "overview") void queryClient.invalidateQueries({ queryKey: chatKeys.list(owner.id) });
+      if (owner?.kind === "overview") {
+        void queryClient.invalidateQueries({ queryKey: chatKeys.list(owner.id) });
+      }
     },
   });
-}
+};

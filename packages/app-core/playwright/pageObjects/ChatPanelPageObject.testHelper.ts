@@ -69,8 +69,11 @@ export class ChatPanelPageObject extends PageObject {
 
   verifySuggestionsRead = (questions: string[]) =>
     this.step(`verifySuggestionsRead ${questions.join(" | ")}`, async () => {
-      if (questions.length === 0) await expect(this.panel().getByTestId(chatPanelTestIds.suggestions)).toHaveCount(0);
-      else await expect(this.panel().getByTestId(chatPanelTestIds.suggestion)).toHaveText(questions);
+      if (questions.length === 0) {
+        await expect(this.panel().getByTestId(chatPanelTestIds.suggestions)).toHaveCount(0);
+      } else {
+        await expect(this.panel().getByTestId(chatPanelTestIds.suggestion)).toHaveText(questions);
+      }
     });
 
   clickSuggestion = (index: number) =>
@@ -118,7 +121,9 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`verifyCitationsRead ${index} ${names.join(" | ")}`, async () => {
       const pills = this.answers().nth(index).getByTestId(chatCitationPillTestIds.pill);
       await expect(pills).toHaveCount(names.length);
-      for (const [at, name] of names.entries()) await expect(pills.nth(at)).toHaveAccessibleName(name);
+      for (const [at, name] of names.entries()) {
+        await expect(pills.nth(at)).toHaveAccessibleName(name);
+      }
     });
 
   followCitation = (answer: number, citation: number) =>
@@ -136,7 +141,9 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`verifyOverviewCitationsNamed ${index} ${names.join(" | ")}`, async () => {
       const pills = this.answers().nth(index).getByTestId(chatOverviewCitationTestIds.pill);
       await expect(pills).toHaveCount(names.length);
-      for (const [at, name] of names.entries()) await expect(pills.nth(at)).toHaveAccessibleName(name);
+      for (const [at, name] of names.entries()) {
+        await expect(pills.nth(at)).toHaveAccessibleName(name);
+      }
     });
 
   // An article's key point or chapter pill has a link to its place on the page beside it (OV-320).
@@ -144,7 +151,9 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`verifyShowOnPageLinks ${index} ${hrefs.join(" | ")}`, async () => {
       const links = this.answers().nth(index).getByTestId(chatAnswerTestIds.showOnPage);
       await expect(links).toHaveCount(hrefs.length);
-      for (const [at, href] of hrefs.entries()) await expect(links.nth(at)).toHaveAttribute("href", href);
+      for (const [at, href] of hrefs.entries()) {
+        await expect(links.nth(at)).toHaveAttribute("href", href);
+      }
     });
 
   // A decline on an article or a recipe page offers the page itself.
@@ -186,7 +195,9 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`verifyOtherOverviewCitationsNamed ${index} ${names.join(" | ")}`, async () => {
       const links = this.answers().nth(index).getByTestId(chatOtherOverviewCitationTestIds.link);
       await expect(links).toHaveCount(names.length);
-      for (const [at, name] of names.entries()) await expect(links.nth(at)).toHaveAccessibleName(name);
+      for (const [at, name] of names.entries()) {
+        await expect(links.nth(at)).toHaveAccessibleName(name);
+      }
     });
 
   followOtherOverviewCitation = (answer: number, citation: number) =>
@@ -242,8 +253,9 @@ export class ChatPanelPageObject extends PageObject {
   verifyCopyUnderAnswers = (count: number) =>
     this.step(`verifyCopyUnderAnswers ${count}`, async () => {
       await expect(this.answers()).toHaveCount(count);
-      for (let index = 0; index < count; index++)
+      for (let index = 0; index < count; index++) {
         await expect(this.answers().nth(index).getByTestId(chatAnswerActionsTestIds.copy)).toHaveAccessibleName("Copy answer");
+      }
     });
 
   verifyCopyIsShown = (index: number, shown: boolean) =>
@@ -259,8 +271,9 @@ export class ChatPanelPageObject extends PageObject {
     );
 
   private openMenuIfClosed = async () => {
-    if ((await this.page.getByTestId(chatConversationMenuTestIds.menu).count()) === 0)
+    if ((await this.page.getByTestId(chatConversationMenuTestIds.menu).count()) === 0) {
       await this.click(this.panel().getByTestId(chatConversationMenuTestIds.trigger));
+    }
   };
 
   openMenu = () => this.step("openMenu", () => this.click(this.panel().getByTestId(chatConversationMenuTestIds.trigger)));
@@ -269,7 +282,9 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`verifyMenuOffers ${items.join(" | ")}`, async () => {
       const offered = this.page.getByTestId(chatConversationMenuTestIds.menu).getByRole("menuitem");
       await expect(offered).toHaveCount(items.length);
-      for (const [index, name] of items.entries()) await expect(offered.nth(index)).toHaveAccessibleName(name);
+      for (const [index, name] of items.entries()) {
+        await expect(offered.nth(index)).toHaveAccessibleName(name);
+      }
     });
 
   verifyContinueDetailReads = (detail: string) =>
@@ -383,8 +398,11 @@ export class ChatPanelPageObject extends PageObject {
       await expect(wait).toHaveRole("status");
       await expect(wait.getByTestId(chatWaitBlockTestIds.heading)).toHaveText(heading);
       await expect(wait.getByTestId(chatWaitBlockTestIds.body)).toHaveText(body);
-      if (action === null) await expect(wait.getByTestId(chatWaitBlockTestIds.action)).toHaveCount(0);
-      else await expect(wait.getByTestId(chatWaitBlockTestIds.action)).toHaveText(action);
+      if (action === null) {
+        await expect(wait.getByTestId(chatWaitBlockTestIds.action)).toHaveCount(0);
+      } else {
+        await expect(wait.getByTestId(chatWaitBlockTestIds.action)).toHaveText(action);
+      }
       await expect(this.field()).toHaveCount(0);
       await expect(this.panel().getByTestId(chatPanelTestIds.suggestions)).toHaveCount(0);
     });
@@ -424,7 +442,9 @@ export class ChatPanelPageObject extends PageObject {
       for (let tries = 0; tries < 20; tries += 1) {
         await this.page.waitForTimeout(100);
         const settled = (await grab.boundingBox())!;
-        if (settled.y === box.y) break;
+        if (settled.y === box.y) {
+          break;
+        }
         box = settled;
       }
       const x = box.x + box.width / 2;
@@ -476,7 +496,9 @@ export class ChatPanelPageObject extends PageObject {
   verifyNextSourcesRead = (texts: string[]) =>
     this.step(`verifyNextSourcesRead ${texts.join(" | ")}`, async () => {
       const row = this.panel().getByTestId(chatComposerTestIds.sources);
-      if (texts.length === 0) return expect(row).toHaveCount(0);
+      if (texts.length === 0) {
+        return expect(row).toHaveCount(0);
+      }
       await expect(row.locator(":scope > *")).toHaveText(texts);
     });
 
@@ -491,7 +513,9 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`verifyMoreSourcesRead ${titles.join(" | ")}`, async () => {
       const removes = this.panel().getByTestId(chatComposerTestIds.moreMenu).getByTestId(chatComposerTestIds.moreRemove);
       await expect(removes).toHaveCount(titles.length);
-      for (const [at, title] of titles.entries()) await expect(removes.nth(at)).toHaveAccessibleName(`Remove source: ${title}`);
+      for (const [at, title] of titles.entries()) {
+        await expect(removes.nth(at)).toHaveAccessibleName(`Remove source: ${title}`);
+      }
     });
 
   clearAllSources = () => this.step("clearAllSources", () => this.click(this.panel().getByTestId(chatComposerTestIds.clearAll)));
@@ -504,7 +528,9 @@ export class ChatPanelPageObject extends PageObject {
           ? `xpath=preceding-sibling::li[1][@data-testid="${chatDrewOnTestIds.pinned}"]`
           : `xpath=following-sibling::li[1][@data-testid="${chatDrewOnTestIds.found}"]`,
       );
-      if (titles === null) return expect(row).toHaveCount(0);
+      if (titles === null) {
+        return expect(row).toHaveCount(0);
+      }
       await expect(row.getByTestId(chatSourceChipTestIds.chip)).toHaveText(titles);
       await expect(row.getByRole("button", { name: /^Remove/ })).toHaveCount(0);
     });
@@ -516,11 +542,18 @@ export class ChatPanelPageObject extends PageObject {
       const root = this.answers().nth(answer);
       await expect(root.locator("p code")).toHaveText(code);
       await expect(root.getByTestId(chatMarkedTextTestIds.link)).toHaveText(links.map((link) => `${link} (opens in a new tab)`));
-      for (const link of await root.getByTestId(chatMarkedTextTestIds.link).all()) await expect(link).toHaveAttribute("target", "_blank");
+      for (const link of await root.getByTestId(chatMarkedTextTestIds.link).all()) {
+        await expect(link).toHaveAttribute("target", "_blank");
+      }
       await expect(root.getByTestId(chatCodeBlockTestIds.code)).toHaveText(blocks);
       await expect(root).not.toContainText("```");
       await expect(root).not.toContainText("`");
     });
+
+  verifyCodeBlocksInListItems = (answer: number, count: number) =>
+    this.step(`verifyCodeBlocksInListItems ${answer} ${count}`, () =>
+      expect(this.answers().nth(answer).locator("li").getByTestId(chatCodeBlockTestIds.code)).toHaveCount(count),
+    );
 
   copyCodeBlock = (answer: number, index: number, expected: string) =>
     this.step(`copyCodeBlock ${answer} ${index}`, async () => {

@@ -7,7 +7,9 @@ export class CaptureQueueStripPageObject extends PageObject {
   verifyReads = (title: string | RegExp, meta?: string | RegExp) =>
     this.step(`verifyReads ${String(title)}`, async () => {
       await expect(this.get(captureQueueStripViewTestIds.title)).toHaveText(title);
-      if (meta !== undefined) await expect(this.get(captureQueueStripViewTestIds.meta)).toHaveText(meta);
+      if (meta !== undefined) {
+        await expect(this.get(captureQueueStripViewTestIds.meta)).toHaveText(meta);
+      }
     });
 
   verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectToHaveCount(captureQueueStripViewTestIds.root, 0));

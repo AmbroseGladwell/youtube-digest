@@ -68,18 +68,23 @@ const spentSoFar = async () =>
     ...(await judgments.all()),
   ]);
 
-const settled = (records: readonly { videoId: string; outcome: string }[]) =>
+interface VideoOutcome {
+  videoId: string;
+  outcome: string;
+}
+
+const settled = (records: readonly VideoOutcome[]) =>
   new Set(records.filter((record) => record.outcome !== "errored").map((record) => record.videoId));
 
 const inLanes = <T>(tasks: T[]): T[][] => Array.from({ length: LANES }, (_, lane) => tasks.filter((_, index) => index % LANES === lane));
 
 const log = (line: string) => console.error(line);
 
-async function spend<R extends Spend & { videoId: string; outcome: string }>(
+const spend = async <R extends Spend & { videoId: string; outcome: string }>(
   phase: string,
   tasks: (() => Promise<R>)[],
   save: (record: R) => Promise<void>,
-) {
+) => {
   const outcome = await spendWithinBudget({
     lanes: inLanes(tasks),
     budgetDollars,
@@ -94,7 +99,7 @@ async function spend<R extends Spend & { videoId: string; outcome: string }>(
     return false;
   }
   return true;
-}
+};
 
 const doneSingle = settled(await stores.single.all());
 const carriedOn = await spend(

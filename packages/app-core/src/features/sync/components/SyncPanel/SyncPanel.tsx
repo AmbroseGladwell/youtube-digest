@@ -23,7 +23,7 @@ const EXTENSION_NOTE =
 // signed out, it points at the sign-in and create-account pages rather than being a second
 // place to ask for a link. While an account row is open its Save is the only orange on the
 // screen, so Sync now steps down until it closes (design 14a).
-export function SyncPanel() {
+export const SyncPanel = () => {
   const analytics = useAnalytics();
   const sync = useSync();
   const signOutNow = useSignOut();
@@ -102,7 +102,9 @@ export function SyncPanel() {
               type="button"
               className={styles.signOutButton}
               onClick={() => {
-                if (sync.signingOut) return;
+                if (sync.signingOut) {
+                  return;
+                }
                 analytics.settings.sync.signOutChosen({ signedOutAtServer: false });
                 void signOut();
               }}
@@ -168,4 +170,4 @@ export function SyncPanel() {
       </section>
     </div>
   );
-}
+};

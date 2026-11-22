@@ -15,11 +15,18 @@ import { createFetchSyncApi, SyncEngine, type SyncStatus } from "@overview/sync"
 import type { TestApp } from "../testing/createTestApp.testHelper.js";
 import type { TestAccount } from "../testing/TestAccount.testHelper.js";
 
+const hrefOf = (input: string | URL | Request): string => {
+  if (typeof input === "string") {
+    return input;
+  }
+  return input instanceof URL ? input.href : input.url;
+};
+
 // fetch over app.inject(): the client half runs exactly as it would in a browser, against
 // the whole API in process, with no port opened (docs/conventions/backend-testing-guide.md).
-export function injectingFetch(app: FastifyInstance): typeof fetch {
+export const injectingFetch = (app: FastifyInstance): typeof fetch => {
   return async (input, init) => {
-    const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
+    const url = new URL(hrefOf(input));
     const response = await app.inject({
       method: (init?.method ?? "GET") as "GET" | "POST" | "PUT" | "DELETE",
       url: `${url.pathname}${url.search}`,
@@ -35,7 +42,7 @@ export function injectingFetch(app: FastifyInstance): typeof fetch {
       ),
     });
   };
-}
+};
 
 export interface SyncedDevice {
   overviews: IndexedDbOverviewStore;
@@ -58,7 +65,7 @@ export interface DeviceOptions {
 }
 
 // One device: its own IndexedDB, its own stores, its own engine, one account's token.
-export async function makeDevice(
+export const makeDevice = async (
   testApp: TestApp,
   account: TestAccount,
   {
@@ -68,7 +75,7 @@ export async function makeDevice(
     onFolded,
     before,
   }: DeviceOptions = {},
-): Promise<SyncedDevice> {
+): Promise<SyncedDevice> => {
   const db = await openLocalDatabase({ indexedDB: new IDBFactory() });
   const storage = new IndexedDbSyncStorage(db, { now: () => testApp.clock.now });
   const overviews = new IndexedDbOverviewStore(db, { onJournaled: storage.notifyJournaled });
@@ -86,4 +93,4 @@ export async function makeDevice(
     onFolded,
   });
   return { overviews, settings, transcripts, projects, chats, storage, engine, sync: () => engine.sync() };
-}
+};

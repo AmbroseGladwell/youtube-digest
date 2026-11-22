@@ -128,7 +128,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
   }
 
   notifyJournaled = (): void => {
-    for (const listener of this.#listeners) listener();
+    for (const listener of this.#listeners) {
+      listener();
+    }
   };
 
   onJournaled(listener: () => void): () => void {
@@ -159,11 +161,15 @@ export class IndexedDbSyncStorage implements SyncStorage {
     ]);
 
     if (recordsEnrolled !== true) {
-      for (const write of await this.#libraryWrites(transaction)) outbox.add({ ...write, stuck: null });
+      for (const write of await this.#libraryWrites(transaction)) {
+        outbox.add({ ...write, stuck: null });
+      }
       meta.put(true, SYNC_ENROLLED_KEY);
     }
     if (transcriptsEnrolled !== true) {
-      for (const write of await this.#transcriptWrites(transaction)) outbox.add({ ...write, stuck: null });
+      for (const write of await this.#transcriptWrites(transaction)) {
+        outbox.add({ ...write, stuck: null });
+      }
       meta.put(true, SYNC_TRANSCRIPTS_ENROLLED_KEY);
     }
     await promisifyTransaction(transaction);
@@ -182,7 +188,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
     return transcripts.flatMap((raw) => {
       const transcript = readableTranscript(raw);
       const overviewId = transcript === null ? undefined : noteOn.get(transcript.videoId);
-      if (transcript === null || overviewId === undefined || queued.has(transcript.videoId)) return [];
+      if (transcript === null || overviewId === undefined || queued.has(transcript.videoId)) {
+        return [];
+      }
       return [transcriptWrite(transcript, overviewId)];
     });
   }
@@ -210,7 +218,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
 
   async leave(): Promise<void> {
     const transaction = this.#db.transaction(BOOKKEEPING_STORES, "readwrite");
-    for (const store of BOOKKEEPING_STORES) transaction.objectStore(store).clear();
+    for (const store of BOOKKEEPING_STORES) {
+      transaction.objectStore(store).clear();
+    }
     await promisifyTransaction(transaction);
   }
 
@@ -346,10 +356,14 @@ export class IndexedDbSyncStorage implements SyncStorage {
     const moved = new Set<string>();
     for (const raw of await promisifyRequest<unknown[]>(members.index(MEMBERS_BY_OVERVIEW_INDEX).getAll(from))) {
       const read = readStoredRecord(raw, ProjectMember, PROJECT_MEMBER_MIGRATIONS);
-      if (read.status !== "read") continue;
+      if (read.status !== "read") {
+        continue;
+      }
       moved.add(read.record.id);
       members.delete(read.record.id);
-      if (!isInProject(read.record)) continue;
+      if (!isInProject(read.record)) {
+        continue;
+      }
       const id = projectMemberId(read.record.projectId, into);
       const existingRaw = await promisifyRequest<unknown>(members.get(id));
       const existing = existingRaw === undefined ? undefined : (readable("projectMember", existingRaw) ?? undefined);
@@ -367,7 +381,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
       promisifyRequest<unknown>(transaction.objectStore(TRANSCRIPTS_STORE).get(videoId)),
       promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
     ]);
-    if (raw === undefined || !overviews.flatMap(notedSource).some(([noted]) => noted === videoId)) return null;
+    if (raw === undefined || !overviews.flatMap(notedSource).some(([noted]) => noted === videoId)) {
+      return null;
+    }
     return readableTranscript(raw);
   }
 
@@ -392,12 +408,24 @@ export class IndexedDbSyncStorage implements SyncStorage {
 
       if (change.deleted || change.body === undefined) {
         store.delete(key);
-        if (change.kind === "overview") transaction.objectStore(OVERVIEW_STATES_STORE).delete(change.id);
-        if (change.kind === "followedPlaylist") await forgetFollowing(transaction, change.id);
-        if (change.kind === "overview") await forgetMembers(transaction, MEMBERS_BY_OVERVIEW_INDEX, change.id);
-        if (change.kind === "overview") await forgetChats(transaction, CHATS_BY_OVERVIEW_INDEX, change.id);
-        if (change.kind === "project") await forgetMembers(transaction, MEMBERS_BY_PROJECT_INDEX, change.id);
-        if (change.kind === "project") await forgetChats(transaction, CHATS_BY_PROJECT_INDEX, change.id);
+        if (change.kind === "overview") {
+          transaction.objectStore(OVERVIEW_STATES_STORE).delete(change.id);
+        }
+        if (change.kind === "followedPlaylist") {
+          await forgetFollowing(transaction, change.id);
+        }
+        if (change.kind === "overview") {
+          await forgetMembers(transaction, MEMBERS_BY_OVERVIEW_INDEX, change.id);
+        }
+        if (change.kind === "overview") {
+          await forgetChats(transaction, CHATS_BY_OVERVIEW_INDEX, change.id);
+        }
+        if (change.kind === "project") {
+          await forgetMembers(transaction, MEMBERS_BY_PROJECT_INDEX, change.id);
+        }
+        if (change.kind === "project") {
+          await forgetChats(transaction, CHATS_BY_PROJECT_INDEX, change.id);
+        }
         revisions.delete([change.kind, change.id]);
         continue;
       }
@@ -422,20 +450,22 @@ export class IndexedDbSyncStorage implements SyncStorage {
 
 const pendingKey = (kind: OutboxKind, id: string) => `${kind}/${id}`;
 
-function groupPending(entries: OutboxEntry[]): Map<string, OutboxEntry[]> {
+const groupPending = (entries: OutboxEntry[]): Map<string, OutboxEntry[]> => {
   const grouped = new Map<string, OutboxEntry[]>();
   for (const entry of entries) {
-    if (entry.stuck !== null) continue;
+    if (entry.stuck !== null) {
+      continue;
+    }
     const key = pendingKey(entry.kind, entry.id);
     grouped.set(key, [...(grouped.get(key) ?? []), entry]);
   }
   return grouped;
-}
+};
 
-function withKey(record: Record<string, unknown>, kind: SyncedRecordKind, id: string): Record<string, unknown> {
+const withKey = (record: Record<string, unknown>, kind: SyncedRecordKind, id: string): Record<string, unknown> => {
   const keyPath = KEY_PATHS[kind];
   return keyPath === null ? record : { ...record, [keyPath]: id };
-}
+};
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
@@ -447,22 +477,26 @@ const readable = (kind: SyncedRecordKind, raw: unknown): Record<string, unknown>
 // An undated record predates the stamp. The server needs a date on every write, so the
 // record's own creation date stands in, and the moment of enrolment where there is none
 // (docs/features/sync-metadata.md, "Absent means older than everything").
-function writtenAt(raw: Record<string, unknown>, creationKey: string | null, now: Date): Date {
+const writtenAt = (raw: Record<string, unknown>, creationKey: string | null, now: Date): Date => {
   const stamped = storedUpdatedAt(raw);
-  if (stamped !== null) return new Date(stamped);
+  if (stamped !== null) {
+    return new Date(stamped);
+  }
   const created = creationKey === null ? undefined : raw[creationKey];
   const parsed = typeof created === "string" ? new Date(created) : new Date(Number.NaN);
   return Number.isNaN(parsed.getTime()) ? now : parsed;
-}
+};
 
-function wholeRecordWrite(
+const wholeRecordWrite = (
   kind: "overview" | "topic" | "followedPlaylist" | "project",
   raw: unknown,
   creationKey: string,
   now: Date,
-): PendingWrite[] {
+): PendingWrite[] => {
   const migrated = readable(kind, raw);
-  if (migrated === null || typeof migrated.id !== "string") return [];
+  if (migrated === null || typeof migrated.id !== "string") {
+    return [];
+  }
   const at = writtenAt(migrated, creationKey, now);
   return [
     {
@@ -472,13 +506,15 @@ function wholeRecordWrite(
       change: { op: "replace", record: stampStoredRecord(migrated, CURRENT_SCHEMA_VERSIONS[kind], at) },
     },
   ];
-}
+};
 
 // Only the membership record of an overview still in its project is sent: one taken out
 // never needs to reach the server, which has never heard of it.
-function memberWrite(raw: unknown, now: Date): PendingWrite[] {
+const memberWrite = (raw: unknown, now: Date): PendingWrite[] => {
   const read = readStoredRecord(raw, ProjectMember, PROJECT_MEMBER_MIGRATIONS);
-  if (read.status !== "read" || !isInProject(read.record) || !isObject(raw)) return [];
+  if (read.status !== "read" || !isInProject(read.record) || !isObject(raw)) {
+    return [];
+  }
   const { id, addedAt, addedBy } = read.record;
   return [
     {
@@ -488,22 +524,28 @@ function memberWrite(raw: unknown, now: Date): PendingWrite[] {
       change: { op: "member", change: { addedAt, addedBy } },
     },
   ];
-}
+};
 
 // The server tombstones them too, but not in the overview's or project's own write, so they may come down later.
-async function forgetChats(transaction: IDBTransaction, index: string, ownerId: string): Promise<void> {
+const forgetChats = async (transaction: IDBTransaction, index: string, ownerId: string): Promise<void> => {
   const chats = transaction.objectStore(CHATS_STORE);
-  for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(index).getAllKeys(ownerId))) chats.delete(key);
-}
+  for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(index).getAllKeys(ownerId))) {
+    chats.delete(key);
+  }
+};
 
-async function forgetMembers(transaction: IDBTransaction, index: string, parentId: string): Promise<void> {
+const forgetMembers = async (transaction: IDBTransaction, index: string, parentId: string): Promise<void> => {
   const members = transaction.objectStore(PROJECT_MEMBERS_STORE);
-  for (const key of await promisifyRequest<IDBValidKey[]>(members.index(index).getAllKeys(parentId))) members.delete(key);
-}
+  for (const key of await promisifyRequest<IDBValidKey[]>(members.index(index).getAllKeys(parentId))) {
+    members.delete(key);
+  }
+};
 
-function stateWrite(raw: unknown, now: Date): PendingWrite[] {
+const stateWrite = (raw: unknown, now: Date): PendingWrite[] => {
   const migrated = readable("overviewState", { ...DEFAULT_OVERVIEW_STATE, ...(isObject(raw) ? raw : {}) });
-  if (migrated === null || typeof migrated.overviewId !== "string") return [];
+  if (migrated === null || typeof migrated.overviewId !== "string") {
+    return [];
+  }
   const { read, favourite, userTags } = migrated;
   return [
     {
@@ -513,12 +555,16 @@ function stateWrite(raw: unknown, now: Date): PendingWrite[] {
       change: { op: "state", patch: { read, favourite, userTags } },
     },
   ];
-}
+};
 
-function settingsWrite(raw: unknown, now: Date): PendingWrite[] {
-  if (raw === undefined) return [];
+const settingsWrite = (raw: unknown, now: Date): PendingWrite[] => {
+  if (raw === undefined) {
+    return [];
+  }
   const migrated = readable("settings", { ...DEFAULT_SETTINGS, ...(isObject(raw) ? raw : {}) });
-  if (migrated === null) return [];
+  if (migrated === null) {
+    return [];
+  }
   const patch = Object.fromEntries(
     Object.keys(DEFAULT_SETTINGS)
       .filter((key) => key in migrated)
@@ -532,11 +578,11 @@ function settingsWrite(raw: unknown, now: Date): PendingWrite[] {
       change: { op: "settings", patch },
     },
   ];
-}
+};
 
 // What this device had seen of a playlist, and what it still had waiting from it. A video
 // that needs the reader's attention stays until they dismiss it (docs/features/playlists.md).
-async function forgetFollowing(transaction: IDBTransaction, playlistId: string): Promise<void> {
+const forgetFollowing = async (transaction: IDBTransaction, playlistId: string): Promise<void> => {
   transaction.objectStore(PLAYLIST_CHECKS_STORE).delete(playlistId);
   const queue = transaction.objectStore(CAPTURE_QUEUE_STORE);
   for (const raw of await promisifyRequest<unknown[]>(queue.getAll())) {
@@ -545,27 +591,27 @@ async function forgetFollowing(transaction: IDBTransaction, playlistId: string):
       queue.delete(parsed.data.videoId);
     }
   }
-}
+};
 
-function readableTranscript(raw: unknown): StoredTranscript | null {
+const readableTranscript = (raw: unknown): StoredTranscript | null => {
   const read = readStoredRecord(raw, StoredTranscript, []);
   return read.status === "read" ? read.record : null;
-}
+};
 
-function notedSource(raw: unknown): Array<[key: string, overviewId: string]> {
+const notedSource = (raw: unknown): Array<[key: string, overviewId: string]> => {
   const overview = readable("overview", raw);
   const key = storedSourceKey(overview);
   return key !== null && typeof overview?.id === "string" ? [[key, overview.id]] : [];
-}
+};
 
-function transcriptWrite(transcript: StoredTranscript, overviewId: string): PendingWrite {
+const transcriptWrite = (transcript: StoredTranscript, overviewId: string): PendingWrite => {
   return {
     kind: "transcript",
     id: transcript.videoId,
     updatedAt: transcript.fetchedAt,
     change: { op: "transcript", overviewId },
   };
-}
+};
 
 const strings = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
@@ -576,7 +622,7 @@ const filingOf = (record: Record<string, unknown>): FoldableFiling => ({
   captureReason: typeof record.captureReason === "string" ? record.captureReason : null,
 });
 
-function stateOf(raw: unknown): FoldableState {
+const stateOf = (raw: unknown): FoldableState => {
   const migrated = readable("overviewState", { ...DEFAULT_OVERVIEW_STATE, ...(isObject(raw) ? raw : {}) });
   return {
     read: migrated?.read === true,
@@ -584,4 +630,4 @@ function stateOf(raw: unknown): FoldableState {
     userTags: migrated === null ? [] : strings(migrated.userTags),
     asked: AskedQuestions.catch([]).parse(migrated?.asked),
   };
-}
+};

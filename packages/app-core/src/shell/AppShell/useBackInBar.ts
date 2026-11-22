@@ -6,7 +6,7 @@ const passedUnder = (entry: IntersectionObserverEntry): boolean =>
 
 // True once the note's back link has scrolled under the sticky band, false again once it
 // comes back out, judged at the band's lower edge (design 167c).
-export function useBackInBar(band: HTMLElement | null, link: HeadBackLink | null, enabled: boolean): boolean {
+export const useBackInBar = (band: HTMLElement | null, link: HeadBackLink | null, enabled: boolean): boolean => {
   const [backInBar, setBackInBar] = useState(false);
 
   useEffect(() => {
@@ -40,4 +40,4 @@ export function useBackInBar(band: HTMLElement | null, link: HeadBackLink | null
   }, [enabled, band, link]);
 
   return backInBar;
-}
+};

@@ -19,12 +19,21 @@ import styles from "./QueuePage.module.scss";
 import { queuePageTestIds } from "./QueuePageTestIds.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
+const introFor = (isPanel: boolean, isPhone: boolean): string => {
+  if (isPanel) {
+    return "Made while this panel or the extension is open. Continues next time.";
+  }
+  return isPhone
+    ? "Made in each playlist’s order while The Overview is open on this phone. Continues next time you open it."
+    : "Videos from playlists you follow, made one at a time, each playlist in the order you chose for it, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
+};
+
 // Design 27j–27o: what is being made, what waits in order, and what needs the reader, on a
 // page of its own. The queue is this device's until OV-11, so the page says where it runs
 // rather than promising it happens anywhere (docs/features/capture-queue.md). Design
 // 95aa–95aj: what waits on a pace, or for the reader, by playlist after it, with Make now on
 // each and Choose for several.
-export function QueuePage() {
+export const QueuePage = () => {
   const queue = useCaptureQueueController();
   const analytics = useAnalytics();
   const isPanel = useIsPanel();
@@ -48,7 +57,9 @@ export function QueuePage() {
 
   useEffect(() => heading.current?.focus({ preventScroll: true }), []);
   useEffect(() => {
-    if (chosen === null) return;
+    if (chosen === null) {
+      return;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         analytics.queue.choose.cancelled();
@@ -62,16 +73,22 @@ export function QueuePage() {
   const toggle = (videoId: VideoId) =>
     setChosen((current) => {
       const next = new Set(current ?? []);
-      if (next.has(videoId)) next.delete(videoId);
-      else next.add(videoId);
+      if (next.has(videoId)) {
+        next.delete(videoId);
+      } else {
+        next.add(videoId);
+      }
       return next;
     });
   const chooseAll = (videoIds: VideoId[], choose: boolean) =>
     setChosen((current) => {
       const next = new Set(current ?? []);
       for (const videoId of videoIds) {
-        if (choose) next.add(videoId);
-        else next.delete(videoId);
+        if (choose) {
+          next.add(videoId);
+        } else {
+          next.delete(videoId);
+        }
       }
       return next;
     });
@@ -86,8 +103,11 @@ export function QueuePage() {
       className={chosen === null ? styles.secondary : styles.ghost}
       aria-pressed={chosen !== null}
       onClick={() => {
-        if (chosen === null) analytics.queue.choose.started();
-        else analytics.queue.choose.cancelled();
+        if (chosen === null) {
+          analytics.queue.choose.started();
+        } else {
+          analytics.queue.choose.cancelled();
+        }
         setChosen(chosen === null ? new Set() : null);
       }}
       data-testid={queuePageTestIds.chooseButton}
@@ -137,31 +157,35 @@ export function QueuePage() {
     );
   };
   useEffect(() => {
-    if (confirmingClear) confirmTitle.current?.focus();
+    if (confirmingClear) {
+      confirmTitle.current?.focus();
+    }
   }, [confirmingClear]);
 
-  const intro = isPanel
-    ? "Made while this panel or the extension is open. Continues next time."
-    : isPhone
-      ? "Made in each playlist’s order while The Overview is open on this phone. Continues next time you open it."
-      : "Videos from playlists you follow, made one at a time, each playlist in the order you chose for it, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
+  const intro = introFor(isPanel, isPhone);
 
-  const pauseControl =
-    queue.needsKey || monthHeld ? null : queue.paused ? (
-      <button
-        type="button"
-        className={stacked ? styles.iconPrimary : styles.primary}
-        onClick={() => {
-          analytics.queue.controls.resumed({ from: "page" });
-          queue.setPaused(false);
-        }}
-        aria-label={stacked ? "Resume queue" : undefined}
-        data-testid={queuePageTestIds.resumeButton}
-      >
-        <StrokeIcon name="play" size={stacked ? 18 : 13} />
-        {!stacked && "Resume queue"}
-      </button>
-    ) : (
+  const pauseButton = () => {
+    if (queue.needsKey || monthHeld) {
+      return null;
+    }
+    if (queue.paused) {
+      return (
+        <button
+          type="button"
+          className={stacked ? styles.iconPrimary : styles.primary}
+          onClick={() => {
+            analytics.queue.controls.resumed({ from: "page" });
+            queue.setPaused(false);
+          }}
+          aria-label={stacked ? "Resume queue" : undefined}
+          data-testid={queuePageTestIds.resumeButton}
+        >
+          <StrokeIcon name="play" size={stacked ? 18 : 13} />
+          {!stacked && "Resume queue"}
+        </button>
+      );
+    }
+    return (
       <button
         type="button"
         className={stacked ? styles.iconSecondary : styles.secondary}
@@ -176,6 +200,8 @@ export function QueuePage() {
         {!stacked && "Pause queue"}
       </button>
     );
+  };
+  const pauseControl = pauseButton();
 
   const clearControl =
     waitingCount === 0 || confirmingClear ? null : (
@@ -425,4 +451,4 @@ export function QueuePage() {
       )}
     </div>
   );
-}
+};

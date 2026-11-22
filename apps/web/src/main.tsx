@@ -15,9 +15,11 @@ import {
 import { adoptLibraryIntoAccount, deleteLocalLibrary, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
 
-async function main() {
+const main = async () => {
   const container = document.getElementById("root");
-  if (!container) throw new Error("index.html is missing its #root element");
+  if (!container) {
+    throw new Error("index.html is missing its #root element");
+  }
 
   // The root is made before the database is opened, so the callback below has something to
   // render into: it fires long after mount, whenever another tab or the worker upgrades.
@@ -49,7 +51,9 @@ async function main() {
   } catch (error) {
     console.error(error);
     const blocked = error instanceof LocalDatabaseBlockedError;
-    if (!blocked) void reportStartupFailure(error, { surface: "web", build: appBuild });
+    if (!blocked) {
+      void reportStartupFailure(error, { surface: "web", build: appBuild });
+    }
     root.render(<StartupFailure blocked={blocked} />);
     return;
   }
@@ -66,6 +70,6 @@ async function main() {
       />
     </StrictMode>,
   );
-}
+};
 
 main().catch((error: unknown) => console.error(error));

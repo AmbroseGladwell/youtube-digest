@@ -1,21 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { OverviewId, type Overview, sourceName } from "@overview/domain";
+import { type OverviewId, type Overview, sourceName } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./NewTopicDialog.module.scss";
 import { newTopicDialogTestIds } from "./NewTopicDialogTestIds.js";
+
+export interface OnCreateOptions {
+  name: string;
+  overviews: Overview[];
+}
 
 export interface NewTopicDialogProps {
   open: boolean;
   unsorted: Overview[];
   busy: boolean;
-  onCreate: (input: { name: string; overviews: Overview[] }) => void;
+  onCreate: (input: OnCreateOptions) => void;
   onPick: (overviewId: OverviewId, picked: boolean) => void;
   onClose: () => void;
 }
 
 const HEADING_ID = "NewTopicDialog-heading";
 
-export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose }: NewTopicDialogProps) {
+export const NewTopicDialog = ({ open, unsorted, busy, onCreate, onPick, onClose }: NewTopicDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const [name, setName] = useState("");
   const [chosen, setChosen] = useState<OverviewId[]>([]);
@@ -160,4 +165,4 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose
       </form>
     </dialog>
   );
-}
+};

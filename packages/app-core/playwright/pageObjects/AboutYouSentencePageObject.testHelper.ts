@@ -25,7 +25,9 @@ export class AboutYouSentencePageObject extends PageObject {
 
   pick = (...entries: string[]) =>
     this.step(`pick ${entries.join(", ")}`, async () => {
-      for (const entry of entries) await this.click(aboutYouSheetTestIds.suggestion(entry));
+      for (const entry of entries) {
+        await this.click(aboutYouSheetTestIds.suggestion(entry));
+      }
     });
 
   verifyOffered = (entry: string) =>
@@ -35,7 +37,9 @@ export class AboutYouSentencePageObject extends PageObject {
     this.step(`verifyGroups ${groups.join(", ")}`, async () => {
       const shown = this.get(aboutYouSheetTestIds.root).getByRole("group");
       await expect(shown).toHaveCount(groups.length);
-      for (const [index, group] of groups.entries()) await expect(shown.nth(index)).toHaveAccessibleName(group);
+      for (const [index, group] of groups.entries()) {
+        await expect(shown.nth(index)).toHaveAccessibleName(group);
+      }
     });
 
   addOwn = (group: string, entry: string) =>
@@ -62,7 +66,9 @@ export class AboutYouSentencePageObject extends PageObject {
 
   verifyInSection = (...entries: string[]) =>
     this.step(`verifyInSection ${entries.join(", ")}`, async () => {
-      for (const entry of entries) await this.expectToBeVisible(aboutYouSheetTestIds.chosen(entry));
+      for (const entry of entries) {
+        await this.expectToBeVisible(aboutYouSheetTestIds.chosen(entry));
+      }
     });
 
   remove = (entry: string) => this.step(`remove ${entry}`, () => this.click(aboutYouSheetTestIds.remove(entry)));

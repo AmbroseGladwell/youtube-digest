@@ -20,7 +20,7 @@ export interface DubiousReasonsPanelProps {
 
 // Design OV-85 (85b–85g): an inline disclosure under the byline rather than a modal
 // (docs/features/dubious-reasons.md).
-export function DubiousReasonsPanel({ dubiousClaims, video, onClose }: DubiousReasonsPanelProps) {
+export const DubiousReasonsPanel = ({ dubiousClaims, video, onClose }: DubiousReasonsPanelProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
   const thanks = useRef<HTMLSpanElement | null>(null);
   const seek = useSeekPlayback(video.id);
@@ -165,4 +165,4 @@ export function DubiousReasonsPanel({ dubiousClaims, video, onClose }: DubiousRe
       </div>
     </section>
   );
-}
+};

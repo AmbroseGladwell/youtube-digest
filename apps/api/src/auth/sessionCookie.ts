@@ -7,7 +7,7 @@ export interface SessionCookieOptions {
 // The web app's transport: the token in an HttpOnly cookie on the API's own origin.
 // SameSite=Lax keeps it off cross-site requests, and every write already needs a header
 // no cross-site form can set (docs/features/sign-in.md).
-export function readSessionCookie(cookieHeader: string | undefined): string | null {
+export const readSessionCookie = (cookieHeader: string | undefined): string | null => {
   if (cookieHeader === undefined) {
     return null;
   }
@@ -19,19 +19,21 @@ export function readSessionCookie(cookieHeader: string | undefined): string | nu
     }
   }
   return null;
-}
+};
 
 const attributes = ({ secure }: SessionCookieOptions): string =>
   ["Path=/", "HttpOnly", "SameSite=Lax", ...(secure ? ["Secure"] : [])].join("; ");
 
-export function sessionCookie(
-  token: string,
-  { expiresAt, now, ...options }: SessionCookieOptions & { expiresAt: string; now: Date },
-): string {
-  const maxAge = Math.max(0, Math.floor((new Date(expiresAt).getTime() - now.getTime()) / 1000));
-  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Max-Age=${maxAge}; ${attributes(options)}`;
+export interface CookieExpiry {
+  expiresAt: string;
+  now: Date;
 }
 
-export function clearedSessionCookie(options: SessionCookieOptions): string {
+export const sessionCookie = (token: string, { expiresAt, now, ...options }: SessionCookieOptions & CookieExpiry): string => {
+  const maxAge = Math.max(0, Math.floor((new Date(expiresAt).getTime() - now.getTime()) / 1000));
+  return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Max-Age=${maxAge}; ${attributes(options)}`;
+};
+
+export const clearedSessionCookie = (options: SessionCookieOptions): string => {
   return `${SESSION_COOKIE}=; Max-Age=0; ${attributes(options)}`;
-}
+};

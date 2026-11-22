@@ -52,11 +52,13 @@ const CookingTimersContext = createContext<CookingTimers | null>(null);
 
 export const CookingTimersProvider = CookingTimersContext.Provider;
 
-export function useCookingTimers(): CookingTimers {
+export const useCookingTimers = (): CookingTimers => {
   const timers = useContext(CookingTimersContext);
-  if (timers === null) throw new Error("useCookingTimers must be used within a CookingTimersProvider");
+  if (timers === null) {
+    throw new Error("useCookingTimers must be used within a CookingTimersProvider");
+  }
   return timers;
-}
+};
 
 // The timers themselves, without the clock: for what only needs to know which timers there are,
 // such as a warning that something will stop them, or the player saying it is paused for one.
@@ -71,8 +73,10 @@ const CookingTimerListContext = createContext<CookingTimerList | null>(null);
 
 export const CookingTimerListProvider = CookingTimerListContext.Provider;
 
-export function useCookingTimerList(): CookingTimerList {
+export const useCookingTimerList = (): CookingTimerList => {
   const list = useContext(CookingTimerListContext);
-  if (list === null) throw new Error("useCookingTimerList must be used within a CookingTimerListProvider");
+  if (list === null) {
+    throw new Error("useCookingTimerList must be used within a CookingTimerListProvider");
+  }
   return list;
-}
+};

@@ -7,7 +7,7 @@ const DONE = "6abb89162c841485996daa9d";
 const ELSEWHERE = "6abb89162c841485996daa9c";
 const BOARD_CARDS = { 5: "jzBBw0A9", 20: "LaDH3sgN" };
 
-function fakeTrello({ failMoves = [], listAfterMove = DONE } = {}) {
+const fakeTrello = ({ failMoves = [], listAfterMove = DONE } = {}) => {
   const calls = [];
   const fetch = async (url, init = {}) => {
     calls.push({ url, method: init.method ?? "GET", headers: init.headers });
@@ -17,13 +17,15 @@ function fakeTrello({ failMoves = [], listAfterMove = DONE } = {}) {
       return shortLink ? { ok: true, json: async () => ({ shortLink }) } : { ok: false, status: 404 };
     }
     const shortLink = segments.pop();
-    if (init.method === "PUT") return { ok: !failMoves.includes(shortLink), status: failMoves.includes(shortLink) ? 401 : 200 };
+    if (init.method === "PUT") {
+      return { ok: !failMoves.includes(shortLink), status: failMoves.includes(shortLink) ? 401 : 200 };
+    }
     return { ok: true, json: async () => ({ idList: listAfterMove, name: `Card ${shortLink}` }) };
   };
   return { fetch, calls };
-}
+};
 
-function move(trello, references) {
+const move = (trello, references) => {
   return moveCardsToDone({
     shortLinks: [],
     cardNumbers: [],
@@ -34,7 +36,7 @@ function move(trello, references) {
     token: "t",
     fetch: trello.fetch,
   });
-}
+};
 
 test("the title's leading OV number is the card a PR moves", () => {
   assert.deepEqual(cardReferencesIn({ title: "OV-5: Rest transcripts on refetch failure" }).cardNumbers, [5]);

@@ -6,16 +6,25 @@ import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js"
 import type { ChatReservation, ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { nextUsageMonth, secondsToNextUsageMonth } from "../usage/usageMonth.js";
 
+export interface ReserveChatMessageOptions {
+  askedAt: Date;
+  accountId: AccountId;
+  plan: Plan;
+  dailyMessages: number;
+}
+
 // One message of the reader's allowance, taken before anything is asked, or the wait that says
 // why not: the month, the day, or everyone's day on us (docs/features/chats.md, "Asking"). Every
 // kind of chat counts the same, one message however many passes it takes.
-export async function reserveChatMessage(
+export const reserveChatMessage = async (
   usage: ChatUsageRepository,
-  { askedAt, accountId, plan, dailyMessages }: { askedAt: Date; accountId: AccountId; plan: Plan; dailyMessages: number },
+  { askedAt, accountId, plan, dailyMessages }: ReserveChatMessageOptions,
   log: FastifyBaseLogger,
-): Promise<Extract<ChatReservation, { reserved: true }>> {
+): Promise<Extract<ChatReservation, { reserved: true }>> => {
   const reservation = await usage.reserve(askedAt, accountId, plan, dailyMessages);
-  if (reservation.reserved) return reservation;
+  if (reservation.reserved) {
+    return reservation;
+  }
   if (reservation.quota === "our-key-daily") {
     log.warn(apiLogLines.chat.dailyCapSpent({ limit: dailyMessages }));
     throw new ApiError("too_many_requests", "We've answered as many questions as we can today. Try again tomorrow.", {
@@ -34,4 +43,4 @@ export async function reserveChatMessage(
         quota: "chat-day",
         retryAfterSeconds: secondsToNextUsageDay(askedAt),
       });
-}
+};

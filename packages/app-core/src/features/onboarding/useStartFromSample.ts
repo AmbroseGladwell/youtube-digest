@@ -23,7 +23,7 @@ export interface SampleOpening {
 // a shared copy: nothing is made, and it's saved into the account once there is one. The choice
 // is counted on the press, so a failed open still records it (docs/features/onboarding.md,
 // "Try a sample").
-export function useStartFromSample(): SampleOpening {
+export const useStartFromSample = (): SampleOpening => {
   const navigate = useNavigate();
   const analytics = useAnalytics();
   const sampleApi = useSampleApi();
@@ -34,7 +34,9 @@ export function useStartFromSample(): SampleOpening {
   useEffect(() => () => clearTimeout(shownAfter.current ?? undefined), []);
 
   const open = async (sample: Sample, index: number): Promise<boolean> => {
-    if (sampleApi === null || busy) return false;
+    if (sampleApi === null || busy) {
+      return false;
+    }
     analytics.onboarding.start.sampleChosen({ sample: index, kind: sampleKindOf(sample.note) });
     setBusy(true);
     setFailed(false);
@@ -53,4 +55,4 @@ export function useStartFromSample(): SampleOpening {
   };
 
   return { opening, busy, failed, open };
-}
+};

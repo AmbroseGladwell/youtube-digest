@@ -18,4 +18,11 @@ export const ChatQuestionSet = z.object({
 });
 export type ChatQuestionSet = z.infer<typeof ChatQuestionSet>;
 
-export const quotesNeeded = (kind: ChatQuestion["kind"]): number => (kind === "notInSource" ? 0 : kind === "twoMoments" ? 2 : 1);
+const QUOTES_NEEDED: Record<ChatQuestion["kind"], number> = {
+  inOverview: 1,
+  transcriptOnly: 1,
+  notInSource: 0,
+  twoMoments: 2,
+};
+
+export const quotesNeeded = (kind: ChatQuestion["kind"]): number => QUOTES_NEEDED[kind];

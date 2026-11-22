@@ -4,7 +4,7 @@ import type { EventsApi } from "./EventsApi.js";
 
 export type FetchEventsApiOptions = ApiRequesterOptions;
 
-export function createFetchEventsApi(options: FetchEventsApiOptions): EventsApi {
+export const createFetchEventsApi = (options: FetchEventsApiOptions): EventsApi => {
   const request = createApiRequester(options);
   return {
     send: async (batch, { keepalive = false } = {}) => {
@@ -14,4 +14,4 @@ export function createFetchEventsApi(options: FetchEventsApiOptions): EventsApi 
       await request("POST", "/events/declined", z.never(), { body: { context } });
     },
   };
-}
+};

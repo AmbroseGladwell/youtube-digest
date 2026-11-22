@@ -11,13 +11,16 @@ import { reserveTrialRead } from "../usage/reserveTrialRead.js";
 
 const Body = z.object({ url: z.url() });
 
+export interface ArticleRoutesOptions {
+  fetchPage: (url: string) => Promise<FetchedPage>;
+  trials: TrialsRepository;
+  clock: () => Date;
+}
+
 // An account, or signed out a trial token reading onboarding's link, and never the link in a
 // log: what someone reads is theirs. The text goes back to the device and isn't kept
 // (docs/features/pasted-article-links.md).
-export function articleRoutes(
-  app: FastifyInstance,
-  { fetchPage, trials, clock }: { fetchPage: (url: string) => Promise<FetchedPage>; trials: TrialsRepository; clock: () => Date },
-): void {
+export const articleRoutes = (app: FastifyInstance, { fetchPage, trials, clock }: ArticleRoutesOptions): void => {
   app.post(
     "/articles/read",
     {
@@ -39,4 +42,4 @@ export function articleRoutes(
       return read;
     },
   );
-}
+};

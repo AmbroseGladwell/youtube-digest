@@ -8,19 +8,21 @@ import { datesBetween, NO_FIGURE, readersFromEnv, recentDays, recordSpend, rowsF
 const AT = "2026-11-09T04:30:00.000Z";
 const NOW = new Date(AT);
 
-function memoryStore({ failPut = false, corrupt = false } = {}) {
+const memoryStore = ({ failPut = false, corrupt = false } = {}) => {
   const objects = new Map();
   return {
     objects,
     async put(key, text) {
-      if (failPut) throw new Error(`R2 refused to store ${key}: 403`);
+      if (failPut) {
+        throw new Error(`R2 refused to store ${key}: 403`);
+      }
       objects.set(key, text);
     },
     async get(key) {
       return corrupt ? "" : (objects.get(key) ?? null);
     },
   };
-}
+};
 
 const openAiRow = (date, environment, area, dollars) => ({ date, provider: "openai", environment, area, dollars, source: "bill" });
 const parse = (csv) =>
@@ -162,14 +164,14 @@ test("a missing key warns and leaves the provider not tracked", async () => {
 
 const neonProject = { compute_time_seconds: 36_000, active_time_seconds: 72_000, data_transfer_bytes: 2e9 };
 
-function neonFetch() {
+const neonFetch = () => {
   const calls = [];
   const fetch = async (url) => {
     calls.push(url);
     return { ok: true, json: async () => (url.endsWith("/branches") ? { branches: [{ logical_size: 5e8 }] } : { project: neonProject }) };
   };
   return { fetch, calls };
-}
+};
 
 test("Neon's month so far is recorded on yesterday as usage, beside its hand-entered cost", async () => {
   const neon = neonFetch();
@@ -230,7 +232,9 @@ test("a range of more than 180 days, or a backwards one, is refused", async () =
 
 const storeWith = (days) => {
   const store = memoryStore();
-  for (const [date, rows] of Object.entries(days)) store.objects.set(`daily/${date}.csv`, spendCsv(rows, AT));
+  for (const [date, rows] of Object.entries(days)) {
+    store.objects.set(`daily/${date}.csv`, spendCsv(rows, AT));
+  }
   return store;
 };
 

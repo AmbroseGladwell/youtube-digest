@@ -24,11 +24,13 @@ const serviceError = (message: string, failure: TranscriptFetchFailure, cause?: 
     ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
   });
 
-function asServiceError(error: unknown): TranscriptFetchError | null {
+const asServiceError = (error: unknown): TranscriptFetchError | null => {
   if (!isSyncRequestError(error)) {
     return serviceError("Our server could not be reached to fetch the transcript.", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);
   }
-  if (error.code === "unavailable") return null;
+  if (error.code === "unavailable") {
+    return null;
+  }
   if (error.code === "transcript_unavailable") {
     const failure = error.details?.failure;
     return serviceError(
@@ -58,7 +60,7 @@ function asServiceError(error: unknown): TranscriptFetchError | null {
     );
   }
   return serviceError("Our server could not fetch the transcript.", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);
-}
+};
 
 // The last rung: our own server fetches the captions, which costs us rather than the
 // reader, so the background prefetch never reaches it and a server with it off is never
@@ -76,14 +78,18 @@ export const serviceTranscriptSource = (api: ServiceTranscriptApi): TranscriptSo
     ]),
   resolve: async (url) => {
     const videoId = extractYouTubeVideoId(url);
-    if (videoId === null) return null;
+    if (videoId === null) {
+      return null;
+    }
 
     let fetched;
     try {
       fetched = await api.fetch(VideoId.parse(videoId));
     } catch (error) {
       const failed = asServiceError(error);
-      if (failed === null) return null;
+      if (failed === null) {
+        return null;
+      }
       throw failed;
     }
     if (!fetched.video) {

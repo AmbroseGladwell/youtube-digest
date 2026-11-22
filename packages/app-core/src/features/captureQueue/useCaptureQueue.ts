@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { PlaylistId, PlaylistOrder, PlaylistPace, QueuedCapture, VideoId } from "@overview/domain";
+import type { PlaylistId, PlaylistOrder, PlaylistPace, PlaylistUnavailable, QueuedCapture, VideoId } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
@@ -47,6 +47,20 @@ const CHECKED_NOTICE_MS = 8_000;
 
 type ResumedVia = "reset" | "extension" | "key" | "plan";
 const DONE_NOTICE_MS = 10_000;
+
+const unavailableFor = (code: string | null): PlaylistUnavailable | null => {
+  if (code === "playlist_private") {
+    return "private";
+  }
+  return code === "playlist_not_found" ? "gone" : null;
+};
+
+const resumeTrigger = (keyChanged: boolean, planChanged: boolean): ResumedVia | null => {
+  if (keyChanged) {
+    return "key";
+  }
+  return planChanged ? "plan" : null;
+};
 
 export interface QueueMaking {
   capture: QueuedCapture;
@@ -99,7 +113,7 @@ export interface CaptureQueueController {
 // it, while the app is open. A run the reader starts goes first
 // (docs/features/capture-queue.md). Owned by the AppShell, like the reader's own run, so it
 // outlives every navigation.
-export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean }): CaptureQueueController {
+export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean }): CaptureQueueController => {
   const { overviewStore, followedPlaylistStore, captureQueueStore } = useStores();
   const accountId = useLibraryAccountId();
   const queryClient = useQueryClient();
@@ -138,9 +152,13 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const items = useMemo(() => (queue.data ?? []).filter((capture) => !made.has(capture.videoId)), [queue.data, made]);
   const madeKey = [...made].join(" ");
   useEffect(() => {
-    if (madeKey === "") return;
+    if (madeKey === "") {
+      return;
+    }
     void (async () => {
-      for (const videoId of madeKey.split(" ") as VideoId[]) await captureQueueStore.removeQueued(videoId);
+      for (const videoId of madeKey.split(" ") as VideoId[]) {
+        await captureQueueStore.removeQueued(videoId);
+      }
       await queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
     })();
   }, [madeKey, captureQueueStore, queryClient]);
@@ -208,7 +226,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   useEffect(() => {
     for (const playlistId of pacedPlaylists === "" ? [] : (pacedPlaylists.split(" ") as PlaylistId[])) {
       const reached = `${today} ${playlistId}`;
-      if (reachedPace.current.has(reached)) continue;
+      if (reachedPace.current.has(reached)) {
+        continue;
+      }
       reachedPace.current.add(reached);
       reporter.warn({
         name: "captureQueuePaced",
@@ -238,11 +258,19 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   // arrives with a pull after the app opened.
   const libraryKey = `${accountId ?? ""}|${playlistApi?.apiUrl ?? ""}`;
   useEffect(() => {
-    if (playlistApi === null || !followed.isSuccess) return;
-    if (checked.current.library !== libraryKey) checked.current = { library: libraryKey, playlists: new Set() };
+    if (playlistApi === null || !followed.isSuccess) {
+      return;
+    }
+    if (checked.current.library !== libraryKey) {
+      checked.current = { library: libraryKey, playlists: new Set() };
+    }
     const playlists = followed.data.map(({ playlist }) => playlist).filter((playlist) => !checked.current.playlists.has(playlist.id));
-    if (playlists.length === 0) return;
-    for (const playlist of playlists) checked.current.playlists.add(playlist.id);
+    if (playlists.length === 0) {
+      return;
+    }
+    for (const playlist of playlists) {
+      checked.current.playlists.add(playlist.id);
+    }
 
     void (async () => {
       let queued = 0;
@@ -274,7 +302,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
           }
         } catch (error) {
           const code = isSyncRequestError(error) ? error.code : null;
-          const unavailable = code === "playlist_private" ? "private" : code === "playlist_not_found" ? "gone" : null;
+          const unavailable = unavailableFor(code);
           if (unavailable !== null && playlist.unavailable !== unavailable) {
             await followedPlaylistStore.saveFollowed({ ...playlist, unavailable });
           }
@@ -288,7 +316,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       }
       void queryClient.invalidateQueries({ queryKey: playlistKeys.followed() });
       refresh();
-      if (queued > 0) setNotice({ kind: "checked", playlists: playlists.length, queued });
+      if (queued > 0) {
+        setNotice({ kind: "checked", playlists: playlists.length, queued });
+      }
     })();
   }, [
     playlistApi,
@@ -304,7 +334,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   ]);
 
   useEffect(() => {
-    if (notice === null) return;
+    if (notice === null) {
+      return;
+    }
     const timer = setTimeout(() => setNotice(null), notice.kind === "checked" ? CHECKED_NOTICE_MS : DONE_NOTICE_MS);
     return () => clearTimeout(timer);
   }, [notice]);
@@ -355,7 +387,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         await queryClient.invalidateQueries({ queryKey: overviewKeys.all });
         void queryClient.invalidateQueries({ queryKey: transcriptKeys.all });
       } catch (error) {
-        if (error instanceof GenerationCancelledError) return;
+        if (error instanceof GenerationCancelledError) {
+          return;
+        }
         const problem = queueProblemOf(error);
         if (isQueueHoldReason(problem)) {
           const held = queueHoldOf(error, problem, new Date());
@@ -376,7 +410,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const resumedVia = useRef<ResumedVia>("reset");
   const resume = useCallback(
     (via: ResumedVia) => {
-      if (holding.current === null) return;
+      if (holding.current === null) {
+        return;
+      }
       holding.current = null;
       resumedVia.current = via;
       savePreferences({ hold: null });
@@ -390,12 +426,16 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const lastKeyed = useRef(keyed);
   const lastPlan = useRef(plan);
   useEffect(() => {
-    const via = keyed !== lastKeyed.current ? "key" : lastPlan.current !== null && plan !== lastPlan.current ? "plan" : null;
+    const via = resumeTrigger(keyed !== lastKeyed.current, lastPlan.current !== null && plan !== lastPlan.current);
     lastKeyed.current = keyed;
     lastPlan.current = plan;
-    if (via === null) return;
+    if (via === null) {
+      return;
+    }
     resumedVia.current = via;
-    if (preferences.hold?.reason === "monthSpent") resume(via);
+    if (preferences.hold?.reason === "monthSpent") {
+      resume(via);
+    }
   }, [keyed, plan]);
   // Each wait is logged once as it begins and once as it ends, whichever way it was learned:
   // from a refusal, or from the month's counts (docs/features/capture-queue.md, "Waiting at a
@@ -403,7 +443,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const loggedHold = useRef<QueueHold | null>(null);
   useEffect(() => {
     const previous = loggedHold.current;
-    if (previous?.reason === hold?.reason) return;
+    if (previous?.reason === hold?.reason) {
+      return;
+    }
     loggedHold.current = hold;
     if (previous !== null) {
       reporter.warn({ name: "captureQueueResumed", reason: previous.reason, waiting: waitingCount.current, via: resumedVia.current });
@@ -421,7 +463,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   }, [hold, reporter]);
 
   useEffect(() => {
-    if (monthHold === null) return;
+    if (monthHold === null) {
+      return;
+    }
     const timer = setTimeout(
       () => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }),
       Math.max(0, monthHold.resumesAt - Date.now()),
@@ -433,14 +477,18 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   // can fetch instead; a shell that always had one is not a connection.
   const persistedHold = preferences.hold;
   useEffect(() => {
-    if (persistedHold === null) return;
+    if (persistedHold === null) {
+      return;
+    }
     const timer = setTimeout(() => resume("reset"), Math.max(0, persistedHold.resumesAt - Date.now()));
     return () => clearTimeout(timer);
   }, [persistedHold, resume]);
   const hadYouTubeFetch = useRef(youTubeFetch !== null);
   useEffect(() => {
     const has = youTubeFetch !== null;
-    if (has && !hadYouTubeFetch.current) resume("extension");
+    if (has && !hadYouTubeFetch.current) {
+      resume("extension");
+    }
     hadYouTubeFetch.current = has;
   }, [youTubeFetch, resume]);
 
@@ -459,21 +507,27 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
     queue.isSuccess &&
     followed.isSuccess;
   useEffect(() => {
-    if (canMake && next !== null) void make(next);
+    if (canMake && next !== null) {
+      void make(next);
+    }
   }, [canMake, next, make]);
 
   // A finished batch says so once, then the next one counts from one again. One that left
   // problems keeps saying so until the reader dismisses it.
   const finished = batch !== null && making === null && paced.ready.length === 0;
   useEffect(() => {
-    if (!finished || attention.length > 0) return;
+    if (!finished || attention.length > 0) {
+      return;
+    }
     setNotice({ kind: "done", made: batch.done });
     setBatch(null);
   }, [finished, attention.length, batch]);
 
   const setPaused = useCallback(
     (paused: boolean) => {
-      if (paused && making !== null) cancelled.current = making.capture.videoId;
+      if (paused && making !== null) {
+        cancelled.current = making.capture.videoId;
+      }
       savePreferences({ paused });
     },
     [making, savePreferences],
@@ -481,7 +535,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
 
   const remove = useCallback(
     (videoId: VideoId) => {
-      if (making?.capture.videoId === videoId) cancelled.current = videoId;
+      if (making?.capture.videoId === videoId) {
+        cancelled.current = videoId;
+      }
       void captureQueueStore.removeQueued(videoId).then(refresh);
     },
     [making, captureQueueStore, refresh],
@@ -492,7 +548,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const retry = useCallback(
     (videoId: VideoId) => {
       const capture = items.find((each) => each.videoId === videoId);
-      if (capture === undefined) return;
+      if (capture === undefined) {
+        return;
+      }
       void captureQueueStore.saveQueued({ ...capture, status: "waiting", problem: null }).then(refresh);
     },
     [items, captureQueueStore, refresh],
@@ -503,7 +561,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       const chosenAt = new Date().toISOString();
       const chosen = new Set<string>(videoIds);
       for (const capture of items) {
-        if (chosen.has(capture.videoId) && capture.status === "waiting") await captureQueueStore.saveQueued({ ...capture, chosenAt });
+        if (chosen.has(capture.videoId) && capture.status === "waiting") {
+          await captureQueueStore.saveQueued({ ...capture, chosenAt });
+        }
       }
       refresh();
     },
@@ -512,8 +572,12 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
 
   const removeMany = useCallback(
     async (videoIds: readonly VideoId[]) => {
-      if (making !== null && videoIds.includes(making.capture.videoId)) cancelled.current = making.capture.videoId;
-      for (const videoId of videoIds) await captureQueueStore.removeQueued(videoId);
+      if (making !== null && videoIds.includes(making.capture.videoId)) {
+        cancelled.current = making.capture.videoId;
+      }
+      for (const videoId of videoIds) {
+        await captureQueueStore.removeQueued(videoId);
+      }
       refresh();
     },
     [making, captureQueueStore, refresh],
@@ -521,7 +585,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
 
   const clear = useCallback(async () => {
     const removed = waiting.length;
-    if (making !== null) cancelled.current = making.capture.videoId;
+    if (making !== null) {
+      cancelled.current = making.capture.videoId;
+    }
     await captureQueueStore.removeWaiting();
     refresh();
     return removed;
@@ -590,7 +656,9 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       dismissStrip: () => {
         setAttentionDismissed(true);
         setNotice(null);
-        if (waiting.length === 0) setBatch(null);
+        if (waiting.length === 0) {
+          setBatch(null);
+        }
       },
     }),
     [
@@ -621,4 +689,4 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       clear,
     ],
   );
-}
+};

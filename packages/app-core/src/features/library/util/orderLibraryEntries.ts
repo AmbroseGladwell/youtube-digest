@@ -11,8 +11,12 @@ const unknownLast =
   (a, b) => {
     const left = key(a);
     const right = key(b);
-    if (left === null) return right === null ? 0 : 1;
-    if (right === null) return -1;
+    if (left === null) {
+      return right === null ? 0 : 1;
+    }
+    if (right === null) {
+      return -1;
+    }
     return compare(left, right);
   };
 
@@ -21,7 +25,7 @@ const byTitle = unknownLast(libraryEntryTitle, (left, right) =>
 );
 const oldestFirst = unknownLast(libraryEntrySavedAt, (left, right) => left.localeCompare(right));
 
-export function orderLibraryEntries<T extends LibraryEntry>(entries: T[], sort: LibrarySort): T[] {
+export const orderLibraryEntries = <T extends LibraryEntry>(entries: T[], sort: LibrarySort): T[] => {
   const newest = orderLibraryEntriesBySavedAt(entries);
   switch (sort) {
     case "newest":
@@ -31,4 +35,4 @@ export function orderLibraryEntries<T extends LibraryEntry>(entries: T[], sort: 
     case "title":
       return newest.sort(byTitle);
   }
-}
+};

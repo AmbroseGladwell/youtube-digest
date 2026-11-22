@@ -51,7 +51,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   about: null,
 };
 
-function SectionBody({ id }: { id: SettingsSectionId }) {
+const SectionBody = ({ id }: { id: SettingsSectionId }) => {
   switch (id) {
     case "account":
       return <SyncPanel />;
@@ -90,11 +90,18 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
         </>
       );
   }
-}
+};
+
+const backLabel = (sectionPage: boolean, isPanel: boolean, homeName: string): string => {
+  if (sectionPage) {
+    return "Settings";
+  }
+  return isPanel ? homeName : "All overviews";
+};
 
 // Design OV-51 (docs/features/settings.md): two panes on a wide screen, and on a phone or in
 // the panel the list is the page and each section is a page of its own.
-export function SettingsPage({ section }: SettingsPageProps) {
+export const SettingsPage = ({ section }: SettingsPageProps) => {
   const analytics = useAnalytics();
   const sections = useSettingsSections();
   const isPanel = useIsPanel();
@@ -108,7 +115,7 @@ export function SettingsPage({ section }: SettingsPageProps) {
   const backToOverviews = useBackTo(Routes.home());
   const backLink = useLentBackLink({
     to: sectionPage ? Routes.settings() : Routes.home(),
-    label: sectionPage ? "Settings" : isPanel ? homeName : "All overviews",
+    label: backLabel(sectionPage, isPanel, homeName),
     // In the panel the page draws no link of its own, so the bar holds it throughout
     // (design 205d-2).
     inPage: !isPanel,
@@ -184,4 +191,4 @@ export function SettingsPage({ section }: SettingsPageProps) {
       )}
     </div>
   );
-}
+};

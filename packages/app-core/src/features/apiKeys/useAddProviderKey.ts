@@ -21,7 +21,7 @@ export type AddKeyState =
   | { step: "failed"; message: string }
   | { step: "saved"; models: number; model: string };
 
-export function useAddProviderKey(provider: Provider) {
+export const useAddProviderKey = (provider: Provider) => {
   const [state, setState] = useState<AddKeyState>({ step: "idle" });
   const { apiKeys, saveKey } = useApiKeys();
   const permissions = useProviderPermissions();
@@ -75,4 +75,4 @@ export function useAddProviderKey(provider: Provider) {
   );
 
   return { state, add, reset };
-}
+};

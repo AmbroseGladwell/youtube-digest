@@ -5,8 +5,10 @@ let cached: string | null = null;
 
 // A tenth of a second of 8-bit silence, for starting the audio element inside a tap
 // (PlayerEngine's unlock). Built rather than inlined so the header's arithmetic is visible.
-export function silentWavDataUri(): string {
-  if (cached !== null) return cached;
+export const silentWavDataUri = (): string => {
+  if (cached !== null) {
+    return cached;
+  }
   const bytes = new Uint8Array(44 + SAMPLES);
   const view = new DataView(bytes.buffer);
   const ascii = (offset: number, text: string) => [...text].forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
@@ -28,4 +30,4 @@ export function silentWavDataUri(): string {
 
   cached = `data:audio/wav;base64,${btoa(String.fromCharCode(...bytes))}`;
   return cached;
-}
+};

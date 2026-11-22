@@ -25,7 +25,9 @@ const reporting = (options: Partial<ReportStartupFailureOptions> & Pick<ReportSt
   let failing = false;
   const createApi = ({ apiUrl, token }: { apiUrl: string; token: string | null }): ErrorsApi => ({
     send: async (batch, sendOptions) => {
-      if (failing) throw new Error("Simulated: offline");
+      if (failing) {
+        throw new Error("Simulated: offline");
+      }
       sent.push({ apiUrl, token, batch, keepalive: sendOptions?.keepalive });
     },
   });

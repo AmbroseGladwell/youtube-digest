@@ -41,7 +41,7 @@ const CHAPTER_TOO_BIG_TO_SKIP = 0.25;
 // and beyond that every source shares the same long rows. A source whose author marks out more
 // parts than its row has key points takes the next row's counts, keeping its own length and
 // point size (docs/features/overview-generation-decisions.md, "One note budget").
-export function noteBudget(form: SourceForm, sourceWords: number, headedParts = 0): NoteBudget {
+export const noteBudget = (form: SourceForm, sourceWords: number, headedParts = 0): NoteBudget => {
   const rows = ROWS[form];
   const row = rows.findIndex(([upToWords]) => sourceWords <= upToWords);
   const own = rows[row]![1];
@@ -52,28 +52,30 @@ export function noteBudget(form: SourceForm, sourceWords: number, headedParts = 
     ...(dense ? { keyPoints: next.keyPoints, mostChapters: next.mostChapters } : {}),
     bigPictureWords: bigPictureBudget(sourceWords),
   };
-}
+};
 
 export const mostWordsPerKeyPoint = ({ wordsPerKeyPoint }: NoteBudget): number => Math.ceil(wordsPerKeyPoint * ROOM_OVER_THE_TARGET);
 
 // Positions are paragraphs for written sources and transcript segments for spoken ones.
-export function positionsInTheFinalStretch(positionWords: readonly number[]): ReadonlySet<number> {
+export const positionsInTheFinalStretch = (positionWords: readonly number[]): ReadonlySet<number> => {
   const total = positionWords.reduce((sum, words) => sum + words, 0);
   const final = new Set<number>();
   let before = 0;
   positionWords.forEach((words, index) => {
-    if (before >= total * FINAL_STRETCH) final.add(index);
+    if (before >= total * FINAL_STRETCH) {
+      final.add(index);
+    }
     before += words;
   });
   return final;
-}
+};
 
 // Returns positions in chapterStarts.
-export function chaptersTooBigToSkip(positionWords: readonly number[], chapterStarts: readonly number[]): number[] {
+export const chaptersTooBigToSkip = (positionWords: readonly number[], chapterStarts: readonly number[]): number[] => {
   const total = positionWords.reduce((sum, words) => sum + words, 0);
   return chapterStarts.flatMap((start, index) => {
     const end = chapterStarts[index + 1] ?? positionWords.length;
     const words = positionWords.slice(start, end).reduce((sum, count) => sum + count, 0);
     return words / total > CHAPTER_TOO_BIG_TO_SKIP ? [index] : [];
   });
-}
+};

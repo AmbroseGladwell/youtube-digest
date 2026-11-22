@@ -1,9 +1,9 @@
-import pg from "pg";
+import type pg from "pg";
 import type { SqlClient } from "./SqlClient.js";
 
 type Queryable = Pick<pg.Pool, "query"> | Pick<pg.PoolClient, "query">;
 
-function clientOver(queryable: Queryable, transaction: SqlClient["transaction"]): SqlClient {
+const clientOver = (queryable: Queryable, transaction: SqlClient["transaction"]): SqlClient => {
   return {
     async query<Row>(text: string, params: unknown[] = []) {
       const result = await queryable.query(text, params);
@@ -15,9 +15,9 @@ function clientOver(queryable: Queryable, transaction: SqlClient["transaction"])
     transaction,
     close: async () => {},
   };
-}
+};
 
-export function createPgSqlClient(pool: pg.Pool): SqlClient {
+export const createPgSqlClient = (pool: pg.Pool): SqlClient => {
   const transaction: SqlClient["transaction"] = async (run) => {
     const connection = await pool.connect();
     try {
@@ -33,4 +33,4 @@ export function createPgSqlClient(pool: pg.Pool): SqlClient {
     }
   };
   return { ...clientOver(pool, transaction), close: () => pool.end() };
-}
+};

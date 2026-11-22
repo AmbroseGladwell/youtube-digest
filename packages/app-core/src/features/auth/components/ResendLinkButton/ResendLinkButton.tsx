@@ -17,7 +17,7 @@ const secondsLeft = (sentAt: number, now: number): number =>
 // The server sends nothing inside its one-a-minute cooldown, so the button waits it out
 // with a clock rather than offering a send that would silently do nothing
 // (docs/features/sign-in.md).
-export function ResendLinkButton({ sentAt, sending, label = "Send another link", onResend }: ResendLinkButtonProps) {
+export const ResendLinkButton = ({ sentAt, sending, label = "Send another link", onResend }: ResendLinkButtonProps) => {
   const [now, setNow] = useState(() => Date.now());
   const waiting = secondsLeft(sentAt, now);
 
@@ -26,7 +26,9 @@ export function ResendLinkButton({ sentAt, sending, label = "Send another link",
     const timer = setInterval(() => {
       const current = Date.now();
       setNow(current);
-      if (secondsLeft(sentAt, current) === 0) clearInterval(timer);
+      if (secondsLeft(sentAt, current) === 0) {
+        clearInterval(timer);
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, [sentAt]);
@@ -45,4 +47,4 @@ export function ResendLinkButton({ sentAt, sending, label = "Send another link",
       {label}
     </button>
   );
-}
+};

@@ -17,8 +17,11 @@ export class SourceStepsPageObject extends PageObject {
       const marks = this.get(readAlongNoteTestIds.bullet);
       await expect(marks.first()).toBeVisible();
       for (const mark of await marks.all()) {
-        if (dotted) await expect(mark).toHaveText("");
-        else await expect(mark).toHaveText(/^\d+\.$/);
+        if (dotted) {
+          await expect(mark).toHaveText("");
+        } else {
+          await expect(mark).toHaveText(/^\d+\.$/);
+        }
       }
     });
 
@@ -79,8 +82,11 @@ export class SourceStepsPageObject extends PageObject {
   verifyDubiousReasonReads = (reason: string, saidAt: string | null) =>
     this.step(`verifyDubiousReasonReads ${reason} ${saidAt}`, async () => {
       await expect(this.get(dubiousStepFlagTestIds.reason)).toHaveText(reason);
-      if (saidAt === null) await this.expectToHaveCount(dubiousStepFlagTestIds.saidAt, 0);
-      else await expect(this.get(dubiousStepFlagTestIds.saidAt)).toHaveText(saidAt);
+      if (saidAt === null) {
+        await this.expectToHaveCount(dubiousStepFlagTestIds.saidAt, 0);
+      } else {
+        await expect(this.get(dubiousStepFlagTestIds.saidAt)).toHaveText(saidAt);
+      }
     });
 
   verifyHowToApplyIsPersonalised = (personalised: boolean) =>

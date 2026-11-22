@@ -3,7 +3,7 @@ import { answered, createApiCaller, createApiRequester, refusalOf, sendApiCall, 
 import type { ChatApi, ChatOutcome, ChatProgress } from "./ChatApi.js";
 import { SyncTransportError } from "./SyncRequestError.js";
 
-async function* serverSentEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<unknown> {
+const serverSentEvents = async function* (body: ReadableStream<Uint8Array>): AsyncGenerator<unknown> {
   const decoder = new TextDecoder();
   let buffered = "";
   for await (const bytes of body as unknown as AsyncIterable<Uint8Array>) {
@@ -16,12 +16,14 @@ async function* serverSentEvents(body: ReadableStream<Uint8Array>): AsyncGenerat
         .filter((line) => line.startsWith("data:"))
         .map((line) => line.slice(5).trimStart())
         .join("\n");
-      if (data !== "") yield JSON.parse(data);
+      if (data !== "") {
+        yield JSON.parse(data);
+      }
     }
   }
-}
+};
 
-export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
+export const createFetchChatApi = (options: ApiRequesterOptions): ChatApi => {
   const call = createApiCaller(options);
   const request = createApiRequester(options);
   const streamed = async (
@@ -33,21 +35,33 @@ export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
   ): Promise<ChatOutcome> => {
     const prepared = call("POST", path, { body: question, ...(signal === undefined ? {} : { signal }) });
     const response = await sendApiCall(prepared);
-    if (!response.ok) throw await refusalOf(response, prepared.requestId);
-    if (response.body === null) throw new SyncTransportError("The answer arrived with no body", { requestId: prepared.requestId });
+    if (!response.ok) {
+      throw await refusalOf(response, prepared.requestId);
+    }
+    if (response.body === null) {
+      throw new SyncTransportError("The answer arrived with no body", { requestId: prepared.requestId });
+    }
     let outcome: ChatOutcome | null = null;
     try {
       for await (const raw of serverSentEvents(response.body)) {
         const event = ChatStreamEvent.parse(raw);
-        if (event.type === "text") onText(event.text);
-        else if (event.type === "answered" || event.type === "failed") outcome = event;
-        else onProgress?.(event);
+        if (event.type === "text") {
+          onText(event.text);
+        } else if (event.type === "answered" || event.type === "failed") {
+          outcome = event;
+        } else {
+          onProgress?.(event);
+        }
       }
     } catch (error) {
-      if (signal?.aborted === true) throw error;
+      if (signal?.aborted === true) {
+        throw error;
+      }
       throw new SyncTransportError("The answer stopped arriving", { cause: error, requestId: prepared.requestId });
     }
-    if (outcome === null) throw new SyncTransportError("The answer ended without settling", { requestId: prepared.requestId });
+    if (outcome === null) {
+      throw new SyncTransportError("The answer ended without settling", { requestId: prepared.requestId });
+    }
     return outcome;
   };
   return {
@@ -63,4 +77,4 @@ export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
         onProgress,
       ),
   };
-}
+};

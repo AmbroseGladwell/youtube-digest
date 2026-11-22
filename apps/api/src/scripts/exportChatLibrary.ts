@@ -21,10 +21,14 @@ const query = async <T extends pg.QueryResultRow>(text: string, values: unknown[
 
 try {
   const [readOnly] = await query<{ transaction_read_only: string }>("show transaction_read_only", []);
-  if (readOnly?.transaction_read_only !== "on") throw new Error("the connection is not read only");
+  if (readOnly?.transaction_read_only !== "on") {
+    throw new Error("the connection is not read only");
+  }
 
   const [account] = await query<{ id: string }>("select id from accounts where email = $1", [email.trim().toLowerCase()]);
-  if (account === undefined) throw new Error("no account for that email");
+  if (account === undefined) {
+    throw new Error("no account for that email");
+  }
 
   const overviews = await query<{ id: string; rev: number; schema_version: number; stored_at: Date; body: unknown }>(
     `select id, rev, schema_version, stored_at, body from records

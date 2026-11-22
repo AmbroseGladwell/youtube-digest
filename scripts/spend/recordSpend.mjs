@@ -16,19 +16,19 @@ export const NOT_BUILT = "not built yet";
 export const NO_FIGURE = "the bill has no figure for this day yet";
 export const NEON_YESTERDAY_ONLY = "Neon reports only the month so far, as of the latest run";
 
-export function datesBetween(from, to) {
+export const datesBetween = (from, to) => {
   const dates = [];
   for (let time = Date.parse(`${from}T00:00:00Z`); time <= Date.parse(`${to}T00:00:00Z`); time += DAY_MS) {
     dates.push(new Date(time).toISOString().slice(0, 10));
   }
   return dates;
-}
+};
 
-export function recentDays(now, count = NIGHTLY_DAYS) {
+export const recentDays = (now, count = NIGHTLY_DAYS) => {
   const today = Date.parse(now.toISOString().slice(0, 10));
   const day = (offset) => new Date(today - offset * DAY_MS).toISOString().slice(0, 10);
   return { from: day(count), to: day(1) };
-}
+};
 
 export const spendObjectKey = (date) => `daily/${date}.csv`;
 
@@ -38,7 +38,7 @@ const ORDER = (left, right) =>
   left.area.localeCompare(right.area) ||
   (left.unit ?? "").localeCompare(right.unit ?? "");
 
-export function rowsForDay({ date, billed, manualEntries, unreadable, kept = [] }) {
+export const rowsForDay = ({ date, billed, manualEntries, unreadable, kept = [] }) => {
   const bills = billed.filter((row) => row.source === "bill");
   const read = new Set(bills.map((row) => row.provider));
   const rows = [...billed.filter((row) => row.date === date), ...kept];
@@ -63,17 +63,21 @@ export function rowsForDay({ date, billed, manualEntries, unreadable, kept = [] 
     });
   }
   return { rows: rows.sort(ORDER), conflicts };
-}
+};
 
-export function sourcesByProvider(rows) {
+export const sourcesByProvider = (rows) => {
   const sources = new Map();
-  for (const row of rows) sources.set(row.provider, new Set([...(sources.get(row.provider) ?? []), row.source]));
+  for (const row of rows) {
+    sources.set(row.provider, new Set([...(sources.get(row.provider) ?? []), row.source]));
+  }
   return [...sources].map(([provider, set]) => `${provider}: ${[...set].join("+").replace("not_tracked", "not tracked")}`).join(", ");
-}
+};
 
-export async function recordSpend({ from, to, readers, manualEntries, store, recordedAt }) {
+export const recordSpend = async ({ from, to, readers, manualEntries, store, recordedAt }) => {
   const dates = datesBetween(from, to);
-  if (dates.length === 0 || dates.length > MAX_DAYS) throw new Error(`Record between 1 and ${MAX_DAYS} days, not ${dates.length}`);
+  if (dates.length === 0 || dates.length > MAX_DAYS) {
+    throw new Error(`Record between 1 and ${MAX_DAYS} days, not ${dates.length}`);
+  }
   const warnings = [];
   const unreadable = new Map();
   const readable = new Map();
@@ -99,7 +103,11 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
   for (const date of dates) {
     const key = spendObjectKey(date);
     const unreadableToday = new Map(unreadable);
-    for (const [provider, { canRead, outOfRange }] of readable) if (!canRead(date)) unreadableToday.set(provider, outOfRange);
+    for (const [provider, { canRead, outOfRange }] of readable) {
+      if (!canRead(date)) {
+        unreadableToday.set(provider, outOfRange);
+      }
+    }
     let kept = [];
     try {
       kept = await storedRowsOf(store, key, unreadableToday);
@@ -109,7 +117,9 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
       );
     }
     const { rows, conflicts } = rowsForDay({ date, billed, manualEntries, unreadable: unreadableToday, kept });
-    for (const conflict of conflicts) warnings.push(`${date}: ${conflict} has a hand-entered figure and a bill; the bill is kept`);
+    for (const conflict of conflicts) {
+      warnings.push(`${date}: ${conflict} has a hand-entered figure and a bill; the bill is kept`);
+    }
     const csv = spendCsv(rows, recordedAt);
     const keptFrom = [...new Set(kept.map((row) => row.provider))];
     try {
@@ -121,20 +131,24 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
     }
   }
   return { days, warnings };
-}
+};
 
 const KEPT_SOURCES = new Set(["bill", "usage"]);
 
-async function storedRowsOf(store, key, unreadableToday) {
-  if (unreadableToday.size === 0) return [];
+const storedRowsOf = async (store, key, unreadableToday) => {
+  if (unreadableToday.size === 0) {
+    return [];
+  }
   const stored = await store.get(key);
-  if (stored === null) return [];
+  if (stored === null) {
+    return [];
+  }
   return parseSpendCsv(stored).filter((row) => unreadableToday.has(row.provider) && KEPT_SOURCES.has(row.source));
-}
+};
 
 const isSet = (value) => value !== undefined && value !== "";
 
-export function readersFromEnv(env, fetch, now) {
+export const readersFromEnv = (env, fetch, now) => {
   const yesterday = recentDays(now, 1).to;
   return {
     openai: isSet(env.OPENAI_ADMIN_KEY)
@@ -161,7 +175,7 @@ export function readersFromEnv(env, fetch, now) {
           }
         : { missing: "CLOUDFLARE_API_TOKEN or R2_ACCOUNT_ID is not set" },
   };
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const env = process.env;
@@ -194,7 +208,9 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     store,
     recordedAt: new Date().toISOString(),
   });
-  for (const warning of warnings) console.log(`::warning::${warning}`);
+  for (const warning of warnings) {
+    console.log(`::warning::${warning}`);
+  }
   for (const day of days) {
     console.log(
       day.recorded

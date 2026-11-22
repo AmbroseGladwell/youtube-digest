@@ -22,18 +22,39 @@ const DOCKED_STATUSES = new Set<PlayerSnapshot["status"]>(["preparing", "playing
 // docks nothing (OV-333). It is absent on the playing note's own reader, whose bar already
 // says all of it (docs/features/audio-player.md). It sits in the cooking timers' dock, under
 // any timers (design 288g).
-export function MiniPlayer() {
+export const MiniPlayer = () => {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();
   const { pathname } = useLocation();
   const { track } = snapshot;
   const shown = track !== null && snapshot.docked && DOCKED_STATUSES.has(snapshot.status) && pathname !== Routes.overview(track.overviewId);
 
-  if (!shown) return null;
+  if (!shown) {
+    return null;
+  }
   return <DockedMiniPlayer snapshot={snapshot} onStop={() => engine.stop()} />;
+};
+
+const metaText = (preparing: boolean, pausedForTimer: boolean, clock: string): string => {
+  if (preparing) {
+    return "Preparing audio";
+  }
+  return pausedForTimer ? "Paused for the timer" : clock;
+};
+
+const playLabel = (preparing: boolean, playing: boolean): string => {
+  if (preparing) {
+    return "Cancel preparing audio";
+  }
+  return playing ? "Pause" : "Play";
+};
+
+interface DockedMiniPlayerProps {
+  snapshot: PlayerSnapshot;
+  onStop: () => void;
 }
 
-function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onStop: () => void }) {
+const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
   const engine = usePlayer();
   const time = usePlayerTime();
   const analytics = useAnalytics();
@@ -63,11 +84,11 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
         >
           <span className={styles.titleText}>{track.title}</span>
           <span className={styles.meta} data-testid={miniPlayerTestIds.meta}>
-            {preparing
-              ? "Preparing audio"
-              : narrationHeld && status === "paused"
-                ? "Paused for the timer"
-                : `${section} · ${estimated}${formatClock(time)} / ${estimated}${formatClock(timings.durationSeconds)}`}
+            {metaText(
+              preparing,
+              narrationHeld && status === "paused",
+              `${section} · ${estimated}${formatClock(time)} / ${estimated}${formatClock(timings.durationSeconds)}`,
+            )}
           </span>
         </PageLink>
         <button
@@ -89,7 +110,7 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
             analytics.player.miniPlayer.playToggled({ overviewId: track.overviewId, playing: !playing && !preparing });
             engine.toggle("miniPlayer");
           }}
-          aria-label={preparing ? "Cancel preparing audio" : playing ? "Pause" : "Play"}
+          aria-label={playLabel(preparing, playing)}
           data-testid={miniPlayerTestIds.playButton}
         >
           {preparing ? (
@@ -130,4 +151,4 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
       </span>
     </div>
   );
-}
+};

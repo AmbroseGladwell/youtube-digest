@@ -52,18 +52,24 @@ export class ErrorQueue {
   }
 
   record(error: SentClientError): void {
-    if (this.#admit(this.#held.length >= MAX_CLIENT_ERROR_BATCH)) this.#held.push(error);
+    if (this.#admit(this.#held.length >= MAX_CLIENT_ERROR_BATCH)) {
+      this.#held.push(error);
+    }
   }
 
   // Warnings share the errors' budget and their batch, so a loop that keeps falling back
   // can't send more than a loop that keeps throwing.
   recordWarning(warning: ClientWarning): void {
-    if (this.#admit(this.#heldWarnings.length >= MAX_CLIENT_WARNING_BATCH)) this.#heldWarnings.push(warning);
+    if (this.#admit(this.#heldWarnings.length >= MAX_CLIENT_WARNING_BATCH)) {
+      this.#heldWarnings.push(warning);
+    }
   }
 
   // As do timings: a capture loop can't send more of them than it can errors.
   recordTiming(timing: ClientTiming): void {
-    if (this.#admit(this.#heldTimings.length >= MAX_CLIENT_TIMING_BATCH)) this.#heldTimings.push(timing);
+    if (this.#admit(this.#heldTimings.length >= MAX_CLIENT_TIMING_BATCH)) {
+      this.#heldTimings.push(timing);
+    }
   }
 
   #admit(full: boolean): boolean {
@@ -86,7 +92,9 @@ export class ErrorQueue {
       clearTimeout(this.#timer);
       this.#timer = null;
     }
-    if (this.#held.length === 0 && this.#heldWarnings.length === 0 && this.#heldTimings.length === 0) return;
+    if (this.#held.length === 0 && this.#heldWarnings.length === 0 && this.#heldTimings.length === 0) {
+      return;
+    }
     const errors = this.#held;
     const warnings = this.#heldWarnings;
     const timings = this.#heldTimings;
@@ -116,7 +124,9 @@ export class ErrorQueue {
   }
 
   dispose(): void {
-    if (this.#timer !== null) clearTimeout(this.#timer);
+    if (this.#timer !== null) {
+      clearTimeout(this.#timer);
+    }
     this.#timer = null;
     this.#held = [];
     this.#heldWarnings = [];

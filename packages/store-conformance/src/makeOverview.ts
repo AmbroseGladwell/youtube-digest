@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { OverviewId, VideoId, type Overview } from "@overview/domain";
-import type { YouTubeSource } from "@overview/domain";
+import { OverviewId, VideoId, type Overview, type YouTubeSource } from "@overview/domain";
 
 export type VideoOverview = Overview & { source: YouTubeSource };
 
-export function makeOverview(overrides: Partial<Overview> = {}): VideoOverview {
+export const makeOverview = (overrides: Partial<Overview> = {}): VideoOverview => {
   return {
     id: OverviewId.parse(randomUUID()),
     source: {
@@ -44,4 +43,4 @@ export function makeOverview(overrides: Partial<Overview> = {}): VideoOverview {
     recipe: null,
     ...overrides,
   } as VideoOverview;
-}
+};

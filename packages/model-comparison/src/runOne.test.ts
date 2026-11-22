@@ -12,11 +12,11 @@ const checkCost = (800 * 4 + 10 * 20) / 1_000_000;
 
 // Answers the kind check with the given kind apart from the queue; every other call takes
 // the next answer.
-function anthropicReplying(...answers: ({ status: number; body: string } | unknown)[]) {
+const anthropicReplying = (...answers: ({ status: number; body: string } | unknown)[]) => {
   return anthropicCheckingAs("default", ...answers);
-}
+};
 
-function anthropicCheckingAs(kind: string, ...answers: ({ status: number; body: string } | unknown)[]) {
+const anthropicCheckingAs = (kind: string, ...answers: ({ status: number; body: string } | unknown)[]) => {
   const sent: string[] = [];
   const http = (async (_url: string, init: RequestInit) => {
     if (String(init.body).includes('"noteKind"')) {
@@ -33,7 +33,7 @@ function anthropicCheckingAs(kind: string, ...answers: ({ status: number; body: 
     return new Response(JSON.stringify({ content: [{ type: "text", text }], usage }), { status: 200 });
   }) as unknown as typeof fetch;
   return { http, sent };
-}
+};
 
 const run = (http: typeof fetch) => runOne({ model: opus, apiKey: "test-key", fetched: makeFetchedTranscript(), http });
 

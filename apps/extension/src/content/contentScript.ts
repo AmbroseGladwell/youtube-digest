@@ -22,15 +22,15 @@ const currentVideoId = (): string | null =>
 
 // Every state the button is told about arrives here, which is also where waiting for a
 // press to be answered stops.
-function applyState(state: ButtonState): void {
+const applyState = (state: ButtonState): void => {
   if (confirmTimer !== null) {
     clearTimeout(confirmTimer);
     confirmTimer = null;
   }
   button?.setState(state);
-}
+};
 
-async function readState(videoId: string): Promise<void> {
+const readState = async (videoId: string): Promise<void> => {
   try {
     const state = (await chrome.runtime.sendMessage({
       type: BridgeMessage.READ_BUTTON_STATE,
@@ -44,9 +44,9 @@ async function readState(videoId: string): Promise<void> {
     // answer: it offers the run rather than claiming anything about one.
     applyState(IDLE_BUTTON_STATE);
   }
-}
+};
 
-function press(): void {
+const press = (): void => {
   if (button === null) {
     return;
   }
@@ -79,13 +79,15 @@ function press(): void {
         applyState(IDLE_BUTTON_STATE);
       }
     });
-}
+};
 
-function reconcile(): void {
+const reconcile = (): void => {
   const videoId = currentVideoId();
 
   if (videoId === null) {
-    for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) stale.remove();
+    for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) {
+      stale.remove();
+    }
     button = null;
     watchedVideoId = null;
     return;
@@ -97,7 +99,9 @@ function reconcile(): void {
   }
 
   if (button === null || !button.element.isConnected) {
-    for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) stale.remove();
+    for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) {
+      stale.remove();
+    }
     button = new OverviewButton(press);
     button.setAccentColour(accentColour);
     watchedVideoId = null;
@@ -112,9 +116,9 @@ function reconcile(): void {
     applyState(IDLE_BUTTON_STATE);
     void readState(videoId);
   }
-}
+};
 
-function scheduleReconcile(delay: number = RECONCILE_DELAY_MS): void {
+const scheduleReconcile = (delay: number = RECONCILE_DELAY_MS): void => {
   if (reconcileTimer !== null) {
     clearTimeout(reconcileTimer);
   }
@@ -122,7 +126,7 @@ function scheduleReconcile(delay: number = RECONCILE_DELAY_MS): void {
     reconcileTimer = null;
     reconcile();
   }, delay);
-}
+};
 
 // YouTube's own navigation event is the cheap signal; the observer is the safety net for
 // the action row arriving later than it. The early-out matters — YouTube mutates the
@@ -154,10 +158,10 @@ window.addEventListener("resize", () => scheduleReconcile(RESIZE_DELAY_MS));
 reconcile();
 observeRebuilds();
 
-async function followAccentColour(): Promise<void> {
+const followAccentColour = async (): Promise<void> => {
   accentColour = await readAccentColour();
   button?.setAccentColour(accentColour);
-}
+};
 
 void followAccentColour();
 onAccentColourChanged(() => void followAccentColour());

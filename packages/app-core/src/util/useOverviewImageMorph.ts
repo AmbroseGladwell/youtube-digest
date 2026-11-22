@@ -14,10 +14,10 @@ const MORPHING = "overviewMorph";
 // Both ends have to be on screen, or the image flies to or from somewhere the reader cannot
 // see. Going in that is free, because the row was just clicked; coming back out of a long
 // note the head has scrolled away, and that is the common case.
-function onScreen(element: Element): boolean {
+const onScreen = (element: Element): boolean => {
   const box = element.getBoundingClientRect();
   return box.width > 0 && box.bottom > 0 && box.top < globalThis.innerHeight;
-}
+};
 
 // The end that was already mounted when the transition began is the page being left: React
 // Router renders that tree with the transition live and only then captures the old snapshot
@@ -30,7 +30,7 @@ function onScreen(element: Element): boolean {
 // "Appeared during this transition" has to be asked afresh each time, not remembered from
 // the first render: the head arrives during the journey in, and is the one being left on the
 // journey back. Having once rendered with no transition running is what separates them.
-export function useOverviewImageMorph<T extends HTMLElement>(overviewPath: string, carries: boolean): RefObject<T | null> {
+export const useOverviewImageMorph = <T extends HTMLElement>(overviewPath: string, carries: boolean): RefObject<T | null> => {
   const element = useRef<T>(null);
   const transitioning = useViewTransitionState(overviewPath);
   const settled = useRef(!transitioning);
@@ -52,11 +52,17 @@ export function useOverviewImageMorph<T extends HTMLElement>(overviewPath: strin
     // The leaving end opens the journey, so the mark starts clean even if the end before it
     // went away without clearing — a head whose image failed after the row had named itself.
     const arriving = !settled.current;
-    if (!arriving) delete root.dataset[MORPHING];
+    if (!arriving) {
+      delete root.dataset[MORPHING];
+    }
 
     const node = element.current;
-    if (node === null || !carries || !shouldAnimateNavigation() || !onScreen(node)) return;
-    if (arriving && root.dataset[MORPHING] === undefined) return;
+    if (node === null || !carries || !shouldAnimateNavigation() || !onScreen(node)) {
+      return;
+    }
+    if (arriving && root.dataset[MORPHING] === undefined) {
+      return;
+    }
 
     node.style.viewTransitionName = OVERVIEW_IMAGE;
     named.current = true;
@@ -67,4 +73,4 @@ export function useOverviewImageMorph<T extends HTMLElement>(overviewPath: strin
   }, [transitioning, carries]);
 
   return element;
-}
+};

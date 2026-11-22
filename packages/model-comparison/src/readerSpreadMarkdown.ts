@@ -9,23 +9,31 @@ const isNoise = (pair: PairSpread) => pair.left === NOISE_PAIR[0] && pair.right 
 const isAboutNobody = (pair: PairSpread) => NOISE_PAIR.some((name) => name === pair.left || name === pair.right);
 
 // Readers' actions are personalised only where they overlap less than two runs for nobody do.
-export function personalisedVerdict(spread: ReaderSpread): string {
+export const personalisedVerdict = (spread: ReaderSpread): string => {
   const noise = spread.pairs.find(isNoise)?.meanWordOverlap ?? null;
   const between = spread.pairs.filter((pair) => !isAboutNobody(pair));
   const above = between.filter((pair) => pair.meanWordOverlap !== null && noise !== null && pair.meanWordOverlap >= noise);
-  if (noise === null || between.length === 0) return "Not enough passed videos to say.";
-  if (above.length === 0)
+  if (noise === null || between.length === 0) {
+    return "Not enough passed videos to say.";
+  }
+  if (above.length === 0) {
     return `Every pair of readers overlaps less than two runs for nobody (${overlap(noise)}): the actions change with the reader.`;
+  }
   return `${above.length} of ${between.length} reader pairs overlap as much as two runs for nobody (${overlap(noise)}) or more: for them, the context made no difference sampling didn't.`;
+};
+
+export interface JudgeSummaries {
+  judge: string;
+  summaries: readonly ActionJudgmentSummary[];
 }
 
-export function readerSpreadMarkdown(
+export const readerSpreadMarkdown = (
   readers: readonly SpreadReader[],
   spread: ReaderSpread,
   byVideo: ReadonlyMap<string, ActionsByReader>,
   transcripts: ReadonlyMap<string, FetchedTranscript>,
-  judged: { judge: string; summaries: readonly ActionJudgmentSummary[] } | null = null,
-): string {
+  judged: JudgeSummaries | null = null,
+): string => {
   const pairRow = (pair: PairSpread) =>
     `| ${pair.left} · ${pair.right} | ${pair.videos} | ${pair.bothEmpty} | ${pair.identical} (${percent(pair.identical, pair.videos)}) | ${overlap(pair.meanWordOverlap)} |`;
   const lines = [
@@ -83,9 +91,9 @@ export function readerSpreadMarkdown(
     }
   }
   return lines.join("\n");
-}
+};
 
-function judgedLines(judge: string, summaries: readonly ActionJudgmentSummary[]): string[] {
+const judgedLines = (judge: string, summaries: readonly ActionJudgmentSummary[]): string[] => {
   const share = (part: number, whole: number) => `${part} (${percent(part, whole)})`;
   const known = summaries.filter((summary) => !NOISE_PAIR.some((name) => name === summary.reader));
   return [
@@ -111,16 +119,18 @@ function judgedLines(judge: string, summaries: readonly ActionJudgmentSummary[])
     ),
     "",
   ];
-}
+};
 
 // Each reader's actions from the earlier run beside this run's, labelled in the same calls.
-export function beforeAndAfterLines(summaries: readonly ActionJudgmentSummary[]): string[] {
+export const beforeAndAfterLines = (summaries: readonly ActionJudgmentSummary[]): string[] => {
   const byName = new Map(summaries.map((summary) => [summary.reader, summary]));
   const pairs = summaries.flatMap((after) => {
     const before = byName.get(`${after.reader}${BEFORE}`);
     return before === undefined ? [] : [[before, after] as const];
   });
-  if (pairs.length === 0) return [];
+  if (pairs.length === 0) {
+    return [];
+  }
   const rate = (part: number, whole: number) => percent(part, whole);
   return [
     "### Before and after, judged together",
@@ -135,4 +145,4 @@ export function beforeAndAfterLines(summaries: readonly ActionJudgmentSummary[])
     ),
     "",
   ];
-}
+};

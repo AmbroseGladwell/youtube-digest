@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId, ProjectId, VideoId } from "@overview/domain";
-import { generateOverview, type GenerationClient } from "./generateOverview.js";
+import { generateOverview } from "./generateOverview.js";
+import { type GenerationClient } from "./requestGeneratedOutput.js";
 import { GenerationError, SchemaFailureError } from "./GenerationError.js";
 import type { GenerationInput } from "./GenerationInput.js";
 import { answeringKindCheck } from "./noteKind/answeringKindCheck.testHelper.js";
@@ -60,7 +61,9 @@ test("a well-formed response from the client assembles into a valid Overview", a
 test("a kind already checked before the account is used, and the check isn't asked again", async () => {
   const asked: string[] = [];
   const client: GenerationClient = async (request) => {
-    if ("noteKind" in request.schema.shape) asked.push("kind check");
+    if ("noteKind" in request.schema.shape) {
+      asked.push("kind check");
+    }
     return {
       inOneLine: "A short description.",
       bigPicture: "",

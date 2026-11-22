@@ -47,17 +47,39 @@ const afterOrdinal = (item: string) => {
 const KEY_POINT_LINKS = ["Then", "Also", "On top of that", "Next", "Beyond that"];
 const ACTION_LINKS = ["Then"];
 
+const linkFor = (index: number, count: number, middleLinks: string[]): string => {
+  if (index === 0) {
+    return "First";
+  }
+  return index === count - 1 ? "And finally" : middleLinks[(index - 1) % middleLinks.length]!;
+};
+
+const stepLinkFor = (index: number, count: number): string | null => {
+  if (count === 1) {
+    return null;
+  }
+  if (index === 0) {
+    return "First";
+  }
+  return index === count - 1 ? "Finally" : "Then";
+};
+
 // docs/features/tts-pre-rendered-speech.md, "The spoken script".
 const inOrder = (items: Body[], middleLinks: string[]): Body[] =>
   items.map((item, index) => {
     if (items.length === 1) {
       return item;
     }
-    const link = index === 0 ? "First" : index === items.length - 1 ? "And finally" : middleLinks[(index - 1) % middleLinks.length]!;
+    const link = linkFor(index, items.length, middleLinks);
     return { ...item, spoken: `${link}, ${afterOrdinal(item.text)}` };
   });
 
-const withRange = ({ text, range }: { text: string; range: TimeRange | null }): Body => (range === null ? { text } : { text, range });
+interface RangedText {
+  text: string;
+  range: TimeRange | null;
+}
+
+const withRange = ({ text, range }: RangedText): Body => (range === null ? { text } : { text, range });
 
 const COUNT_NAME = ["", "one", "two", "three", "four", "five", "six", "seven"];
 const STEP_COUNT_NAME = [
@@ -94,13 +116,24 @@ const spokenWatchAnswer = ({ answer, range }: WatchAnyway, episode: boolean) => 
 const READ_ANYWAY_LABEL: Record<WatchAnswer, string> = { no: "No", yes: "Yes", partial: "Just part of it" };
 
 const spokenReadAnswer = ({ answer }: ReadAnyway, chapters: readonly string[]) => {
-  if (answer === "yes") return "Yes, it's worth reading.";
-  if (answer === "no") return "No, you can probably skip the article, the overview covers it.";
+  if (answer === "yes") {
+    return "Yes, it's worth reading.";
+  }
+  if (answer === "no") {
+    return "No, you can probably skip the article, the overview covers it.";
+  }
   return chapters.length === 0 ? "Yes, it's worth reading one part." : `Yes, it's worth reading part of it: ${chapters.join(", and ")}.`;
 };
 
 // One chapter has nowhere to link but the top of the page (design 77p).
 export const hasChapterLinks = (overview: SharedNote): boolean => (overview.article?.chapters.length ?? 0) > 1;
+
+export interface ShownRecipeParts {
+  ingredients?: readonly string[];
+  units?: RecipeUnits;
+  methodAmounts?: readonly MethodAmount[];
+  steps?: boolean;
+}
 
 // Takes SharedNote rather than Overview because a shared copy has to build the same body
 // from the same fields, and the three the copy leaves out are ones this never read
@@ -109,10 +142,7 @@ export const hasChapterLinks = (overview: SharedNote): boolean => (overview.arti
 // on screen (docs/features/recipe-notes.md, "Reading aloud").
 // `steps: false` is the reader's switch: the block is hidden everywhere, and How to apply is
 // introduced as it was before the block.
-export function overviewNoteLines(
-  overview: SharedNote,
-  shown: { ingredients?: readonly string[]; units?: RecipeUnits; methodAmounts?: readonly MethodAmount[]; steps?: boolean } = {},
-): NoteLine[] {
+export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts = {}): NoteLine[] => {
   const lines: NoteLine[] = [];
 
   const section = (name: string, heading: Body, bodies: Body[], bullet = false) => {
@@ -202,10 +232,12 @@ export function overviewNoteLines(
     SOURCE_STEPS_SECTION,
     { text: SOURCE_STEPS_SECTION, spoken: sourceStepsHeading(steps.length, sourceWord), aside: `From the ${sourceWord}, in its order` },
     steps.map(({ text, range, dubiousReason }, index) => {
-      const link = steps.length === 1 ? null : index === 0 ? "First" : index === steps.length - 1 ? "Finally" : "Then";
+      const link = stepLinkFor(index, steps.length);
       const said = link === null ? text : `${link}, ${afterOrdinal(text)}`;
       const body = withRange({ text, range });
-      if (dubiousReason !== null) return { ...body, dubiousReason, spoken: `${said}${flaggedAloud(dubiousReason)}` };
+      if (dubiousReason !== null) {
+        return { ...body, dubiousReason, spoken: `${said}${flaggedAloud(dubiousReason)}` };
+      }
       return link === null ? body : { ...body, spoken: said };
     }),
     true,
@@ -256,8 +288,8 @@ export function overviewNoteLines(
   }
 
   return lines;
-}
+};
 
-export function noteSectionNames(lines: NoteLine[]): string[] {
+export const noteSectionNames = (lines: NoteLine[]): string[] => {
   return [...new Set(lines.map((line) => line.section))];
-}
+};

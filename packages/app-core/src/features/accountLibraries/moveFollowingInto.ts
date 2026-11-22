@@ -10,7 +10,7 @@ export interface FollowingStores {
 // playlist this device never followed is not carried, only dropped. Written there before it
 // leaves here, so a move that stops is finished by running it again
 // (docs/features/playlists.md, "Signing in").
-export async function moveFollowingInto(from: FollowingStores, into: FollowingStores): Promise<{ playlists: number }> {
+export const moveFollowingInto = async (from: FollowingStores, into: FollowingStores): Promise<{ playlists: number }> => {
   const [leaving, held, queued] = await Promise.all([
     from.followedPlaylistStore.listFollowed(),
     into.followedPlaylistStore.listFollowed(),
@@ -31,7 +31,9 @@ export async function moveFollowingInto(from: FollowingStores, into: FollowingSt
 
   const leavingIds = new Set<string>(leaving.map((playlist) => playlist.id));
   await into.captureQueueStore.enqueue(queued.filter((capture) => leavingIds.has(capture.fromPlaylist.id)));
-  for (const capture of queued) await from.captureQueueStore.removeQueued(capture.videoId);
+  for (const capture of queued) {
+    await from.captureQueueStore.removeQueued(capture.videoId);
+  }
 
   return { playlists: leaving.filter((playlist) => !heldIds.has(playlist.id)).length };
-}
+};

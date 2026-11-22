@@ -13,20 +13,22 @@ test("each request is signed with the SHA-1 of key, secret and time, and the sec
   });
 });
 
-function directoryOver(answers: Record<string, unknown>) {
+const directoryOver = (answers: Record<string, unknown>) => {
   const asked: { url: string; headers: Record<string, string> }[] = [];
   const directory = podcastIndexDirectory(
     KEY,
     async (url, headers) => {
       asked.push({ url, headers });
       const path = new URL(url).pathname.replace("/api/1.0/", "");
-      if (!(path in answers)) throw new Error(`unexpected ${path}`);
+      if (!(path in answers)) {
+        throw new Error(`unexpected ${path}`);
+      }
       return answers[path];
     },
     () => NOW,
   );
   return { directory, asked };
-}
+};
 
 test("a show is searched for by its name, and each feed found becomes a show with its feed", async () => {
   const { directory, asked } = directoryOver({

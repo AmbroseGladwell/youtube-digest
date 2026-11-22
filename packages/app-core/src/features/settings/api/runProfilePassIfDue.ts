@@ -26,10 +26,17 @@ export interface ProfilePassDeps {
   now?: () => Date;
 }
 
+const passKeyOf = (madeOn: KeySource | null, hasOwn: boolean, hasApi: boolean): KeySource | null => {
+  if (madeOn === "own" && hasOwn) {
+    return "own";
+  }
+  return madeOn === "ours" && hasApi ? "ours" : null;
+};
+
 // Runs after an overview lands, on the key that made it. Its failing never touches the overview
 // and nothing tells the reader, so it is counted and left; the next due pass picks up from here
 // (docs/features/personalisation.md, "A profile that learns"). True when Settings changed.
-export async function runProfilePassIfDue({
+export const runProfilePassIfDue = async ({
   madeOn,
   own,
   api,
@@ -37,9 +44,11 @@ export async function runProfilePassIfDue({
   settingsStore,
   analytics,
   now = () => new Date(),
-}: ProfilePassDeps): Promise<boolean> {
-  const passAsks = madeOn === "own" && own !== null ? "own" : madeOn === "ours" && api !== null ? "ours" : null;
-  if (passAsks === null) return false;
+}: ProfilePassDeps): Promise<boolean> => {
+  const passAsks = passKeyOf(madeOn, own !== null, api !== null);
+  if (passAsks === null) {
+    return false;
+  }
   const counted = analytics.settings.personalisation;
   try {
     const [settings, overviews, topics] = await Promise.all([
@@ -52,7 +61,9 @@ export async function runProfilePassIfDue({
       countAtLastPass: settings.overviewsAtLastProfilePass,
       keepLearning: settings.keepLearning,
     };
-    if (!profilePassIsDue(schedule)) return false;
+    if (!profilePassIsDue(schedule)) {
+      return false;
+    }
     await settingsStore.update({ overviewsAtLastProfilePass: overviews.length });
 
     const recent = [...overviews].sort((a, b) => b.savedAt.localeCompare(a.savedAt)).slice(0, PROFILE_PASS_RECENT_OVERVIEWS);
@@ -72,7 +83,9 @@ export async function runProfilePassIfDue({
     };
     const items: ProfilePassItem[] = passAsks === "own" ? await generateProfileItems(own!, input) : (await api!.profilePass(input)).items;
     counted.profilePassRan({ added: items.length, key: passAsks });
-    if (items.length === 0) return true;
+    if (items.length === 0) {
+      return true;
+    }
 
     const learnedAt = now().toISOString();
     const learned: LearnedItems = Object.fromEntries(
@@ -84,4 +97,4 @@ export async function runProfilePassIfDue({
     counted.profilePassFailed({ key: passAsks });
     return false;
   }
-}
+};

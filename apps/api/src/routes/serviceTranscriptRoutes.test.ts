@@ -19,16 +19,16 @@ const HEADERS = { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
 const videoIdNumbered = (n: number) => `vid${String(n).padStart(8, "0")}`;
 const PLAYLIST_OF_NINETEEN = 19;
 
-async function serviceApp(
+const serviceApp = async (
   youTube: FakeYouTube,
   proxyDailyFetches = 1000,
   logger?: ReturnType<typeof recordingLogger>["logger"],
-): Promise<TestApp> {
+): Promise<TestApp> => {
   return createTestApp(
     {},
     { transcriptService: { fetches: youTube.fetches, proxyDailyFetches }, ...(logger === undefined ? {} : { logger }) },
   );
-}
+};
 
 const saying = (lines: LogLine[], msg: string) => lines.filter((line) => line.msg === msg);
 
@@ -37,7 +37,9 @@ const readers = new WeakMap<TestApp, Map<string, Promise<TestAccount>>>();
 const askAs = async (testApp: TestApp, videoId: string, reader = "first") => {
   const byName = readers.get(testApp) ?? new Map<string, Promise<TestAccount>>();
   readers.set(testApp, byName);
-  if (!byName.has(reader)) byName.set(reader, makeAccount(testApp));
+  if (!byName.has(reader)) {
+    byName.set(reader, makeAccount(testApp));
+  }
   const account = await byName.get(reader)!;
   return account.inject({ method: "POST", url: `/api/service-transcripts/${videoId}` });
 };
@@ -195,10 +197,12 @@ test("a signed-in reader is counted by account at its plan's cap, not by address
   await testApp.close();
 });
 
-async function spend(testApp: TestApp, accountId: AccountId, keySource: "ours" | "own", count: number) {
+const spend = async (testApp: TestApp, accountId: AccountId, keySource: "ours" | "own", count: number) => {
   const usage = new OverviewUsageRepository(testApp.sql);
-  for (let made = 0; made < count; made += 1) await usage.reserve(testApp.clock.now, accountId, keySource, count);
-}
+  for (let made = 0; made < count; made += 1) {
+    await usage.reserve(testApp.clock.now, accountId, keySource, count);
+  }
+};
 
 test("an account with no overview left this month on either key is refused, with the reset date", async () => {
   const youTube = makeFakeYouTube();

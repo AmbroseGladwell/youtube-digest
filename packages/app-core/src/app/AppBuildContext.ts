@@ -13,6 +13,6 @@ const AppBuildContext = createContext<AppBuild | null>(null);
 
 export const AppBuildProvider = AppBuildContext.Provider;
 
-export function useAppBuild(): AppBuild | null {
+export const useAppBuild = (): AppBuild | null => {
   return useContext(AppBuildContext);
-}
+};

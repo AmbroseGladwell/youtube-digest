@@ -5,16 +5,16 @@ import type { SignedOutTrial } from "./types/SignedOutTrial.js";
 // reads it to fetch a transcript.
 let snapshot: SignedOutTrial | null = null;
 
-export function currentSignedOutTrial(): SignedOutTrial {
+export const currentSignedOutTrial = (): SignedOutTrial => {
   snapshot ??= readSignedOutTrial();
   return snapshot;
-}
+};
 
-function update(change: Partial<SignedOutTrial>): void {
+const update = (change: Partial<SignedOutTrial>): void => {
   const next = { ...currentSignedOutTrial(), ...change };
   writeSignedOutTrial(next);
   snapshot = next;
-}
+};
 
 export const rememberTrialToken = (token: string): void => update({ token });
 export const forgetTrialToken = (): void => update({ token: null });

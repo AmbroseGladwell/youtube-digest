@@ -43,7 +43,9 @@ export class IndexedDbFollowedPlaylistStore implements FollowedPlaylistStore {
       change: { op: "replace", record },
     });
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 
   async unfollow(playlistId: PlaylistId): Promise<void> {
@@ -61,7 +63,9 @@ export class IndexedDbFollowedPlaylistStore implements FollowedPlaylistStore {
         change: { op: "delete" },
       }));
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 
   async getCheck(playlistId: PlaylistId): Promise<PlaylistCheck | null> {

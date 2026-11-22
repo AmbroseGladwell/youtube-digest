@@ -15,7 +15,7 @@ export interface OnboardingAboutYouProps {
 
 // Design 327i, from 141a: a sentence to finish, not a form, straight after Moment 3 has shown what
 // it's for. Nothing here is required (docs/features/personalisation.md).
-export function OnboardingAboutYou({ aboutYou, topicNames, saving, onContinue }: OnboardingAboutYouProps) {
+export const OnboardingAboutYou = ({ aboutYou, topicNames, saving, onContinue }: OnboardingAboutYouProps) => {
   const [answer, setAnswer] = useState(aboutYou);
   const isPanel = useIsPanel();
 
@@ -56,4 +56,4 @@ export function OnboardingAboutYou({ aboutYou, topicNames, saving, onContinue }:
       </div>
     </div>
   );
-}
+};

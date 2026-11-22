@@ -7,7 +7,7 @@ export interface CappedTopics {
   hiddenCount: number;
 }
 
-export function cappedTopics(topics: Topic[], selectedId: TopicId | "all", limit: number = TOPIC_LIMIT): CappedTopics {
+export const cappedTopics = (topics: Topic[], selectedId: TopicId | "all", limit: number = TOPIC_LIMIT): CappedTopics => {
   const shown = topics.slice(0, limit);
   const selected = topics.find((topic) => topic.id === selectedId);
 
@@ -16,4 +16,4 @@ export function cappedTopics(topics: Topic[], selectedId: TopicId | "all", limit
   }
 
   return { shown, hiddenCount: topics.length - shown.length };
-}
+};

@@ -28,7 +28,7 @@ const SIGN_OUT_SYNC_LIMIT_MS = 10_000;
 // Owns the one engine for this tab: built when a server is known, stopped when it goes.
 // Sits above the router so a cycle outlives every navigation, and inside the query
 // client so a pull can tell every open page to re-read (docs/features/sync-client.md).
-export function SyncRuntime({ children }: { children: ReactNode }) {
+export const SyncRuntime = ({ children }: { children: ReactNode }) => {
   const stores = useStores();
   const { connection, setConnection } = useSyncConnection();
   // Never the library being left, mid-switch (docs/features/account-libraries.md).
@@ -52,7 +52,9 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   useEffect(() => {
     const signedIn = connected && !wasConnected.current;
     wasConnected.current = connected;
-    if (!signedIn) return;
+    if (!signedIn) {
+      return;
+    }
     setSignOutNotice(null);
     setOpening(true);
   }, [connected]);
@@ -97,8 +99,12 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   // A new plan can make room for an overview the last month refused (tiers.md, "Counting").
   useEffect(() => {
     const changed = lastPlan.current !== null && plan !== null && plan !== lastPlan.current;
-    if (plan !== null) lastPlan.current = plan;
-    if (changed) engine.current?.engine.retryWaiting();
+    if (plan !== null) {
+      lastPlan.current = plan;
+    }
+    if (changed) {
+      engine.current?.engine.retryWaiting();
+    }
   }, [plan]);
 
   const value = useMemo(
@@ -167,12 +173,12 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   );
 
   return <SyncProvider value={value}>{children}</SyncProvider>;
-}
+};
 
 // One cycle, so whatever was waiting goes before the session does; a cycle that hangs is
 // given up on rather than holding the reader signed in (docs/features/account-libraries.md).
-async function lastCycleBeforeSigningOut(engine: SyncEngine, online: boolean): Promise<SignOutOutcome> {
+const lastCycleBeforeSigningOut = async (engine: SyncEngine, online: boolean): Promise<SignOutOutcome> => {
   const limit = new Promise<null>((resolve) => setTimeout(() => resolve(null), SIGN_OUT_SYNC_LIMIT_MS));
   const finished = await Promise.race([engine.sync().catch(() => engine.status), limit]);
   return signOutOutcomeOf(finished ?? engine.status, { online, timedOut: finished === null });
-}
+};

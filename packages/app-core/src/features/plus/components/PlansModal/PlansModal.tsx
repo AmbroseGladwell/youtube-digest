@@ -19,14 +19,20 @@ export interface PlansModalProps {
 // the nudge's See plans. Every plan has every feature, so the cards differ only in their figures.
 // Choosing a paid plan goes to checkout once billing exists (OV-18); until then the buttons say so
 // rather than going nowhere. On a phone Plus comes first, so the recommended plan is in view.
-export function PlansModal({ open, plan, onClose }: PlansModalProps) {
+export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const phone = useIsPhone();
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
   const cards = phone ? [...PLAN_CARDS].reverse() : PLAN_CARDS;
 
@@ -49,9 +55,14 @@ export function PlansModal({ open, plan, onClose }: PlansModalProps) {
       <p className={styles.foot}>Cancel anytime. Prices in GBP.</p>
     </dialog>
   );
+};
+
+interface PlanCardItemProps {
+  card: PlanCard;
+  yours: boolean;
 }
 
-function PlanCardItem({ card, yours }: { card: PlanCard; yours: boolean }) {
+const PlanCardItem = ({ card, yours }: PlanCardItemProps) => {
   const plan = PLAN_OF_CARD[card.name]!;
   const recommended = plan === "plus";
   return (
@@ -83,22 +94,24 @@ function PlanCardItem({ card, yours }: { card: PlanCard; yours: boolean }) {
       <p className={styles.note}>{card.note}</p>
       {yours ? (
         <span className={styles.current}>What you’re on now</span>
-      ) : plan === "free" ? null : (
-        <>
-          <button
-            type="button"
-            className={recommended ? styles.primary : styles.secondary}
-            disabled
-            aria-describedby={`plans-modal-billing-${plan}`}
-            data-testid={plansModalTestIds.choose(plan)}
-          >
-            {CHOOSE[plan]}
-          </button>
-          <span id={`plans-modal-billing-${plan}`} className={styles.soon}>
-            Paying for a plan opens soon.
-          </span>
-        </>
+      ) : (
+        plan !== "free" && (
+          <>
+            <button
+              type="button"
+              className={recommended ? styles.primary : styles.secondary}
+              disabled
+              aria-describedby={`plans-modal-billing-${plan}`}
+              data-testid={plansModalTestIds.choose(plan)}
+            >
+              {CHOOSE[plan]}
+            </button>
+            <span id={`plans-modal-billing-${plan}`} className={styles.soon}>
+              Paying for a plan opens soon.
+            </span>
+          </>
+        )
       )}
     </li>
   );
-}
+};

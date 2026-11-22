@@ -1,5 +1,4 @@
-import { useCallback } from "react";
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import type { Provider } from "@overview/domain";
 import type { ApiKeys } from "./ApiKeys.js";
 import { readApiKeys, writeApiKeys } from "./apiKeyStorage.js";
@@ -19,26 +18,30 @@ export interface UseApiKeysResult {
 const listeners = new Set<() => void>();
 let snapshot: ApiKeys | null = null;
 
-function getSnapshot(): ApiKeys {
+const getSnapshot = (): ApiKeys => {
   snapshot ??= readApiKeys();
   return snapshot;
-}
+};
 
-function refresh(): void {
+const refresh = (): void => {
   snapshot = readApiKeys();
-  for (const listener of listeners) listener();
-}
+  for (const listener of listeners) {
+    listener();
+  }
+};
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
   globalThis.addEventListener?.("storage", refresh);
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) globalThis.removeEventListener?.("storage", refresh);
+    if (listeners.size === 0) {
+      globalThis.removeEventListener?.("storage", refresh);
+    }
   };
-}
+};
 
-export function useApiKeys(): UseApiKeysResult {
+export const useApiKeys = (): UseApiKeysResult => {
   const apiKeys = useSyncExternalStore(subscribe, getSnapshot);
 
   const saveKey = useCallback((provider: Provider, key: string) => {
@@ -59,4 +62,4 @@ export function useApiKeys(): UseApiKeysResult {
   }, []);
 
   return { apiKeys, saveKey, removeKey, removeAllKeys };
-}
+};

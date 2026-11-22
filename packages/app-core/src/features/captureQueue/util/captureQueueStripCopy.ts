@@ -13,12 +13,14 @@ export interface CaptureQueueStripCopy {
 
 // Design 27k's words for each state, wide and compact (27n, 27o), with 95ac's for a queue
 // waiting on its playlists' paces.
-export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean): CaptureQueueStripCopy {
+export const captureQueueStripCopy = (strip: CaptureQueueStrip, compact: boolean): CaptureQueueStripCopy => {
   switch (strip.kind) {
     case "making": {
       const title = `Making ${strip.position} of ${strip.total}`;
       const tomorrow = `${strip.tomorrow.toLocaleString("en-GB")} continue tomorrow`;
-      if (strip.tomorrow === 0) return { title, meta: `${strip.step} · ${strip.title}` };
+      if (strip.tomorrow === 0) {
+        return { title, meta: `${strip.step} · ${strip.title}` };
+      }
       return compact ? { title, meta: tomorrow } : { title, meta: `${strip.step} · ${strip.title}`, after: `· ${tomorrow}` };
     }
     case "paused":
@@ -74,4 +76,4 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
     case "done":
       return { title: `Queue done · ${strip.made.toLocaleString("en-GB")} made`, meta: null };
   }
-}
+};

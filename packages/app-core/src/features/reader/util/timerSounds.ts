@@ -34,14 +34,16 @@ const note = (name: string): number => {
 };
 
 const panned = ({ audio }: Engine, node: AudioNode, pan: number): AudioNode => {
-  if (pan === 0) return node;
+  if (pan === 0) {
+    return node;
+  }
   const panner = audio.createStereoPanner();
   panner.pan.value = pan;
   node.connect(panner);
   return panner;
 };
 
-function partial(engine: Engine, out: AudioNode, { f, t, peak, decay, attack = 0.004, type = "sine", pan = 0 }: Tone): OscillatorNode {
+const partial = (engine: Engine, out: AudioNode, { f, t, peak, decay, attack = 0.004, type = "sine", pan = 0 }: Tone): OscillatorNode => {
   const { audio } = engine;
   const osc = audio.createOscillator();
   const env = audio.createGain();
@@ -54,9 +56,9 @@ function partial(engine: Engine, out: AudioNode, { f, t, peak, decay, attack = 0
   osc.start(t);
   osc.stop(t + attack + decay + 0.05);
   return osc;
-}
+};
 
-function tine(engine: Engine, out: AudioNode, { ratio = 3.5, index = 1.4, bright = 0.09, ...tone }: Tine): void {
+const tine = (engine: Engine, out: AudioNode, { ratio = 3.5, index = 1.4, bright = 0.09, ...tone }: Tine): void => {
   const carrier = partial(engine, out, { ...tone, attack: 0.005 });
   const mod = engine.audio.createOscillator();
   const depth = engine.audio.createGain();
@@ -66,16 +68,16 @@ function tine(engine: Engine, out: AudioNode, { ratio = 3.5, index = 1.4, bright
   mod.connect(depth).connect(carrier.frequency);
   mod.start(tone.t);
   mod.stop(tone.t + tone.decay);
-}
+};
 
-function mallet(engine: Engine, out: AudioNode, f: number, t: number, level: number, pan = 0): void {
+const mallet = (engine: Engine, out: AudioNode, f: number, t: number, level: number, pan = 0): void => {
   partial(engine, out, { f, t, peak: level, decay: 0.9, attack: 0.003, pan });
   partial(engine, out, { f: f * 3.93, t, peak: level * 0.22, decay: 0.18, attack: 0.002, pan });
   partial(engine, out, { f: f * 9.24, t, peak: level * 0.06, decay: 0.05, attack: 0.001, pan });
   partial(engine, out, { f: f * 0.5, t, peak: level * 0.12, decay: 0.5, attack: 0.01, pan });
-}
+};
 
-function vibe(engine: Engine, out: AudioNode, f: number, t: number, level: number, length: number, pan = 0): void {
+const vibe = (engine: Engine, out: AudioNode, f: number, t: number, level: number, length: number, pan = 0): void => {
   const { audio } = engine;
   const shimmer = audio.createGain();
   const lfo = audio.createOscillator();
@@ -88,9 +90,9 @@ function vibe(engine: Engine, out: AudioNode, f: number, t: number, level: numbe
   shimmer.connect(out);
   tine(engine, shimmer, { f, t, peak: level, decay: length, ratio: 4, index: 0.5, bright: 0.05, pan });
   partial(engine, shimmer, { f: f * 4, t, peak: level * 0.08, decay: length * 0.3, pan });
-}
+};
 
-function pluck(engine: Engine, out: AudioNode, f: number, t: number, level: number, pan = 0): void {
+const pluck = (engine: Engine, out: AudioNode, f: number, t: number, level: number, pan = 0): void => {
   const { audio } = engine;
   const osc = audio.createOscillator();
   const tone = audio.createBiquadFilter();
@@ -108,9 +110,9 @@ function pluck(engine: Engine, out: AudioNode, f: number, t: number, level: numb
   osc.start(t);
   osc.stop(t + 1.5);
   partial(engine, out, { f, t, peak: level * 0.5, decay: 1.6, attack: 0.003, pan });
-}
+};
 
-function strings(engine: Engine, out: AudioNode, f: number, t: number, level: number, length: number, pan = 0): void {
+const strings = (engine: Engine, out: AudioNode, f: number, t: number, level: number, length: number, pan = 0): void => {
   const { audio } = engine;
   const section = audio.createGain();
   const tone = audio.createBiquadFilter();
@@ -141,7 +143,7 @@ function strings(engine: Engine, out: AudioNode, f: number, t: number, level: nu
     player.stop(t + length + 0.1);
   }
   panned(engine, tone.connect(section), pan).connect(out);
-}
+};
 
 const SOUNDS: Record<TimerSound, { seconds: number; room: number; voice: Voice }> = {
   ready: {
@@ -329,9 +331,13 @@ const roomEcho = (audio: AudioContext): AudioBuffer => {
 let engine: Engine | null = null;
 
 const audioEngine = (): Engine | null => {
-  if (engine !== null) return engine;
+  if (engine !== null) {
+    return engine;
+  }
   const Context = typeof window === "undefined" ? undefined : window.AudioContext;
-  if (Context === undefined) return null;
+  if (Context === undefined) {
+    return null;
+  }
   const audio = new Context();
   const limiter = audio.createDynamicsCompressor();
   limiter.threshold.value = -14;
@@ -354,19 +360,27 @@ const audioEngine = (): Engine | null => {
   return engine;
 };
 
-export function unlockTimerSound(): void {
+export const unlockTimerSound = (): void => {
   const audio = audioEngine()?.audio;
-  if (audio !== undefined && audio.state === "suspended") void audio.resume();
-}
+  if (audio !== undefined && audio.state === "suspended") {
+    void audio.resume();
+  }
+};
 
 // Every sound is made here with Web Audio, so none needs a file and they play in the panel too
 // (docs/features/recipe-notes.md, "Timers"). Returns a stop that fades the sound out.
-export function playTimerSound(sound: TimerSound, { vibrate = true } = {}): () => void {
-  if (vibrate) navigator.vibrate?.(VIBRATION_MS);
+export const playTimerSound = (sound: TimerSound, { vibrate = true } = {}): (() => void) => {
+  if (vibrate) {
+    navigator.vibrate?.(VIBRATION_MS);
+  }
   const ready = audioEngine();
-  if (ready === null) return () => {};
+  if (ready === null) {
+    return () => {};
+  }
   const { audio, master, room } = ready;
-  if (audio.state === "suspended") void audio.resume();
+  if (audio.state === "suspended") {
+    void audio.resume();
+  }
   const { voice, room: roomAmount } = SOUNDS[sound];
   const out = audio.createGain();
   out.connect(master);
@@ -378,4 +392,4 @@ export function playTimerSound(sound: TimerSound, { vibrate = true } = {}): () =
     out.gain.setTargetAtTime(0, audio.currentTime, 0.03);
     setTimeout(() => out.disconnect(), 200);
   };
-}
+};

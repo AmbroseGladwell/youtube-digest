@@ -4,8 +4,12 @@ import type { GenerationReadiness } from "../newOverview/useGenerationReadiness.
 
 // What this device is called in a sentence about where a key lives. The distinction is the
 // whole point of the sentence, so it is not softened to "here" (design 110g).
-export const deviceWord = (surface: Surface, isPhone: boolean): string =>
-  surface === "extension" ? "the extension" : isPhone ? "this phone" : "this computer";
+export const deviceWord = (surface: Surface, isPhone: boolean): string => {
+  if (surface === "extension") {
+    return "the extension";
+  }
+  return isPhone ? "this phone" : "this computer";
+};
 
 // "Anthropic, OpenAI, Google Gemini, DeepSeek, xAI Grok or Mistral" — the six named in
 // full, once, where a reader with no key at all needs to know what would count
@@ -21,10 +25,13 @@ export type KeyPrompt =
   | { kind: "no-key"; heading: string; detail: string }
   | { kind: "wrong-device"; heading: string; detail: string; provider: Provider; fallback: Provider; footnote: string };
 
-export function keyPrompt(
-  readiness: GenerationReadiness,
-  { surface, isPhone, detail }: { surface: Surface; isPhone: boolean; detail: string },
-): KeyPrompt | null {
+export interface KeyPromptOptions {
+  surface: Surface;
+  isPhone: boolean;
+  detail: string;
+}
+
+export const keyPrompt = (readiness: GenerationReadiness, { surface, isPhone, detail }: KeyPromptOptions): KeyPrompt | null => {
   if (readiness.hasChosenKey) {
     return null;
   }
@@ -47,7 +54,7 @@ export function keyPrompt(
     fallback: readiness.fallback,
     footnote: `Using ${fallbackName} changes the choice on every device.`,
   };
-}
+};
 
 export const sentenceCase = (words: string): string => `${words.charAt(0).toUpperCase()}${words.slice(1)}`;
 

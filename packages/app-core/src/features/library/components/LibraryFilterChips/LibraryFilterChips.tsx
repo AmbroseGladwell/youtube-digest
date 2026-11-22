@@ -15,7 +15,7 @@ const GAP = 8;
 // The filters changed from the default, on one line under the search that never wraps:
 // whole chips while they fit, then "+N" for the rest ("OV-84 2 Library Filter" 84o, 84r-2).
 // A hidden copy of the row is what gets measured, since a chip that is not shown has no width.
-export function LibraryFilterChips({ chips, onRemove, onMore }: LibraryFilterChipsProps) {
+export const LibraryFilterChips = ({ chips, onRemove, onMore }: LibraryFilterChipsProps) => {
   const row = useRef<HTMLDivElement | null>(null);
   const measure = useRef<HTMLDivElement | null>(null);
   const [fitting, setFitting] = useState(chips.length);
@@ -23,7 +23,9 @@ export function LibraryFilterChips({ chips, onRemove, onMore }: LibraryFilterChi
   useLayoutEffect(() => {
     const rowElement = row.current;
     const measureElement = measure.current;
-    if (!rowElement || !measureElement) return;
+    if (!rowElement || !measureElement) {
+      return;
+    }
     const fit = () => {
       const widths = [...measureElement.querySelectorAll<HTMLElement>("[data-chip]")].map((chip) => chip.offsetWidth);
       const more = measureElement.querySelector<HTMLElement>("[data-more]")?.offsetWidth ?? 0;
@@ -91,4 +93,4 @@ export function LibraryFilterChips({ chips, onRemove, onMore }: LibraryFilterChi
       </div>
     </div>
   );
-}
+};

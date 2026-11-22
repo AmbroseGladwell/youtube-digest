@@ -7,7 +7,7 @@ import {
   type ProfilePassInput,
   type ProfilePassItem,
 } from "@overview/domain";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { GenerationError } from "./GenerationError.js";
 
 const ProfileOutput = z.object({
@@ -33,18 +33,20 @@ Say what you can fairly conclude that the reader is doing, learning or working t
 
 const listed = (items: readonly string[]) => (items.length === 0 ? "none" : items.map((item) => `- ${item}`).join("\n"));
 
-function sourceOf(indices: readonly number[], overviews: ProfilePassInput["overviews"]): string {
+const sourceOf = (indices: readonly number[], overviews: ProfilePassInput["overviews"]): string => {
   const tally = new Map<string, number>();
   for (const index of indices) {
-    for (const topic of overviews[index]?.topics ?? []) tally.set(topic, (tally.get(topic) ?? 0) + 1);
+    for (const topic of overviews[index]?.topics ?? []) {
+      tally.set(topic, (tally.get(topic) ?? 0) + 1);
+    }
   }
   const topic = [...tally.entries()].sort(([, a], [, b]) => b - a)[0]?.[0];
   return topic === undefined ? `From ${indices.length} overviews` : `From ${indices.length} overviews on ${topic.toLowerCase()}`;
-}
+};
 
 // The model says what and which overviews; code counts them, drops what can't stand and writes
 // the source line (docs/prototype/constraints.md, docs/features/personalisation.md).
-export async function generateProfileItems(client: GenerationClient, input: ProfilePassInput): Promise<ProfilePassItem[]> {
+export const generateProfileItems = async (client: GenerationClient, input: ProfilePassInput): Promise<ProfilePassItem[]> => {
   const raw = await client({
     systemPrompt: SYSTEM_PROMPT,
     userMessage: [
@@ -66,8 +68,10 @@ export async function generateProfileItems(client: GenerationClient, input: Prof
   const held = new Set([...input.learned, ...input.removed].map(learnedItemKey));
   return parsed.data.items.flatMap(({ text, overviewIndices }) => {
     const indices = [...new Set(overviewIndices)].filter((index) => index < input.overviews.length);
-    if (indices.length < MIN_OVERVIEWS_BEHIND_AN_ITEM || held.has(learnedItemKey(text))) return [];
+    if (indices.length < MIN_OVERVIEWS_BEHIND_AN_ITEM || held.has(learnedItemKey(text))) {
+      return [];
+    }
     held.add(learnedItemKey(text));
     return [{ text: text.trim(), source: sourceOf(indices, input.overviews) }];
   });
-}
+};

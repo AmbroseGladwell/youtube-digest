@@ -30,8 +30,12 @@ const warnIfDegraded = (
   failures: TranscriptSourceFailure[],
   answeredBy: TranscriptSourceFailure["tier"] | null,
 ) => {
-  if (answeredBy !== null && !failures.some(({ outcome }) => outcome === "failed")) return;
-  if (failures.length === 0) return;
+  if (answeredBy !== null && !failures.some(({ outcome }) => outcome === "failed")) {
+    return;
+  }
+  if (failures.length === 0) {
+    return;
+  }
   deps.warn?.({
     name: "transcriptFellThrough",
     passed: failures.map(({ tier, outcome, error }) => ({
@@ -56,13 +60,15 @@ export interface ResolvedVideoWithSource extends ResolvedVideo {
 
 // The rungs in order, each asked only if the one before could not answer. The store is
 // read before any of them (docs/features/transcript-retrieval.md).
-export async function resolveVideo(pastedUrl: string, deps: VideoResolutionDeps): Promise<ResolvedVideoWithSource> {
+export const resolveVideo = async (pastedUrl: string, deps: VideoResolutionDeps): Promise<ResolvedVideoWithSource> => {
   const url = canonicalYouTubeUrl(pastedUrl) ?? pastedUrl;
   const { stopwatch } = deps;
   const cached = await (stopwatch
     ? stopwatch.time("stored", () => readCachedVideo(url, deps.transcriptStore), answeredOrNot)
     : readCachedVideo(url, deps.transcriptStore));
-  if (cached) return { ...cached, source: "stored" };
+  if (cached) {
+    return { ...cached, source: "stored" };
+  }
 
   const context: TranscriptSourceContext = {
     readHeldTranscript: (videoId) => deps.transcriptStore.getTranscript(videoId),
@@ -95,12 +101,14 @@ export async function resolveVideo(pastedUrl: string, deps: VideoResolutionDeps)
 
   warnIfDegraded(deps, failures, null);
   throw new NoTranscriptSourceError(transcriptFailureMessage(failures), failures);
-}
+};
 
 // The one place a resolved video is written back, so every rung completes a record that
 // was stored before metadata was kept (docs/features/watching-detection.md).
-async function saveResolved(resolved: ResolvedVideo, transcriptStore: TranscriptStore): Promise<void> {
-  if (resolved.video.id === null) return;
+const saveResolved = async (resolved: ResolvedVideo, transcriptStore: TranscriptStore): Promise<void> => {
+  if (resolved.video.id === null) {
+    return;
+  }
   await transcriptStore.saveTranscript({
     videoId: resolved.video.id,
     segments: resolved.transcript,
@@ -108,24 +116,28 @@ async function saveResolved(resolved: ResolvedVideo, transcriptStore: Transcript
     fetchedAt: new Date().toISOString(),
     video: resolved.video,
   });
-}
+};
 
 // The url is this request's, not the one the first fetch happened to use: everything else
 // describes the video, but the url is what the reader's timestamp links point at.
-async function readCachedVideo(url: string, transcriptStore: TranscriptStore): Promise<ResolvedVideo | null> {
+const readCachedVideo = async (url: string, transcriptStore: TranscriptStore): Promise<ResolvedVideo | null> => {
   const parsedId = parseVideoId(url);
-  if (parsedId === null) return null;
+  if (parsedId === null) {
+    return null;
+  }
 
   const stored: StoredTranscript | null = await transcriptStore.getTranscript(parsedId);
-  if (!stored?.video) return null;
+  if (!stored?.video) {
+    return null;
+  }
 
   return { video: { ...stored.video, url }, transcript: stored.segments, generated: stored.generated };
-}
+};
 
 // Only ever used to ask the store a question. A parse that disagreed with the platform's
 // own id costs one metadata call and then resolves by the real id; it can never file
 // captions under an invented one.
-function parseVideoId(url: string): VideoId | null {
+const parseVideoId = (url: string): VideoId | null => {
   const id = extractYouTubeVideoId(url);
   return id === null ? null : VideoId.parse(id);
-}
+};

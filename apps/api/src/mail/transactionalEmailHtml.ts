@@ -75,7 +75,7 @@ const styles = `
 
 // Design OV-88: one shell every transactional mail fills, so a later mail (an email change,
 // a receipt) brings only its words (docs/features/sign-in.md, "The mail").
-export function transactionalEmailHtml(slots: TransactionalEmailSlots): string {
+export const transactionalEmailHtml = (slots: TransactionalEmailSlots): string => {
   const site = escapeHtml(slots.siteUrl);
   const siteLabel = escapeHtml(new URL(slots.siteUrl).host);
   const action = slots.action === null ? "" : actionBlock(slots.action);
@@ -164,9 +164,14 @@ ${notes}
 </body>
 </html>
 `;
+};
+
+interface EmailAction {
+  label: string;
+  link: string;
 }
 
-function actionBlock({ label: rawLabel, link: rawLink }: { label: string; link: string }): string {
+const actionBlock = ({ label: rawLabel, link: rawLink }: EmailAction): string => {
   const link = escapeHtml(rawLink);
   const label = escapeHtml(rawLabel);
   const vmlWidth = rawLabel.length * 10 + 64;
@@ -181,4 +186,4 @@ function actionBlock({ label: rawLabel, link: rawLink }: { label: string; link: 
 <p class="ov-muted" style="margin: 0 0 4px; font-family: ${sans}; font-size: 13.5px; line-height: 20px; color: ${light.muted};">Button not working? Paste this link into your browser:</p>
 <p style="margin: 0; font-family: ${sans}; font-size: 13.5px; line-height: 20px; word-break: break-all;"><a class="ov-link" href="${link}" style="color: ${light.link}; text-decoration: underline;">${link}</a></p>
 `;
-}
+};

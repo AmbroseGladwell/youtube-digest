@@ -18,11 +18,16 @@ export interface ReadingPosition {
   setRemembering: (remembering: boolean) => void;
 }
 
-export function useReadingPosition(
+export interface UseReadingPositionOptions {
+  ignored: boolean;
+  head: HTMLElement | null;
+}
+
+export const useReadingPosition = (
   videoId: string | null,
   blocks: TranscriptBlock[],
-  { ignored, head }: { ignored: boolean; head: HTMLElement | null },
-): ReadingPosition {
+  { ignored, head }: UseReadingPositionOptions,
+): ReadingPosition => {
   const accountId = useLibraryAccountId();
   const [remembered] = useState(() => (videoId === null ? null : readReadingPosition(videoId, accountId)));
   const [restoreDone, setRestoreDone] = useState(false);
@@ -92,6 +97,11 @@ export function useReadingPosition(
     },
     setRemembering,
   };
+};
+
+interface RestingRow {
+  index: number;
+  startMs: number;
 }
 
 // The line a block is put back on is the line one is read off, so a restore does not then
@@ -99,10 +109,10 @@ export function useReadingPosition(
 // one to start at the line rather than the nearest to it: a block still half behind the
 // head is not the one being read. A pixel of tolerance, because the scroll that put it
 // there lands on whole device pixels.
-function rowAtRestingLine(container: HTMLElement, line: number): { index: number; startMs: number } | null {
+const rowAtRestingLine = (container: HTMLElement, line: number): RestingRow | null => {
   const rows = Array.from(container.children);
   const found = rows.findIndex((child) => child.getBoundingClientRect().top >= line - 1);
   const index = found === -1 ? rows.length - 1 : found;
   const row = rows[index];
   return row === undefined ? null : { index, startMs: Number((row as HTMLElement).dataset.startMs) };
-}
+};

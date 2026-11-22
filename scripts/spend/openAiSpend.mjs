@@ -7,7 +7,7 @@ const DAY_SECONDS = 86_400;
 export const SPLIT_SINCE = "2026-11-09";
 export const UNSPLIT = "spend before 9 Nov 2026 is one project for every environment: see unsplit";
 
-export function environmentOfProject(name, date) {
+export const environmentOfProject = (name, date) => {
   const words = name
     .toLowerCase()
     .split(/[^a-z0-9]+/)
@@ -15,13 +15,13 @@ export function environmentOfProject(name, date) {
     .map((word) => (word === "production" ? "prod" : word));
   const environment = ENVIRONMENTS.find((candidate) => words.at(-1) === candidate || words[0] === candidate) ?? "unattributed";
   return environment === "prod" && date < SPLIT_SINCE ? "unsplit" : environment;
-}
+};
 
-export function areaOfLineItem(lineItem) {
+export const areaOfLineItem = (lineItem) => {
   return /embedding/i.test(lineItem ?? "") ? "embeddings" : "generation";
-}
+};
 
-export function openAiRowsOf({ projects, buckets }) {
+export const openAiRowsOf = ({ projects, buckets }) => {
   const nameOf = new Map(projects.map((project) => [project.id, project.name]));
   const totals = new Map();
   for (const bucket of buckets) {
@@ -53,15 +53,17 @@ export function openAiRowsOf({ projects, buckets }) {
     }
   }
   return [...totals.values()];
-}
+};
 
-async function readJson(fetch, url, adminKey) {
+const readJson = async (fetch, url, adminKey) => {
   const response = await fetch(url, { headers: { Authorization: `Bearer ${adminKey}`, Accept: "application/json" } });
-  if (!response.ok) throw new ProviderReadError(`OpenAI answered ${response.status}`);
+  if (!response.ok) {
+    throw new ProviderReadError(`OpenAI answered ${response.status}`);
+  }
   return response.json();
-}
+};
 
-async function allProjects(fetch, adminKey) {
+const allProjects = async (fetch, adminKey) => {
   const projects = [];
   let after = null;
   do {
@@ -74,9 +76,9 @@ async function allProjects(fetch, adminKey) {
     after = page.has_more ? page.last_id : null;
   } while (after !== null);
   return projects;
-}
+};
 
-async function allCostBuckets(fetch, adminKey, from, to) {
+const allCostBuckets = async (fetch, adminKey, from, to) => {
   const startTime = Date.parse(`${from}T00:00:00Z`) / 1000;
   const endTime = Date.parse(`${to}T00:00:00Z`) / 1000 + DAY_SECONDS;
   const buckets = [];
@@ -88,9 +90,9 @@ async function allCostBuckets(fetch, adminKey, from, to) {
     page = body.has_more ? body.next_page : null;
   } while (page !== null);
   return buckets;
-}
+};
 
-export async function openAiSpend({ adminKey, fetch, from, to }) {
+export const openAiSpend = async ({ adminKey, fetch, from, to }) => {
   const [projects, buckets] = await Promise.all([allProjects(fetch, adminKey), allCostBuckets(fetch, adminKey, from, to)]);
   return openAiRowsOf({ projects, buckets });
-}
+};

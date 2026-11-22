@@ -10,7 +10,7 @@ import {
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 import type { GenerationApi } from "./GenerationApi.js";
 
-export function createFetchGenerationApi(options: ApiRequesterOptions): GenerationApi {
+export const createFetchGenerationApi = (options: ApiRequesterOptions): GenerationApi => {
   const request = createApiRequester(options);
   return {
     status: () => answered(request("GET", "/generations", OurKeyGenerationStatus)),
@@ -30,4 +30,4 @@ export function createFetchGenerationApi(options: ApiRequesterOptions): Generati
     },
     startTrial: () => answered(request("POST", "/trials", TrialToken)),
   };
-}
+};

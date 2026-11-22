@@ -71,7 +71,9 @@ export class TranscriptionQueue {
   }
 
   kick(): void {
-    if (!this.#options.runWorkers) return;
+    if (!this.#options.runWorkers) {
+      return;
+    }
     while (this.#active < this.#options.concurrency) {
       this.#active += 1;
       void this.#work().finally(() => {
@@ -100,7 +102,9 @@ export class TranscriptionQueue {
     const { jobs, clock } = this.#options;
     const now = clock();
     const job = await jobs.claimNext(now, this.#lease(), new Date(now.getTime() - KEEP_FINISHED_MS));
-    if (job === null) return false;
+    if (job === null) {
+      return false;
+    }
     await this.#run(job);
     return true;
   }
@@ -128,18 +132,24 @@ export class TranscriptionQueue {
       const now = clock();
       if (state === null) {
         hostErrors += 1;
-        if (hostErrors > HOST_ERRORS_TOLERATED) return this.#cancelAndFail(job, callId, "failed", "host_unanswering");
+        if (hostErrors > HOST_ERRORS_TOLERATED) {
+          return this.#cancelAndFail(job, callId, "failed", "host_unanswering");
+        }
         await jobs.renew(job.id, this.#lease());
         continue;
       }
       hostErrors = 0;
-      if (state.state === "failed") return this.#fail(job, HOST_FAILURES[state.error] ?? "failed", state.detail ?? state.error);
+      if (state.state === "failed") {
+        return this.#fail(job, HOST_FAILURES[state.error] ?? "failed", state.detail ?? state.error);
+      }
       if (startedAt === null && state.state !== "waiting") {
         startedAt = now;
         await jobs.markStarted(job.id, now, this.#lease());
         this.#options.log.info(apiLogLines.transcription.started({ waitedSeconds: seconds(job.requestedAt, now) }));
       }
-      if (state.state === "done") return this.#finish(job, state.result);
+      if (state.state === "done") {
+        return this.#finish(job, state.result);
+      }
       if (startedAt === null && now.getTime() - job.requestedAt.getTime() > START_WAIT_MS) {
         return this.#cancelAndFail(job, callId, "no-transcriber", "no_card_in_time");
       }
@@ -156,7 +166,9 @@ export class TranscriptionQueue {
     const key = VideoId.parse(job.sourceKey);
     const transcript: StoredTranscript = { videoId: key, segments: result.segments, generated: true, fetchedAt: now.toISOString() };
     const fault = transcriptFault(transcript, key);
-    if (fault !== null) return this.#fail(job, "failed", fault);
+    if (fault !== null) {
+      return this.#fail(job, "failed", fault);
+    }
     await jobs.markReady(job, transcript, result.audioSeconds, now);
     const dollars = (result.workerSeconds / 3600) * (GPU_DOLLARS_PER_HOUR[result.gpu] ?? DEAREST_GPU);
     await costs.recordOrLog(

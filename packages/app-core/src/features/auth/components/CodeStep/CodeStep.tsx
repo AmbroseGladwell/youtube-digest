@@ -35,7 +35,7 @@ const secondsLeft = (sentAt: number, now: number): number =>
 // Designs 14d and 14i: one box for both codes, the step-up's and the new address's, so the
 // two read as a pair. The heading takes focus when the step arrives; an error keeps focus
 // in the field (docs/features/account-changes.md).
-export function CodeStep({
+export const CodeStep = ({
   heading,
   lead,
   note,
@@ -53,7 +53,7 @@ export function CodeStep({
   onDifferentAddress,
   variant = "box",
   headingId,
-}: CodeStepProps) {
+}: CodeStepProps) => {
   const ids = useId();
   const [code, setCode] = useState("");
   const [empty, setEmpty] = useState(false);
@@ -67,18 +67,24 @@ export function CodeStep({
   }, [heading]);
 
   useEffect(() => {
-    if (sentAt === null) return;
+    if (sentAt === null) {
+      return;
+    }
     setNow(Date.now());
     const timer = setInterval(() => {
       const current = Date.now();
       setNow(current);
-      if (secondsLeft(sentAt, current) === 0) clearInterval(timer);
+      if (secondsLeft(sentAt, current) === 0) {
+        clearInterval(timer);
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, [sentAt]);
 
   useEffect(() => {
-    if (problem !== null) field.current?.focus();
+    if (problem !== null) {
+      field.current?.focus();
+    }
   }, [problem]);
 
   const shown = empty ? "Enter the code from the email." : problem;
@@ -191,4 +197,4 @@ export function CodeStep({
       )}
     </form>
   );
-}
+};

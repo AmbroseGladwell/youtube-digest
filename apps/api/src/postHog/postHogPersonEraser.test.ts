@@ -13,7 +13,9 @@ const answering = (persons: Array<{ id: string }>, deleteStatus = 204) => {
   const fetch = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const headers = init?.headers as Record<string, string>;
     sent.push({ url: String(input), method: init?.method ?? "GET", authorization: headers.authorization! });
-    if (init?.method === "DELETE") return new Response(null, { status: deleteStatus });
+    if (init?.method === "DELETE") {
+      return new Response(null, { status: deleteStatus });
+    }
     return new Response(JSON.stringify({ results: persons }), { status: 200 });
   };
   return { sent, fetch };

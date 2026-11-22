@@ -15,7 +15,7 @@ export interface ButtonFacts {
 
 // A run for another video is not this button's run: the panel follows the tab you are
 // looking at, and two tabs can each have one of these.
-export function overviewButtonState({ videoId, report, held }: ButtonFacts): ButtonState {
+export const overviewButtonState = ({ videoId, report, held }: ButtonFacts): ButtonState => {
   const mine = report !== null && report.videoId === videoId;
 
   if (mine && report.status === "running") {
@@ -37,4 +37,4 @@ export function overviewButtonState({ videoId, report, held }: ButtonFacts): But
   }
 
   return IDLE_BUTTON_STATE;
-}
+};

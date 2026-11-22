@@ -45,20 +45,26 @@ export class OtlpLogExporter {
 
   write(chunk: string): void {
     for (const line of chunk.split("\n")) {
-      if (line.trim() === "") continue;
+      if (line.trim() === "") {
+        continue;
+      }
       let parsed: unknown;
       try {
         parsed = JSON.parse(line);
       } catch {
         continue;
       }
-      if (typeof parsed !== "object" || parsed === null) continue;
+      if (typeof parsed !== "object" || parsed === null) {
+        continue;
+      }
       if (this.#held.length >= this.#options.maxHeldRecords) {
         this.#dropped += 1;
         continue;
       }
       this.#held.push(otlpLogRecord(parsed as Record<string, unknown>, this.#options.now()));
-      if (this.#held.length >= this.#options.maxBatchRecords) void this.flush();
+      if (this.#held.length >= this.#options.maxBatchRecords) {
+        void this.flush();
+      }
     }
   }
 
@@ -119,6 +125,8 @@ export class OtlpLogExporter {
       }),
       signal: AbortSignal.timeout(timeoutMs),
     });
-    if (!response.ok) throw new Error(`the log destination answered ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`the log destination answered ${response.status}`);
+    }
   }
 }

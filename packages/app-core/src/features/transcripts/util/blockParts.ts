@@ -7,7 +7,7 @@ export interface BlockPart {
   match: number | null;
 }
 
-export function blockParts(text: string, matches: TranscriptMatch[]): BlockPart[] {
+export const blockParts = (text: string, matches: TranscriptMatch[]): BlockPart[] => {
   if (matches.length === 0) {
     return [{ text, match: null }];
   }
@@ -25,4 +25,4 @@ export function blockParts(text: string, matches: TranscriptMatch[]): BlockPart[
     parts.push({ text: text.slice(cursor), match: null });
   }
   return parts;
-}
+};

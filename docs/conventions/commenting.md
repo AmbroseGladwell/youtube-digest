@@ -18,6 +18,10 @@ carry the information — typically a genuinely surprising workaround (a browser
 bug, a spec quirk) with no other home. If you're about to write more than one
 line explaining *why*, that reasoning belongs in a doc instead.
 
+The linter holds the line: `overview/no-long-comment` refuses a comment of more than
+one line, and any TODO or FIXME, on every line a change adds or edits
+(`lint-and-format.md`, "Rules on the lines a change adds").
+
 ## How this relates to `docs/reference/coding-conventions/commenting.md`
 
 That file is a general baseline, brought in from elsewhere: don't restate a

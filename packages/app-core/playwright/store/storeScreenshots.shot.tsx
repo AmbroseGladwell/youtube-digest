@@ -348,7 +348,9 @@ const panelFrom = async (page: Page, file: string): Promise<number> => {
       whole.width = shot.naturalWidth;
       whole.height = shot.naturalHeight;
       const drawing = whole.getContext("2d", { willReadFrequently: true });
-      if (drawing === null) throw new Error("no 2d context");
+      if (drawing === null) {
+        throw new Error("no 2d context");
+      }
       drawing.drawImage(shot, 0, 0);
       const { data: pixels, width, height } = drawing.getImageData(0, 0, whole.width, whole.height);
 
@@ -365,30 +367,48 @@ const panelFrom = async (page: Page, file: string): Promise<number> => {
       const nearlyAll = (count: number, of: number): boolean => count >= of * 0.98;
       const dimmedRow = (y: number): boolean => {
         let n = 0;
-        for (let x = 0; x < width; x += 1) if (dimmed(x, y)) n += 1;
+        for (let x = 0; x < width; x += 1) {
+          if (dimmed(x, y)) {
+            n += 1;
+          }
+        }
         return nearlyAll(n, width);
       };
       const dimmedColumn = (x: number): boolean => {
         let n = 0;
-        for (let y = 0; y < height; y += 1) if (dimmed(x, y)) n += 1;
+        for (let y = 0; y < height; y += 1) {
+          if (dimmed(x, y)) {
+            n += 1;
+          }
+        }
         return nearlyAll(n, height);
       };
 
       const most = Number(limit);
       let top = 0;
-      while (top < most && dimmedRow(top)) top += 1;
+      while (top < most && dimmedRow(top)) {
+        top += 1;
+      }
       let bottom = 0;
-      while (bottom < most && dimmedRow(height - 1 - bottom)) bottom += 1;
+      while (bottom < most && dimmedRow(height - 1 - bottom)) {
+        bottom += 1;
+      }
       let left = 0;
-      while (left < most && dimmedColumn(left)) left += 1;
+      while (left < most && dimmedColumn(left)) {
+        left += 1;
+      }
       let right = 0;
-      while (right < most && dimmedColumn(width - 1 - right)) right += 1;
+      while (right < most && dimmedColumn(width - 1 - right)) {
+        right += 1;
+      }
 
       const panel = document.createElement("canvas");
       panel.width = width - left - right;
       panel.height = height - top - bottom;
       const onto = panel.getContext("2d");
-      if (onto === null) throw new Error("no 2d context");
+      if (onto === null) {
+        throw new Error("no 2d context");
+      }
       onto.drawImage(whole, left, top, panel.width, panel.height, 0, 0, panel.width, panel.height);
       Object.assign(panel.style, { width: "100%", height: "100%", display: "block" });
 

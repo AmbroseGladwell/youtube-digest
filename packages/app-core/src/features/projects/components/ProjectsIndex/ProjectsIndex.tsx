@@ -24,7 +24,7 @@ const plural = (count: number, one: string, many: string) => `${count} ${count =
 
 // Every active project as a card, then the archived ones as a group of their own: the only
 // place they are listed ("OV-168 1 Where Projects Live" 168e).
-export function ProjectsIndex({ active, archived, now, onNew, onOpen, onRestore, onArchivedShown }: ProjectsIndexProps) {
+export const ProjectsIndex = ({ active, archived, now, onNew, onOpen, onRestore, onArchivedShown }: ProjectsIndexProps) => {
   const [archivedShown, setArchivedShown] = useState(false);
   const archivedId = useId();
   const backToOverviews = useBackTo(Routes.home());
@@ -135,4 +135,4 @@ export function ProjectsIndex({ active, archived, now, onNew, onOpen, onRestore,
       )}
     </div>
   );
-}
+};

@@ -21,7 +21,7 @@ const lastChanged = (library: Library, project: Project): string =>
     ...library.members.filter((member) => member.projectId === project.id).flatMap((member) => [member.addedAt, member.removedAt]),
   ]);
 
-function projectLines(library: Library, project: Project): string {
+const projectLines = (library: Library, project: Project): string => {
   const items = projectOverviews(library, project.id);
   const unread = items.filter((item) => !item.read).length;
   const spread = verdictSpreadLine(verdictSpread(items.map((item) => item.overview)));
@@ -37,7 +37,7 @@ function projectLines(library: Library, project: Project): string {
     `  ${project.purpose === null ? "No purpose given." : `Purpose: ${project.purpose}`}`,
     `  ${facts.join(" · ")}`,
   ].join("\n");
-}
+};
 
 export const listProjects = mcpTool({
   name: "list_projects",

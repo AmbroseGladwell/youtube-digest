@@ -4,6 +4,11 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import styles from "./NewProjectDialog.module.scss";
 import { newProjectDialogTestIds } from "./NewProjectDialogTestIds.js";
 
+export interface OnCreateOptions {
+  name: string;
+  purpose: string | null;
+}
+
 export interface NewProjectDialogProps {
   // The overview made from the picker, which the new project takes with it (168x).
   adds: { title: string } | { count: number } | null;
@@ -11,13 +16,13 @@ export interface NewProjectDialogProps {
   assistantConnected: boolean;
   takenNames: string[];
   busy: boolean;
-  onCreate: (input: { name: string; purpose: string | null }) => void;
+  onCreate: (input: OnCreateOptions) => void;
   onClose: () => void;
 }
 
 // A name, and what it's for with the reason to write it right under the field
 // ("OV-168 3 Adding and Making" 168x, 168y, 168y-2).
-export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, onCreate, onClose }: NewProjectDialogProps) {
+export const NewProjectDialog = ({ adds, assistantConnected, takenNames, busy, onCreate, onClose }: NewProjectDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const [name, setName] = useState("");
   const [purpose, setPurpose] = useState("");
@@ -29,7 +34,9 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
 
   useEffect(() => {
     const element = dialog.current;
-    if (element && !element.open) element.showModal();
+    if (element && !element.open) {
+      element.showModal();
+    }
   }, []);
 
   const trimmed = name.trim();
@@ -38,7 +45,9 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!creatable) return;
+    if (!creatable) {
+      return;
+    }
     onCreate({ name: trimmed, purpose: purpose.trim() === "" ? null : purpose.trim() });
   };
 
@@ -52,7 +61,9 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={newProjectDialogTestIds.root}
     >
@@ -131,4 +142,4 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
       </form>
     </dialog>
   );
-}
+};

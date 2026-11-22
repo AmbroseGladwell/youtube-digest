@@ -37,7 +37,9 @@ const failed = (reason: PodcastReadFailure, showName?: string | null): PodcastRe
 class NoAnswerError extends Error {}
 
 const samePage = (a: string | null, b: string | null): boolean => {
-  if (a === null || b === null) return false;
+  if (a === null || b === null) {
+    return false;
+  }
   const key = (link: string) => {
     const url = new URL(link);
     return `${url.hostname.replace(/^www\./, "")}${url.pathname.replace(/\/+$/, "")}`.toLowerCase();
@@ -45,16 +47,24 @@ const samePage = (a: string | null, b: string | null): boolean => {
   return key(a) === key(b);
 };
 
+export interface FetchedPodcastPage {
+  url: string;
+  html: string;
+  isFeed: boolean;
+}
+
 // docs/features/podcast-links.md
-export function createPodcastReader({
+export const createPodcastReader = ({
   fetchPublicWeb,
   mostFeedBytes = MOST_FEED_BYTES,
   appleBudget,
   podcastIndex = null,
-}: PodcastReaderOptions) {
-  const fetchPage = async (link: string): Promise<{ url: string; html: string; isFeed: boolean } | { failure: PodcastReadFailure }> => {
+}: PodcastReaderOptions) => {
+  const fetchPage = async (link: string): Promise<FetchedPodcastPage | { failure: PodcastReadFailure }> => {
     const answer = await fetchPublicWeb(link, { accept: HTML });
-    if (answer.status === "failed") return { failure: answer.reason === "no-answer" ? "no-answer" : "not-found" };
+    if (answer.status === "failed") {
+      return { failure: answer.reason === "no-answer" ? "no-answer" : "not-found" };
+    }
     const isFeed = XML_TYPE.test(answer.response.headers.get("content-type") ?? "");
     try {
       const html = await readBodyText(answer.response, MOST_PAGE_BYTES);
@@ -66,9 +76,13 @@ export function createPodcastReader({
 
   const fetchJson = async (url: string): Promise<unknown> => {
     const answer = await fetchPublicWeb(url, { accept: "application/json" });
-    if (answer.status === "failed") throw new NoAnswerError(answer.reason);
+    if (answer.status === "failed") {
+      throw new NoAnswerError(answer.reason);
+    }
     const text = await readBodyText(answer.response, MOST_JSON_BYTES);
-    if (text === null) throw new NoAnswerError("too long");
+    if (text === null) {
+      throw new NoAnswerError("too long");
+    }
     return JSON.parse(text);
   };
 
@@ -78,10 +92,14 @@ export function createPodcastReader({
     fetchFeedEpisode(fetchPublicWeb, feedUrl, isWanted, mostFeedBytes);
 
   const episodeFrom = async (feedUrl: string, read: FeedRead, linkFrom: PodcastLinkFrom, showName: string | null): Promise<PodcastRead> => {
-    if (read.status === "failed") return failed(read.reason, showName);
+    if (read.status === "failed") {
+      return failed(read.reason, showName);
+    }
     const { show, item } = read.feed;
     const name = show.title ?? showName;
-    if (item === null || item.audioUrl === null || item.title === null) return failed("not-found", name);
+    if (item === null || item.audioUrl === null || item.title === null) {
+      return failed("not-found", name);
+    }
     const episode = PodcastEpisode.safeParse({
       feedUrl,
       guid: feedItemGuid(item),
@@ -107,7 +125,9 @@ export function createPodcastReader({
     guid: string | null,
     linkFrom: PodcastLinkFrom,
   ): Promise<PodcastRead> => {
-    if (show.feedUrl === null) return failed("no-public-feed", show.showName);
+    if (show.feedUrl === null) {
+      return failed("no-public-feed", show.showName);
+    }
     const read = await readFeed(show.feedUrl, (item) => (guid !== null && item.guid === guid) || sameEpisode(facts, item));
     return episodeFrom(show.feedUrl, read, linkFrom, show.showName);
   };
@@ -117,10 +137,16 @@ export function createPodcastReader({
   // Apple link says so and points to another link (OV-297, the terms review).
   const fromApple = async (showId: string, episodeId: string): Promise<PodcastRead> => {
     const listing = await directory.showWithEpisodes(showId);
-    if (listing === null) return failed("not-found");
-    if (listing.show.feedUrl === null) return failed("no-public-feed", listing.show.showName);
+    if (listing === null) {
+      return failed("not-found");
+    }
+    if (listing.show.feedUrl === null) {
+      return failed("no-public-feed", listing.show.showName);
+    }
     const listed = listing.episodes.find((episode) => episode.episodeId === episodeId);
-    if (listed === undefined) return failed("not-listed", listing.show.showName);
+    if (listed === undefined) {
+      return failed("not-listed", listing.show.showName);
+    }
     return fromFeed(listing.show, listed, listed.guid, "apple");
   };
 
@@ -129,10 +155,16 @@ export function createPodcastReader({
   // fails or doesn't know the show hands on to the next (docs/features/podcast-links.md).
   const fromSpotify = async (episodeId: string): Promise<PodcastRead> => {
     const page = await fetchPage(`https://open.spotify.com/episode/${episodeId}`);
-    if ("failure" in page) return failed(page.failure);
+    if ("failure" in page) {
+      return failed(page.failure);
+    }
     const facts = spotifyEpisodeFacts(pageMeta(page.html, page.url));
-    if (facts === null) return failed("not-found");
-    if (facts.showName === null) return failed("no-public-feed");
+    if (facts === null) {
+      return failed("not-found");
+    }
+    if (facts.showName === null) {
+      return failed("no-public-feed");
+    }
     const showKey = episodeTitleKey(facts.showName);
     const showDirectories: ShowDirectory[] = podcastIndex === null ? [directory] : [podcastIndex, directory];
     for (const [index, showDirectory] of showDirectories.entries()) {
@@ -143,18 +175,26 @@ export function createPodcastReader({
           .filter((show) => episodeTitleKey(show.showName) === showKey)
           .slice(0, MOST_SHOWS_TRIED);
       } catch (error) {
-        if (isLast) throw error;
+        if (isLast) {
+          throw error;
+        }
         continue;
       }
-      if (shows.length === 0) continue;
+      if (shows.length === 0) {
+        continue;
+      }
       for (const show of shows) {
         const listing = await showDirectory.showWithEpisodes(show.showId).catch((error: unknown) => {
-          if (isLast) throw error;
+          if (isLast) {
+            throw error;
+          }
           return null;
         });
         const listed = listing === null ? null : pickEpisode(facts, listing.episodes);
         const read = await fromFeed(listing?.show ?? show, facts, listed?.guid ?? null, "spotify");
-        if (read.status === "read" || read.reason === "no-answer") return read;
+        if (read.status === "read" || read.reason === "no-answer") {
+          return read;
+        }
       }
       return failed("not-found", facts.showName);
     }
@@ -174,19 +214,27 @@ export function createPodcastReader({
         ({ show, episode }) =>
           sameEpisode({ title, publishedAt: null, durationSeconds: null }, episode) && pageText.includes(episodeTitleKey(show.showName)),
       );
-      if (found !== undefined) return fromFeed(found.show, found.episode, found.episode.guid, "page");
+      if (found !== undefined) {
+        return fromFeed(found.show, found.episode, found.episode.guid, "page");
+      }
     }
     return failed("not-an-episode");
   };
 
   const fromPage = async (link: string): Promise<PodcastRead> => {
     const page = await fetchPage(link);
-    if ("failure" in page) return failed(page.failure);
-    if (page.isFeed) return failed("not-an-episode");
+    if ("failure" in page) {
+      return failed(page.failure);
+    }
+    if (page.isFeed) {
+      return failed("not-an-episode");
+    }
     const meta: PageMeta = pageMeta(page.html, page.url);
     const pageUrls = [page.url, meta.canonicalUrl, meta.meta.get("og:url") ?? null];
     const titles = [meta.meta.get("og:title") ?? null, meta.title].filter((title): title is string => title !== null);
-    if (meta.feedUrl === null) return fromDirectorySearch(titles);
+    if (meta.feedUrl === null) {
+      return fromDirectorySearch(titles);
+    }
     const read = await readFeed(
       meta.feedUrl,
       (item) =>
@@ -201,7 +249,9 @@ export function createPodcastReader({
       let parsed = parsePodcastLink(link);
       if (parsed?.platform === "spotify-short") {
         const page = await fetchPage(parsed.url);
-        if ("failure" in page) return failed(page.failure);
+        if ("failure" in page) {
+          return failed(page.failure);
+        }
         const followed = parsePodcastLink(page.url);
         parsed = followed?.platform === "spotify" ? followed : parsePodcastLink(pageMeta(page.html, page.url).meta.get("og:url") ?? "");
       }
@@ -219,4 +269,4 @@ export function createPodcastReader({
       return failed("no-answer");
     }
   };
-}
+};

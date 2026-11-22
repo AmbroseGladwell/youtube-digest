@@ -53,12 +53,12 @@ const CHAT_REPLY: ReplyShape = { name: "chat_reply", schema: CHAT_REPLY_SCHEMA, 
 
 // A refusal for now (a rate limit, an overloaded provider) is asked again after a wait,
 // quietly, before anything has streamed; anything else, or a third refusal, fails.
-export async function streamChatCompletion(
+export const streamChatCompletion = async (
   { apiKey, http, sleep, retried }: ChatCompletionSetup,
   messages: readonly PromptMessage[],
   cacheKey: string,
   shape: ReplyShape = CHAT_REPLY,
-): Promise<ChatCompletionStream> {
+): Promise<ChatCompletionStream> => {
   const body = JSON.stringify({
     model: chatModel.model,
     max_completion_tokens: shape.maxTokens,
@@ -75,7 +75,9 @@ export async function streamChatCompletion(
       body,
       signal: AbortSignal.timeout(120_000),
     });
-    if (response.ok && response.body !== null) return readStream(response.body);
+    if (response.ok && response.body !== null) {
+      return readStream(response.body);
+    }
     const wait = RETRY_WAITS_MS[attempt];
     if (!RETRIED_STATUSES.has(response.status) || wait === undefined) {
       throw new ChatProviderError(response.status, `The provider answered ${response.status}`);
@@ -84,12 +86,12 @@ export async function streamChatCompletion(
     const asked = Number(response.headers.get("retry-after")) * 1000;
     await sleep(Number.isFinite(asked) && asked > 0 ? Math.min(asked, LONGEST_RETRY_WAIT_MS) : wait);
   }
-}
+};
 
-function readStream(body: ReadableStream<Uint8Array>): ChatCompletionStream {
+const readStream = (body: ReadableStream<Uint8Array>): ChatCompletionStream => {
   let usage: TokenUsage | null = null;
   let finishReason: string | null = null;
-  async function* pieces(): AsyncGenerator<string> {
+  const pieces = async function* (): AsyncGenerator<string> {
     const decoder = new TextDecoder();
     let buffered = "";
     for await (const bytes of body as unknown as AsyncIterable<Uint8Array>) {
@@ -97,17 +99,27 @@ function readStream(body: ReadableStream<Uint8Array>): ChatCompletionStream {
       const lines = buffered.split("\n");
       buffered = lines.pop() ?? "";
       for (const line of lines) {
-        if (!line.startsWith("data:")) continue;
+        if (!line.startsWith("data:")) {
+          continue;
+        }
         const data = line.slice(5).trim();
-        if (data === "[DONE]") return;
+        if (data === "[DONE]") {
+          return;
+        }
         const chunk = JSON.parse(data) as { choices?: Array<{ delta?: { content?: unknown }; finish_reason?: unknown }>; usage?: unknown };
-        if (chunk.usage !== undefined && chunk.usage !== null) usage = tokenUsageOf("openai", chunk);
+        if (chunk.usage !== undefined && chunk.usage !== null) {
+          usage = tokenUsageOf("openai", chunk);
+        }
         const finished = chunk.choices?.[0]?.finish_reason;
-        if (typeof finished === "string") finishReason = finished;
+        if (typeof finished === "string") {
+          finishReason = finished;
+        }
         const content = chunk.choices?.[0]?.delta?.content;
-        if (typeof content === "string" && content.length > 0) yield content;
+        if (typeof content === "string" && content.length > 0) {
+          yield content;
+        }
       }
     }
-  }
+  };
   return { pieces: pieces(), usage: () => usage, finishReason: () => finishReason };
-}
+};

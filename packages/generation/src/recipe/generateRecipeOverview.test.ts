@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { OverviewId, type ExtractedArticle, type Recipe } from "@overview/domain";
-import type { GenerationClient } from "../generateOverview.js";
+import type { GenerationClient } from "../requestGeneratedOutput.js";
 import type { ArticleGenerationInput } from "../article/ArticleGenerationInput.js";
 import { generateOverviewOf } from "../article/generateOverviewOf.js";
 import { providerJsonSchema } from "../providerJsonSchema.js";

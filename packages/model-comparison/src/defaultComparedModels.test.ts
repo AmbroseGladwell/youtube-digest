@@ -4,7 +4,9 @@ import { parseComparedModel } from "./ComparedModel.js";
 import { DEFAULT_COMPARED_MODELS } from "./defaultComparedModels.js";
 
 test("every compared model parses as provider:model", () => {
-  for (const name of DEFAULT_COMPARED_MODELS) parseComparedModel(name);
+  for (const name of DEFAULT_COMPARED_MODELS) {
+    parseComparedModel(name);
+  }
 });
 
 test("at least six models across at least three providers, as the card's definition of done asks", () => {

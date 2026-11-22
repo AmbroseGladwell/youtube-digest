@@ -7,18 +7,21 @@ export type FilterControl = "panel" | "filterChip" | "clearAll" | "reset" | "cau
 // value it changed to: a topic by its id, a novelty or status by its own enum, never a label
 // (docs/architecture/analytics.md, "What an event may carry"). The search query is not here:
 // it is counted once the reader stops typing.
-export function recordLibraryFilterChange(
+export const recordLibraryFilterChange = (
   analytics: Analytics["library"]["filters"],
   before: LibraryFilters,
   patch: Partial<LibraryFilters>,
   from: FilterControl,
-): void {
+): void => {
   if (patch.source !== undefined && patch.source !== before.source) {
     analytics.sourceChosen({ source: patch.source, from });
   }
   if (patch.topicId !== undefined && patch.topicId !== before.topicId) {
-    if (patch.topicId === "all") analytics.topicCleared({ from });
-    else analytics.topicChosen({ topicId: patch.topicId, from });
+    if (patch.topicId === "all") {
+      analytics.topicCleared({ from });
+    } else {
+      analytics.topicChosen({ topicId: patch.topicId, from });
+    }
   }
   if (patch.novelty !== undefined && patch.novelty !== before.novelty) {
     analytics.noveltyChosen({ novelty: patch.novelty, from });
@@ -33,7 +36,10 @@ export function recordLibraryFilterChange(
     analytics.dubiousSwitched({ on: patch.dubious, from });
   }
   if (patch.tag !== undefined && patch.tag !== before.tag) {
-    if (patch.tag === null) analytics.tagCleared({ from });
-    else analytics.tagChosen({ from });
+    if (patch.tag === null) {
+      analytics.tagCleared({ from });
+    } else {
+      analytics.tagChosen({ from });
+    }
   }
-}
+};

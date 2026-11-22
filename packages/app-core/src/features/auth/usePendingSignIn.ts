@@ -18,26 +18,32 @@ const readLive = (): PendingSignIn | null => {
   return pending !== null && isPendingSignInLive(pending, Date.now()) ? pending : null;
 };
 
-function getSnapshot(): PendingSignIn | null {
-  if (snapshot === undefined) snapshot = readLive();
+const getSnapshot = (): PendingSignIn | null => {
+  if (snapshot === undefined) {
+    snapshot = readLive();
+  }
   return snapshot;
-}
+};
 
-function refresh(): void {
+const refresh = (): void => {
   snapshot = readLive();
-  for (const listener of listeners) listener();
-}
+  for (const listener of listeners) {
+    listener();
+  }
+};
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
   globalThis.addEventListener?.("storage", refresh);
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) globalThis.removeEventListener?.("storage", refresh);
+    if (listeners.size === 0) {
+      globalThis.removeEventListener?.("storage", refresh);
+    }
   };
-}
+};
 
-export function usePendingSignIn(): UsePendingSignInResult {
+export const usePendingSignIn = (): UsePendingSignInResult => {
   const pending = useSyncExternalStore(subscribe, getSnapshot);
 
   const setPending = useCallback((next: PendingSignIn | null) => {
@@ -46,4 +52,4 @@ export function usePendingSignIn(): UsePendingSignInResult {
   }, []);
 
   return { pending, setPending };
-}
+};

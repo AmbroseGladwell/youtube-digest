@@ -45,7 +45,7 @@ const isLive = (record: StoredRecord | null): boolean => record !== null && !rec
 
 // A reader's own writes. What an assistant does goes through the connector, which marks it
 // as the assistant's (docs/features/projects.md).
-export function projectRoutes(app: FastifyInstance, records: RecordsRepository): void {
+export const projectRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
   app.post("/projects", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The project");
     const id = parseOrThrow(ProjectId, body.id, "The project's id");
@@ -112,8 +112,12 @@ export function projectRoutes(app: FastifyInstance, records: RecordsRepository):
           { kind: "overview", id: overviewId },
         ],
         decide: (current, _held, [project, overview]) => {
-          if (!isLive(project ?? null)) throw new ApiError("not_found", "No such project");
-          if (adding && overview?.deleted === true) throw new ApiError("not_found", "No such overview");
+          if (!isLive(project ?? null)) {
+            throw new ApiError("not_found", "No such project");
+          }
+          if (adding && overview?.deleted === true) {
+            throw new ApiError("not_found", "No such overview");
+          }
           return decideMerge(
             "projectMember",
             current,
@@ -132,4 +136,4 @@ export function projectRoutes(app: FastifyInstance, records: RecordsRepository):
     ]);
     return sendWritten(reply, written!);
   });
-}
+};

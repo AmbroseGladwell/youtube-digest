@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { LINK_CODE_TTL_MINUTES, MAGIC_LINK_TTL_MINUTES, type AuthIntent } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { AuthScreen } from "../AuthScreen/AuthScreen.js";
@@ -33,13 +33,81 @@ export type EnterCodeProps = EnterCodeCommonProps &
     | { from: "webApp"; initialServerUrl: string | null; onEmailInstead: () => void }
   );
 
+const EMPTY_CODE_PROBLEM: Record<EnterCodeProps["from"], string> = {
+  emailCode: "Enter the code from the email.",
+  emailLink: "Enter the code from the page the link opened.",
+  webApp: "Enter the code the web app shows.",
+};
+
+const CODE_LABEL: Record<EnterCodeProps["from"], string> = {
+  emailCode: "Code from the email",
+  emailLink: "Code from the email link",
+  webApp: "Code from the web app",
+};
+
+const leadOf = (props: EnterCodeProps, codeFirst: boolean): ReactNode => {
+  if (props.from === "webApp") {
+    return "In the web app, where you're signed in, open the account menu and choose Connect the extension. It shows an 8-character code.";
+  }
+  if (codeFirst) {
+    return (
+      <>
+        <strong data-testid={enterCodeTestIds.email}>{props.email}</strong>
+        <br />
+        It confirms it’s you. There’s no password.
+      </>
+    );
+  }
+  if (props.from === "emailCode") {
+    return (
+      <>
+        The email we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong> has an 8-character code under the link.
+        Type it here to sign in this browser.
+      </>
+    );
+  }
+  return (
+    <>
+      Open the link we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong>. The page it opens shows an 8-character
+      code.
+    </>
+  );
+};
+
+interface NoteFacts {
+  codeFirst: boolean;
+  inMail: boolean;
+  fromEmail: boolean;
+  refused: string | null;
+}
+
+const noteOf = ({ codeFirst, inMail, fromEmail, refused }: NoteFacts): string => {
+  if (codeFirst) {
+    return `Or tap the link in the email. The code works once, for ${MAGIC_LINK_TTL_MINUTES} minutes after we sent it.`;
+  }
+  if (inMail) {
+    return `The code works once, for ${MAGIC_LINK_TTL_MINUTES} minutes after we sent it.`;
+  }
+  if (refused === null && fromEmail) {
+    return "You can close this panel to open your email. It'll be waiting here when you come back.";
+  }
+  return `Codes work once, for ${LINK_CODE_TTL_MINUTES} minutes.`;
+};
+
+const submitLabelOf = (props: EnterCodeProps): string => {
+  if (props.from !== "emailCode") {
+    return "Connect";
+  }
+  return props.intent === "createAccount" ? "Create account" : "Sign in";
+};
+
 // Design 10c/10d: the link opens a tab that shows a code, and the code comes back here.
 // Reopening the panel lands here again until the code is used or could no longer work
 // (docs/features/sign-in.md, "Waiting for the code"). A code the signed-in web app made
 // comes in the same way, with no email behind it. On the web, the code is the one printed in
 // the mail itself, for a mail read somewhere other than this browser
 // (docs/features/sign-in.md, "A code in the web mail").
-export function EnterCode(props: EnterCodeProps) {
+export const EnterCode = (props: EnterCodeProps) => {
   const { connecting, refused, onConnect } = props;
   const fromEmail = props.from !== "webApp";
   const inMail = props.from === "emailCode";
@@ -51,13 +119,7 @@ export function EnterCode(props: EnterCodeProps) {
   const [serverUrl, setServerUrl] = useState(props.from === "webApp" ? (props.initialServerUrl ?? "") : "");
   const [serverShown, setServerShown] = useState(props.from === "webApp" && props.initialServerUrl === null);
   const [serverInvalid, setServerInvalid] = useState(false);
-  const problem = empty
-    ? inMail
-      ? "Enter the code from the email."
-      : fromEmail
-        ? "Enter the code from the page the link opened."
-        : "Enter the code the web app shows."
-    : refused;
+  const problem = empty ? EMPTY_CODE_PROBLEM[props.from] : refused;
 
   const connect = (event: FormEvent) => {
     event.preventDefault();
@@ -87,27 +149,7 @@ export function EnterCode(props: EnterCodeProps) {
       testId={enterCodeTestIds.root}
       embedded={codeFirst}
       title={codeFirst ? "Enter the code we sent to" : "Enter your code"}
-      lead={
-        codeFirst ? (
-          <>
-            <strong data-testid={enterCodeTestIds.email}>{props.email}</strong>
-            <br />
-            It confirms it’s you. There’s no password.
-          </>
-        ) : inMail ? (
-          <>
-            The email we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong> has an 8-character code under the link.
-            Type it here to sign in this browser.
-          </>
-        ) : fromEmail ? (
-          <>
-            Open the link we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong>. The page it opens shows an
-            8-character code.
-          </>
-        ) : (
-          "In the web app, where you're signed in, open the account menu and choose Connect the extension. It shows an 8-character code."
-        )
-      }
+      lead={leadOf(props, codeFirst)}
     >
       <form className={`${styles.form} ${codeFirst ? styles.codeFirst : ""}`} onSubmit={connect} noValidate>
         {serverShown && (
@@ -141,9 +183,7 @@ export function EnterCode(props: EnterCodeProps) {
           </label>
         )}
         <label className={styles.label}>
-          <span className={styles.labelText}>
-            {inMail ? "Code from the email" : fromEmail ? "Code from the email link" : "Code from the web app"}
-          </span>
+          <span className={styles.labelText}>{CODE_LABEL[props.from]}</span>
           <input
             id={`${ids}-code`}
             name="one-time-code"
@@ -214,20 +254,12 @@ export function EnterCode(props: EnterCodeProps) {
         </div>
 
         <div className={styles.footer}>
-          <p className={styles.note}>
-            {codeFirst
-              ? `Or tap the link in the email. The code works once, for ${MAGIC_LINK_TTL_MINUTES} minutes after we sent it.`
-              : inMail
-                ? `The code works once, for ${MAGIC_LINK_TTL_MINUTES} minutes after we sent it.`
-                : refused === null && fromEmail
-                  ? "You can close this panel to open your email. It'll be waiting here when you come back."
-                  : `Codes work once, for ${LINK_CODE_TTL_MINUTES} minutes.`}
-          </p>
+          <p className={styles.note}>{noteOf({ codeFirst, inMail, fromEmail, refused })}</p>
           <button type="submit" className={styles.submit} disabled={connecting} data-testid={enterCodeTestIds.connectButton}>
-            {!inMail ? "Connect" : props.intent === "createAccount" ? "Create account" : "Sign in"}
+            {submitLabelOf(props)}
           </button>
         </div>
       </form>
     </AuthScreen>
   );
-}
+};

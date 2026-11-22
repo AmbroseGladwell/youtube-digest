@@ -16,7 +16,7 @@ export interface ChatChipRowProps {
 // OV-362: a row of source chips that never runs long. Two show, then "+N", which opens a menu of
 // every one, as the row above the field does (OV-354, page 1). Used for a section's sources by
 // relation, a list item's, Pinned, Found for you and what a library answer read.
-export function ChatChipRow({ chips, hiddenLabels, align = "start", testId }: ChatChipRowProps) {
+export const ChatChipRow = ({ chips, hiddenLabels, align = "start", testId }: ChatChipRowProps) => {
   const [open, setOpen] = useState(false);
   const host = useRef<HTMLSpanElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
@@ -25,10 +25,14 @@ export function ChatChipRow({ chips, hiddenLabels, align = "start", testId }: Ch
 
   // The menu opens toward whichever side has room, so it never runs off a phone's screen (OV-368).
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const hostBox = host.current?.getBoundingClientRect();
     const width = menu.current?.offsetWidth ?? 0;
-    if (hostBox === undefined) return;
+    if (hostBox === undefined) {
+      return;
+    }
     const roomRight = window.innerWidth - hostBox.left;
     const roomLeft = hostBox.right;
     setToEnd(align === "end" ? roomLeft >= width || roomLeft >= roomRight : roomRight < width && roomLeft > roomRight);
@@ -59,4 +63,4 @@ export function ChatChipRow({ chips, hiddenLabels, align = "start", testId }: Ch
       )}
     </div>
   );
-}
+};

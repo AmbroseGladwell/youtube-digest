@@ -5,7 +5,7 @@ import { useSavedMoment } from "../../timeSaved/components/SavedChip/useSavedMom
 // Design 34r: marking this overview read, from anywhere on the page, brings in the
 // "Saved you" chip, and it stays until the reader leaves. Arriving at an overview already
 // read shows nothing (docs/features/time-saved.md, "Every day").
-export function useSavedOnRead(overviewId: OverviewId, read: boolean | undefined) {
+export const useSavedOnRead = (overviewId: OverviewId, read: boolean | undefined) => {
   const moment = useSavedMoment(null);
   const last = useRef<{ overviewId: OverviewId; read: boolean } | null>(null);
 
@@ -25,4 +25,4 @@ export function useSavedOnRead(overviewId: OverviewId, read: boolean | undefined
   }, [overviewId, read]);
 
   return moment.phase;
-}
+};

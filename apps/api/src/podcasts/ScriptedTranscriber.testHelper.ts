@@ -22,9 +22,9 @@ export interface ScriptedTranscriber extends Transcriber {
 }
 
 // A GPU host that answers each status with the next line of its script.
-export function makeScriptedTranscriber(
+export const makeScriptedTranscriber = (
   script: (HostJobState | Error)[] = [{ state: "running" }, { state: "done", result: transcribedAudio() }],
-): ScriptedTranscriber {
+): ScriptedTranscriber => {
   const transcriber: ScriptedTranscriber = {
     submitted: [],
     cancelled: [],
@@ -35,7 +35,9 @@ export function makeScriptedTranscriber(
     },
     async status() {
       const next = transcriber.script.length > 1 ? transcriber.script.shift()! : transcriber.script[0]!;
-      if (next instanceof Error) throw next;
+      if (next instanceof Error) {
+        throw next;
+      }
       return next;
     },
     async cancel(callId) {
@@ -43,4 +45,4 @@ export function makeScriptedTranscriber(
     },
   };
   return transcriber;
-}
+};

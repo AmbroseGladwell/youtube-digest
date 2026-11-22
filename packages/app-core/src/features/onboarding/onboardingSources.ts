@@ -93,11 +93,16 @@ export interface OnboardingCard {
   facts: { line: string };
 }
 
+export interface TargetProgress {
+  link: string;
+  sourceKey: string | null;
+}
+
 export interface OnboardingSource {
   linkKind: (link: string) => OnboardingLinkKind | null;
   keyFromLink: (link: string) => SourceKey | null;
   // What the run makes from: the link, or a playlist's chosen video. Null until it's known.
-  target: (progress: { link: string; sourceKey: string | null }) => string | null;
+  target: (progress: TargetProgress) => string | null;
   make: (target: string, makers: OnboardingMakers, options: OnboardingMakeOptions) => Promise<Overview>;
   // What the source is called on Your link, Topics and Moment 3, before and after it's found.
   noun: (linkKind: OnboardingLinkKind, found: OnboardingFound | null) => string;
@@ -143,14 +148,18 @@ const turnedInto = (minutes: ExpectedMinutes | null): string =>
     : `turned into an overview you can read in about ${minutes.read}, listen to in about ${minutes.listen}, and share.`;
 
 const spokenLength = (durationMs: number | null): string | null => {
-  if (durationMs === null) return null;
+  if (durationMs === null) {
+    return null;
+  }
   const minutes = Math.round(durationMs / 60_000);
   return minutes < 60 ? `${minutes} minutes` : recipeMinutes(minutes);
 };
 
 const platformOf = (link: string): string | null => {
   const platform = parsePodcastLink(link)?.platform;
-  if (platform === "apple" || platform === "apple-show") return "from Apple Podcasts";
+  if (platform === "apple" || platform === "apple-show") {
+    return "from Apple Podcasts";
+  }
   return platform === "spotify" || platform === "spotify-short" || platform === "spotify-show" ? "from Spotify" : null;
 };
 
@@ -183,8 +192,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
   youtube: {
     linkKind: (link) => {
       const parsed = youTubeLink(link);
-      if (parsed === null) return null;
-      if (parsed.kind === "playlist") return "playlist";
+      if (parsed === null) {
+        return null;
+      }
+      if (parsed.kind === "playlist") {
+        return "playlist";
+      }
       return parsed.kind === "unfollowable" && parsed.videoUrl === null ? null : "video";
     },
     keyFromLink: (link) => {
@@ -195,7 +208,9 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     target: ({ sourceKey }) => (sourceKey === null ? null : watchUrl(sourceKey)),
     make: async (target, makers, { onFound, isCancelled, waitToSpend, onSourceWords, onWriting }) => {
       const read = await makers.readVideo(extractYouTubeVideoId(target) ?? target);
-      if (read.status === "failed") throw new VideoReadError(read.reason);
+      if (read.status === "failed") {
+        throw new VideoReadError(read.reason);
+      }
       const opening = (read.transcript?.segments ?? [])
         .map((segment) => segment.text)
         .join(" ")
@@ -207,8 +222,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         noteKind: read.noteKind,
       });
       await waitToSpend();
-      if (isCancelled()) throw new GenerationCancelledError();
-      if (read.transcript !== null) await makers.keepTranscript({ ...read.transcript, video: read.video });
+      if (isCancelled()) {
+        throw new GenerationCancelledError();
+      }
+      if (read.transcript !== null) {
+        await makers.keepTranscript({ ...read.transcript, video: read.video });
+      }
       return makers.video(target, {
         isCancelled,
         onProgress: ({ transcriptWords }) => onSourceWords?.(transcriptWords),
@@ -216,7 +235,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         ...(read.noteKind === null ? {} : { noteKind: read.noteKind }),
       });
     },
-    noun: (linkKind, found) => (linkKind === "playlist" ? "playlist" : found?.noteKind === "recipe" ? "recipe" : "video"),
+    noun: (linkKind, found) => {
+      if (linkKind === "playlist") {
+        return "playlist";
+      }
+      return found?.noteKind === "recipe" ? "recipe" : "video";
+    },
     pending: () => null,
     finding: "Finding the video…",
     notFound: "We couldn't find that video.",
@@ -252,7 +276,9 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     target: ({ link }) => link,
     make: async (target, makers, { onFound, onTranscription, isCancelled, waitToSpend, transcribe, onSourceWords, onWriting }) => {
       const read = await makers.readPodcast(target);
-      if (read.status === "failed") throw new PodcastReadError(read.reason, read.showName ?? null);
+      if (read.status === "failed") {
+        throw new PodcastReadError(read.reason, read.showName ?? null);
+      }
       const id = await podcastSourceId(read.episode);
       const episodeWords = await makers.checkEpisode(read.episode).catch((): TranscriptCheck => ({ words: "unknown" }));
       const source = podcastSource(read.episode, id, target);
@@ -261,7 +287,9 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         throw new EpisodeCannotBeMadeError();
       }
       await waitToSpend();
-      if (isCancelled()) throw new GenerationCancelledError();
+      if (isCancelled()) {
+        throw new GenerationCancelledError();
+      }
       const make = (choice: TranscribeChoice | undefined) =>
         makers.podcast(
           { episode: read.episode, sharedFrom: target, transcribe: choice },
@@ -276,7 +304,9 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       const needsTranscribing = episodeWords.words === "none" && episodeWords.transcription.status !== "free";
       return (transcribe !== undefined || needsTranscribing ? make(transcribe ?? "chosen") : make(undefined))
         .catch((error: unknown) => {
-          if (error instanceof EpisodeNeedsTranscribingError) return make("chosen");
+          if (error instanceof EpisodeNeedsTranscribingError) {
+            return make("chosen");
+          }
           throw error;
         })
         .catch((error: unknown) => {
@@ -323,12 +353,19 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         const id = await articleSourceId(read.article.url);
         onFound({ source: webSource(read.article, id), recipe: read.article.recipe, about: pageOpening(read.article) });
         await waitToSpend();
-        if (isCancelled()) throw new GenerationCancelledError();
+        if (isCancelled()) {
+          throw new GenerationCancelledError();
+        }
         onSourceWords?.(read.article.wordCount);
       }
       return makers.article(async () => read, { isCancelled, onWriting });
     },
-    noun: (_linkKind, found) => (found === null ? "page" : found.recipe !== null ? "recipe" : "article"),
+    noun: (_linkKind, found) => {
+      if (found === null) {
+        return "page";
+      }
+      return found.recipe !== null ? "recipe" : "article";
+    },
     pending: (link) => domainOf(link),
     finding: "Reading the page…",
     notFound: "We couldn't read that page.",
@@ -366,13 +403,20 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
   },
 };
 
-export function onboardingSourceOf(link: string): { source: OnboardingSource; linkKind: OnboardingLinkKind } | null {
+export interface OnboardingSourceMatch {
+  source: OnboardingSource;
+  linkKind: OnboardingLinkKind;
+}
+
+export const onboardingSourceOf = (link: string): OnboardingSourceMatch | null => {
   for (const source of Object.values(onboardingSources)) {
     const linkKind = source.linkKind(link);
-    if (linkKind !== null) return { source, linkKind };
+    if (linkKind !== null) {
+      return { source, linkKind };
+    }
   }
   return null;
-}
+};
 
 export const foundIn = (overview: Overview): OnboardingFound => ({
   source: overview.source,

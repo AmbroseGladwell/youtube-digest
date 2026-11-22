@@ -29,7 +29,7 @@ const updatedLabel = new Intl.DateTimeFormat("en-GB", {
 // One long-form layout for the privacy policy and the terms: a heading that takes focus on
 // arrival, the date the text last changed, a contents list of the sections, and the sections
 // themselves, each an h2 (docs/features/legal-pages.md).
-export function LegalPage({ title, updatedOn, intro, sections, otherPage }: LegalPageProps) {
+export const LegalPage = ({ title, updatedOn, intro, sections, otherPage }: LegalPageProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
@@ -86,4 +86,4 @@ export function LegalPage({ title, updatedOn, intro, sections, otherPage }: Lega
       </footer>
     </article>
   );
-}
+};

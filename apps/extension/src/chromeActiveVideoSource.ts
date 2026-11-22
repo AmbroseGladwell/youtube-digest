@@ -7,24 +7,30 @@ const listeners = new Set<() => void>();
 
 // pendingUrl covers a tab that has come to the front before its navigation commits, which
 // a tab opened from another app does (docs/features/watching-detection.md).
-async function readActiveVideoUrl(): Promise<string | null> {
+const readActiveVideoUrl = async (): Promise<string | null> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || tab?.pendingUrl;
   return url !== undefined && isYouTubeUrl(url) ? url : null;
-}
+};
 
-async function refresh(): Promise<void> {
+const refresh = async (): Promise<void> => {
   const next = await readActiveVideoUrl();
-  if (next === videoUrl) return;
+  if (next === videoUrl) {
+    return;
+  }
   videoUrl = next;
-  for (const listener of listeners) listener();
-}
+  for (const listener of listeners) {
+    listener();
+  }
+};
 
 const onActivated = () => void refresh();
 
 // YouTube navigates without a page load, so a new video is a URL change on an open tab.
 const onUpdated = (_tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-  if (changeInfo.url !== undefined || changeInfo.status === "complete") void refresh();
+  if (changeInfo.url !== undefined || changeInfo.status === "complete") {
+    void refresh();
+  }
 };
 
 export const chromeActiveVideoSource: ActiveVideoSource = {

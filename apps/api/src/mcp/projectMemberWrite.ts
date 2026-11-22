@@ -6,20 +6,22 @@ import { serverClientContext } from "../versions/serverClientContext.js";
 
 // An assistant's add or removal, dated by the server's clock and never later than the
 // membership record's last change: an assistant is never asked the time (CLAUDE.md).
-export function projectMemberWrite(
+export const projectMemberWrite = (
   projectId: string,
   overviewId: string,
   change: "add" | "remove",
   by: ProjectAuthor,
   now: Date,
-): WriteOperation {
+): WriteOperation => {
   const id = projectMemberId(projectId, overviewId);
   return {
     kind: "projectMember",
     id,
     requires: [{ kind: "project", id: projectId }],
     decide: (current, _held, [project]) => {
-      if (project == null || project.deleted) throw new ApiError("not_found", "No such project");
+      if (project == null || project.deleted) {
+        throw new ApiError("not_found", "No such project");
+      }
       const at = memberChangeTime(current?.deleted === false ? (current.body ?? undefined) : undefined, now);
       return decideMerge(
         "projectMember",
@@ -35,4 +37,4 @@ export function projectMemberWrite(
       );
     },
   };
-}
+};

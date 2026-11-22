@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 import {
   API_ERROR_CODES,
   ApiErrorEnvelope,
@@ -48,7 +48,7 @@ export interface ApiCall {
 
 // What every call to /api carries (docs/architecture/api.md), for a requester that parses
 // the answer whole and for one that reads it as it streams.
-export function createApiCaller({
+export const createApiCaller = ({
   baseUrl,
   token = null,
   trialToken = null,
@@ -56,7 +56,7 @@ export function createApiCaller({
   surface,
   fetch: fetchImpl = globalThis.fetch,
   newRequestId = () => globalThis.crypto.randomUUID(),
-}: ApiRequesterOptions): (method: ApiMethod, path: string, options?: ApiRequestOptions & { signal?: AbortSignal }) => ApiCall {
+}: ApiRequesterOptions): ((method: ApiMethod, path: string, options?: ApiRequestOptions & { signal?: AbortSignal }) => ApiCall) => {
   const root = baseUrl.replace(/\/+$/, "");
   return (method, path, { body, ifMatch, keepalive = false, signal } = {}) => {
     const requestId = newRequestId();
@@ -81,19 +81,19 @@ export function createApiCaller({
       },
     };
   };
-}
+};
 
-export async function sendApiCall({ url, init, requestId, fetch: fetchImpl }: ApiCall): Promise<Response> {
+export const sendApiCall = async ({ url, init, requestId, fetch: fetchImpl }: ApiCall): Promise<Response> => {
   try {
     return await fetchImpl(url, init);
   } catch (error) {
     throw new SyncTransportError("The sync server could not be reached", { cause: error, requestId });
   }
-}
+};
 
 // A failed answer, as the error every caller catches: the API's own refusal when it wears
 // the envelope, a transport error when it doesn't.
-export async function refusalOf(response: Response, requestId: string): Promise<Error> {
+export const refusalOf = async (response: Response, requestId: string): Promise<Error> => {
   let json: unknown;
   try {
     json = await response.json();
@@ -112,11 +112,11 @@ export async function refusalOf(response: Response, requestId: string): Promise<
     details,
     requestId,
   );
-}
+};
 
 // One request against /api: the headers every call carries, the envelope every failure
 // wears, and the schema every answer is parsed with (docs/architecture/api.md).
-export function createApiRequester(options: ApiRequesterOptions): ApiRequester {
+export const createApiRequester = (options: ApiRequesterOptions): ApiRequester => {
   const call = createApiCaller(options);
   return async <T>(method: ApiMethod, path: string, schema: z.ZodType<T>, requestOptions: ApiRequestOptions = {}): Promise<T | null> => {
     const prepared = call(method, path, requestOptions);
@@ -146,12 +146,12 @@ export function createApiRequester(options: ApiRequesterOptions): ApiRequester {
     }
     return parsed.data;
   };
-}
+};
 
-export async function answered<T>(promise: Promise<T | null>): Promise<T> {
+export const answered = async <T>(promise: Promise<T | null>): Promise<T> => {
   const result = await promise;
   if (result === null) {
     throw new SyncTransportError("The sync server answered with no content where content was expected");
   }
   return result;
-}
+};

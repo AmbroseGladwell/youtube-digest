@@ -14,7 +14,7 @@ import { useOnboardingRunOwner } from "./useOnboardingRunOwner.js";
 // the overview over. One tab has it; the others ask after it and take it over if that tab
 // is gone. Nothing is spent until the account exists and the answers are moved into it
 // (docs/features/onboarding.md, "The run lives in one tab" and "Nothing paid before the account").
-export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
+export const OnboardingRunRuntime = ({ children }: { children: ReactNode }) => {
   const [progress, update] = useOnboardingProgress();
   const libraryMove = useLibraryMove();
   const accountId = useLibraryAccountId();
@@ -28,7 +28,9 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
   // The answers have been given, and the account they were moved into exists (OV-327).
   const maySpend = (progress?.mayWrite ?? false) && accountId !== null && libraryMove.answersIn === accountId;
   const claim = useCallback(() => {
-    if (wanted) update({ runner: onboardingTabId() });
+    if (wanted) {
+      update({ runner: onboardingTabId() });
+    }
   }, [wanted, update]);
 
   const run = useOnboardingRun({
@@ -39,7 +41,9 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
     attempt,
     transcribe: link !== null && transcribing?.link === link ? transcribing.choice : undefined,
     onFound: (found) => {
-      if (progress?.sourceKey === null) update({ sourceKey: sourceKey(found.source) });
+      if (progress?.sourceKey === null) {
+        update({ sourceKey: sourceKey(found.source) });
+      }
     },
     onMade: (overview) => update({ overviewId: overview.id }),
   });
@@ -62,16 +66,22 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
       mine,
       attempt,
       retry: () => {
-        if (!mine) claim();
+        if (!mine) {
+          claim();
+        }
         setAttempt((current) => current + 1);
       },
       transcribe: () => {
-        if (!mine) claim();
-        if (link !== null) setTranscribing({ link, choice: transcribing?.link === link ? "retried" : "asked" });
+        if (!mine) {
+          claim();
+        }
+        if (link !== null) {
+          setTranscribing({ link, choice: transcribing?.link === link ? "retried" : "asked" });
+        }
         setAttempt((current) => current + 1);
       },
     };
   }, [run, mine, held, attempt, claim, link, transcribing]);
 
   return <OnboardingRunProvider value={value}>{children}</OnboardingRunProvider>;
-}
+};

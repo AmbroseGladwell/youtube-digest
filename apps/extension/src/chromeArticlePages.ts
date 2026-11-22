@@ -13,41 +13,51 @@ let page: ActivePage | null = null;
 let menuRequest: ActivePage | null = null;
 const listeners = new Set<() => void>();
 const notify = () => {
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 };
 
-async function refresh(): Promise<void> {
+const refresh = async (): Promise<void> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || tab?.pendingUrl;
   const next =
     url !== undefined && tab?.id !== undefined && isOfferablePage(url)
       ? { url: canonicalArticleUrl(url, null), title: tab.title ?? "", tabId: tab.id }
       : null;
-  if (next?.url === page?.url && next?.title === page?.title && next?.tabId === page?.tabId) return;
+  if (next?.url === page?.url && next?.title === page?.title && next?.tabId === page?.tabId) {
+    return;
+  }
   page = next;
   notify();
-}
+};
 
-async function pullMenuRequest(): Promise<void> {
+const pullMenuRequest = async (): Promise<void> => {
   try {
     const reply = (await chrome.runtime.sendMessage({ type: BridgeMessage.TAKE_PAGE_REQUEST })) as { page: ActivePage | null } | undefined;
-    if (reply?.page == null) return;
+    if (reply?.page == null) {
+      return;
+    }
     menuRequest = reply.page;
     notify();
   } catch {
     // No worker to answer, so nothing is waiting.
   }
-}
+};
 
 const onActivated = () => void refresh();
 const onUpdated = (_tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-  if (changeInfo.url !== undefined || changeInfo.title !== undefined || changeInfo.status === "complete") void refresh();
+  if (changeInfo.url !== undefined || changeInfo.title !== undefined || changeInfo.status === "complete") {
+    void refresh();
+  }
 };
 const onMessage = (message: unknown) => {
-  if (isPageMenuRequest(message)) void pullMenuRequest();
+  if (isPageMenuRequest(message)) {
+    void pullMenuRequest();
+  }
 };
 
-function reloadTab(tabId: number): Promise<void> {
+const reloadTab = (tabId: number): Promise<void> => {
   return new Promise((resolve) => {
     const finish = () => {
       clearTimeout(timeout);
@@ -55,13 +65,15 @@ function reloadTab(tabId: number): Promise<void> {
       resolve();
     };
     const onReloaded = (updatedId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-      if (updatedId === tabId && changeInfo.status === "complete") finish();
+      if (updatedId === tabId && changeInfo.status === "complete") {
+        finish();
+      }
     };
     const timeout = setTimeout(finish, RELOAD_TIMEOUT_MS);
     chrome.tabs.onUpdated.addListener(onReloaded);
     void chrome.tabs.reload(tabId).catch(finish);
   });
-}
+};
 
 export const chromeArticlePages: ArticlePages = {
   subscribe: (onChange) => {

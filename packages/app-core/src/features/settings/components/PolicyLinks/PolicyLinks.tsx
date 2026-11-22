@@ -7,10 +7,12 @@ import { policyLinksTestIds } from "./PolicyLinksTestIds.js";
 // Designs 62d and 62i: the privacy policy and the terms, as plain links, at the foot of
 // Settings › Privacy and under the version in About. From the extension they open the web
 // app's pages in a tab of their own.
-export function PolicyLinks() {
+export const PolicyLinks = () => {
   const apiUrl = useKnownApiUrl();
   const opensElsewhere = useSurface() === "extension";
-  if (apiUrl === null) return null;
+  if (apiUrl === null) {
+    return null;
+  }
   const target = opensElsewhere ? { target: "_blank", rel: "noreferrer" } : {};
 
   return (
@@ -23,4 +25,4 @@ export function PolicyLinks() {
       </a>
     </p>
   );
-}
+};

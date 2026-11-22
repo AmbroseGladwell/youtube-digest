@@ -5,12 +5,12 @@ import type { RecordKind } from "./RecordKind.js";
 import type { StoredRecord } from "./StoredRecord.js";
 import type { WriteDecision } from "./WriteDecision.js";
 
-export function decideTombstone(
+export const decideTombstone = (
   kind: RecordKind,
   current: StoredRecord | null,
   ifMatch: number | null,
   client: ClientContext,
-): WriteDecision {
+): WriteDecision => {
   if (current === null || current.deleted) {
     return { action: "nothing" };
   }
@@ -19,4 +19,4 @@ export function decideTombstone(
   }
   assertRecordWritable(kind, current.schemaVersion, client);
   return { action: "tombstone" };
-}
+};

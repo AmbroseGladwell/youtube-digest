@@ -5,6 +5,6 @@ const HistoryTrailContext = createContext<HistoryTrail>(EMPTY_HISTORY_TRAIL);
 
 export const HistoryTrailProvider = HistoryTrailContext.Provider;
 
-export function usePreviousPathname(): string | null {
+export const usePreviousPathname = (): string | null => {
   return previousPathname(useContext(HistoryTrailContext));
-}
+};

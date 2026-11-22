@@ -20,7 +20,9 @@ const FAILURES = new Set<string>(Object.values(TranscriptFetchFailure));
 const SOURCE_ID = "podcast";
 
 const asTranscriptError = (error: unknown): TranscriptFetchError => {
-  if (error instanceof TranscriptFetchError) return error;
+  if (error instanceof TranscriptFetchError) {
+    return error;
+  }
   if (isSyncRequestError(error) && error.code === "transcript_unavailable") {
     const failure = error.details?.failure;
     return new TranscriptFetchError(error.message, {
@@ -57,17 +59,21 @@ const isUnconfirmed = (error: unknown) => isSyncRequestError(error) && error.det
 // connection and checked by our server before it is kept for everyone. Without an extension, our
 // server searches itself (docs/features/podcast-on-youtube.md, "The reader's part"). Where no rung
 // answers and our server would transcribe the episode for this reader, it says so (design 305c-2).
-export async function podcastTranscript(
+export const podcastTranscript = async (
   api: Pick<PodcastApi, "transcript">,
   episode: PodcastEpisode,
   youTubeFetch: YouTubeFetch | null,
-): Promise<PodcastTranscript> {
+): Promise<PodcastTranscript> => {
   const ask = { feedUrl: episode.feedUrl, guid: episode.guid };
   try {
     return { transcript: await api.transcript(ask), keptForEveryone: true };
   } catch (error) {
-    if (!isNoCaptions(error)) throw asTranscriptError(error);
-    if (!isTranscribable(error)) return fromYouTube(api, episode, youTubeFetch, ask);
+    if (!isNoCaptions(error)) {
+      throw asTranscriptError(error);
+    }
+    if (!isTranscribable(error)) {
+      return fromYouTube(api, episode, youTubeFetch, ask);
+    }
   }
   try {
     return await fromYouTube(api, episode, youTubeFetch, ask);
@@ -77,14 +83,19 @@ export async function podcastTranscript(
     }
     throw error;
   }
+};
+
+interface FeedEpisode {
+  feedUrl: string;
+  guid: string;
 }
 
-async function fromYouTube(
+const fromYouTube = async (
   api: Pick<PodcastApi, "transcript">,
   episode: PodcastEpisode,
   youTubeFetch: YouTubeFetch | null,
-  ask: { feedUrl: string; guid: string },
-): Promise<PodcastTranscript> {
+  ask: FeedEpisode,
+): Promise<PodcastTranscript> => {
   let videoId: string | null = null;
   if (youTubeFetch !== null) {
     try {
@@ -103,7 +114,9 @@ async function fromYouTube(
       }
       videoId = found.videoId;
     } catch (error) {
-      if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) throw error;
+      if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {
+        throw error;
+      }
     }
   }
 
@@ -116,7 +129,9 @@ async function fromYouTube(
   try {
     return { transcript: await api.transcript({ ...ask, youTubeVideoId: videoId }), keptForEveryone: true };
   } catch (error) {
-    if (!isUnconfirmed(error) || youTubeFetch === null) throw asTranscriptError(error);
+    if (!isUnconfirmed(error) || youTubeFetch === null) {
+      throw asTranscriptError(error);
+    }
   }
   const fetched = await fetchInnerTubeTranscript(youTubeFetch, videoId, `https://www.youtube.com/watch?v=${videoId}`);
   return {
@@ -128,4 +143,4 @@ async function fromYouTube(
     },
     keptForEveryone: false,
   };
-}
+};

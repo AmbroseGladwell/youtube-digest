@@ -28,7 +28,7 @@ export const isPracticalAndHelpful = (action: JudgedAction): boolean =>
   action.doable === "doable" &&
   action.helpful === "helpful";
 
-export function summariseActionJudgments(readers: readonly string[], records: readonly ActionJudgeRecord[]): ActionJudgmentSummary[] {
+export const summariseActionJudgments = (readers: readonly string[], records: readonly ActionJudgeRecord[]): ActionJudgmentSummary[] => {
   const judged = records.filter((record) => record.outcome === "judged");
   return readers.map((reader) => {
     const actions = judged.flatMap((record) => record.actions.filter((action) => action.reader === reader));
@@ -53,4 +53,4 @@ export function summariseActionJudgments(readers: readonly string[], records: re
       emptyMissed: empty.filter((entry) => entry.verdict === "missed").length,
     };
   });
-}
+};

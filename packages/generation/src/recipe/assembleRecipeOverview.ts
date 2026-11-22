@@ -1,6 +1,7 @@
-import { Overview, recipeNote, resolveTags, webSource, type OverviewId, type Recipe, type SourceKey } from "@overview/domain";
+import { Overview, recipeNote, resolveTags, webSource, type Recipe } from "@overview/domain";
 import type { ArticleGenerationInput } from "../article/ArticleGenerationInput.js";
 import { resolvedFollowUpQuestions } from "../sections/followUpQuestionsSection.js";
+import type { AssembledOverviewMeta } from "../OverviewMeta.js";
 
 export interface GeneratedRecipeOutput {
   inOneLine: string;
@@ -14,12 +15,12 @@ export interface GeneratedRecipeOutput {
 
 // Everything in the recipe is the page's, copied by code; only the summary and the line come
 // from the model (docs/features/recipe-notes.md).
-export function assembleRecipeOverview(
+export const assembleRecipeOverview = (
   input: ArticleGenerationInput,
   recipe: Recipe,
   output: GeneratedRecipeOutput,
-  meta: { id: OverviewId; savedAt: string; sourceId: SourceKey },
-): Overview {
+  meta: AssembledOverviewMeta,
+): Overview => {
   return Overview.parse({
     id: meta.id,
     source: webSource(input.article, meta.sourceId),
@@ -44,4 +45,4 @@ export function assembleRecipeOverview(
     article: null,
     recipe: recipeNote(recipe, output.summary),
   });
-}
+};

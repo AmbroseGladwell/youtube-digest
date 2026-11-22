@@ -6,15 +6,19 @@ import { findEpisodeOnYouTube, type YouTubeFetch } from "@overview/transcripts";
 // Our server answers for a remembered source and the feed's tag first. Then the reader's extension
 // looks on YouTube on their own connection, as Create would; without one, our server searches,
 // which spends one of the app's daily searches (owner, 16 Nov 2026).
-export async function checkEpisodeWords(
+export const checkEpisodeWords = async (
   api: Pick<PodcastApi, "checkTranscript">,
   episode: PodcastEpisode,
   youTubeFetch: YouTubeFetch | null,
-): Promise<TranscriptCheck> {
+): Promise<TranscriptCheck> => {
   const ask = { feedUrl: episode.feedUrl, guid: episode.guid };
-  if (youTubeFetch === null) return api.checkTranscript({ ...ask, searchYouTube: true });
+  if (youTubeFetch === null) {
+    return api.checkTranscript({ ...ask, searchYouTube: true });
+  }
   const checked = await api.checkTranscript(ask);
-  if (checked.words !== "none") return checked;
+  if (checked.words !== "none") {
+    return checked;
+  }
   try {
     const found = await findEpisodeOnYouTube(youTubeFetch, {
       showName: episode.showName,
@@ -27,4 +31,4 @@ export async function checkEpisodeWords(
   } catch {
     return { words: "unknown" };
   }
-}
+};

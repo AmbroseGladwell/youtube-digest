@@ -8,8 +8,9 @@ import {
   type Topic,
   type TranscriptStore,
   type VideoId,
+  DEFAULT_SETTINGS,
+  type Settings,
 } from "@overview/domain";
-import { DEFAULT_SETTINGS, type Settings } from "@overview/domain";
 import type { AnswerStores } from "./moveAnswersInto.js";
 import type { MovingStores } from "./moveLibraryInto.js";
 

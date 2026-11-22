@@ -12,7 +12,7 @@ const MOST_TERMS = 12;
 
 // A question's words worth searching for: lower-cased letters and digits, without the words every
 // question has, at most a dozen. Postgres stems them, as it stemmed the passages.
-export function keywordTermsOf(question: string): string[] {
+export const keywordTermsOf = (question: string): string[] => {
   const words = question
     .toLowerCase()
     .normalize("NFKD")
@@ -20,7 +20,7 @@ export function keywordTermsOf(question: string): string[] {
     .split(/\s+/)
     .filter((word) => word.length > 1 && !STOPWORDS.has(word));
   return [...new Set(words)].slice(0, MOST_TERMS);
-}
+};
 
 export interface KeywordHit {
   videoId: string;
@@ -29,6 +29,12 @@ export interface KeywordHit {
   // right moment with them, against 45 without.
   around: Passage[];
   score: number;
+}
+
+export interface SearchOptions {
+  limit: number;
+  except?: readonly string[];
+  within?: readonly string[] | null;
 }
 
 // The account's transcripts as minute passages under a full-text index, searched by the
@@ -46,7 +52,9 @@ export class TranscriptPassagesRepository {
   static async index(tx: SqlClient, accountId: AccountId, videoId: string, transcript: StoredTranscript): Promise<void> {
     await tx.query("delete from transcript_passages where account_id = $1 and video_id = $2", [accountId, videoId]);
     const passages = transcriptPassages(transcript.segments).filter((passage) => passage.text.length > 0);
-    if (passages.length === 0) return;
+    if (passages.length === 0) {
+      return;
+    }
     await tx.query(
       `insert into transcript_passages (account_id, video_id, passage_id, start_ms, end_ms, terms)
        select $1, $2, p.id, p.start_ms, p.end_ms, to_tsvector('english', p.body)
@@ -73,7 +81,9 @@ export class TranscriptPassagesRepository {
     let indexed = 0;
     for (const row of rows) {
       const parsed = StoredTranscript.safeParse(row.body);
-      if (!parsed.success) continue;
+      if (!parsed.success) {
+        continue;
+      }
       await this.#sql.transaction((tx) => TranscriptPassagesRepository.index(tx, accountId, row.video_id, parsed.data));
       indexed += 1;
     }
@@ -83,13 +93,11 @@ export class TranscriptPassagesRepository {
   // The best passages for the question's words, from the given transcripts only when `within` is
   // set, never from those in `except`. Only transcripts of the account's live overviews are kept,
   // so a passage never outlives the note it came with.
-  async search(
-    accountId: AccountId,
-    question: string,
-    { limit, except = [], within = null }: { limit: number; except?: readonly string[]; within?: readonly string[] | null },
-  ): Promise<KeywordHit[]> {
+  async search(accountId: AccountId, question: string, { limit, except = [], within = null }: SearchOptions): Promise<KeywordHit[]> {
     const terms = keywordTermsOf(question);
-    if (terms.length === 0 || limit <= 0) return [];
+    if (terms.length === 0 || limit <= 0) {
+      return [];
+    }
     const rows = await this.#sql.query<{ video_id: string; passage_id: string; score: number }>(
       `with q as (
          select term, plainto_tsquery('english', term) as query from unnest($2::text[]) as term
@@ -118,14 +126,18 @@ export class TranscriptPassagesRepository {
     return rows.flatMap((row) => {
       const all = cut.get(row.video_id) ?? [];
       const at = all.findIndex((passage) => passage.id === row.passage_id);
-      if (at === -1) return [];
+      if (at === -1) {
+        return [];
+      }
       return [{ videoId: row.video_id, passage: all[at]!, around: all.slice(Math.max(0, at - 1), at + 2), score: Number(row.score) }];
     });
   }
 
   // A hit's words, cut again from its transcript the way they were indexed.
   async #passagesOf(accountId: AccountId, videoIds: readonly string[]): Promise<Map<string, Passage[]>> {
-    if (videoIds.length === 0) return new Map();
+    if (videoIds.length === 0) {
+      return new Map();
+    }
     const rows = await this.#sql.query<{ video_id: string; body: unknown }>(
       "select video_id, body from account_transcripts where account_id = $1 and video_id = any($2::text[])",
       [accountId, [...videoIds]],

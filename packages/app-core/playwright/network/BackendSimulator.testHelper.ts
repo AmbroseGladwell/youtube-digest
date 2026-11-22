@@ -135,7 +135,11 @@ const silentWav = (seconds: number): Buffer => {
   return wav;
 };
 
-type SimulatedResponse = { status: number; body?: unknown; stream?: unknown[] };
+interface SimulatedResponse {
+  status: number;
+  body?: unknown;
+  stream?: unknown[];
+}
 
 // A streamed answer is server-sent events, one per piece; everything else is JSON.
 const fulfil = (route: Route, { status, body, stream }: SimulatedResponse): Promise<void> =>
@@ -346,7 +350,9 @@ export class BackendSimulator {
     const held = this.#stalled.filter((entry) => entry.endpoint === endpoint);
     this.#stalled = this.#stalled.filter((entry) => entry.endpoint !== endpoint);
     this.simulateEndpointDefault(endpoint);
-    for (const { route, onDefault } of held) await fulfil(route, onDefault());
+    for (const { route, onDefault } of held) {
+      await fulfil(route, onDefault());
+    }
   };
 
   setGeneratedOutputOverrides = (overrides: Record<string, unknown>): void => {
@@ -410,38 +416,41 @@ export class BackendSimulator {
 
     await this.#page.route("**/api.anthropic.com/v1/messages**", (route) =>
       this.#respond(route, EndpointKey.ANTHROPIC_MESSAGES, {
-        onDefault: () =>
-          this.#anthropicRefusesModel
-            ? {
-                status: 400,
-                body: {
-                  type: "error",
-                  error: {
-                    type: "invalid_request_error",
-                    message: "The compiled grammar is too large, which would cause performance issues.",
-                  },
+        onDefault: () => {
+          if (this.#anthropicRefusesModel) {
+            return {
+              status: 400,
+              body: {
+                type: "error",
+                error: {
+                  type: "invalid_request_error",
+                  message: "The compiled grammar is too large, which would cause performance issues.",
                 },
-              }
-            : this.#anthropicOutOfCredit
-              ? {
-                  status: 400,
-                  body: {
-                    type: "error",
-                    error: {
-                      type: "invalid_request_error",
-                      message:
-                        "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
-                    },
-                  },
-                }
-              : {
-                  status: 200,
-                  body: makeAnthropicMessageResponse(
-                    route.request().postData()?.includes('"noteKind"')
-                      ? { noteKind: this.#generatedOutputOverrides.recipe ? "recipe" : "default" }
-                      : makeGeneratedOutputFixture(this.#generatedOutputOverrides),
-                  ),
+              },
+            };
+          }
+          if (this.#anthropicOutOfCredit) {
+            return {
+              status: 400,
+              body: {
+                type: "error",
+                error: {
+                  type: "invalid_request_error",
+                  message:
+                    "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
                 },
+              },
+            };
+          }
+          return {
+            status: 200,
+            body: makeAnthropicMessageResponse(
+              route.request().postData()?.includes('"noteKind"')
+                ? { noteKind: this.#generatedOutputOverrides.recipe ? "recipe" : "default" }
+                : makeGeneratedOutputFixture(this.#generatedOutputOverrides),
+            ),
+          };
+        },
         onError: () => ({
           status: 401,
           body: {
@@ -451,6 +460,21 @@ export class BackendSimulator {
         }),
       }),
     );
+  };
+
+  #ourKeyOverviewFor = (request: OurKeyGenerationRequest) => {
+    if ("podcast" in request.input) {
+      return makeOverview({ id: request.overviewId, source: request.input.podcast, inOneLine: "Made from the episode." });
+    }
+    if ("article" in request.input) {
+      return { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." };
+    }
+    return makeOverview({
+      id: request.overviewId,
+      source: youTubeSource(request.input.video),
+      inOneLine: "Made on our key.",
+      ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
+    });
   };
 
   #handleSyncNetworking = async (): Promise<void> => {
@@ -635,7 +659,9 @@ export class BackendSimulator {
         onDefault: () => {
           const { code } = route.request().postDataJSON() as { code: string };
           this.#emailChangeCodes.push(code);
-          if (!codeMatches(code)) return spent();
+          if (!codeMatches(code)) {
+            return spent();
+          }
           if (this.#newAddressTaken) {
             return { status: 409, body: { error: { code: "already_exists", message: "Simulated: taken" } } };
           }
@@ -861,7 +887,9 @@ export class BackendSimulator {
           this.#narrationVoices.push(voice);
           const key = keyFor(lines, voice);
           const held = this.#renders.get(key);
-          if (held?.render.status === "ready") return { status: 200, body: held.render };
+          if (held?.render.status === "ready") {
+            return { status: 200, body: held.render };
+          }
           if (this.#narrationDailyCapSpent) {
             return {
               status: 429,
@@ -998,7 +1026,9 @@ export class BackendSimulator {
     await this.#page.route("**/api/podcasts/read", async (route) => {
       this.#podcastReads.push((route.request().postDataJSON() as { url: string }).url);
       const held = this.#podcastReadsHeld;
-      if (held !== null) await new Promise<void>((answer) => held.push(answer));
+      if (held !== null) {
+        await new Promise<void>((answer) => held.push(answer));
+      }
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#podcastAnswer) });
     });
 
@@ -1023,8 +1053,9 @@ export class BackendSimulator {
 
     // Asked for, then asked after: each answer is the next line of the script, the last repeating.
     await this.#page.route("**/api/podcasts/transcription**", (route) => {
-      if (route.request().method() === "POST")
+      if (route.request().method() === "POST") {
         this.#transcriptionAsks.push(route.request().postDataJSON() as { feedUrl: string; guid: string });
+      }
       const next = this.#transcriptionScript.length > 1 ? this.#transcriptionScript.shift()! : this.#transcriptionScript[0];
       if (next === undefined) {
         return route.fulfill({
@@ -1060,16 +1091,7 @@ export class BackendSimulator {
               return {
                 status: 200,
                 body: {
-                  ...("podcast" in request.input
-                    ? makeOverview({ id: request.overviewId, source: request.input.podcast, inOneLine: "Made from the episode." })
-                    : "article" in request.input
-                      ? { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." }
-                      : makeOverview({
-                          id: request.overviewId,
-                          source: youTubeSource(request.input.video),
-                          inOneLine: "Made on our key.",
-                          ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
-                        })),
+                  ...this.#ourKeyOverviewFor(request),
                   filedProjectIds,
                 },
               };
@@ -1289,7 +1311,9 @@ export class BackendSimulator {
           if (this.#sessionLapsed) {
             return { status: 401, body: { error: { code: "unauthenticated", message: "Simulated: no such session" } } };
           }
-          if (pending(requestId) === null) return notFound();
+          if (pending(requestId) === null) {
+            return notFound();
+          }
           this.#decisions.push({ requestId, approve });
           this.#connectionRequest = null;
           const answer = approve ? "code=simulated-code" : "error=access_denied";
@@ -1472,8 +1496,12 @@ export class BackendSimulator {
   #answerChat = (request: ChatQuestionSent): SimulatedResponse => {
     this.#chatQuestions.push(request);
     const reply = this.#chatReplies.shift() ?? DEFAULT_CHAT_REPLY;
-    if (reply.kind === "refused") return { status: reply.status, body: { error: { message: "Simulated", ...reply.error } } };
-    if (reply.kind === "failed") return { status: 200, stream: [{ type: "failed", message: "Simulated: the provider failed" }] };
+    if (reply.kind === "refused") {
+      return { status: reply.status, body: { error: { message: "Simulated", ...reply.error } } };
+    }
+    if (reply.kind === "failed") {
+      return { status: 200, stream: [{ type: "failed", message: "Simulated: the provider failed" }] };
+    }
     const at = new Date().toISOString();
     const chatId = chatRecordId(request.overviewId, request.conversationId);
     const known = this.#chatRecords.get(chatId);
@@ -1483,11 +1511,19 @@ export class BackendSimulator {
     const library = new Map(this.#seedOverviews.map((overview) => [overview.id as string, overview.source.title]));
     const sources: ChatSource[] = [];
     const add = (overviewId: string, title: string, how: ChatSource["how"]) => {
-      if (overviewId === request.overviewId || [...before, ...sources].some((source) => source.overviewId === overviewId)) return;
+      if (overviewId === request.overviewId || [...before, ...sources].some((source) => source.overviewId === overviewId)) {
+        return;
+      }
       sources.push({ label: `S${before.length + sources.length + 1}`, overviewId: overviewId as OverviewId, title, how });
     };
-    for (const id of request.pins?.overviews ?? []) add(id, library.get(id) ?? "Untitled", "pinned");
-    if (request.searchLibrary !== false) for (const found of reply.found ?? []) add(found.overviewId, found.title, "found");
+    for (const id of request.pins?.overviews ?? []) {
+      add(id, library.get(id) ?? "Untitled", "pinned");
+    }
+    if (request.searchLibrary !== false) {
+      for (const found of reply.found ?? []) {
+        add(found.overviewId, found.title, "found");
+      }
+    }
     const setAside = before.filter((source) => request.setAside?.includes(source.overviewId)).map((source) => source.label);
     const messages: ChatMessage[] = [
       {
@@ -1534,22 +1570,28 @@ export class BackendSimulator {
   #answerAsk = (owner: ChatOwner, request: Omit<ChatQuestionSent, "overviewId">): SimulatedResponse => {
     this.#chatQuestions.push({ overviewId: owner.kind === "library" ? "library" : `project:${owner.id}`, ...request });
     const reply = this.#chatReplies.shift() ?? DEFAULT_CHAT_REPLY;
-    if (reply.kind === "refused") return { status: reply.status, body: { error: { message: "Simulated", ...reply.error } } };
-    if (reply.kind === "failed") return { status: 200, stream: [{ type: "failed", message: "Simulated: the provider failed" }] };
+    if (reply.kind === "refused") {
+      return { status: reply.status, body: { error: { message: "Simulated", ...reply.error } } };
+    }
+    if (reply.kind === "failed") {
+      return { status: 200, stream: [{ type: "failed", message: "Simulated: the provider failed" }] };
+    }
     const at = new Date().toISOString();
     const chatId = chatRecordId(owner, request.conversationId);
     const known = this.#chatRecords.get(chatId);
     const before = (known?.messages ?? []).flatMap((message) => (message.from === "reader" ? (message.sources ?? []) : []));
     const library = new Map(this.#seedOverviews.map((overview) => [overview.id as string, overview.source.title]));
     const pinned: ChatSource[] = [];
-    for (const id of request.pins?.overviews ?? [])
-      if (![...before, ...pinned].some((source) => source.overviewId === id))
+    for (const id of request.pins?.overviews ?? []) {
+      if (![...before, ...pinned].some((source) => source.overviewId === id)) {
         pinned.push({
           label: `S${before.length + pinned.length + 1}`,
           overviewId: id as OverviewId,
           title: library.get(id) ?? "Untitled",
           how: "pinned",
         });
+      }
+    }
     const picked = reply.picked ?? [];
     const messages: ChatMessage[] = [
       {
@@ -1604,7 +1646,9 @@ export class BackendSimulator {
     // Writes this device made and has not sent yet, as the open library's outbox holds them.
     queueLocalWrites: (entries: OutboxEntry[]) =>
       this.#page.evaluate((queued) => {
-        for (const entry of queued) window.__iwftStores__.syncStorage?.seedPending(entry);
+        for (const entry of queued) {
+          window.__iwftStores__.syncStorage?.seedPending(entry);
+        }
       }, entries),
     // How many overviews one of this device's libraries still holds, the no-account one under null.
     overviewsHeldIn: (accountId: string | null) =>
@@ -1734,7 +1778,9 @@ export class BackendSimulator {
     letReadsGo: (): void => {
       const held = this.#podcastReadsHeld ?? [];
       this.#podcastReadsHeld = null;
-      for (const answer of held) answer();
+      for (const answer of held) {
+        answer();
+      }
     },
     reads: (): string[] => [...this.#podcastReads],
     transcriptAsks: (): Array<{ feedUrl: string; guid: string }> => [...this.#podcastTranscriptAsks],
@@ -1842,12 +1888,16 @@ export class BackendSimulator {
     requestedVoices: (): string[] => [...this.#narrationVoices],
     finishRenders: (): void => {
       for (const [key, held] of this.#renders) {
-        if (held.render.status !== "ready") held.render = readyRender(key, held.lineCount);
+        if (held.render.status !== "ready") {
+          held.render = readyRender(key, held.lineCount);
+        }
       }
     },
     failRenders: (): void => {
       for (const [key, held] of this.#renders) {
-        if (held.render.status !== "ready") held.render = { key, status: "failed" };
+        if (held.render.status !== "ready") {
+          held.render = { key, status: "failed" };
+        }
       }
     },
     accountIsBusy: (): void => {

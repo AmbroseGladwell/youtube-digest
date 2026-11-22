@@ -7,7 +7,7 @@ export interface BigPictureWording {
   good: string;
 }
 
-export function bigPicturePrompt(targetWords: number, { source, good }: BigPictureWording): string {
+export const bigPicturePrompt = (targetWords: number, { source, good }: BigPictureWording): string => {
   if (targetWords === 0) {
     return `
 ## Big picture
@@ -35,7 +35,7 @@ Leave it empty rather than pad. When the ${source} has one thread and the
 core claim already holds it, an empty big picture is right.
 Good: "${good}"
 Bad: "A wide-ranging look at the subject, full of practical insights and food for thought."`;
-}
+};
 
 export const bigPictureShape = (targetWords: number) => {
   const mostWords = mostBigPictureWords(targetWords);

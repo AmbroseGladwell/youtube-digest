@@ -7,7 +7,7 @@ export interface TopicMatch {
   after: string;
 }
 
-export function topicMatches(topics: Topic[], query: string): TopicMatch[] {
+export const topicMatches = (topics: Topic[], query: string): TopicMatch[] => {
   const needle = query.trim().toLocaleLowerCase();
   if (needle === "") {
     return topics.map((topic) => ({ topic, before: topic.name, matched: "", after: "" }));
@@ -27,12 +27,12 @@ export function topicMatches(topics: Topic[], query: string): TopicMatch[] {
       },
     ];
   });
-}
+};
 
-export function creatableTopicName(topics: Topic[], query: string): string | null {
+export const creatableTopicName = (topics: Topic[], query: string): string | null => {
   const name = query.trim();
   if (name === "") {
     return null;
   }
   return topics.some((topic) => sameTopicName(topic.name, name)) ? null : name;
-}
+};

@@ -6,7 +6,7 @@ import type { PlacedPlaylistEntry } from "./inPlaylistOrder.js";
 // handed over in, carrying where it sat in its playlist so the queue can reorder it when the
 // reader asks for another order. A video YouTube will not show is queued as skipped, so it
 // explains itself rather than vanishing (docs/features/capture-queue.md).
-export function capturesFor(entries: PlacedPlaylistEntry[], fromPlaylist: PlaylistOrigin, now: Date): QueuedCapture[] {
+export const capturesFor = (entries: PlacedPlaylistEntry[], fromPlaylist: PlaylistOrigin, now: Date): QueuedCapture[] => {
   return entries.map((entry, index) => ({
     videoId: entry.videoId,
     url: canonicalYouTubeUrl(`https://www.youtube.com/watch?v=${entry.videoId}`)!,
@@ -20,4 +20,4 @@ export function capturesFor(entries: PlacedPlaylistEntry[], fromPlaylist: Playli
     addedAt: entry.addedAt,
     playlistIndex: entry.playlistIndex,
   }));
-}
+};

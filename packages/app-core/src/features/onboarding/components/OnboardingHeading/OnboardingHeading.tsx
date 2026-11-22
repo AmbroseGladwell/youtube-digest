@@ -4,8 +4,13 @@ import styles from "./OnboardingHeading.module.scss";
 
 export const ONBOARDING_HEADING_ID = "onboarding-heading";
 
+export interface OnboardingHeadingProps {
+  children: ReactNode;
+  small?: boolean;
+}
+
 // Every screen's heading, which takes focus as the screen arrives (the brief's accessibility).
-export function OnboardingHeading({ children, small = false }: { children: ReactNode; small?: boolean }) {
+export const OnboardingHeading = ({ children, small = false }: OnboardingHeadingProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
   const isPanel = useIsPanel();
   useEffect(() => heading.current?.focus(), []);
@@ -19,4 +24,4 @@ export function OnboardingHeading({ children, small = false }: { children: React
       {children}
     </h1>
   );
-}
+};

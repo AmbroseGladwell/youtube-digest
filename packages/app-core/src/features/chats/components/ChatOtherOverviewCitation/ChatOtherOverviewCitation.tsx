@@ -27,15 +27,19 @@ const SECTION: Record<OverviewPart, string> = {
 };
 
 export const otherOverviewCitationPlace = ({ item, range }: Pick<OtherOverviewCitation, "item" | "range">): string | undefined => {
-  if (range !== undefined) return formatTimestamp(range.startMs);
-  if (item === null) return undefined;
+  if (range !== undefined) {
+    return formatTimestamp(range.startMs);
+  }
+  if (item === null) {
+    return undefined;
+  }
   const numbered = NUMBERED[item.part];
   return numbered === undefined ? SECTION[item.part] : `${numbered} ${item.index + 1}`;
 };
 
 // Another of the reader's overviews an answer drew on (OV-355), named by the title it had when
 // cited, as the shared chip (OV-354, page 2) linking to it; muted, and not a link, once deleted.
-export function ChatOtherOverviewCitation({ citation, held, imageUrl, wide, onFollowed }: ChatOtherOverviewCitationProps) {
+export const ChatOtherOverviewCitation = ({ citation, held, imageUrl, wide, onFollowed }: ChatOtherOverviewCitationProps) => {
   const place = otherOverviewCitationPlace(citation);
   const label = place === undefined ? citation.title : `${citation.title} · ${place}`;
   return (
@@ -53,4 +57,4 @@ export function ChatOtherOverviewCitation({ citation, held, imageUrl, wide, onFo
       testId={held ? chatOtherOverviewCitationTestIds.link : chatOtherOverviewCitationTestIds.gone}
     />
   );
-}
+};

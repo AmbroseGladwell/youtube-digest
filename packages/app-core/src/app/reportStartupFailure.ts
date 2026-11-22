@@ -5,13 +5,18 @@ import type { AppBuild } from "./AppBuildContext.js";
 import type { AppLayout } from "./LayoutContext.js";
 import type { Surface } from "./SurfaceContext.js";
 
+export interface ApiDestinationOptions {
+  apiUrl: string;
+  token: string | null;
+}
+
 export interface ReportStartupFailureOptions {
   surface: Surface;
   layout?: AppLayout;
   build: AppBuild | null;
   defaultApiUrl?: string | null;
   storage?: Storage;
-  createApi?: (destination: { apiUrl: string; token: string | null }) => ErrorsApi;
+  createApi?: (destination: ApiDestinationOptions) => ErrorsApi;
   now?: () => Date;
 }
 
@@ -20,7 +25,7 @@ const SEMVER = /^\d+\.\d+\.\d+$/;
 // A shell that couldn't open its database has no App, so none of the reporter: this sends
 // the one error straight to the server the shell knows, as the service worker does
 // (docs/architecture/errors-and-logs.md, "Before the app mounts").
-export async function reportStartupFailure(
+export const reportStartupFailure = async (
   thrown: unknown,
   {
     surface,
@@ -31,11 +36,13 @@ export async function reportStartupFailure(
     createApi = ({ apiUrl, token }) => createFetchErrorsApi({ baseUrl: apiUrl, token, surface }),
     now = () => new Date(),
   }: ReportStartupFailureOptions,
-): Promise<void> {
+): Promise<void> => {
   try {
     const connection = readSyncConnection(storage);
     const apiUrl = surface === "extension" ? (connection.apiUrl ?? defaultApiUrl) : (globalThis.location?.origin ?? null);
-    if (apiUrl === null) return;
+    if (apiUrl === null) {
+      return;
+    }
     const context: AnalyticsContext = {
       surface,
       layout,
@@ -47,4 +54,4 @@ export async function reportStartupFailure(
   } catch {
     // Nothing is mounted to report a failed report to; the shell has logged the error itself.
   }
-}
+};

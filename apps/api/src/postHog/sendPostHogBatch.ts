@@ -16,10 +16,10 @@ export class PostHogDeliveryError extends Error {}
 
 // PostHog over its one batch call, with no SDK: its client would bring a queue and retries
 // the request path doesn't want (docs/architecture/analytics.md, "Where events go").
-export async function sendPostHogBatch(
+export const sendPostHogBatch = async (
   batch: PostHogCapture[],
   { apiKey, host, fetch: fetchImpl = globalThis.fetch, timeoutMs = 5_000 }: PostHogBatchOptions,
-): Promise<void> {
+): Promise<void> => {
   const response = await fetchImpl(`${host.replace(/\/+$/, "")}/batch/`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -29,4 +29,4 @@ export async function sendPostHogBatch(
   if (!response.ok) {
     throw new PostHogDeliveryError(`PostHog answered ${response.status}`);
   }
-}
+};

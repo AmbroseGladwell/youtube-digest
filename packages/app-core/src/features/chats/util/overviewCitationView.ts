@@ -22,6 +22,13 @@ export type OverviewCitationView =
 
 const OPENING_WORDS = 6;
 
+const anywaySectionOf = (overview: Overview): string => {
+  if (overview.source.kind === "podcast") {
+    return LISTEN_ANYWAY_HEADING;
+  }
+  return overview.source.kind === "web" ? READ_ANYWAY_SECTION : WATCH_ANYWAY_SECTION;
+};
+
 const sectionOf = (part: OverviewPart, overview: Overview): string =>
   ({
     verdict: "Verdict",
@@ -30,12 +37,7 @@ const sectionOf = (part: OverviewPart, overview: Overview): string =>
     step: "The steps it gives",
     howToApply: "How to apply",
     selling: "What it's selling",
-    watchAnyway:
-      overview.source.kind === "podcast"
-        ? LISTEN_ANYWAY_HEADING
-        : overview.source.kind === "web"
-          ? READ_ANYWAY_SECTION
-          : WATCH_ANYWAY_SECTION,
+    watchAnyway: anywaySectionOf(overview),
     chapter: "Chapters",
     ingredient: "Ingredients",
     method: "Method",
@@ -69,17 +71,26 @@ const openingOf = (text: string): string => {
   return words.length > OPENING_WORDS ? `${words.slice(0, OPENING_WORDS).join(" ")}…` : words.join(" ");
 };
 
+const chapterIndexOf = (article: NonNullable<Overview["article"]>, part: OverviewPart, index: number): number | null | undefined => {
+  if (part === "chapter") {
+    return index;
+  }
+  return part === "keyPoint" ? article.keyPointChapters[index] : null;
+};
+
 const placeOf = (overview: Overview, part: OverviewPart, index: number): ArticlePlace | undefined => {
   const article = overview.article;
-  if (article === null) return undefined;
-  const chapter = part === "chapter" ? index : part === "keyPoint" ? article.keyPointChapters[index] : null;
+  if (article === null) {
+    return undefined;
+  }
+  const chapter = chapterIndexOf(article, part, index);
   return chapter === null || chapter === undefined ? undefined : article.chapters[chapter]?.place;
 };
 
 const isOverviewCitation = (citation: ChatCitation): citation is Extract<ChatCitation, OverviewPartCitation> => "part" in citation;
 
 // An answer's citations of the overview, in the note's order.
-export function overviewCitationViews(overview: Overview, citations: readonly ChatCitation[]): OverviewCitationView[] {
+export const overviewCitationViews = (overview: Overview, citations: readonly ChatCitation[]): OverviewCitationView[] => {
   const cited = citations
     .filter(isOverviewCitation)
     .sort((a, b) => OVERVIEW_PARTS.indexOf(a.part) - OVERVIEW_PARTS.indexOf(b.part) || a.index - b.index);
@@ -87,7 +98,9 @@ export function overviewCitationViews(overview: Overview, citations: readonly Ch
   const citedTwice = (part: OverviewPart) => cited.filter((citation) => citation.part === part).length > 1;
   return cited.map((citation): OverviewCitationView => {
     const landed = citedOverviewPart(overview, citation);
-    if (landed === null) return { kind: "gone", part: citation.part, section: sectionOf(citation.part, overview) };
+    if (landed === null) {
+      return { kind: "gone", part: citation.part, section: sectionOf(citation.part, overview) };
+    }
     if (landed.index === null) {
       return {
         kind: "changed",
@@ -106,4 +119,4 @@ export function overviewCitationViews(overview: Overview, citations: readonly Ch
       ...(place === undefined ? {} : { place }),
     };
   });
-}
+};

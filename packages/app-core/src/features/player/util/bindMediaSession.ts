@@ -7,7 +7,7 @@ const POSITION_REPORT_MS = 5000;
 // The lock screen, Now Playing and headphone buttons, which are designed through this
 // rather than drawn (docs/features/audio-player.md). Seek ±15 s and no track buttons: iOS
 // shows skip buttons only when there is no previous or next track to offer instead.
-export function bindMediaSession(engine: PlayerEngine): () => void {
+export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
   const session = typeof navigator === "undefined" ? undefined : navigator.mediaSession;
   if (session === undefined || typeof MediaMetadata === "undefined") {
     return () => undefined;
@@ -18,7 +18,9 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
 
   const reportPosition = () => {
     const { timings, rate, source } = engine.getSnapshot();
-    if (source !== "audio" || timings.durationSeconds <= 0 || typeof session.setPositionState !== "function") return;
+    if (source !== "audio" || timings.durationSeconds <= 0 || typeof session.setPositionState !== "function") {
+      return;
+    }
     lastReport = Date.now();
     session.setPositionState({
       duration: timings.durationSeconds,
@@ -64,7 +66,9 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
     [
       "seekto",
       (details) => {
-        if (details.seekTime !== undefined) engine.seek(details.seekTime);
+        if (details.seekTime !== undefined) {
+          engine.seek(details.seekTime);
+        }
         reportPosition();
       },
     ],
@@ -78,7 +82,9 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
       // A browser that does not know an action refuses it; the rest still work.
     }
   };
-  for (const [action, handler] of handlers) setHandler(action, handler);
+  for (const [action, handler] of handlers) {
+    setHandler(action, handler);
+  }
 
   // Track buttons exist only while something gives them a meaning, so iOS keeps its skip buttons
   // the rest of the time.
@@ -92,7 +98,9 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
 
   const stopState = engine.subscribe(update);
   const stopTime = engine.subscribeTime(() => {
-    if (Date.now() - lastReport >= POSITION_REPORT_MS) reportPosition();
+    if (Date.now() - lastReport >= POSITION_REPORT_MS) {
+      reportPosition();
+    }
   });
   update();
 
@@ -108,4 +116,4 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
       }
     }
   };
-}
+};

@@ -25,13 +25,13 @@ export const sameLetterBothOrders = (record: KeyPointsJudgeRecord): boolean =>
   record.candidateFirst.overall.winner !== "tie" &&
   record.candidateFirst.overall.winner === record.candidateSecond.overall.winner;
 
-export function keyPointsJudgingMarkdown(
+export const keyPointsJudgingMarkdown = (
   records: readonly KeyPointsJudgeRecord[],
   videos: readonly KeyPointsVideo[],
   candidateRun: string,
   baselineRun: string,
   rubricVersion: number,
-): string {
+): string => {
   const judged = records.filter((record) => record.results !== null);
   const dimensions = [...KEY_POINT_DIMENSIONS, "overall" as const];
   const cost = records.reduce((total, record) => total + (record.costDollars ?? 0), 0);
@@ -62,7 +62,9 @@ export function keyPointsJudgingMarkdown(
   ];
   for (const video of videos) {
     const record = judged.find((candidate) => candidate.videoId === video.videoId);
-    if (record === undefined) continue;
+    if (record === undefined) {
+      continue;
+    }
     const results = record.results!;
     lines.push(
       `| ${video.title} | ${video.length} | ${results.overall} | ${results.choice} | ${results.completeness} | ${results.faithfulness} |`,
@@ -71,7 +73,9 @@ export function keyPointsJudgingMarkdown(
   lines.push("", "## Reasons", "");
   for (const video of videos) {
     const record = judged.find((candidate) => candidate.videoId === video.videoId);
-    if (record === undefined) continue;
+    if (record === undefined) {
+      continue;
+    }
     lines.push(
       `**${video.title}**: ${record.results!.overall}.`,
       `- Candidate as A: ${record.candidateFirst!.overall.winner}. ${record.candidateFirst!.overall.reason}`,
@@ -80,4 +84,4 @@ export function keyPointsJudgingMarkdown(
     );
   }
   return `${lines.join("\n")}\n`;
-}
+};

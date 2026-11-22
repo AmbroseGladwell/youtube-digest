@@ -12,44 +12,58 @@ export interface ListedUpload {
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
-function everyValueAt(value: unknown, key: string, found: unknown[] = []): unknown[] {
+const everyValueAt = (value: unknown, key: string, found: unknown[] = []): unknown[] => {
   if (Array.isArray(value)) {
-    for (const item of value) everyValueAt(item, key, found);
+    for (const item of value) {
+      everyValueAt(item, key, found);
+    }
   } else if (isObject(value)) {
     for (const [name, inner] of Object.entries(value)) {
-      if (name === key) found.push(inner);
+      if (name === key) {
+        found.push(inner);
+      }
       everyValueAt(inner, key, found);
     }
   }
   return found;
-}
+};
 
 const text = (value: unknown): string => {
-  if (!isObject(value)) return typeof value === "string" ? value : "";
-  if (typeof value.simpleText === "string") return value.simpleText;
-  if (typeof value.content === "string") return value.content;
+  if (!isObject(value)) {
+    return typeof value === "string" ? value : "";
+  }
+  if (typeof value.simpleText === "string") {
+    return value.simpleText;
+  }
+  if (typeof value.content === "string") {
+    return value.content;
+  }
   return Array.isArray(value.runs) ? value.runs.map((run) => (isObject(run) && typeof run.text === "string" ? run.text : "")).join("") : "";
 };
 
-export function clockSeconds(value: string): number | null {
-  if (!/^\d+(:\d{2}){1,2}$/.test(value.trim())) return null;
+export const clockSeconds = (value: string): number | null => {
+  if (!/^\d+(:\d{2}){1,2}$/.test(value.trim())) {
+    return null;
+  }
   return value
     .trim()
     .split(":")
     .reduce((total, part) => total * 60 + Number(part), 0);
-}
+};
 
 // YouTube's own page data, read loosely: these are the web client's screens, not an API, so a
 // field that moves reads as nothing found rather than as an error
 // (docs/features/podcast-on-youtube.md, "What is read from YouTube").
-export function channelsIn(searchResponse: unknown): ListedChannel[] {
+export const channelsIn = (searchResponse: unknown): ListedChannel[] => {
   return everyValueAt(searchResponse, "channelRenderer").flatMap((channel) =>
     isObject(channel) && typeof channel.channelId === "string" ? [{ channelId: channel.channelId, title: text(channel.title) }] : [],
   );
-}
+};
 
-function fromLockup(lockup: unknown): ListedUpload | null {
-  if (!isObject(lockup) || typeof lockup.contentId !== "string") return null;
+const fromLockup = (lockup: unknown): ListedUpload | null => {
+  if (!isObject(lockup) || typeof lockup.contentId !== "string") {
+    return null;
+  }
   const [metadata] = everyValueAt(lockup, "lockupMetadataViewModel");
   const badges = everyValueAt(lockup, "thumbnailBadgeViewModel").map((badge) => (isObject(badge) ? text(badge.text) : ""));
   const parts = everyValueAt(lockup, "metadataParts")
@@ -61,14 +75,16 @@ function fromLockup(lockup: unknown): ListedUpload | null {
     lengthSeconds: badges.map(clockSeconds).find((seconds) => seconds !== null) ?? null,
     age: parts.find((part) => part.endsWith(" ago")) ?? null,
   };
-}
+};
 
-function fromVideoRenderer(video: unknown): ListedUpload | null {
-  if (!isObject(video) || typeof video.videoId !== "string") return null;
+const fromVideoRenderer = (video: unknown): ListedUpload | null => {
+  if (!isObject(video) || typeof video.videoId !== "string") {
+    return null;
+  }
   const length = text(video.lengthText);
   const age = text(video.publishedTimeText);
   return { videoId: video.videoId, title: text(video.title), lengthSeconds: clockSeconds(length), age: age === "" ? null : age };
-}
+};
 
 export interface ListedVideo extends ListedUpload {
   channelId: string | null;
@@ -76,34 +92,52 @@ export interface ListedVideo extends ListedUpload {
 }
 
 // A video search's results, with the channel each is on.
-export function videosIn(searchResponse: unknown): ListedVideo[] {
+export const videosIn = (searchResponse: unknown): ListedVideo[] => {
   return everyValueAt(searchResponse, "videoRenderer").flatMap((video) => {
     const upload = fromVideoRenderer(video);
-    if (upload === null || upload.title === "" || !isObject(video)) return [];
+    if (upload === null || upload.title === "" || !isObject(video)) {
+      return [];
+    }
     const owner = video.ownerText ?? video.longBylineText;
     const [channelId] = everyValueAt(owner, "browseId");
     return [{ ...upload, channelId: typeof channelId === "string" ? channelId : null, channelTitle: text(owner) }];
   });
+};
+
+export interface UploadsPage {
+  uploads: ListedUpload[];
+  continuation: string | null;
 }
 
-export function uploadsIn(browseResponse: unknown): { uploads: ListedUpload[]; continuation: string | null } {
+export const uploadsIn = (browseResponse: unknown): UploadsPage => {
   const uploads = [
     ...everyValueAt(browseResponse, "lockupViewModel").map(fromLockup),
     ...everyValueAt(browseResponse, "videoRenderer").map(fromVideoRenderer),
   ].filter((upload): upload is ListedUpload => upload !== null && upload.title !== "");
   const [command] = everyValueAt(everyValueAt(browseResponse, "continuationItemRenderer"), "continuationCommand");
   return { uploads, continuation: isObject(command) && typeof command.token === "string" ? command.token : null };
-}
+};
 
 const DAYS: Record<string, number> = { second: 0, minute: 0, hour: 0, day: 1, week: 7, month: 30, year: 365 };
 
+export interface AgeRangeDays {
+  fewest: number;
+  most: number;
+}
+
 // "3 weeks ago" as the days it could mean, with the slack the rounding leaves.
-export function ageInDays(age: string): { fewest: number; most: number } | null {
+export const ageInDays = (age: string): AgeRangeDays | null => {
   const match = /(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/.exec(age);
-  if (match === null) return null;
+  if (match === null) {
+    return null;
+  }
   const count = Number(match[1]);
   const unit = DAYS[match[2]!]!;
-  if (unit === 0) return { fewest: 0, most: 1.1 };
-  if (unit === 1) return { fewest: count - 0.5, most: count + 1.5 };
+  if (unit === 0) {
+    return { fewest: 0, most: 1.1 };
+  }
+  if (unit === 1) {
+    return { fewest: count - 0.5, most: count + 1.5 };
+  }
   return { fewest: count * unit - 1, most: (count + 1) * unit };
-}
+};

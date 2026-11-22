@@ -7,10 +7,15 @@ import { OverviewAnalyticsProvider } from "../analytics/OverviewAnalyticsContext
 import { useAnalyticsContext } from "../analytics/useAnalyticsContext.js";
 import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 
+export interface SharedPageAnalyticsRuntimeProps {
+  token: string;
+  children: ReactNode;
+}
+
 // A shared link counts what its visitors do, account or not, against the share's own route
 // rather than the reader's session; the page load's id lives in memory and nowhere else
 // (docs/architecture/analytics.md, "The shared page").
-export function SharedPageAnalyticsRuntime({ token, children }: { token: string; children: ReactNode }) {
+export const SharedPageAnalyticsRuntime = ({ token, children }: SharedPageAnalyticsRuntimeProps) => {
   const context = useAnalyticsContext();
   const errors = useErrorReporter();
   const [viewId] = useState(() => globalThis.crypto.randomUUID());
@@ -27,7 +32,9 @@ export function SharedPageAnalyticsRuntime({ token, children }: { token: string;
 
   useEffect(() => {
     const flushOnHide = () => {
-      if (document.visibilityState === "hidden") void queue.flush({ keepalive: true });
+      if (document.visibilityState === "hidden") {
+        void queue.flush({ keepalive: true });
+      }
     };
     const flushOnLeave = () => void queue.flush({ keepalive: true });
     document.addEventListener("visibilitychange", flushOnHide);
@@ -57,4 +64,4 @@ export function SharedPageAnalyticsRuntime({ token, children }: { token: string;
       <OverviewAnalyticsProvider value={overviewAnalytics}>{children}</OverviewAnalyticsProvider>
     </AnalyticsProvider>
   );
-}
+};

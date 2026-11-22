@@ -40,7 +40,7 @@ export interface GenerationReadiness {
   settled: boolean;
 }
 
-export function useGenerationReadiness(): GenerationReadiness {
+export const useGenerationReadiness = (): GenerationReadiness => {
   const { apiKeys } = useApiKeys();
   const settingsQuery = useSettingsQuery();
   const settings = settingsQuery.data;
@@ -65,4 +65,4 @@ export function useGenerationReadiness(): GenerationReadiness {
     needsTranscriptSource,
     accountNeeded,
   };
-}
+};

@@ -36,7 +36,7 @@ const fraction = (whole: string, numerator: string, denominator: string) => {
   return `${NUMBER_NAME[count]} ${count === 1 ? names[0] : names[1]}`;
 };
 
-export function speakable(text: string): string {
+export const speakable = (text: string): string => {
   return text
     .replace(/\s+\([^()]*\)/g, "")
     .replace(/\b401\s?\(?k\)?/gi, "four oh one k")
@@ -54,4 +54,4 @@ export function speakable(text: string): string {
     .replace(/(?<![\d/])(\d{1,2})\/(\d{1,2})(?![\d/])/g, fraction)
     .replace(/\s{2,}/g, " ")
     .trim();
-}
+};

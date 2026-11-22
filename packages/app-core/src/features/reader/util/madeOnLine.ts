@@ -18,12 +18,14 @@ const PASSED_OVER_OURS: Record<FallbackCause, string> = {
 
 // The one quiet line a fallback earns, and nothing for an overview the first key made
 // (docs/architecture/tiers.md, "Which key an overview uses").
-export function madeOnLine(madeOn: MadeOn | null): string | null {
+export const madeOnLine = (madeOn: MadeOn | null): string | null => {
   const fallback = madeOn?.fallback ?? null;
-  if (madeOn === null || fallback === null) return null;
+  if (madeOn === null || fallback === null) {
+    return null;
+  }
   const provider = fallback.provider === null ? null : PROVIDER_SHORT_LABEL[fallback.provider];
   if (madeOn.key === "ours") {
     return `On us: ${PASSED_OVER_OWN[fallback.cause](provider ?? "your provider")}`;
   }
   return `Made on ${provider === null ? "your own key" : `your ${provider} key`}: ${PASSED_OVER_OURS[fallback.cause]}`;
-}
+};

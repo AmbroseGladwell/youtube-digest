@@ -10,10 +10,10 @@ export interface R2Settings {
 
 // R2 through its S3 API, signed per request; the bucket is private and only this server
 // holds a key to it (docs/features/tts-pre-rendered-speech.md, "The API side").
-export function createR2AudioStore(
+export const createR2AudioStore = (
   { accountId, bucket, accessKeyId, secretAccessKey }: R2Settings,
   fetchImpl: typeof fetch = fetch,
-): AudioStore {
+): AudioStore => {
   const client = new AwsClient({ accessKeyId, secretAccessKey, service: "s3", region: "auto" });
   const objectUrl = (key: string) => `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${key}.m4a`;
   const send = async (url: string, init: RequestInit) => fetchImpl(await client.sign(url, init));
@@ -46,4 +46,4 @@ export function createR2AudioStore(
       }
     },
   };
-}
+};

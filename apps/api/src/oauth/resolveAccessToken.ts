@@ -14,7 +14,7 @@ export interface ConnectionAccess {
 
 // Any signed-in account can connect an assistant, so a live token is the whole check
 // (docs/architecture/tiers.md; docs/features/mcp-connector.md).
-export async function resolveAccessToken(sql: SqlClient, token: string, now: Date): Promise<ConnectionAccess | null> {
+export const resolveAccessToken = async (sql: SqlClient, token: string, now: Date): Promise<ConnectionAccess | null> => {
   const [row] = await sql.query<{
     id: string;
     account_id: string;
@@ -41,4 +41,4 @@ export async function resolveAccessToken(sql: SqlClient, token: string, now: Dat
     scope: row.scope,
     clientName: row.client_name,
   };
-}
+};

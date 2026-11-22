@@ -26,7 +26,9 @@ const below = (header: HTMLElement, title: HTMLElement): HTMLElement[] => {
   }
   const onPage: HTMLElement[] = [];
   for (let next = header.nextElementSibling; next !== null; next = next.nextElementSibling) {
-    if (getComputedStyle(next).position !== "fixed") onPage.push(next as HTMLElement);
+    if (getComputedStyle(next).position !== "fixed") {
+      onPage.push(next as HTMLElement);
+    }
   }
   return [title, ...inHead, ...onPage];
 };
@@ -35,7 +37,7 @@ const below = (header: HTMLElement, title: HTMLElement): HTMLElement[] => {
 // from where it was, so the page doesn't reflow on the way; the text below slides with it
 // and who it's from fades in at its new place. Reduced motion swaps at once and crossfades
 // the head.
-export function useHeadImageMotion(full: boolean, parts: HeadImageMotionParts): () => void {
+export const useHeadImageMotion = (full: boolean, parts: HeadImageMotionParts): (() => void) => {
   const before = useRef<Before | null>(null);
 
   useLayoutEffect(() => {
@@ -44,7 +46,9 @@ export function useHeadImageMotion(full: boolean, parts: HeadImageMotionParts): 
     const header = parts.header.current;
     const image = parts.image.current;
     const title = parts.title.current;
-    if (first === null || header === null || image === null || title === null) return;
+    if (first === null || header === null || image === null || title === null) {
+      return;
+    }
 
     if (prefersReducedMotion()) {
       header.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE_IN_MS, easing: "linear" });
@@ -87,7 +91,9 @@ export function useHeadImageMotion(full: boolean, parts: HeadImageMotionParts): 
   return () => {
     const image = parts.image.current;
     const title = parts.title.current;
-    if (image === null || title === null) return;
+    if (image === null || title === null) {
+      return;
+    }
     before.current = { image: image.getBoundingClientRect(), titleTop: title.getBoundingClientRect().top };
   };
-}
+};

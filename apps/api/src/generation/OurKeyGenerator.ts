@@ -70,7 +70,10 @@ export class OurKeyDailyCapSpentError extends Error {
 }
 
 // An account, counted by the month on its plan. Nothing is made on us signed out (OV-327).
-export type OurKeyCaller = { accountId: AccountId; plan: Plan };
+export interface OurKeyCaller {
+  accountId: AccountId;
+  plan: Plan;
+}
 
 export type SmallPass = "profile" | "topics" | "topicSuggestions" | "kindCheck";
 
@@ -84,9 +87,15 @@ interface HeldSlot {
 // Our own key refused by the provider: ours to fix, never the reader's key problem.
 export class OurKeyUnavailableError extends Error {}
 
+interface MeteredUsage {
+  inputTokens: number;
+  outputTokens: number;
+  costDollars: number | null;
+}
+
 // What a run of calls on our key used and cost, failed attempts included, since the provider
 // bills every response it answers.
-function meteredUsageOf(calls: MeteredCall[]): { inputTokens: number; outputTokens: number; costDollars: number | null } {
+const meteredUsageOf = (calls: MeteredCall[]): MeteredUsage => {
   const price = priceOf(ourKeyModel);
   return calls.reduce(
     (total, { usage }) =>
@@ -99,7 +108,7 @@ function meteredUsageOf(calls: MeteredCall[]): { inputTokens: number; outputToke
           },
     { inputTokens: 0, outputTokens: 0, costDollars: price === undefined ? null : 0 },
   );
-}
+};
 
 export class OurKeyGenerationError extends Error {
   readonly fallback: FallbackReason | null;
@@ -270,7 +279,9 @@ export class OurKeyGenerator {
 
   async #recordCost(calls: MeteredCall[], payer: CostPayer, detail: string, log: FastifyBaseLogger): Promise<void> {
     const { inputTokens, outputTokens, costDollars } = meteredUsageOf(calls);
-    if (costDollars === null || calls.every((call) => call.usage === null)) return;
+    if (costDollars === null || calls.every((call) => call.usage === null)) {
+      return;
+    }
     const { costs, clock } = this.#options;
     await costs.recordOrLog(
       clock(),

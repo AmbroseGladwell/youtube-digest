@@ -13,19 +13,19 @@ const storedProject = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-async function withProject(account: TestAccount) {
+const withProject = async (account: TestAccount) => {
   const project = storedProject();
   const response = await account.inject({ method: "POST", url: "/api/projects", body: project });
   assert.equal(response.statusCode, 201);
   return project;
-}
+};
 
-async function withOverview(account: TestAccount) {
+const withOverview = async (account: TestAccount) => {
   const overview = storedOverview();
   const response = await account.inject({ method: "POST", url: "/api/overviews", body: overview });
   assert.equal(response.statusCode, 201);
   return overview;
-}
+};
 
 const member = (account: TestAccount, projectId: string, overviewId: string, body: Record<string, unknown>) =>
   account.inject({ method: "PUT", url: `/api/projects/${projectId}/members/${overviewId}`, body: { updatedAt: UPDATED_AT, ...body } });
@@ -254,7 +254,9 @@ test("deleting an overview takes it out of every project", async () => {
   const account = await makeAccount(testApp);
   const [first, second] = [await withProject(account), await withProject(account)];
   const [doomed, kept] = [await withOverview(account), await withOverview(account)];
-  for (const project of [first, second]) await member(account, project.id, doomed.id, { addedAt: UPDATED_AT });
+  for (const project of [first, second]) {
+    await member(account, project.id, doomed.id, { addedAt: UPDATED_AT });
+  }
   await member(account, first.id, kept.id, { addedAt: UPDATED_AT });
 
   await account.inject({ method: "DELETE", url: `/api/overviews/${doomed.id}` });

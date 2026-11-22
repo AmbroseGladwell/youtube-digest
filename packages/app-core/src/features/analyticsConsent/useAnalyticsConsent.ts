@@ -13,24 +13,28 @@ export interface AnalyticsConsentState {
 const listeners = new Set<() => void>();
 let snapshot: AnalyticsConsentState | null = null;
 
-export function analyticsConsentSnapshot(): AnalyticsConsentState {
+export const analyticsConsentSnapshot = (): AnalyticsConsentState => {
   snapshot ??= { consent: readAnalyticsConsent() };
   return snapshot;
-}
+};
 
-function update(next: AnalyticsConsentState): void {
-  if (next.consent !== analyticsConsentSnapshot().consent) writeAnalyticsConsent(next.consent);
+const update = (next: AnalyticsConsentState): void => {
+  if (next.consent !== analyticsConsentSnapshot().consent) {
+    writeAnalyticsConsent(next.consent);
+  }
   snapshot = next;
-  for (const listener of listeners) listener();
-}
+  for (const listener of listeners) {
+    listener();
+  }
+};
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
   return () => listeners.delete(listener);
-}
+};
 
 // A yes always makes a new id: one that was deleted by a no is never used again.
-export function answerAnalyticsConsent(answer: ConsentAnswer, now: Date = new Date()): void {
+export const answerAnalyticsConsent = (answer: ConsentAnswer, now: Date = new Date()): void => {
   update({
     consent: {
       answer,
@@ -39,30 +43,34 @@ export function answerAnalyticsConsent(answer: ConsentAnswer, now: Date = new Da
       anonymousId: answer === "share" ? crypto.randomUUID() : null,
     },
   });
-}
+};
 
 // A no after a live yes is a withdrawal, not a decline (docs/features/analytics-consent.md).
-export function declineAnalyticsConsent(now: Date = new Date()): { declined: boolean } {
+export const declineAnalyticsConsent = (now: Date = new Date()): { declined: boolean } => {
   const sharing = consentAllowsSharing(analyticsConsentSnapshot().consent);
   answerAnalyticsConsent("dontShare", now);
   return { declined: !sharing };
-}
+};
 
 // The id belongs to whoever uses this device with no account, so a sign-in drops it and the
 // next reader signed out here gets a new one (docs/features/analytics-consent.md).
-export function forgetAnonymousId(): void {
+export const forgetAnonymousId = (): void => {
   const state = analyticsConsentSnapshot();
-  if (state.consent?.anonymousId == null) return;
+  if (state.consent?.anonymousId == null) {
+    return;
+  }
   update({ ...state, consent: { ...state.consent, anonymousId: null } });
-}
+};
 
-export function mintAnonymousId(): void {
+export const mintAnonymousId = (): void => {
   const state = analyticsConsentSnapshot();
   const { consent } = state;
-  if (consent === null || !consentAllowsSharing(consent) || consent.anonymousId !== null) return;
+  if (consent === null || !consentAllowsSharing(consent) || consent.anonymousId !== null) {
+    return;
+  }
   update({ ...state, consent: { ...consent, anonymousId: crypto.randomUUID() } });
-}
+};
 
-export function useAnalyticsConsent(): AnalyticsConsentState {
+export const useAnalyticsConsent = (): AnalyticsConsentState => {
   return useSyncExternalStore(subscribe, analyticsConsentSnapshot);
-}
+};

@@ -5,6 +5,26 @@ import type { ServerError, ServerErrorFrame, ServerErrorRequest } from "./ErrorS
 const V8_FRAME = /^\s*at (?:(.*?) \()?(.+?):(\d+):(\d+)\)?$/;
 const IDENTIFIER = /^[A-Za-z_$][\w$]{0,63}$/;
 
+const messageOf = (error: Error | null, thrown: unknown): string => {
+  if (error !== null) {
+    return error.message;
+  }
+  if (typeof thrown === "string") {
+    return thrown;
+  }
+  return "";
+};
+
+const typeOf = (error: Error | null): string => {
+  if (error === null) {
+    return "NonError";
+  }
+  if (IDENTIFIER.test(error.name)) {
+    return error.name;
+  }
+  return "Error";
+};
+
 export interface ToServerErrorOptions {
   caughtBy: ServerError["caughtBy"];
   request?: ServerErrorRequest;
@@ -17,12 +37,16 @@ const relativeFile = (location: string, root: string): string => {
   return (path.isAbsolute(file) ? path.relative(root, file) : file).replace(/[^\w./@~+:-]/g, "_").slice(0, 200);
 };
 
-export function parseServerStack(stack: string | undefined, root: string): ServerErrorFrame[] {
-  if (stack === undefined) return [];
+export const parseServerStack = (stack: string | undefined, root: string): ServerErrorFrame[] => {
+  if (stack === undefined) {
+    return [];
+  }
   const frames: ServerErrorFrame[] = [];
   for (const line of stack.split("\n")) {
     const match = V8_FRAME.exec(line);
-    if (match === null) continue;
+    if (match === null) {
+      continue;
+    }
     const [, fn = "", location = "", lineNumber = "0", column = "0"] = match;
     const file = relativeFile(location, root);
     frames.push({
@@ -35,23 +59,25 @@ export function parseServerStack(stack: string | undefined, root: string): Serve
       column: Number(column),
       inApp: !file.startsWith("node:") && !file.includes("node_modules/"),
     });
-    if (frames.length === MAX_ERROR_FRAMES) break;
+    if (frames.length === MAX_ERROR_FRAMES) {
+      break;
+    }
   }
   return frames;
-}
+};
 
 // Anything the server threw, as it may leave the process: the message redacted by the same
 // rules a client's is, and paths made relative to where the server runs
 // (docs/architecture/errors-and-logs.md, "The server's own errors").
-export function toServerError(thrown: unknown, { caughtBy, request, at, root = process.cwd() }: ToServerErrorOptions): ServerError {
+export const toServerError = (thrown: unknown, { caughtBy, request, at, root = process.cwd() }: ToServerErrorOptions): ServerError => {
   const error = thrown instanceof Error ? thrown : null;
-  const message = error !== null ? error.message : typeof thrown === "string" ? thrown : "";
+  const message = messageOf(error, thrown);
   return {
     caughtBy,
-    type: error !== null && IDENTIFIER.test(error.name) ? error.name : error !== null ? "Error" : "NonError",
+    type: typeOf(error),
     message: redactErrorMessage(message),
     frames: parseServerStack(error?.stack, root),
     ...(request === undefined ? {} : { request }),
     at: at.toISOString(),
   };
-}
+};

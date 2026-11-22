@@ -34,12 +34,12 @@ const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: t
   .partial()
   .extend({ asked: AskedQuestions.optional(), updatedAt: UpdatedAt });
 
-export function overviewRoutes(
+export const overviewRoutes = (
   app: FastifyInstance,
   records: RecordsRepository,
   transcripts: TranscriptsRepository,
   reservations: OverviewReservationsRepository,
-): void {
+): void => {
   // A new overview is let in only with a reservation, a generation on our key, or a saved
   // share behind it, so a skipped reservation buys an overview that never leaves the device.
   // A replace is a regeneration, counted when it was reserved, and takes its slot here too
@@ -163,4 +163,4 @@ export function overviewRoutes(
     }
     return sendWritten(reply, overview);
   });
-}
+};

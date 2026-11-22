@@ -21,7 +21,7 @@ const madeSentence = (limit: LimitMessage | null) =>
   limit === null ? "This month's overviews are made" : `This month's ${limit.made} are made`;
 
 // Designs 95p and 95r: the strip, wide and compact.
-export function monthHoldStripMeta(hold: QueueHold, limit: LimitMessage | null, compact: boolean): string {
+export const monthHoldStripMeta = (hold: QueueHold, limit: LimitMessage | null, compact: boolean): string => {
   const withKey = monthHoldWays(limit).includes("addKey");
   if (compact) {
     return withKey
@@ -29,10 +29,10 @@ export function monthHoldStripMeta(hold: QueueHold, limit: LimitMessage | null, 
       : `${madeSentence(limit)} · resumes ${monthResumeDate(hold, true)}`;
   }
   return `${madeSentence(limit)}. Resumes ${monthResumeDate(hold)}${withKey ? ", or when you add a key" : ""}.`;
-}
+};
 
 // Design 95q: the note above the queue's list.
-export function monthHoldNote(hold: QueueHold, limit: LimitMessage | null): string {
+export const monthHoldNote = (hold: QueueHold, limit: LimitMessage | null): string => {
   const ways = monthHoldWays(limit);
   const when = [
     `on ${monthResumeDate(hold)}`,
@@ -40,4 +40,4 @@ export function monthHoldNote(hold: QueueHold, limit: LimitMessage | null): stri
     ...(ways.includes("seePlans") ? ["if your plan changes"] : []),
   ];
   return `${madeSentence(limit)}, so the queue is waiting. It carries on by itself ${OR.format(when)}.`;
-}
+};

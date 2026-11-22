@@ -124,7 +124,9 @@ test.describe("filing into projects", () => {
   test("a new overview is offered the active projects and filed into those our key matched", async ({ launcher, backendSimulator }) => {
     backendSimulator.ourKey.isAvailable();
     backendSimulator.ourKey.filesInto(["Kitchen renovation"]);
-    for (const project of [kitchen, launch, shed]) backendSimulator.projects.seed(project);
+    for (const project of [kitchen, launch, shed]) {
+      backendSimulator.projects.seed(project);
+    }
     await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
     const dialog = await launcher.appShell.openNewOverview();
 

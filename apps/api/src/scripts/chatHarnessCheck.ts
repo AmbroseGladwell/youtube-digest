@@ -128,14 +128,56 @@ const OWNED = /\byour (own )?(library|saved|overviews)\b|\byou(['’]ve| have)? 
 
 // x1/x2: no offer of what chat can't take. x3: with similar overviews, names one as the reader's own;
 // with none, doesn't claim any. x4: points to Settings › Personalisation.
-function productRight(question: Question, answer: string, similarTitles: readonly string[]): boolean {
-  if (question.id === "x1" || question.id === "x2") return !OFFERS_WHAT_CHAT_CANNOT.test(answer);
+const productRight = (question: Question, answer: string, similarTitles: readonly string[]): boolean => {
+  if (question.id === "x1" || question.id === "x2") {
+    return !OFFERS_WHAT_CHAT_CANNOT.test(answer);
+  }
   if (question.id === "x3") {
     const named = similarTitles.some((title) => normalised(answer).includes(normalised(title).split(" ").slice(0, 4).join(" ")));
     return similarTitles.length === 0 ? !named : named && OWNED.test(answer);
   }
   return answer.includes("Settings") && answer.includes("Personalisation");
+};
+
+interface SourceCheck {
+  kind: Question["kind"];
+  webPage: boolean;
+  answerable: boolean;
+  citesParts: boolean;
+  inSource: boolean;
 }
+
+const rightOnSourceOf = ({ kind, webPage, answerable, citesParts, inSource }: SourceCheck): boolean | null => {
+  if (kind === "filler" || kind === "overviewPart" || kind === "aboutReader" || kind === "product") {
+    return null;
+  }
+  return webPage ? answerable === citesParts : inSource === answerable;
+};
+
+interface MentionCheck {
+  question: Question;
+  personalised: boolean;
+  answerable: boolean;
+  text: string;
+}
+
+const mentionedOf = ({ question, personalised, answerable, text }: MentionCheck): boolean | null => {
+  if (question.id === "r1") {
+    return personalised
+      ? READER_TERMS.some((term) => text.toLowerCase().includes(term)) && text.includes("Settings")
+      : !READER_TERMS.some((term) => text.toLowerCase().includes(term)) && text.includes("Settings");
+  }
+  return answerable && question.mentions.length > 0
+    ? question.mentions.some((term) => text.toLowerCase().includes(term.toLowerCase()))
+    : null;
+};
+
+const rightOnGeneralOf = (kind: Question["kind"], generalKnowledge: boolean | null): boolean | null => {
+  if (kind === "notInSource") {
+    return generalKnowledge === true;
+  }
+  return kind === "offSubject" ? generalKnowledge === false : null;
+};
 
 const TOLERANCE_MS = 10_000;
 const normalised = (text: string) =>
@@ -144,22 +186,28 @@ const normalised = (text: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-function locateQuote(segments: readonly TranscriptSegment[], quote: string): number | null {
+const locateQuote = (segments: readonly TranscriptSegment[], quote: string): number | null => {
   let joined = "";
   const starts: Array<{ offset: number; startMs: number }> = [];
   for (const segment of segments) {
     const text = normalised(segment.text);
-    if (text.length === 0) continue;
-    if (joined.length > 0) joined += " ";
+    if (text.length === 0) {
+      continue;
+    }
+    if (joined.length > 0) {
+      joined += " ";
+    }
     starts.push({ offset: joined.length, startMs: segment.startMs });
     joined += text;
   }
   const found = joined.indexOf(normalised(quote));
-  if (found === -1) return null;
+  if (found === -1) {
+    return null;
+  }
   return starts.filter((start) => start.offset <= found).at(-1)?.startMs ?? null;
-}
+};
 
-async function loadSource(directory: string): Promise<Source> {
+const loadSource = async (directory: string): Promise<Source> => {
   const read = (file: string) => readFile(join(directory, file), "utf-8").catch(() => null);
   const transcriptText = await read("transcript.json");
   const markdownText = (await read("overview.md")) ?? "";
@@ -188,12 +236,12 @@ async function loadSource(directory: string): Promise<Source> {
       ...(overviewQuestions === null ? [] : (JSON.parse(overviewQuestions) as { questions: Question[] }).questions),
     ],
   };
-}
+};
 
 // Two of the library's longest, end to end: the library has nothing over 89 minutes. Questions
 // on both, and code-placed fillers through the whole, to fill a 30-question conversation. The
 // first's overview goes in the prompt, so the second's questions about its overview are left out.
-function longSource(first: Source, whole: Source): Source {
+const longSource = (first: Source, whole: Source): Source => {
   const second = { ...whole, questions: whole.questions.filter((question) => question.kind !== "overviewPart") };
   const offset = (first.segments.at(-1)?.endMs ?? 0) + 1_000;
   const segments = [
@@ -214,12 +262,12 @@ function longSource(first: Source, whole: Source): Source {
     overview: first.overview,
     questions,
   };
-}
+};
 
 // Every number in a text, as written: an answer's numbers should all be the overview's.
 const numbersOf = (text: string): string[] => [...text.matchAll(/\d+(?:[.,/]\d+)?/g)].map(([number]) => number);
 
-async function main() {
+const main = async () => {
   const [dataDirectory, outFile, mode, limit] = process.argv.slice(2);
   const longOnly = mode === "long-only";
   const profile = mode === "profile";
@@ -251,7 +299,9 @@ async function main() {
     await testApp.sql.query("update accounts set plan = 'plus' where id = $1", [account.accountId]);
     if (reader) {
       const put = await account.inject({ method: "PUT", url: "/api/settings", body: { ...READER, updatedAt: new Date().toISOString() } });
-      if (put.statusCode !== 200) throw new Error(`settings: ${put.statusCode} ${put.body}`);
+      if (put.statusCode !== 200) {
+        throw new Error(`settings: ${put.statusCode} ${put.body}`);
+      }
     }
     const videoId = VideoId.parse(randomUUID().slice(0, 11));
     const video = { ...source.video, id: videoId, url: `https://www.youtube.com/watch?v=${videoId}` };
@@ -272,9 +322,13 @@ async function main() {
           };
     const overview = storedOverview({ ...source.overview, source: web ?? youTubeSource(video) });
     const posted = await account.inject({ method: "POST", url: "/api/overviews", body: overview });
-    if (posted.statusCode !== 201) throw new Error(`overview: ${posted.statusCode} ${posted.body}`);
+    if (posted.statusCode !== 201) {
+      throw new Error(`overview: ${posted.statusCode} ${posted.body}`);
+    }
     numbersIn.set(overview.id, numbersOf(overviewMarkdown(overview)));
-    if (web !== null) return { account, overviewId: overview.id };
+    if (web !== null) {
+      return { account, overviewId: overview.id };
+    }
     const stored = {
       videoId,
       segments: source.segments,
@@ -283,7 +337,9 @@ async function main() {
       video: youTubeSource(video),
     };
     const put = await account.inject({ method: "PUT", url: `/api/transcripts/${videoId}`, body: stored });
-    if (put.statusCode !== 204) throw new Error(`transcript: ${put.statusCode} ${put.body}`);
+    if (put.statusCode !== 204) {
+      throw new Error(`transcript: ${put.statusCode} ${put.body}`);
+    }
     return { account, overviewId: overview.id };
   };
 
@@ -349,12 +405,13 @@ async function main() {
         kind: question.kind,
         failed: false,
         // A web page has no transcript: a decline is right when it cites nothing at all.
-        rightOnSource:
-          question.kind === "filler" || question.kind === "overviewPart" || question.kind === "aboutReader" || question.kind === "product"
-            ? null
-            : source.page !== null
-              ? answerable === parts.length > 0
-              : answer.inSource === answerable,
+        rightOnSource: rightOnSourceOf({
+          kind: question.kind,
+          webPage: source.page !== null,
+          answerable,
+          citesParts: parts.length > 0,
+          inSource: answer.inSource,
+        }),
         citedRightMoment:
           answerable && moments.length > 0
             ? moments.every(
@@ -362,14 +419,7 @@ async function main() {
               )
             : null,
         // With a profile, "what do you know" names it and Settings; with none, it says nothing yet and names Settings.
-        mentioned:
-          question.id === "r1"
-            ? logged.personalised === true
-              ? READER_TERMS.some((term) => answer.text.toLowerCase().includes(term)) && answer.text.includes("Settings")
-              : !READER_TERMS.some((term) => answer.text.toLowerCase().includes(term)) && answer.text.includes("Settings")
-            : answerable && question.mentions.length > 0
-              ? question.mentions.some((term) => answer.text.toLowerCase().includes(term.toLowerCase()))
-              : null,
+        mentioned: mentionedOf({ question, personalised: logged.personalised === true, answerable, text: answer.text }),
         citedRightPart:
           question.parts === undefined
             ? null
@@ -378,8 +428,7 @@ async function main() {
               ),
         generalKnowledge,
         // OV-329: a fair question the source doesn't answer gets general knowledge; one off its subject is declined.
-        rightOnGeneral:
-          question.kind === "notInSource" ? generalKnowledge === true : question.kind === "offSubject" ? generalKnowledge === false : null,
+        rightOnGeneral: rightOnGeneralOf(question.kind, generalKnowledge),
         rightOnProduct:
           question.kind === "product"
             ? productRight(question, answer.text, source.overview.verdict?.similarTo.map(({ title }) => title) ?? [])
@@ -454,6 +503,6 @@ async function main() {
 
   await writeFile(outFile, JSON.stringify({ ranOn: new Date().toISOString().slice(0, 10), turns }, null, 2));
   await testApp.close();
-}
+};
 
 await main();

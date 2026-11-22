@@ -21,7 +21,7 @@ const spokenCode = (code: string): string =>
 // Design 9g: the tab a link asked for from the extension opens in is the messenger. It
 // shows the code and signs nothing in here. The same card shows the code a signed-in web
 // app mints for the extension beside it (docs/features/sign-in.md).
-export function LinkCodeCard(props: LinkCodeCardProps) {
+export const LinkCodeCard = (props: LinkCodeCardProps) => {
   const { code } = props;
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const copied = copiedCode === code;
@@ -84,4 +84,4 @@ export function LinkCodeCard(props: LinkCodeCardProps) {
       </p>
     </AuthScreen>
   );
-}
+};

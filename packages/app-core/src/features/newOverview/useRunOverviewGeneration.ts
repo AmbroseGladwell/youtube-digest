@@ -47,7 +47,7 @@ type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptSto
 // (docs/architecture/tiers.md, "Signed out"). Shared by a run the reader starts and by the
 // capture queue (docs/features/capture-queue.md). The library is the one shown, unless the
 // run brings its own.
-export function useRunOverviewGeneration(apiKeys: ApiKeys) {
+export const useRunOverviewGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
   const youTubeFetch = useYouTubeFetch();
@@ -78,9 +78,9 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
         .finally(settled),
     [makeWith, learnFrom, settled, knownApiUrl, youTubeFetch, connection.token, shown, reporter],
   );
-}
+};
 
-export function useRunArticleGeneration(apiKeys: ApiKeys) {
+export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
 
@@ -100,13 +100,13 @@ export function useRunArticleGeneration(apiKeys: ApiKeys) {
         .finally(settled),
     [makeWith, learnFrom, settled, shown],
   );
-}
+};
 
 // An episode's words come through our server, on the account; the reader's
 // extension searches YouTube for the episode on their own connection when it can
 // (docs/features/podcast-on-youtube.md). Or its audio is transcribed, as the reader chose, with the
 // events of that measured here, wherever the run was started (docs/features/speech-to-text.md).
-export function useRunPodcastGeneration(apiKeys: ApiKeys) {
+export const useRunPodcastGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const analytics = useAnalytics();
   const shown = useStores();
@@ -116,7 +116,9 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
 
   return useCallback(
     async (request: PodcastRunRequest, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> => {
-      if (knownApiUrl === null) throw new Error("Episodes are read through our server, and there isn't one here");
+      if (knownApiUrl === null) {
+        throw new Error("Episodes are read through our server, and there isn't one here");
+      }
       const api = createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token });
       const from = options.from ?? "dialog";
       const episodeMinutes = {
@@ -130,7 +132,9 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
           const words = await transcribeEpisode(api, episode, {
             isCancelled: options.isCancelled,
             onProgress: (progress: TranscriptionProgress) => {
-              if (progress === "transcribing" && startedAt === null) startedAt = Date.now();
+              if (progress === "transcribing" && startedAt === null) {
+                startedAt = Date.now();
+              }
               onTranscription?.(progress);
             },
           });
@@ -143,8 +147,12 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
           });
           return words;
         } catch (error) {
-          if (error instanceof TranscriptionFailedError) analytics.capture.episodeTranscription.failed({ from, reason: error.reason });
-          if (error instanceof TranscriptionRefusedError) analytics.capture.episodeTranscription.failed({ from, reason: error.refusal });
+          if (error instanceof TranscriptionFailedError) {
+            analytics.capture.episodeTranscription.failed({ from, reason: error.reason });
+          }
+          if (error instanceof TranscriptionRefusedError) {
+            analytics.capture.episodeTranscription.failed({ from, reason: error.refusal });
+          }
           throw error;
         }
       };
@@ -154,8 +162,9 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
           request.transcribe !== undefined
             ? transcribe(episode, onTranscription)
             : podcastTranscript(api, episode, youTubeFetch).catch((error: unknown) => {
-                if (error instanceof EpisodeNeedsTranscribingError)
+                if (error instanceof EpisodeNeedsTranscribingError) {
                   analytics.capture.episodeTranscription.asked({ from, ...episodeMinutes });
+                }
                 throw error;
               }),
         {
@@ -172,9 +181,9 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
     },
     [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, analytics],
   );
-}
+};
 
-function useOverviewMaker(apiKeys: ApiKeys) {
+const useOverviewMaker = (apiKeys: ApiKeys) => {
   const settingsQuery = useSettingsQuery();
   const knownApiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
@@ -234,7 +243,9 @@ function useOverviewMaker(apiKeys: ApiKeys) {
         settingsStore,
         analytics,
       }).then((ran) => {
-        if (ran) void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+        if (ran) {
+          void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+        }
       });
       return overview;
     },
@@ -244,4 +255,4 @@ function useOverviewMaker(apiKeys: ApiKeys) {
   const settled = useCallback(() => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }), [queryClient]);
 
   return { makeWith, learnFrom, settled };
-}
+};

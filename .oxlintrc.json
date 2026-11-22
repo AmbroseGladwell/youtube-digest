@@ -4,8 +4,28 @@
   "categories": { "correctness": "error" },
   "env": { "browser": true, "node": true, "es2024": true },
   "ignorePatterns": ["prototype/**", "samples/**", "**/dist/**"],
+  "jsPlugins": ["./scripts/oxlint/overviewPlugin.mjs"],
   "rules": {
     "no-unused-vars": ["error", { "args": "none", "caughtErrors": "none", "ignoreRestSiblings": true, "varsIgnorePattern": "^_" }],
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-definitions": ["error", "interface"],
+    "typescript/consistent-type-imports": "error",
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "curly": ["error", "all"],
+    "no-var": "error",
+    "no-param-reassign": "error",
+    "no-sequences": "error",
+    "no-unused-expressions": ["error", { "allowTernary": false, "allowShortCircuit": false }],
+    "func-style": ["error", "expression"],
+    "prefer-arrow-callback": "error",
+    "import/no-duplicates": "error",
+    "import/no-cycle": "error",
+    "react/jsx-no-useless-fragment": ["error", { "allowExpressions": true }],
+    "overview/no-side-effect-ternary": "error",
+    "overview/no-inline-object-type": "error",
+    "max-depth": ["error", 3],
+    "max-nested-callbacks": ["error", 3],
+    "no-nested-ternary": "error",
     "unicorn/no-thenable": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/no-new-array": "off",
@@ -16,6 +36,40 @@
     "react/set-state-in-effect": "off",
     "react/purity": "off",
     "react/immutability": "off",
-    "react/preserve-manual-memoization": "off"
-  }
+    "react/preserve-manual-memoization": "off",
+    "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }, { "group": ["**/*.testHelper", "**/*.testHelper.js"], "message": "A .testHelper file is for tests only; product code never imports one." }]}]
+  },
+  "overrides": [
+    {
+      "files": ["packages/domain/src/**"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }, { "group": ["**/*.testHelper", "**/*.testHelper.js"], "message": "A .testHelper file is for tests only; product code never imports one." }, { "group": ["@overview/*"], "message": "@overview/domain is the bottom of the graph and imports no other workspace package." }, { "group": ["node:*"], "message": "This code runs in the browser too, so it can't import Node's built-ins." }]}]
+      }
+    },
+    {
+      "files": ["packages/app-core/src/**"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }, { "group": ["**/*.testHelper", "**/*.testHelper.js"], "message": "A .testHelper file is for tests only; product code never imports one." }, { "group": ["node:*"], "message": "This code runs in the browser too, so it can't import Node's built-ins." }]}]
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.testHelper.ts", "**/*.testHelper.tsx", "**/playwright/**", "**/scripts/**", "scripts/**"],
+      "rules": {
+        "overview/no-inline-object-type": "off",
+        "max-nested-callbacks": ["error", 4],
+        "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette", "!@overview/transcripts/testing"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }]}]
+      }
+    },
+    {
+      "files": ["apps/api/src/scripts/chatAcrossSourcesCheck.ts"],
+      "rules": { "max-depth": "off", "max-nested-callbacks": "off", "no-nested-ternary": "off" }
+    },
+    {
+      "files": ["**/playwright/**"],
+      "rules": {
+        "import/no-cycle": "off",
+        "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette", "!@overview/transcripts/testing"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }]}]
+      }
+    }
+  ]
 }

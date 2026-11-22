@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId, type SelectionAction, type TopicId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
@@ -36,7 +36,7 @@ import { meaningEntries } from "../util/meaningEntries.js";
 import { useMeaningMatchesQuery } from "../queries/meaningMatchesQuery.js";
 import { useSettledText } from "../../../util/useSettledText.js";
 import { orderLibraryEntries } from "../util/orderLibraryEntries.js";
-import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { NO_LIBRARY_FILTERS, NO_LIBRARY_FILTERS as EVERY_OVERVIEW } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 import { libraryViewState } from "../util/libraryViewState.js";
 import { libraryViewSummary } from "../util/libraryViewSummary.js";
@@ -66,7 +66,6 @@ import { libraryPageTestIds } from "./LibraryPageTestIds.js";
 import { LibraryQueueGroup } from "../../captureQueue/components/LibraryQueueGroup/LibraryQueueGroup.js";
 import { useLibraryProjects } from "../../projects/useLibraryProjects.js";
 import { WHOLE_LIBRARY, type LibraryPlace } from "../types/LibraryPlace.js";
-import { NO_LIBRARY_FILTERS as EVERY_OVERVIEW } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_SORT } from "../types/LibrarySort.js";
 import { useSetOverviewTopicsMutation } from "../../overviews/mutations/useSetOverviewTopicsMutation.js";
 import { useDeleteOverviewMutation } from "../../overviews/mutations/useDeleteOverviewMutation.js";
@@ -93,7 +92,21 @@ export interface LibraryPageProps {
 // A project's page starts from every overview in it (docs/features/projects.md).
 const PROJECT_VIEW = { filters: EVERY_OVERVIEW, sort: DEFAULT_LIBRARY_SORT };
 
-export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) {
+const selectionLineFor = (count: number, coarsePointer: boolean): string => {
+  if (count > 0) {
+    return `${count} selected`;
+  }
+  return coarsePointer ? "Tap to select" : "Click to select";
+};
+
+const searchPlaceholderFor = (filtered: boolean, sortedOnSheet: boolean): string => {
+  if (filtered) {
+    return "Search within these";
+  }
+  return sortedOnSheet ? "Search overviews" : "Search claims, channels, tags";
+};
+
+export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) => {
   const topicsQuery = useTopicsQuery();
   const { searchParams, view, change } = useLibraryView(topicsQuery.data, { remember: place.kind === "library" });
   // The field's words lead and the URL follows once typing pauses, so a key never waits on
@@ -105,12 +118,16 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const viewParams = query === view.filters.query ? searchParams : applyLibraryFilterPatch(searchParams, { query });
   const writeView = (next: URLSearchParams) => {
     const nextQuery = parseLibraryView(next).filters.query;
-    if (nextQuery !== view.filters.query) queryWrites.current.push(nextQuery);
+    if (nextQuery !== view.filters.query) {
+      queryWrites.current.push(nextQuery);
+    }
     change(next);
   };
   const settledTyping = useSettledText(query, QUERY_TO_URL_MS);
   useEffect(() => {
-    if (settledTyping !== query || query === view.filters.query) return;
+    if (settledTyping !== query || query === view.filters.query) {
+      return;
+    }
     writeView(applyLibraryFilterPatch(searchParams, { query }));
   }, [settledTyping]);
   useEffect(() => {
@@ -119,7 +136,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       queryWrites.current.splice(0, written + 1);
       return;
     }
-    if (view.filters.query === query) return;
+    if (view.filters.query === query) {
+      return;
+    }
     setQuery(view.filters.query);
     showInSearch(view.filters.query);
   }, [view.filters.query]);
@@ -185,7 +204,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const meaningSettled = useRef(() => {});
   const meaningHeadingId = useId();
   useEffect(() => {
-    if (meaningQuery.data !== undefined && settledQuery !== "") meaningSettled.current();
+    if (meaningQuery.data !== undefined && settledQuery !== "") {
+      meaningSettled.current();
+    }
   }, [meaningQuery.data, settledQuery]);
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
   const isPhone = useMediaQuery(PHONE_QUERY);
@@ -213,13 +234,17 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   // hold the keyboard. On the wide one it is part of the page and `filtersOpen` is never
   // set, the button that would set it being hidden.
   const closeFilters = () => {
-    if (filtersOpen) analytics.library.filterSheet.closed();
+    if (filtersOpen) {
+      analytics.library.filterSheet.closed();
+    }
     setFiltersOpen(false);
   };
   useFocusTrap(filtersOpen, rail);
   useDismissOnOutside(filtersOpen, closeFilters, rail);
   useEffect(() => {
-    if (selection.selecting || !refocusSelect.current) return;
+    if (selection.selecting || !refocusSelect.current) {
+      return;
+    }
     refocusSelect.current = false;
     selectButton.current?.focus();
   }, [selection.selecting]);
@@ -242,7 +267,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const applied = appliedLibraryFilters(filters, topics);
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1], from: FilterControl | null = null) => {
-    if (from !== null) recordLibraryFilterChange(analytics.library.filters, filters, patch, from);
+    if (from !== null) {
+      recordLibraryFilterChange(analytics.library.filters, filters, patch, from);
+    }
     changeView(applyLibraryFilterPatch(viewParams, patch));
   };
   const showAll = (from: FilterControl) => changeFilters(NO_LIBRARY_FILTERS, from);
@@ -280,7 +307,7 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const selectable = readableEntries(entries).length > 0;
   const allRead = selected.length > 0 && selected.every((entry) => entry.state.read);
   const allFavourite = selected.length > 0 && selected.every((entry) => entry.state.favourite);
-  const selectionLine = selected.length > 0 ? `${selected.length} selected` : coarsePointer ? "Tap to select" : "Click to select";
+  const selectionLine = selectionLineFor(selected.length, coarsePointer);
   const stopSelecting = () => {
     analytics.library.selection.stopped({ selected: selected.length, reason: "reader" });
     selection.stop();
@@ -291,7 +318,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     refocusSelect.current = true;
     selection.stop();
     void countFailed(writes).then((failed) => {
-      if (failed > 0) analytics.library.selection.failed({ action, failed, writes: writes.length });
+      if (failed > 0) {
+        analytics.library.selection.failed({ action, failed, writes: writes.length });
+      }
       const { text, done: succeeded } = bulkActionToast(done, { writes: writes.length, failed });
       toast.show(text, succeeded);
     });
@@ -300,7 +329,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     const writes: Promise<unknown>[] = [];
     for (const entry of selected) {
       const [key, value] = Object.entries(patch)[0] as ["read" | "favourite", boolean];
-      if (entry.state[key] === value) continue;
+      if (entry.state[key] === value) {
+        continue;
+      }
       keepInPlace(entry.overview.id);
       writes.push(setOverviewState.mutateAsync({ overviewId: entry.overview.id, patch }));
     }
@@ -321,7 +352,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       change.given = give;
     }
     for (const { overview } of selected) {
-      if (overview.topicIds.includes(topicId) === give) continue;
+      if (overview.topicIds.includes(topicId) === give) {
+        continue;
+      }
       keepInPlace(overview.id);
       writes.push(
         setOverviewTopics.mutateAsync({
@@ -344,7 +377,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     setChoosingTopics(false);
     const { changes, writes } = topicSession.current;
     const done = pickerAction(changes.values(), selected.length, "topic");
-    if (done !== null) finishActing("addToTopic", done, writes, selected.length);
+    if (done !== null) {
+      finishActing("addToTopic", done, writes, selected.length);
+    }
   };
 
   // Only counts: with a tag set the chip under the search names it, so the line says it to a
@@ -439,12 +474,49 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       }}
     />
   );
-  const searchPlaceholder =
-    chips.length > 0
-      ? "Search within these"
-      : railIsSheet && sort !== DEFAULT_LIBRARY_VIEW.sort
-        ? "Search overviews"
-        : "Search claims, channels, tags";
+  const searchPlaceholder = searchPlaceholderFor(chips.length > 0, railIsSheet && sort !== DEFAULT_LIBRARY_VIEW.sort);
+  const listShown = place.kind !== "projects" && !projects.missing && !(place.kind === "project" && projects.current === null);
+  const notListed = (): ReactNode => {
+    if (place.kind === "projects") {
+      return projects.index;
+    }
+    return projects.missing ? <ErrorState screen="notFound" title="This project isn't here any more" back /> : null;
+  };
+  const listBody = (): ReactNode => {
+    if (visible.length === 0 && caughtUp) {
+      return (
+        <div className={styles.caughtUp} data-testid={libraryPageTestIds.caughtUp}>
+          <p className={styles.caughtUpTitle}>You're all caught up</p>
+          <p className={styles.caughtUpBody}>Every overview here is read.</p>
+          <button
+            type="button"
+            className={styles.caughtUpAction}
+            onClick={() => {
+              analytics.library.caughtUp.allShown();
+              showAll("caughtUp");
+            }}
+            data-testid={libraryPageTestIds.caughtUpShowAllButton}
+          >
+            Show all overviews
+          </button>
+        </div>
+      );
+    }
+    if (visible.length === 0) {
+      return (
+        closeInMeaning.length === 0 && (
+          <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
+            No overviews match these filters.
+          </p>
+        )
+      );
+    }
+    return (
+      <div className={styles.list} data-testid={libraryPageTestIds.list}>
+        {visible.map((entry, index) => row(entry, index))}
+      </div>
+    );
+  };
 
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
@@ -509,11 +581,7 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         </aside>
 
         <main className={styles.main} ref={main}>
-          {place.kind === "projects" ? (
-            projects.index
-          ) : projects.missing ? (
-            <ErrorState screen="notFound" title="This project isn't here any more" back />
-          ) : place.kind === "project" && projects.current === null ? null : (
+          {listShown ? (
             <>
               {projects.head ?? (
                 <div className={styles.listHead}>
@@ -647,34 +715,7 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
 
               {railIsSheet && projects.current === null && milestoneStack}
 
-              {projects.empty ??
-                (visible.length === 0 && caughtUp ? (
-                  <div className={styles.caughtUp} data-testid={libraryPageTestIds.caughtUp}>
-                    <p className={styles.caughtUpTitle}>You're all caught up</p>
-                    <p className={styles.caughtUpBody}>Every overview here is read.</p>
-                    <button
-                      type="button"
-                      className={styles.caughtUpAction}
-                      onClick={() => {
-                        analytics.library.caughtUp.allShown();
-                        showAll("caughtUp");
-                      }}
-                      data-testid={libraryPageTestIds.caughtUpShowAllButton}
-                    >
-                      Show all overviews
-                    </button>
-                  </div>
-                ) : visible.length === 0 ? (
-                  closeInMeaning.length === 0 && (
-                    <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
-                      No overviews match these filters.
-                    </p>
-                  )
-                ) : (
-                  <div className={styles.list} data-testid={libraryPageTestIds.list}>
-                    {visible.map((entry, index) => row(entry, index))}
-                  </div>
-                ))}
+              {projects.empty ?? listBody()}
               {closeInMeaning.length > 0 && (
                 <section className={styles.meaning} aria-labelledby={meaningHeadingId} data-testid={libraryPageTestIds.meaningGroup}>
                   <h2 className={styles.meaningHeading} id={meaningHeadingId}>
@@ -700,7 +741,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                     acted("addToProject");
                     const overviews = selected.length;
                     projects.fileSelection(selected, (done, writes) => {
-                      if (done !== null) finishActing("addToProject", done, writes, overviews);
+                      if (done !== null) {
+                        finishActing("addToProject", done, writes, overviews);
+                      }
                     });
                   }}
                   onAddToTopic={() => {
@@ -734,6 +777,8 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                 />
               )}
             </>
+          ) : (
+            notListed()
           )}
         </main>
       </div>
@@ -808,4 +853,4 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       <Toast toast={toast.toast} onDismiss={toast.dismiss} />
     </div>
   );
-}
+};

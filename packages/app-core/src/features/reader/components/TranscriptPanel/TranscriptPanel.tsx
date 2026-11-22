@@ -49,7 +49,7 @@ export interface TranscriptPanelProps {
 
 const canCopy = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromStep = null, onBackToChapters }: TranscriptPanelProps) {
+export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromStep = null, onBackToChapters }: TranscriptPanelProps) => {
   const transcriptQuery = useTranscriptQuery(held === undefined ? video.id : null);
   const transcript = held ?? transcriptQuery.data ?? null;
   const blocks = useMemo(() => (transcript === null ? [] : transcriptBlocks(transcript.segments)), [transcript]);
@@ -147,6 +147,42 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
 
   const currentBlock = blocks[follow.currentBlockIndex] ?? null;
 
+  const headingLeadFor = (): ReactNode => {
+    if (openedFrom !== null) {
+      return (
+        <button
+          type="button"
+          className={styles.backToChapters}
+          onClick={() => {
+            analytics.transcript.backToChapters();
+            onBackToChapters();
+          }}
+          data-testid={transcriptPanelTestIds.backToChaptersButton}
+        >
+          <StrokeIcon name="arrowLeft" size={14} />
+          Back to chapters
+        </button>
+      );
+    }
+    if (follow.following) {
+      return (
+        <span className={styles.following} data-testid={transcriptPanelTestIds.followingNote}>
+          <span className={styles.followingMark} aria-hidden="true" />
+          Following the {timedNoun(video)}
+        </span>
+      );
+    }
+    if (follow.offered) {
+      return (
+        <span className={styles.notFollowing} data-testid={transcriptPanelTestIds.notFollowingNote}>
+          Not following · you scrolled away
+        </span>
+      );
+    }
+    return <span className={styles.label}>Full transcript</span>;
+  };
+  const headingLead = headingLeadFor();
+
   return (
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
       <div className={styles.head} ref={setHead} data-sticky-fade="" data-testid={transcriptPanelTestIds.head}>
@@ -155,31 +191,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
               the video — the way back to the chapter that opened it, or whether it is
               following — and only a transcript with no player to follow is labelled. */}
           <p className={styles.heading}>
-            {openedFrom !== null ? (
-              <button
-                type="button"
-                className={styles.backToChapters}
-                onClick={() => {
-                  analytics.transcript.backToChapters();
-                  onBackToChapters();
-                }}
-                data-testid={transcriptPanelTestIds.backToChaptersButton}
-              >
-                <StrokeIcon name="arrowLeft" size={14} />
-                Back to chapters
-              </button>
-            ) : follow.following ? (
-              <span className={styles.following} data-testid={transcriptPanelTestIds.followingNote}>
-                <span className={styles.followingMark} aria-hidden="true" />
-                Following the {timedNoun(video)}
-              </span>
-            ) : follow.offered ? (
-              <span className={styles.notFollowing} data-testid={transcriptPanelTestIds.notFollowingNote}>
-                Not following · you scrolled away
-              </span>
-            ) : (
-              <span className={styles.label}>Full transcript</span>
-            )}
+            {headingLead}
             {transcript?.generated === true && (
               <span className={styles.sourceNote} data-testid={transcriptPanelTestIds.sourceNote}>
                 {machineTranscribedLabel(timedNoun(video))}
@@ -229,7 +241,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
       )}
     </div>
   );
-}
+};
 
 interface TranscriptState {
   blocks: TranscriptBlock[];
@@ -240,7 +252,7 @@ interface TranscriptState {
 
 // Null means there are blocks to read, which is the one case the tools and the search
 // box are worth drawing for.
-function unreadableTranscript(video: VideoSource, { blocks, isPending, error, retry }: TranscriptState): ReactNode | null {
+const unreadableTranscript = (video: VideoSource, { blocks, isPending, error, retry }: TranscriptState): ReactNode | null => {
   if (video.id === null) {
     return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
@@ -261,7 +273,7 @@ function unreadableTranscript(video: VideoSource, { blocks, isPending, error, re
     return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
   return null;
-}
+};
 
 interface TranscriptRowsProps {
   blocks: TranscriptBlock[];
@@ -278,7 +290,7 @@ interface TranscriptRowsProps {
 
 const chapterNumber = (number: number) => String(number).padStart(2, "0");
 
-function TranscriptRows({
+const TranscriptRows = ({
   blocks,
   search,
   follow,
@@ -289,7 +301,7 @@ function TranscriptRows({
   openedFrom,
   openedFromStep,
   head,
-}: TranscriptRowsProps) {
+}: TranscriptRowsProps) => {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
   const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
   const analytics = useOverviewPageAnalytics();
@@ -309,6 +321,15 @@ function TranscriptRows({
   // Design 2a: paragraphs the video has already passed drop to the muted ink, so the
   // eye finds the one being spoken by weight before it finds the card.
   const past = (index: number) => follow.currentBlockIndex !== -1 && index < follow.currentBlockIndex;
+  const rowRefOf = (opensRun: boolean, restored: boolean, current: boolean) => {
+    if (opensRun) {
+      return setTargetRow;
+    }
+    if (restored) {
+      return position.restoredRow;
+    }
+    return current ? follow.currentRow : undefined;
+  };
 
   return (
     <div className={styles.rows} ref={position.rows}>
@@ -322,7 +343,7 @@ function TranscriptRows({
           <div
             key={`${index}-${block.startMs}`}
             className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""} ${opensRun ? styles.rowTargetOpens : ""} ${closesRun ? styles.rowTargetCloses : ""} ${past(index) ? styles.rowPast : ""}`}
-            ref={opensRun ? setTargetRow : restored ? position.restoredRow : current ? follow.currentRow : undefined}
+            ref={rowRefOf(opensRun, restored, current)}
             data-current={current}
             data-target={target}
             data-start-ms={block.startMs}
@@ -395,7 +416,7 @@ function TranscriptRows({
       })}
     </div>
   );
-}
+};
 
 interface TranscriptSearchBarProps {
   search: TranscriptSearch;
@@ -405,7 +426,7 @@ interface TranscriptSearchBarProps {
 // The field's own clear button, in place of the browser's blue cancel glyph, so all
 // three round controls in the pill are the one size, colour and hover
 // (docs/features/stone-theme.md, "Transcript search").
-function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps) {
+const TranscriptSearchBar = ({ search, onQueryChange }: TranscriptSearchBarProps) => {
   const searching = search.query.trim() !== "";
   const found = search.matches.length;
   const input = useRef<HTMLInputElement | null>(null);
@@ -502,17 +523,22 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
       )}
     </div>
   );
+};
+
+interface TranscriptNoteProps {
+  testId: string;
+  children: ReactNode;
 }
 
-function TranscriptNote({ testId, children }: { testId: string; children: ReactNode }) {
+const TranscriptNote = ({ testId, children }: TranscriptNoteProps) => {
   return (
     <p className={styles.note} data-testid={testId}>
       {children}
     </p>
   );
-}
+};
 
-function TranscriptSkeleton() {
+const TranscriptSkeleton = () => {
   return (
     <div data-testid={transcriptPanelTestIds.skeleton}>
       {Array.from({ length: SKELETON_ROWS }, (_, index) => (
@@ -527,4 +553,4 @@ function TranscriptSkeleton() {
       ))}
     </div>
   );
-}
+};

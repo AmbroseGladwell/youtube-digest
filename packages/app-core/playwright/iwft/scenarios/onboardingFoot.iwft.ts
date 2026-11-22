@@ -28,7 +28,9 @@ const reachTopics = async (launcher: Launcher, backendSimulator: BackendSimulato
   await onboarding.confirmVideo();
   await onboarding.continueFromSaving();
   await onboarding.verifyOnScreen("topics");
-  if (allTopics) await onboarding.seeAllTopics();
+  if (allTopics) {
+    await onboarding.seeAllTopics();
+  }
   return onboarding;
 };
 

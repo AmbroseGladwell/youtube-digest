@@ -34,7 +34,9 @@ export const changeProjectMembers = mcpTool({
   run: async ({ project: nameOrId, add = [], remove = [] }, { sql, accountId, records, clock, log, connection }) => {
     const library = await readLibrary(sql, accountId);
     const project = resolveProject(library, nameOrId);
-    if (!isProject(project)) return project;
+    if (!isProject(project)) {
+      return project;
+    }
     const inside = new Set<string>(projectOverviews(library, project.id).map(({ overview }) => overview.id));
     const held = new Set<string>(library.entries.map((entry) => entry.overview.id));
     const titles = new Map<string, string>(library.entries.map((entry) => [entry.overview.id, entry.overview.source.title]));
@@ -56,10 +58,16 @@ export const changeProjectMembers = mcpTool({
         ...adding.map((overviewId) => projectMemberWrite(project.id, overviewId, "add", by, now)),
         ...removing.map((overviewId) => projectMemberWrite(project.id, overviewId, "remove", by, now)),
       ]);
-      for (const outcome of written) if (outcome !== null) logRecordWritten(log, outcome);
+      for (const outcome of written) {
+        if (outcome !== null) {
+          logRecordWritten(log, outcome);
+        }
+      }
     } catch (error) {
       const refusal = projectWriteRefusal(error);
-      if (refusal !== null) return refusal;
+      if (refusal !== null) {
+        return refusal;
+      }
       throw error;
     }
 

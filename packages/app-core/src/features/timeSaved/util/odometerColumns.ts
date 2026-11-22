@@ -19,7 +19,7 @@ const capped = (rows: number[]): number[] => (rows.length > MAX_ROWS ? [rows[0]!
 // The strips a rolling total turns through, minutes first and carrying into tens and then
 // hours like a mechanical counter. Each strip lists the digits it passes from the old value
 // to the new, top to bottom in the direction it travels (docs/features/time-saved.md).
-export function odometerColumns(from: number, to: number): OdometerColumn[] {
+export const odometerColumns = (from: number, to: number): OdometerColumn[] => {
   const up = to >= from;
   const ordered = (rows: number[]) => (up ? rows : [...rows].reverse()).map(String);
   const largest = Math.max(from, to);
@@ -36,4 +36,4 @@ export function odometerColumns(from: number, to: number): OdometerColumn[] {
   const units = capped(steps(from, to)).map((value) => value % 10);
   columns.push({ key: "units", rows: ordered(units), up, delayMs: 0, durationMs: 1000, suffix: "m" });
   return columns;
-}
+};

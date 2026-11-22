@@ -8,7 +8,7 @@ import type { RecordsRepository } from "../records/RecordsRepository.js";
 
 // Create-only: nothing edits a topic yet, so nothing replaces one
 // (docs/features/sync-metadata.md, "Topic is stamped for the rule").
-export function topicRoutes(app: FastifyInstance, records: RecordsRepository): void {
+export const topicRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
   app.post("/topics", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The topic");
     const id = parseOrThrow(TopicId, body.id, "The topic's id");
@@ -21,4 +21,4 @@ export function topicRoutes(app: FastifyInstance, records: RecordsRepository): v
     ]);
     return sendWritten(reply, written!, 201);
   });
-}
+};

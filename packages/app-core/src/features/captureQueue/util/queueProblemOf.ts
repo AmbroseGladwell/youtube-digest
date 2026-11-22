@@ -23,8 +23,10 @@ const monthSpentResetOf = (error: unknown): string | null =>
     ? String(error.details?.resetsOn ?? "")
     : null;
 
-function fetchErrorOf(error: unknown): TranscriptFetchError | null {
-  if (error instanceof TranscriptFetchError) return error;
+const fetchErrorOf = (error: unknown): TranscriptFetchError | null => {
+  if (error instanceof TranscriptFetchError) {
+    return error;
+  }
   if (error instanceof NoTranscriptSourceError) {
     return (
       error.failures
@@ -34,26 +36,38 @@ function fetchErrorOf(error: unknown): TranscriptFetchError | null {
     );
   }
   return null;
-}
+};
 
 // What the reader is told about a video the queue could not make, by kind, never by a
 // provider's own words. The ladder's last rung to answer says why
 // (docs/features/capture-queue.md, "Needs attention").
-export function queueProblemOf(error: unknown): QueueProblem {
-  if (monthSpentResetOf(error) !== null) return "monthSpent";
+export const queueProblemOf = (error: unknown): QueueProblem => {
+  if (monthSpentResetOf(error) !== null) {
+    return "monthSpent";
+  }
   const fetchError = fetchErrorOf(error);
-  if (fetchError?.failure === "daily-cap") return "serverCap";
-  if (fetchError?.failure === "rate-limited" && fetchError.sourceId === "service") return "serverBusy";
-  if (fetchError?.failure === "no-captions") return "noCaptions";
-  if (fetchError?.failure === "video-unavailable" || fetchError?.failure === "access-restricted") return "unavailable";
+  if (fetchError?.failure === "daily-cap") {
+    return "serverCap";
+  }
+  if (fetchError?.failure === "rate-limited" && fetchError.sourceId === "service") {
+    return "serverBusy";
+  }
+  if (fetchError?.failure === "no-captions") {
+    return "noCaptions";
+  }
+  if (fetchError?.failure === "video-unavailable" || fetchError?.failure === "access-restricted") {
+    return "unavailable";
+  }
   return "failed";
-}
+};
 
 // How long the queue waits: until the month resets at its limit; as long as the server said;
 // when it didn't, until UTC midnight at the daily cap, or a minute when asked to slow down.
-export function queueHoldOf(error: unknown, reason: QueueHoldReason, now: Date): QueueHold {
-  if (reason === "monthSpent") return { reason, resumesAt: monthResetOf(monthSpentResetOf(error), now).getTime() };
+export const queueHoldOf = (error: unknown, reason: QueueHoldReason, now: Date): QueueHold => {
+  if (reason === "monthSpent") {
+    return { reason, resumesAt: monthResetOf(monthSpentResetOf(error), now).getTime() };
+  }
   const said = fetchErrorOf(error)?.retryAfterSeconds ?? null;
   const seconds = said ?? (reason === "serverBusy" ? BUSY_WAIT_SECONDS : null);
   return { reason, resumesAt: resumesAtFrom(seconds, now).getTime() };
-}
+};

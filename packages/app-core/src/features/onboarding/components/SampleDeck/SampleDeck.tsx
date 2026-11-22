@@ -21,6 +21,29 @@ const GEOMETRY = {
 
 type Layout = "deck" | "gather" | "list" | "stack";
 
+const DURATION_MS: Record<Layout, number> = { deck: 480, gather: 220, list: 420, stack: 420 };
+
+const stageTransition = (reduced: boolean, layout: Layout, n: number): string => {
+  if (reduced) {
+    return "none";
+  }
+  return layout === "list" ? `height ${420 + 60 + (n - 2) * 45}ms ${EASE}` : `height 420ms ${EASE} 120ms`;
+};
+
+const toggleLabel = (expanded: boolean, phone: boolean, n: number): string => {
+  if (expanded) {
+    return phone ? "One at a time" : "Show one at a time";
+  }
+  return phone ? `See all ${n}` : `See all ${n} samples`;
+};
+
+const innerTransition = (dragging: boolean, reduced: boolean): string => {
+  if (dragging) {
+    return "none";
+  }
+  return reduced ? "opacity 120ms linear" : `opacity 240ms ${EASE}`;
+};
+
 export interface SampleDeckProps {
   samples: readonly Sample[];
   // Where the deck opens; Start picks it at random each visit (327b).
@@ -29,12 +52,17 @@ export interface SampleDeckProps {
   onFront: (sample: Sample) => void;
 }
 
+export interface FrontChange {
+  manual: boolean;
+  fling?: number;
+}
+
 // Design 155l: on the web, Start's samples are a deck in the Example overview card's shape, one
 // full card with two behind it, cycling on its own. Hover or focus holds it, Pause stops it for
 // the visit, and the arrows step by hand. See all unfolds it into a list in deck order. With
 // reduced motion it doesn't cycle until Play, and every change is a crossfade
 // (docs/features/onboarding.md, "Try a sample").
-export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDeckProps) {
+export const SampleDeck = ({ samples, firstIndex = 0, phone, onFront }: SampleDeckProps) => {
   const n = samples.length;
   const g = phone ? GEOMETRY.phone : GEOMETRY.wide;
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -59,7 +87,7 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
   const expanded = layout === "list" || layout === "gather";
   const playing = !paused && (!reduced || userPlay);
 
-  const setFront = (index: number, by: { manual: boolean; fling?: number }) => {
+  const setFront = (index: number, by: FrontChange) => {
     setFrontIndex(index);
     setManual(by.manual);
     setFling(by.fling ?? 0);
@@ -71,15 +99,21 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
   const advance = useRef(() => {});
   advance.current = () => setFront((front + 1) % n, { manual: false });
   useEffect(() => {
-    if (!cycling) return;
+    if (!cycling) {
+      return;
+    }
     const next = setTimeout(() => advance.current(), CYCLE_MS);
     return () => clearTimeout(next);
   }, [cycling, front]);
 
   useEffect(() => {
-    if (!failed) return;
+    if (!failed) {
+      return;
+    }
     setPaused(true);
-    if (pressed.current !== null) cards.current[pressed.current]?.focus();
+    if (pressed.current !== null) {
+      cards.current[pressed.current]?.focus();
+    }
   }, [failed]);
 
   const toggleAll = () => {
@@ -97,23 +131,31 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
   };
 
   const choose = (index: number) => {
-    if (Date.now() - draggedAt.current < 300) return;
+    if (Date.now() - draggedAt.current < 300) {
+      return;
+    }
     pressed.current = index;
     void open(samples[index]!, index);
   };
 
   const onPointerDown = (event: PointerEvent) => {
-    if (layout !== "deck") return;
+    if (layout !== "deck") {
+      return;
+    }
     pointer.current = { x: event.clientX, y: event.clientY, horizontal: null };
   };
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const p = pointer.current;
-    if (p === null) return;
+    if (p === null) {
+      return;
+    }
     const dx = event.clientX - p.x;
     const dy = event.clientY - p.y;
     if (p.horizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
       p.horizontal = Math.abs(dx) > Math.abs(dy);
-      if (p.horizontal) event.currentTarget.setPointerCapture?.(event.pointerId);
+      if (p.horizontal) {
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+      }
     }
     if (p.horizontal) {
       setDrag(dx);
@@ -123,16 +165,20 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
   const onPointerUp = (event: PointerEvent) => {
     const p = pointer.current;
     pointer.current = null;
-    if (p === null || !p.horizontal) return;
+    if (p === null || !p.horizontal) {
+      return;
+    }
     draggedAt.current = Date.now();
     const dx = event.clientX - p.x;
     setDrag(null);
     setHold(false);
-    if (Math.abs(dx) > SWIPE_PX) setFront((front + 1) % n, { manual: true, fling: dx < 0 ? -1 : 1 });
+    if (Math.abs(dx) > SWIPE_PX) {
+      setFront((front + 1) % n, { manual: true, fling: dx < 0 ? -1 : 1 });
+    }
   };
 
   const dragging = drag !== null && layout === "deck";
-  const duration = layout === "deck" ? 480 : layout === "gather" ? 220 : 420;
+  const duration = DURATION_MS[layout];
   const width = layout === "list" ? g.listWidth : g.width;
   const motion = reduced
     ? "opacity 120ms linear"
@@ -141,7 +187,7 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
   const stageStyle: CSSProperties = {
     width,
     height: layout === "list" ? n * g.row + (n - 1) * GAP : g.height + TOP,
-    transition: reduced ? "none" : layout === "list" ? `height ${420 + 60 + (n - 2) * 45}ms ${EASE}` : `height 420ms ${EASE} 120ms`,
+    transition: stageTransition(reduced, layout, n),
   };
 
   return (
@@ -153,7 +199,9 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
       onMouseLeave={() => setHold(false)}
       onFocus={() => setHold(true)}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setHold(false);
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setHold(false);
+        }
       }}
       data-testid={sampleDeckTestIds.root}
     >
@@ -163,7 +211,7 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
         </h2>
         <button type="button" className={styles.toggle} aria-expanded={expanded} onClick={toggleAll} data-testid={sampleDeckTestIds.toggle}>
           {!phone && <StrokeIcon name={expanded ? "stack" : "layoutGrid"} size={14} />}
-          {expanded ? (phone ? "One at a time" : "Show one at a time") : phone ? `See all ${n}` : `See all ${n} samples`}
+          {toggleLabel(expanded, phone, n)}
         </button>
       </div>
       {failed && (
@@ -219,7 +267,7 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
                 className={styles.inner}
                 style={{
                   opacity: look.innerOpacity,
-                  transition: dragging ? "none" : reduced ? "opacity 120ms linear" : `opacity 240ms ${EASE}`,
+                  transition: innerTransition(dragging, reduced),
                   transitionDelay: `${layout === "list" && slot > 0 && !reduced ? look.delay + 160 : 0}ms`,
                 }}
               >
@@ -295,8 +343,9 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
               className={styles.round}
               aria-label={playing ? "Pause samples" : "Play samples"}
               onClick={() => {
-                if (playing) setPaused(true);
-                else {
+                if (playing) {
+                  setPaused(true);
+                } else {
                   setPaused(false);
                   setUserPlay(true);
                 }
@@ -319,7 +368,7 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
       )}
     </section>
   );
-}
+};
 
 interface Placement {
   top: number;
@@ -336,9 +385,7 @@ interface Placement {
   still: boolean;
 }
 
-// Where each card sits, by its place behind the front one: the deck's three, the one leaving,
-// the rest waiting out of sight; or squared into a stack, or laid out as rows.
-function placement(o: {
+interface PlacementInput {
   layout: Layout;
   slot: number;
   n: number;
@@ -347,7 +394,11 @@ function placement(o: {
   drag: number | null;
   fling: number;
   reduced: boolean;
-}): Placement {
+}
+
+// Where each card sits, by its place behind the front one: the deck's three, the one leaving,
+// the rest waiting out of sight; or squared into a stack, or laid out as rows.
+const placement = (o: PlacementInput): Placement => {
   const { layout, slot, n, g, dragging, drag, fling, reduced } = o;
   const p: Placement = {
     top: TOP,
@@ -366,7 +417,9 @@ function placement(o: {
   const behind = (deep: boolean) => {
     p.transform = deep ? "translate(18px, -18px) rotate(2.2deg)" : "translate(8px, -8px) rotate(1deg)";
     p.background = deep ? "var(--surface)" : "color-mix(in srgb, var(--card), var(--surface) 40%)";
-    if (deep) p.shadow = "none";
+    if (deep) {
+      p.shadow = "none";
+    }
     p.innerOpacity = 0;
     p.hidden = true;
   };
@@ -418,11 +471,12 @@ function placement(o: {
     p.hidden = true;
     p.z = 11;
     p.opacity = 0;
-    if (!reduced)
+    if (!reduced) {
       p.transform = fling ? `translate(${fling * 440}px, 36px) rotate(${fling * 16}deg)` : "translate(-48px, 16px) rotate(-6deg)";
+    }
     return p;
   }
   behind(true);
   p.opacity = 0;
   return p;
-}
+};

@@ -51,24 +51,50 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   const { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore } = seeded;
   const libraries = new Map<string | null, Window["__iwftStores__"]>([[libraryAccountIdOf(connection), seeded]]);
 
-  for (const overview of hooksConfig?.seedOverviews ?? []) overviewStore.seedOverview(overview);
-  for (const state of hooksConfig?.seedStates ?? []) overviewStore.seedState(state);
-  for (const topic of hooksConfig?.seedTopics ?? []) overviewStore.seedTopic(topic);
-  for (const record of hooksConfig?.seedUnreadable ?? []) overviewStore.seedUnreadable(record);
-  for (const transcript of hooksConfig?.seedTranscripts ?? []) transcriptStore.seedTranscript(transcript);
-  if (hooksConfig?.seedSettings) settingsStore.seedSettings(hooksConfig.seedSettings);
-  for (const playlist of hooksConfig?.seedFollowedPlaylists ?? []) followedPlaylistStore.seedFollowed(playlist);
-  for (const check of hooksConfig?.seedPlaylistChecks ?? []) followedPlaylistStore.seedCheck(check);
+  for (const overview of hooksConfig?.seedOverviews ?? []) {
+    overviewStore.seedOverview(overview);
+  }
+  for (const state of hooksConfig?.seedStates ?? []) {
+    overviewStore.seedState(state);
+  }
+  for (const topic of hooksConfig?.seedTopics ?? []) {
+    overviewStore.seedTopic(topic);
+  }
+  for (const record of hooksConfig?.seedUnreadable ?? []) {
+    overviewStore.seedUnreadable(record);
+  }
+  for (const transcript of hooksConfig?.seedTranscripts ?? []) {
+    transcriptStore.seedTranscript(transcript);
+  }
+  if (hooksConfig?.seedSettings) {
+    settingsStore.seedSettings(hooksConfig.seedSettings);
+  }
+  for (const playlist of hooksConfig?.seedFollowedPlaylists ?? []) {
+    followedPlaylistStore.seedFollowed(playlist);
+  }
+  for (const check of hooksConfig?.seedPlaylistChecks ?? []) {
+    followedPlaylistStore.seedCheck(check);
+  }
   await captureQueueStore.enqueue(hooksConfig?.seedQueue ?? []);
-  for (const project of hooksConfig?.seedProjects ?? []) projectStore.seedProject(project);
-  for (const member of hooksConfig?.seedProjectMembers ?? []) projectStore.seedMember(member);
-  for (const read of hooksConfig?.failingReads ?? []) overviewStore.failOn(read);
-  if (hooksConfig?.apiKeys) writeApiKeys(hooksConfig.apiKeys);
+  for (const project of hooksConfig?.seedProjects ?? []) {
+    projectStore.seedProject(project);
+  }
+  for (const member of hooksConfig?.seedProjectMembers ?? []) {
+    projectStore.seedMember(member);
+  }
+  for (const read of hooksConfig?.failingReads ?? []) {
+    overviewStore.failOn(read);
+  }
+  if (hooksConfig?.apiKeys) {
+    writeApiKeys(hooksConfig.apiKeys);
+  }
   writeSyncConnection(connection);
   writePendingSignIn(hooksConfig?.pendingSignIn ?? null);
   writeSignedOutTrial(hooksConfig?.signedOutTrial ?? NO_TRIAL);
   writeAnalyticsConsent(hooksConfig?.analyticsConsent ?? null);
-  if (hooksConfig?.accountSeen === true) markAccountSeen();
+  if (hooksConfig?.accountSeen === true) {
+    markAccountSeen();
+  }
 
   window.__iwftStores__ = seeded;
   window.__iwftLibraries__ = libraries;
@@ -76,7 +102,9 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftOpenLibrary__ = async (accountId, { shown = true } = {}) => {
     const stores = libraries.get(accountId) ?? makeStores(syncAvailable);
     libraries.set(accountId, stores);
-    if (shown) window.__iwftStores__ = stores;
+    if (shown) {
+      window.__iwftStores__ = stores;
+    }
     return { accountId, stores, close: () => undefined };
   };
   window.__iwftDeleteLibrary__ = async (accountId) => {

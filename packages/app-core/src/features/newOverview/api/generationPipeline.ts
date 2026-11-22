@@ -65,6 +65,11 @@ export interface GenerationPipelineDeps {
   projectStore?: Pick<ProjectStore, "listProjects" | "fileIntoProject"> | undefined;
 }
 
+export interface TaggingCounts {
+  reused: number;
+  added: number;
+}
+
 export interface RunOverviewGenerationOptions {
   // Where the reader asked, for the events a run sends of its own (an episode's transcription).
   from?: CaptureEntry | undefined;
@@ -89,7 +94,7 @@ export interface RunOverviewGenerationOptions {
   fromPlaylist?: PlaylistOrigin | undefined;
   // How many of the note's tags were already in the library, counted against the library
   // as the run saw it (docs/features/tag-reuse.md).
-  onTagged?: ((tagging: { reused: number; added: number }) => void) | undefined;
+  onTagged?: ((tagging: TaggingCounts) => void) | undefined;
   // Whether anything about the reader went into the prompt, as composed for this run
   // (docs/features/personalisation.md, "Analytics").
   onPersonalised?: ((personalised: boolean) => void) | undefined;
@@ -104,11 +109,11 @@ export interface RunOverviewGenerationOptions {
   onProjectsFiled?: ((count: number) => void) | undefined;
 }
 
-export async function runOverviewGeneration(
+export const runOverviewGeneration = async (
   url: string,
   deps: GenerationPipelineDeps,
   options: RunOverviewGenerationOptions = {},
-): Promise<Overview> {
+): Promise<Overview> => {
   const stopwatch = new CaptureStopwatch(deps.now);
   let transcriptCharacters = 0;
   const timed = (outcome: Parameters<CaptureStopwatch["report"]>[0]) => {
@@ -141,28 +146,32 @@ export async function runOverviewGeneration(
     timed(error instanceof GenerationCancelledError ? "cancelled" : "failed");
     throw error;
   }
-}
+};
 
 // An article has no transcript to keep, so what's read is used and let go
 // (docs/features/article-panel.md). Nothing is reserved until it is read, so a page that
 // can't be read costs the reader nothing.
-export async function runArticleOverviewGeneration(
+export const runArticleOverviewGeneration = async (
   read: () => Promise<ArticleRead>,
   deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore">,
   options: RunOverviewGenerationOptions = {},
-): Promise<Overview> {
+): Promise<Overview> => {
   const result = await read();
-  if (result.status === "failed") throw new ArticleReadError(result);
+  if (result.status === "failed") {
+    throw new ArticleReadError(result);
+  }
   stopIfCancelled(options);
   options.onArticleRead?.(result.article);
   if (options.overviewId === undefined) {
     const key = sourceKey({ kind: "web", id: await articleSourceId(result.article.url) })!;
     const held = await heldOverviewOf(deps.overviewStore, key);
-    if (held !== null) throw new ArticleAlreadyHeldError(held);
+    if (held !== null) {
+      throw new ArticleAlreadyHeldError(held);
+    }
   }
   stopIfCancelled(options);
   return writeOverview({ article: result.article }, deps, options);
-}
+};
 
 export interface PodcastRunRequest {
   episode: PodcastEpisode;
@@ -176,17 +185,19 @@ export interface PodcastRunRequest {
 // An episode is read before Create is pressed, so the run starts at its words: the free routes,
 // then the note in a podcast's words. An episode with no words found makes nothing and costs
 // nothing (docs/features/podcast-screens.md).
-export async function runPodcastOverviewGeneration(
+export const runPodcastOverviewGeneration = async (
   { episode, sharedFrom }: PodcastRunRequest,
   findWords: (episode: PodcastEpisode, options: RunOverviewGenerationOptions) => Promise<Pick<PodcastTranscript, "transcript">>,
   deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
   options: RunOverviewGenerationOptions = {},
-): Promise<Overview> {
+): Promise<Overview> => {
   const id = await podcastSourceId(episode);
   const key = sourceKey({ kind: "podcast", id })!;
   if (options.overviewId === undefined) {
     const held = await heldOverviewOf(deps.overviewStore, key);
-    if (held !== null) throw new ArticleAlreadyHeldError(held);
+    if (held !== null) {
+      throw new ArticleAlreadyHeldError(held);
+    }
   }
   const { transcript } = await findWords(episode, options);
   stopIfCancelled(options);
@@ -195,11 +206,13 @@ export async function runPodcastOverviewGeneration(
   stopIfCancelled(options);
   const podcast = podcastSource(episode, id, sharedFrom);
   return writeOverview({ podcast, video: episodeAsVideo(podcast, episode.notes), transcript: transcript.segments }, deps, options);
-}
+};
 
-function stopIfCancelled(options: RunOverviewGenerationOptions): void {
-  if (options.isCancelled?.()) throw new GenerationCancelledError();
-}
+const stopIfCancelled = (options: RunOverviewGenerationOptions): void => {
+  if (options.isCancelled?.()) {
+    throw new GenerationCancelledError();
+  }
+};
 
 // A regeneration rewrites what the model wrote and keeps what the reader did: why they saved it,
 // where they filed it, its tags, when they saved it and where it came from
@@ -218,12 +231,12 @@ type WhatToWrite =
   | Pick<PodcastGenerationInput, "podcast" | "video" | "transcript">
   | { article: ExtractedArticle };
 
-async function writeOverview(
+const writeOverview = async (
   what: WhatToWrite,
   deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore">,
   options: RunOverviewGenerationOptions,
   stopwatch: CaptureStopwatch | null = null,
-): Promise<Overview> {
+): Promise<Overview> => {
   options.onWriting?.();
   const [existingTopics, claims, library, settings, previous, projects] = await Promise.all([
     deps.overviewStore.listTopics(),
@@ -281,9 +294,11 @@ async function writeOverview(
   const save = () => deps.overviewStore.saveOverview(saved);
   await (stopwatch ? stopwatch.time("save", save) : save());
   if (existingProjects.length > 0) {
-    for (const projectId of filedProjectIds) await deps.projectStore!.fileIntoProject(projectId, saved.id);
+    for (const projectId of filedProjectIds) {
+      await deps.projectStore!.fileIntoProject(projectId, saved.id);
+    }
     options.onProjectsFiled?.(filedProjectIds.length);
   }
 
   return saved;
-}
+};

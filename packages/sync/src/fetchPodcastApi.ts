@@ -1,8 +1,16 @@
 import { PodcastRead, PodcastTranscription, StoredTranscript, TranscriptCheck } from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 
-export type PodcastTranscriptAsk = { feedUrl: string; guid: string; youTubeVideoId?: string; searchYouTube?: boolean };
-export type PodcastEpisodeAsk = { feedUrl: string; guid: string };
+export interface PodcastTranscriptAsk {
+  feedUrl: string;
+  guid: string;
+  youTubeVideoId?: string;
+  searchYouTube?: boolean;
+}
+export interface PodcastEpisodeAsk {
+  feedUrl: string;
+  guid: string;
+}
 
 // A podcast link read on our server, an episode's transcript from its rungs there, and an episode
 // transcribed from its audio when the reader chooses (docs/features/podcast-links.md,
@@ -15,7 +23,7 @@ export interface PodcastApi {
   transcription: (id: string) => Promise<PodcastTranscription>;
 }
 
-export function createFetchPodcastApi(options: ApiRequesterOptions): PodcastApi {
+export const createFetchPodcastApi = (options: ApiRequesterOptions): PodcastApi => {
   const request = createApiRequester(options);
   return {
     read: (url) => answered(request("POST", "/podcasts/read", PodcastRead, { body: { url } })),
@@ -24,4 +32,4 @@ export function createFetchPodcastApi(options: ApiRequesterOptions): PodcastApi 
     transcribe: (ask) => answered(request("POST", "/podcasts/transcription", PodcastTranscription, { body: ask })),
     transcription: (id) => answered(request("GET", `/podcasts/transcription/${encodeURIComponent(id)}`, PodcastTranscription)),
   };
-}
+};

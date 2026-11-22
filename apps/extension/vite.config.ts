@@ -11,7 +11,7 @@ const stamp = buildStamp();
 // The manifest is emitted rather than copied from public/, so its version is the root
 // package.json's and nothing else; build.json beside it is what the release check reads
 // back out of the zip (docs/architecture/deploy.md, "The version", "Tags and releases").
-function stampedManifest(): Plugin {
+const stampedManifest = (): Plugin => {
   const asJson = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
   return {
     name: "overview:stamped-manifest",
@@ -21,7 +21,7 @@ function stampedManifest(): Plugin {
       this.emitFile({ type: "asset", fileName: "build.json", source: asJson(stamp) });
     },
   };
-}
+};
 
 export default defineConfig({
   plugins: [react(), stampedManifest()],

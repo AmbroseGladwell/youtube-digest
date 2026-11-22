@@ -19,9 +19,15 @@ const stepsWritten = (document: Document, written: string): string[] => {
 };
 
 const methodSteps = (document: Document, value: unknown, group: string | null): RecipeStep[] => {
-  if (typeof value === "string") return stepsWritten(document, value).map((text) => ({ text, group }));
-  if (Array.isArray(value)) return value.flatMap((entry) => methodSteps(document, entry, group));
-  if (!isObject(value) || typesOf(value).includes("HowToTip")) return [];
+  if (typeof value === "string") {
+    return stepsWritten(document, value).map((text) => ({ text, group }));
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => methodSteps(document, entry, group));
+  }
+  if (!isObject(value) || typesOf(value).includes("HowToTip")) {
+    return [];
+  }
   if (value.itemListElement !== undefined) {
     const isSection = typesOf(value).includes("HowToSection") && typeof value.name === "string";
     return methodSteps(document, value.itemListElement, isSection ? plainText(document, value.name as string) || group : group);
@@ -40,9 +46,13 @@ const ingredientsOf = (document: Document, node: JsonObject): string[] => {
 const MINUTES_IN_A_DAY = 24 * 60;
 
 const minutesIn = (value: unknown): number | null => {
-  if (typeof value !== "string") return null;
+  if (typeof value !== "string") {
+    return null;
+  }
   const parts = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:\d+S)?)?$/i.exec(value.trim());
-  if (parts === null) return null;
+  if (parts === null) {
+    return null;
+  }
   const [, days = "0", hours = "0", minutes = "0"] = parts;
   return Number(days) * MINUTES_IN_A_DAY + Number(hours) * 60 + Number(minutes) || null;
 };
@@ -58,7 +68,9 @@ const yieldOf = (document: Document, value: unknown): string | null => {
 const recipeFrom = (document: Document, node: JsonObject): Recipe | null => {
   const ingredients = ingredientsOf(document, node);
   const steps = methodSteps(document, node.recipeInstructions, null);
-  if (ingredients.length === 0 || steps.length === 0) return null;
+  if (ingredients.length === 0 || steps.length === 0) {
+    return null;
+  }
   return {
     ingredients,
     steps,
@@ -74,11 +86,13 @@ const isHidden = ({ isAccessibleForFree: free }: JsonObject): boolean =>
 
 // One page, one recipe: a page declaring several is a round-up, and reads as an article. A page
 // declaring none is read from its markup (docs/features/recipe-notes.md).
-export function pageRecipe(document: Document): Recipe | null {
+export const pageRecipe = (document: Document): Recipe | null => {
   const declared = linkedData(document)
     .flatMap((node) => [node, ...(isObject(node.mainEntity) ? [node.mainEntity] : [])])
     .filter((node) => typesOf(node).includes("Recipe"));
-  if (declared.length === 0) return markupRecipe(document);
+  if (declared.length === 0) {
+    return markupRecipe(document);
+  }
   const usable = declared
     .filter((node) => !isHidden(node))
     .flatMap((node) => {
@@ -86,6 +100,8 @@ export function pageRecipe(document: Document): Recipe | null {
       return recipe === null ? [] : [{ name: node.name, recipe }];
     });
   const [first] = usable;
-  if (first === undefined || usable.some(({ name }) => name !== first.name)) return null;
+  if (first === undefined || usable.some(({ name }) => name !== first.name)) {
+    return null;
+  }
   return first.recipe;
-}
+};

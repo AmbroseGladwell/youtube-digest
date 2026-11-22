@@ -11,19 +11,21 @@ const GOOD_MANIFEST = { name: "The Overview", version: "0.1.0" };
 const KEY = "MIIB…";
 const GOOD_BUILD = { version: "0.1.0", commit: "30bb95a", dirty: false };
 
-function releaseZip({ manifest = GOOD_MANIFEST, build = GOOD_BUILD } = {}) {
+const releaseZip = ({ manifest = GOOD_MANIFEST, build = GOOD_BUILD } = {}) => {
   const root = mkdtempSync(path.join(tmpdir(), "verifyRelease-test-"));
   const files = { "manifest.json": manifest, "build.json": build };
   const names = [];
   for (const [name, value] of Object.entries(files)) {
-    if (value === null) continue;
+    if (value === null) {
+      continue;
+    }
     writeFileSync(path.join(root, name), JSON.stringify(value));
     names.push(name);
   }
   const zipPath = path.join(root, "the-overview-0.1.0.zip");
   execFileSync("zip", ["-q", zipPath, ...names], { cwd: root });
   return { root, zipPath };
-}
+};
 
 const check = (zip, overrides = {}) => verifyRelease({ zipPath: zip.zipPath, version: "0.1.0", commit: FULL_SHA, ...overrides });
 
@@ -78,7 +80,9 @@ test("the keyed zip passes only when it carries the store's own key", () => {
     assert.throws(() => check(stripped, { key: KEY }), /carries no key, so it would load under a directory-derived id/);
     assert.throws(() => check(wrong, { key: KEY }), /a key that is not the store's/);
   } finally {
-    for (const zip of [keyed, stripped, wrong]) rmSync(zip.root, { recursive: true, force: true });
+    for (const zip of [keyed, stripped, wrong]) {
+      rmSync(zip.root, { recursive: true, force: true });
+    }
   }
 });
 

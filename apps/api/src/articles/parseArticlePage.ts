@@ -15,6 +15,6 @@ const documentOf = (html: string): Document => {
 
 // parse5 lays the page out as a browser would before linkedom builds it; neither runs script
 // or loads anything (docs/features/pasted-article-links.md, "Parsing").
-export function parseArticlePage(html: string, url: string): ArticleRead {
+export const parseArticlePage = (html: string, url: string): ArticleRead => {
   return readArticle(documentOf(serialize(parse(html))), url);
-}
+};

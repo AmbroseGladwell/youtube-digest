@@ -11,7 +11,9 @@ const makeQueue = (options: Partial<AnalyticsQueueOptions> = {}) => {
   const queue = new AnalyticsQueue({
     mode: () => mode,
     send: async (batch, { keepalive }) => {
-      if (failing) throw new Error("Simulated: offline");
+      if (failing) {
+        throw new Error("Simulated: offline");
+      }
       sent.push({ ...batch, keepalive });
     },
     now: () => new Date(),
@@ -113,7 +115,9 @@ describe("AnalyticsQueue", () => {
   it("drops past the per-minute cap, and counts how many on the next batch that gets through, not as an event", async () => {
     const { queue, names, sent } = makeQueue({ maxPerMinute: 3 });
 
-    for (let i = 0; i < 5; i++) queue.record("mcp.consentScreen.shown", {});
+    for (let i = 0; i < 5; i++) {
+      queue.record("mcp.consentScreen.shown", {});
+    }
     await vi.advanceTimersByTimeAsync(2_000);
     vi.advanceTimersByTime(60_000);
     queue.record("mcp.settingsConnections.revoked", {});
@@ -129,7 +133,9 @@ describe("AnalyticsQueue", () => {
   it("never holds more than one batch", async () => {
     const { queue, sent } = makeQueue({ maxPerMinute: 1_000 });
 
-    for (let i = 0; i < MAX_ANALYTICS_BATCH_EVENTS + 10; i++) queue.record("mcp.consentScreen.shown", {});
+    for (let i = 0; i < MAX_ANALYTICS_BATCH_EVENTS + 10; i++) {
+      queue.record("mcp.consentScreen.shown", {});
+    }
     await vi.advanceTimersByTimeAsync(2_000);
 
     expect(sent[0]!.events).toHaveLength(MAX_ANALYTICS_BATCH_EVENTS);

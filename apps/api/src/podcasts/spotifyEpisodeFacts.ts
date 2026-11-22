@@ -10,9 +10,11 @@ const SHOW_IN_DESCRIPTION = /^Listen to this episode from (.+?) on Spotify\./;
 const SHOW_IN_OG_DESCRIPTION = /^(.+?) · Episode$/;
 
 // What a Spotify episode's page tells any link preview: no API key, no account.
-export function spotifyEpisodeFacts({ meta }: PageMeta): SpotifyEpisodeFacts | null {
+export const spotifyEpisodeFacts = ({ meta }: PageMeta): SpotifyEpisodeFacts | null => {
   const title = meta.get("og:title");
-  if (title === undefined || title === "") return null;
+  if (title === undefined || title === "") {
+    return null;
+  }
   const showName =
     SHOW_IN_DESCRIPTION.exec(meta.get("description") ?? "")?.[1] ??
     SHOW_IN_OG_DESCRIPTION.exec(meta.get("og:description") ?? "")?.[1] ??
@@ -25,4 +27,4 @@ export function spotifyEpisodeFacts({ meta }: PageMeta): SpotifyEpisodeFacts | n
     publishedAt: Number.isNaN(released) ? null : new Date(released).toISOString(),
     durationSeconds: Number.isInteger(duration) && duration > 0 ? duration : null,
   };
-}
+};

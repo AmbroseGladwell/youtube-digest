@@ -17,7 +17,7 @@ export const descriptionOf = (input: Pick<GenerationInput, "video">): string =>
 // against what the description and the video state, reads the times and yield only where the
 // description labels them, and places each step by its segments (docs/features/recipe-notes.md,
 // "Recipe videos"). Null when no ingredient survives, so the video keeps its ordinary note.
-export function videoRecipe(input: GenerationInput, generated: GeneratedRecipe): Recipe | null {
+export const videoRecipe = (input: GenerationInput, generated: GeneratedRecipe): Recipe | null => {
   const description = descriptionOf(input);
   const stated = statedNumbersIn([description, input.transcript.map(({ text }) => text).join(" ")]);
   const { ingredients } = withStatedAmounts(generated.ingredients, stated);
@@ -38,4 +38,4 @@ export function videoRecipe(input: GenerationInput, generated: GeneratedRecipe):
     .filter((line) => line !== "");
   const recipe = Recipe.safeParse({ ingredients, steps, ...recipeFactsInLines(lines), ingredientsSaid });
   return recipe.success ? recipe.data : null;
-}
+};

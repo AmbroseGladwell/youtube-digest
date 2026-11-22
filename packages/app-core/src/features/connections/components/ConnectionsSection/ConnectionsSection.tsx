@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { useLocation } from "react-router";
 import { connectionAssistant, FOLLOW_UP_ASSISTANTS, type ChosenAssistant } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
@@ -25,16 +25,18 @@ export const CONNECTIONS_INTRO =
 
 // Design 301f: arriving from a question's "Set up a connection", what happens next, until the
 // assistant questions open in is connected.
-function arrivalNote(chosen: ChosenAssistant | null): string {
-  if (chosen === null || chosen === "other") return "Pick your assistant and connect it, then go back to your question.";
+const arrivalNote = (chosen: ChosenAssistant | null): string => {
+  if (chosen === null || chosen === "other") {
+    return "Pick your assistant and connect it, then go back to your question.";
+  }
   const { name } = FOLLOW_UP_ASSISTANTS[chosen];
   return `Connect ${name}, then go back to your question. It’ll open in ${name}, connected.`;
-}
+};
 
 // Design 58i–58r. A connection belongs to an account rather than to a plan
 // (docs/architecture/tiers.md), so signed out is the only state that says what it would take
 // rather than showing controls that cannot work.
-export function ConnectionsSection() {
+export const ConnectionsSection = () => {
   const analytics = useAnalytics();
   const sync = useSync();
   const { connection } = useSyncConnection();
@@ -115,6 +117,59 @@ export function ConnectionsSection() {
     requestAnimationFrame(() => (remaining > 0 ? connectedLabel.current : setupLabel.current)?.focus());
   };
 
+  const connectionsBodyFor = (): ReactNode => {
+    if (connections.isError) {
+      return (
+        <p className={styles.error} role="alert" data-testid={connectionsSectionTestIds.error}>
+          <StrokeIcon name="alertCircle" size={14} />
+          Your connections couldn't be loaded.{" "}
+          <button
+            type="button"
+            className={styles.retry}
+            onClick={() => {
+              analytics.mcp.settingsConnections.retried();
+              void connections.refetch();
+            }}
+          >
+            Try again
+          </button>
+        </p>
+      );
+    }
+    if (listed === undefined) {
+      return <div className={styles.pending} aria-busy="true" data-testid={connectionsSectionTestIds.pending} />;
+    }
+    if (listed.length > 0) {
+      return (
+        <>
+          <div className={styles.card} data-testid={connectionsSectionTestIds.connected}>
+            <p className={styles.label} ref={connectedLabel} tabIndex={-1} data-testid={connectionsSectionTestIds.connectedLabel}>
+              Connected
+            </p>
+            <ul className={styles.list}>
+              {listed.map((each) => (
+                <ConnectionRow key={each.id} connection={each} now={now} sharingProfile={sharingProfile} onRevoke={revokeOne} />
+              ))}
+            </ul>
+          </div>
+          <ConnectorSetup label="Connect another" address={address} iconUrl={iconUrl} ref={setupLabel} />
+          <QuestionsPlacePicker />
+        </>
+      );
+    }
+    return (
+      <>
+        <ConnectorSetup label="Connect an assistant" address={address} iconUrl={iconUrl} ref={setupLabel} />
+        <div className={styles.card} data-testid={connectionsSectionTestIds.tryAsking}>
+          <p className={styles.label}>Try asking</p>
+          <ExampleQuestions />
+        </div>
+        <QuestionsPlacePicker />
+      </>
+    );
+  };
+  const connectionsBody = connectionsBodyFor();
+
   return (
     <>
       <p className={styles.intro} data-testid={connectionsSectionTestIds.intro}>
@@ -131,48 +186,7 @@ export function ConnectionsSection() {
           That assistant couldn't be revoked. Try again.
         </p>
       )}
-      {connections.isError ? (
-        <p className={styles.error} role="alert" data-testid={connectionsSectionTestIds.error}>
-          <StrokeIcon name="alertCircle" size={14} />
-          Your connections couldn't be loaded.{" "}
-          <button
-            type="button"
-            className={styles.retry}
-            onClick={() => {
-              analytics.mcp.settingsConnections.retried();
-              void connections.refetch();
-            }}
-          >
-            Try again
-          </button>
-        </p>
-      ) : listed === undefined ? (
-        <div className={styles.pending} aria-busy="true" data-testid={connectionsSectionTestIds.pending} />
-      ) : listed.length > 0 ? (
-        <>
-          <div className={styles.card} data-testid={connectionsSectionTestIds.connected}>
-            <p className={styles.label} ref={connectedLabel} tabIndex={-1} data-testid={connectionsSectionTestIds.connectedLabel}>
-              Connected
-            </p>
-            <ul className={styles.list}>
-              {listed.map((each) => (
-                <ConnectionRow key={each.id} connection={each} now={now} sharingProfile={sharingProfile} onRevoke={revokeOne} />
-              ))}
-            </ul>
-          </div>
-          <ConnectorSetup label="Connect another" address={address} iconUrl={iconUrl} ref={setupLabel} />
-          <QuestionsPlacePicker />
-        </>
-      ) : (
-        <>
-          <ConnectorSetup label="Connect an assistant" address={address} iconUrl={iconUrl} ref={setupLabel} />
-          <div className={styles.card} data-testid={connectionsSectionTestIds.tryAsking}>
-            <p className={styles.label}>Try asking</p>
-            <ExampleQuestions />
-          </div>
-          <QuestionsPlacePicker />
-        </>
-      )}
+      {connectionsBody}
     </>
   );
-}
+};

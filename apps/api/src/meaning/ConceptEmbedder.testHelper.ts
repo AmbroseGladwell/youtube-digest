@@ -9,15 +9,17 @@ export interface ConceptEmbedder extends Embedder {
 const CONCEPT_DIMENSIONS = 100;
 const words = (text: string) => text.toLowerCase().match(/[a-z]+/g) ?? [];
 
-function slot(word: string): number {
+const slot = (word: string): number => {
   let hash = 0;
-  for (const letter of word) hash = (hash * 31 + letter.charCodeAt(0)) % 1_000_003;
+  for (const letter of word) {
+    hash = (hash * 31 + letter.charCodeAt(0)) % 1_000_003;
+  }
   return CONCEPT_DIMENSIONS + (hash % (EMBEDDING_DIMENSIONS - CONCEPT_DIMENSIONS));
-}
+};
 
 // A stand-in for a real model: each group of words is one idea, so texts that share an idea
 // and no word land close together, and any other word only adds a little of its own.
-export function makeConceptEmbedder(concepts: string[][]): ConceptEmbedder {
+export const makeConceptEmbedder = (concepts: string[][]): ConceptEmbedder => {
   const embedder: ConceptEmbedder = {
     model: "concept-test",
     dollarsPerMillionTokens: 0.02,
@@ -45,4 +47,4 @@ export function makeConceptEmbedder(concepts: string[][]): ConceptEmbedder {
     },
   };
   return embedder;
-}
+};

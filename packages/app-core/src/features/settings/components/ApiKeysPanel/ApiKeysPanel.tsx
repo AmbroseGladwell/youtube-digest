@@ -26,7 +26,7 @@ export const NO_KEYS_STANDFIRST = "To write overviews you’ll need your own API
 // come first as full rows; providers without one sit below as quiet one-line rows. On a
 // first run there is no list to join yet, so all six are shown the same way and the
 // "Generate with" card is absent — there is nothing to generate with.
-export function ApiKeysPanel() {
+export const ApiKeysPanel = () => {
   const { apiKeys, removeKey, removeAllKeys } = useApiKeys();
   const settingsQuery = useSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();
@@ -192,4 +192,4 @@ export function ApiKeysPanel() {
       />
     </div>
   );
-}
+};

@@ -31,8 +31,8 @@ export const canWriteAnOverview = (id: string): boolean => {
   return !CANNOT_WRITE_PROSE.some((family) => name.includes(family));
 };
 
-export function usableModels(ids: readonly string[]): ModelListing {
+export const usableModels = (ids: readonly string[]): ModelListing => {
   const unique = [...new Set(ids)];
   const usable = unique.filter(canWriteAnOverview).sort();
   return { usable, unusable: unique.length - usable.length };
-}
+};

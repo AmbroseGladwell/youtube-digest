@@ -14,7 +14,7 @@ interface EditTagsContext {
 
 // One merge, rename, delete or undo: every note's new tags as its own synced field write, then
 // the aliases (docs/features/tag-reuse.md, "Merge and rename rewrite the notes").
-export function useEditTagsMutation() {
+export const useEditTagsMutation = () => {
   const { overviewStore, settingsStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -22,8 +22,12 @@ export function useEditTagsMutation() {
     mutationKey: overviewKeys.all,
     mutationFn: async ({ writes, aliases }) => {
       for (const { overviewId, tags, userTags } of writes) {
-        if (tags !== undefined) await overviewStore.setOverviewTags(overviewId, tags);
-        if (userTags !== undefined) await overviewStore.setOverviewState(overviewId, { userTags });
+        if (tags !== undefined) {
+          await overviewStore.setOverviewTags(overviewId, tags);
+        }
+        if (userTags !== undefined) {
+          await overviewStore.setOverviewState(overviewId, { userTags });
+        }
       }
       await settingsStore.update({ tagAliases: aliases });
     },
@@ -48,9 +52,13 @@ export function useEditTagsMutation() {
     },
 
     onError: (_error, _plan, context) => {
-      if (!context) return;
+      if (!context) {
+        return;
+      }
       queryClient.setQueryData(overviewKeys.list(), context.previousList);
-      if (context.previousSettings) queryClient.setQueryData(settingsKeys.all, context.previousSettings);
+      if (context.previousSettings) {
+        queryClient.setQueryData(settingsKeys.all, context.previousSettings);
+      }
       void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
     },
 
@@ -61,4 +69,4 @@ export function useEditTagsMutation() {
       }
     },
   });
-}
+};

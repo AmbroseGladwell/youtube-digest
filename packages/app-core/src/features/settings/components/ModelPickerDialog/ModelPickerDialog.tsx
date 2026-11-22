@@ -23,7 +23,7 @@ const FIRST_FEW = 5;
 
 const HEADING_ID = "ModelPickerDialog-heading";
 
-export function ModelPickerDialog({ provider, apiKey, onClose }: ModelPickerDialogProps) {
+export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const analytics = useAnalytics();
   const settingsQuery = useSettingsQuery();
@@ -238,4 +238,4 @@ export function ModelPickerDialog({ provider, apiKey, onClose }: ModelPickerDial
       )}
     </dialog>
   );
-}
+};

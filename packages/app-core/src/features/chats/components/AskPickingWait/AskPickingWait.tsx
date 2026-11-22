@@ -8,11 +8,16 @@ import { askPickingWaitTestIds } from "./AskPickingWaitTestIds.js";
 
 export const SLOW_PICKING_MS = 10_000;
 
+export interface OverviewImage {
+  url: string | null;
+  wide: boolean;
+}
+
 export interface AskPickingWaitProps {
   // Choosing what to read, reading what was chosen, or read, once the answer has begun.
   phase: "choosing" | "reading" | "read";
   picked: readonly PickedOverview[];
-  imageOf: (overviewId: string) => { url: string | null; wide: boolean };
+  imageOf: (overviewId: string) => OverviewImage;
   holds: (overviewId: string) => boolean;
   onOpened: () => void;
   onFollow: () => void;
@@ -24,7 +29,7 @@ const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "ove
 
 // The mark as the loader (354v): its circle an orange arc turning over its bar while a step runs;
 // a filled circle with a tick drawn in once it is done; faint, and still, before it starts.
-function Mark({ state }: { state: MarkState }) {
+const Mark = ({ state }: { state: MarkState }) => {
   return (
     <svg className={`${styles.mark} ${styles[state]}`} viewBox="0 0 30 30" fill="none" aria-hidden="true">
       {state === "done" ? (
@@ -42,24 +47,26 @@ function Mark({ state }: { state: MarkState }) {
       )}
     </svg>
   );
-}
+};
 
 // OV-354, page 3 (354v, the mp4): a short list in small muted type while a library or project
 // question chooses what to read, then reads it, the titles named by code from the ids; once the
 // answer begins it folds into one "Read 5 overviews" line that opens to show them as chips.
-export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFollow }: AskPickingWaitProps) {
+export const AskPickingWait = ({ phase, picked, imageOf, holds, onOpened, onFollow }: AskPickingWaitProps) => {
   const [slow, setSlow] = useState(false);
   const [open, setOpen] = useState(false);
   const chipsId = useId();
 
   useEffect(() => {
     setSlow(false);
-    if (phase !== "choosing") return;
+    if (phase !== "choosing") {
+      return;
+    }
     const timer = setTimeout(() => setSlow(true), SLOW_PICKING_MS);
     return () => clearTimeout(timer);
   }, [phase]);
 
-  if (phase === "read")
+  if (phase === "read") {
     return (
       <div className={styles.folded} data-testid={askPickingWaitTestIds.root}>
         <button
@@ -68,7 +75,9 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
           aria-expanded={open}
           aria-controls={chipsId}
           onClick={() => {
-            if (!open) onOpened();
+            if (!open) {
+              onOpened();
+            }
             setOpen(!open);
           }}
           data-testid={askPickingWaitTestIds.read}
@@ -101,6 +110,7 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
         )}
       </div>
     );
+  }
 
   const reading = phase === "reading";
   return (
@@ -146,4 +156,4 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
       )}
     </div>
   );
-}
+};

@@ -22,7 +22,7 @@ export interface PreviewChoiceLineProps<Choice extends string> {
 // Design 95t–95v: the choice sits behind one line with Change, because the reader's default
 // needs no attention. Change opens the options in place as a radio group, each with its result
 // written out; choosing is immediate and there is no Done.
-export function PreviewChoiceLine<Choice extends string>({
+export const PreviewChoiceLine = <Choice extends string>({
   choice,
   choices,
   theDefault,
@@ -34,14 +34,16 @@ export function PreviewChoiceLine<Choice extends string>({
   icon,
   stacked,
   onChange,
-}: PreviewChoiceLineProps<Choice>) {
+}: PreviewChoiceLineProps<Choice>) => {
   const [choosing, setChoosing] = useState(false);
   const chosenOption = useRef<HTMLInputElement>(null);
   const group = useId();
   const resultId = `${group}-result`;
 
   useEffect(() => {
-    if (choosing) chosenOption.current?.focus();
+    if (choosing) {
+      chosenOption.current?.focus();
+    }
   }, [choosing]);
 
   if (choosing) {
@@ -109,4 +111,4 @@ export function PreviewChoiceLine<Choice extends string>({
       </div>
     </div>
   );
-}
+};

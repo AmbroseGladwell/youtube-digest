@@ -14,7 +14,12 @@ import { authFailureMessage } from "../util/authFailureMessage.js";
 import styles from "./RevertEmailPage.module.scss";
 import { revertEmailPageTestIds } from "./RevertEmailPageTestIds.js";
 
-const refusalReason = (details: Record<string, unknown> | undefined): { reason: Refusal; email: string | null } => {
+interface RefusalReason {
+  reason: Refusal;
+  email: string | null;
+}
+
+const refusalReason = (details: Record<string, unknown> | undefined): RefusalReason => {
   const parsed = EmailChangeRevertRefusal.safeParse(details?.reason);
   return {
     reason: parsed.success ? parsed.data : "spent",
@@ -37,7 +42,7 @@ const refusedLead = (reason: Refusal, email: string | null): string => {
 // a POST from this page, as a sign-in link's is. Done means every session on the account
 // has ended, this browser's included, so Sign in is the one action
 // (docs/features/account-changes.md, "Moving it back").
-export function RevertEmailPage() {
+export const RevertEmailPage = () => {
   const { hash } = useLocation();
   const navigate = useNavigate();
   const sync = useSync();
@@ -49,7 +54,9 @@ export function RevertEmailPage() {
   const started = useRef<string | null>(null);
 
   useEffect(() => {
-    if (token === null || started.current === token) return;
+    if (token === null || started.current === token) {
+      return;
+    }
     started.current = token;
     revert.mutate(
       { apiUrl, token },
@@ -136,4 +143,4 @@ export function RevertEmailPage() {
       </p>
     </AuthScreen>
   );
-}
+};

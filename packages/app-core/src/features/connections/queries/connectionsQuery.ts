@@ -13,9 +13,9 @@ export const connectionsQueryOptions = (account: string | null, api: Connections
   });
 
 // A connection belongs to an account, so there is nothing to list until the session is known.
-export function useConnectionsQuery() {
+export const useConnectionsQuery = () => {
   const { connection } = useSyncConnection();
   const session = useSessionQuery();
   const api = useConnectionsApi();
   return useQuery(connectionsQueryOptions(connection.email, api, session.data !== undefined));
-}
+};

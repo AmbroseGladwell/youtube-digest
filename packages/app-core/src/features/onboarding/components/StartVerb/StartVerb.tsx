@@ -6,12 +6,14 @@ const ROLL_MS = 560;
 // Design 155l: Start's headline verb follows the deck's front card, Watch Less for a video,
 // Learn More for an article, Cook Easier for a recipe, Listen Less for a podcast (327b-2). The old verb rolls up out of a clipped line
 // as the new one rises in; with reduced motion the verb simply changes.
-export function StartVerb({ verb }: { verb: string }) {
+export const StartVerb = ({ verb }: { verb: string }) => {
   const [shown, setShown] = useState({ verb, previous: null as string | null, turn: 0 });
   const clear = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (verb === shown.verb) return;
+    if (verb === shown.verb) {
+      return;
+    }
     setShown((now) => ({ verb, previous: now.verb, turn: now.turn + 1 }));
     clearTimeout(clear.current ?? undefined);
     clear.current = setTimeout(() => setShown((now) => ({ ...now, previous: null })), ROLL_MS + 40);
@@ -30,4 +32,4 @@ export function StartVerb({ verb }: { verb: string }) {
       </span>
     </span>
   );
-}
+};

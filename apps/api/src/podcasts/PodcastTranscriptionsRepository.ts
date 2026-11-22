@@ -70,6 +70,11 @@ export type TranscriptionAsked =
   | { outcome: "existing"; job: PodcastTranscriptionJob }
   | { outcome: "over-allowance"; usedSeconds: number };
 
+export interface TranscriptionUsage {
+  usedSeconds: number;
+  episodes: number;
+}
+
 // A caller's transcriptions and the month's seconds they hold: one job per caller and episode,
 // so asking again for words already made or on their way costs nothing, and a failed one starts
 // again from nothing (docs/features/speech-to-text.md, "The server rung").
@@ -90,7 +95,7 @@ export class PodcastTranscriptionsRepository {
   }
 
   // The month's seconds held or spent, and the episodes they went on.
-  async usage(now: Date, caller: string): Promise<{ usedSeconds: number; episodes: number }> {
+  async usage(now: Date, caller: string): Promise<TranscriptionUsage> {
     const rows = await this.#sql.query<{ seconds: number; episodes: number }>(
       "select seconds, episodes from transcription_usage where month = $1::date and caller = $2",
       [usageMonth(now), caller],
@@ -115,7 +120,9 @@ export class PodcastTranscriptionsRepository {
         `select ${COLUMNS} from podcast_transcriptions where caller = $1 and source_key = $2 for update`,
         [ask.caller, ask.sourceKey],
       );
-      if (existing[0] !== undefined && existing[0].status !== "failed") return { outcome: "existing", job: fromRow(existing[0]) };
+      if (existing[0] !== undefined && existing[0].status !== "failed") {
+        return { outcome: "existing", job: fromRow(existing[0]) };
+      }
       const held = await tx.query(
         `insert into transcription_usage (month, caller, account_id, seconds) values ($1::date, $2, $3, $4)
          on conflict (month, caller) do update set seconds = transcription_usage.seconds + excluded.seconds
@@ -124,7 +131,9 @@ export class PodcastTranscriptionsRepository {
         [usageMonth(ask.now), ask.caller, ask.accountId, ask.reserveSeconds, ask.limitSeconds],
       );
       if (held.length === 0 || ask.reserveSeconds > ask.limitSeconds) {
-        if (held.length > 0) await this.#give(tx, ask.now, ask.caller, ask.reserveSeconds);
+        if (held.length > 0) {
+          await this.#give(tx, ask.now, ask.caller, ask.reserveSeconds);
+        }
         return { outcome: "over-allowance", usedSeconds: await this.#usedIn(tx, ask.now, ask.caller) };
       }
       const rows = await tx.query<JobRow>(
@@ -200,7 +209,9 @@ export class PodcastTranscriptionsRepository {
          returning id`,
         [job.id, JSON.stringify(transcript), measured, now.toISOString()],
       );
-      if (settled.length === 0) return false;
+      if (settled.length === 0) {
+        return false;
+      }
       await this.#give(tx, job.requestedAt, job.caller, job.reservedSeconds - measured);
       await tx.query("update transcription_usage set episodes = episodes + 1 where month = $1::date and caller = $2", [
         usageMonth(job.requestedAt),
@@ -220,14 +231,18 @@ export class PodcastTranscriptionsRepository {
          returning id`,
         [job.id, failure, now.toISOString()],
       );
-      if (settled.length === 0) return false;
+      if (settled.length === 0) {
+        return false;
+      }
       await this.#give(tx, job.requestedAt, job.caller, job.reservedSeconds);
       return true;
     });
   }
 
   async #give(tx: SqlClient, at: Date, caller: string, seconds: number): Promise<void> {
-    if (seconds === 0) return;
+    if (seconds === 0) {
+      return;
+    }
     await tx.query("update transcription_usage set seconds = greatest(seconds - $3, 0) where month = $1::date and caller = $2", [
       usageMonth(at),
       caller,

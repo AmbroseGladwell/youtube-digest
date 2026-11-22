@@ -7,8 +7,11 @@ export class LibraryMoveNoticePageObject extends PageObject {
     this.step(`verifyReads ${lead}`, async () => {
       await expect(this.get(libraryMoveNoticeTestIds.root)).toHaveAttribute("role", "status");
       await expect(this.get(libraryMoveNoticeTestIds.lead)).toHaveText(lead);
-      if (then === null) await this.expectNotToBeVisible(libraryMoveNoticeTestIds.then);
-      else await expect(this.get(libraryMoveNoticeTestIds.then)).toHaveText(then);
+      if (then === null) {
+        await this.expectNotToBeVisible(libraryMoveNoticeTestIds.then);
+      } else {
+        await expect(this.get(libraryMoveNoticeTestIds.then)).toHaveText(then);
+      }
     });
 
   verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectNotToBeVisible(libraryMoveNoticeTestIds.root));

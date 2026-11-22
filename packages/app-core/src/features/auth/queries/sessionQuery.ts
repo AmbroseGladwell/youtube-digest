@@ -16,17 +16,21 @@ export const sessionQueryOptions = (account: string | null, api: AuthApi | null)
 // session (docs/features/mcp-connector.md, "Plus"). The name and address the server answers
 // with are written back to the connection, which is how a change made on another device
 // reaches this one (docs/features/account-changes.md).
-export function useSessionQuery() {
+export const useSessionQuery = () => {
   const { connection, setConnection } = useSyncConnection();
   const api = useSessionAuthApi();
   const query = useQuery(sessionQueryOptions(connection.accountId, api));
   const answered = query.data;
 
   useEffect(() => {
-    if (answered === undefined || answered.accountId !== connection.accountId) return;
-    if (answered.email === connection.email && answered.firstName === connection.firstName) return;
+    if (answered === undefined || answered.accountId !== connection.accountId) {
+      return;
+    }
+    if (answered.email === connection.email && answered.firstName === connection.firstName) {
+      return;
+    }
     setConnection({ ...connection, email: answered.email, firstName: answered.firstName });
   }, [answered, connection, setConnection]);
 
   return query;
-}
+};

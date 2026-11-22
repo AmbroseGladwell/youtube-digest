@@ -21,7 +21,7 @@ const COPY = {
   },
 } as const;
 
-export function SharedOverviewGone({ state }: SharedOverviewGoneProps) {
+export const SharedOverviewGone = ({ state }: SharedOverviewGoneProps) => {
   const { heading, body } = COPY[state];
   const analytics = useAnalytics();
 
@@ -46,4 +46,4 @@ export function SharedOverviewGone({ state }: SharedOverviewGoneProps) {
       </div>
     </main>
   );
-}
+};

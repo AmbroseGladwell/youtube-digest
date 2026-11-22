@@ -30,7 +30,7 @@ export interface OpenLocalDatabaseOptions {
 
 const NOVELTY_RENAME_RESET_VERSION = 2;
 
-export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promise<IDBDatabase> {
+export const openLocalDatabase = (options: OpenLocalDatabaseOptions = {}): Promise<IDBDatabase> => {
   const { name = DATABASE_NAME, indexedDB = globalThis.indexedDB, onSuperseded } = options;
 
   return new Promise((resolve, reject) => {
@@ -41,7 +41,9 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
       const upgradingFromBeforeNoveltyRename = event.oldVersion > 0 && event.oldVersion < NOVELTY_RENAME_RESET_VERSION;
       if (upgradingFromBeforeNoveltyRename) {
         for (const store of [OVERVIEWS_STORE, OVERVIEW_STATES_STORE]) {
-          if (db.objectStoreNames.contains(store)) db.deleteObjectStore(store);
+          if (db.objectStoreNames.contains(store)) {
+            db.deleteObjectStore(store);
+          }
         }
       }
       if (!db.objectStoreNames.contains(OVERVIEWS_STORE)) {
@@ -90,7 +92,9 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
       }
       // A project's chats (OV-353), indexed on a store that may already hold an overview's.
       const chats = request.transaction!.objectStore(CHATS_STORE);
-      if (!chats.indexNames.contains(CHATS_BY_PROJECT_INDEX)) chats.createIndex(CHATS_BY_PROJECT_INDEX, "projectId");
+      if (!chats.indexNames.contains(CHATS_BY_PROJECT_INDEX)) {
+        chats.createIndex(CHATS_BY_PROJECT_INDEX, "projectId");
+      }
     };
 
     request.onblocked = () => reject(new LocalDatabaseBlockedError(name));
@@ -105,4 +109,4 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
     };
     request.onerror = () => reject(request.error);
   });
-}
+};

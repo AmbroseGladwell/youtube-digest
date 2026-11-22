@@ -42,9 +42,11 @@ if (
 const sources = await Promise.all(CHAT_SOURCES.map(loadChatSource));
 
 const roughTokens = (text: string) => Math.ceil(text.length / 4);
-function roughConversationDollars(source: LoadedChatSource, arm: ChatArm, model: string): number {
+const roughConversationDollars = (source: LoadedChatSource, arm: ChatArm, model: string): number => {
   const price = priceOf({ provider: "openai", model });
-  if (price === undefined) return 0;
+  if (price === undefined) {
+    return 0;
+  }
   const passages = transcriptPassages(source.fetched.transcript, windowS * 1000);
   const system = roughTokens(chatSystemPrompt(arm, source.overview, passages));
   const averagePassage = passages.reduce((sum, passage) => sum + roughTokens(passage.text), 0) / Math.max(passages.length, 1);
@@ -58,16 +60,17 @@ function roughConversationDollars(source: LoadedChatSource, arm: ChatArm, model:
     history += user + 150;
   }
   return dollars;
-}
+};
 
 if (values["dry-run"]) {
   let total = 0;
-  for (const model of models)
+  for (const model of models) {
     for (const arm of arms) {
       const dollars = sources.reduce((sum, source) => sum + roughConversationDollars(source, arm, model), 0) * repeats;
       total += dollars;
       console.log(`${model.padEnd(14)} ${arm.padEnd(20)} ~$${dollars.toFixed(3)} uncached, ${repeats} repeat(s)`);
     }
+  }
   console.log(`total ~$${total.toFixed(2)} at most, before caching (characters / 4; a rough ceiling, not a measurement)`);
   process.exit(0);
 }
@@ -88,8 +91,14 @@ const spentDollars = (
   )
 ).reduce((sum, cost) => sum + cost, 0);
 
-const fileOf = (record: { overviewId: string; arm: string; model: string; repeat: number }) =>
-  `${record.overviewId}--${record.arm}--${record.model}--${record.repeat}.json`;
+interface ChatRunRecord {
+  overviewId: string;
+  arm: string;
+  model: string;
+  repeat: number;
+}
+
+const fileOf = (record: ChatRunRecord) => `${record.overviewId}--${record.arm}--${record.model}--${record.repeat}.json`;
 
 const prepared = await Promise.all(
   sources.map(async (source) => {
@@ -111,15 +120,12 @@ const prepared = await Promise.all(
   }),
 );
 
-const lanes = models.map((model) =>
-  prepared.flatMap((setup) =>
-    arms.flatMap((arm) =>
-      Array.from({ length: repeats }, (_, index) => index + 1)
-        .filter((repeat) => !done.has(fileOf({ overviewId: setup.source.overviewId, arm, model, repeat })))
-        .map((repeat) => () => runChatConversation({ apiKey, ...setup, arm, model, repeat, windowS, retrieveCount })),
-    ),
-  ),
-);
+const lanesFor = (model: string, setup: (typeof prepared)[number], arm: ChatArm) =>
+  Array.from({ length: repeats }, (_, index) => index + 1)
+    .filter((repeat) => !done.has(fileOf({ overviewId: setup.source.overviewId, arm, model, repeat })))
+    .map((repeat) => () => runChatConversation({ apiKey, ...setup, arm, model, repeat, windowS, retrieveCount }));
+
+const lanes = models.map((model) => prepared.flatMap((setup) => arms.flatMap((arm) => lanesFor(model, setup, arm))));
 
 const outcome = await spendWithinBudget<ChatConversationRecord>({
   lanes,

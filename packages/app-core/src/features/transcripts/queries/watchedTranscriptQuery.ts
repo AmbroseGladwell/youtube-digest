@@ -23,7 +23,9 @@ export const watchedTranscriptQueryOptions = (
     // Create, and this is the one place that already knows (design 205a).
     queryFn: (): Promise<VideoSource | null> => {
       const sources = freeTranscriptSources(createTranscriptSources({ ...sourceOptions, service: null }));
-      if (url === null || sources.length === 0) return Promise.resolve(null);
+      if (url === null || sources.length === 0) {
+        return Promise.resolve(null);
+      }
       return resolveVideo(url, { sources, transcriptStore }).then((resolved) => resolved.video);
     },
     // Noticing the video and grabbing its captions costs nothing, so it needs no key —

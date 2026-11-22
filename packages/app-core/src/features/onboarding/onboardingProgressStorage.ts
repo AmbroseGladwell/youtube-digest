@@ -4,7 +4,9 @@ import { extractYouTubeVideoId } from "../newOverview/util/parseYouTubeUrl.js";
 
 // Progress from before any kind of link was taken held the video's address instead of its key.
 const keyedBySource = (raw: unknown): unknown => {
-  if (typeof raw !== "object" || raw === null || "sourceKey" in raw || !("videoUrl" in raw)) return raw;
+  if (typeof raw !== "object" || raw === null || "sourceKey" in raw || !("videoUrl" in raw)) {
+    return raw;
+  }
   const { videoUrl, ...rest } = raw as { videoUrl: unknown };
   return { ...rest, sourceKey: typeof videoUrl === "string" ? extractYouTubeVideoId(videoUrl) : null };
 };
@@ -18,7 +20,9 @@ const STEPS_SINCE_GONE: Record<string, OnboardingStep> = {
   plan: "wait",
 };
 const onTodaysStep = (raw: unknown): unknown => {
-  if (typeof raw !== "object" || raw === null || !("step" in raw)) return raw;
+  if (typeof raw !== "object" || raw === null || !("step" in raw)) {
+    return raw;
+  }
   const step = (raw as { step: unknown }).step;
   return typeof step === "string" && step in STEPS_SINCE_GONE ? { ...raw, step: STEPS_SINCE_GONE[step] } : raw;
 };
@@ -63,24 +67,29 @@ const STORAGE_KEY = ONBOARDING_PROGRESS_STORAGE_KEY;
 // Where this device is in onboarding, so a reload or the sign-in link opened in another tab
 // picks up at the same screen. The device's own, before there is an account to keep it on
 // (docs/features/onboarding.md, "Leaving and coming back").
-export function readOnboardingProgress(storage: Storage = globalThis.localStorage): OnboardingProgress | null {
+export const readOnboardingProgress = (storage: Storage = globalThis.localStorage): OnboardingProgress | null => {
   try {
     const raw = storage.getItem(STORAGE_KEY);
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     const parsed = OnboardingProgress.safeParse(JSON.parse(raw));
     return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }
-}
+};
 
-export function writeOnboardingProgress(progress: OnboardingProgress | null, storage: Storage = globalThis.localStorage): void {
+export const writeOnboardingProgress = (progress: OnboardingProgress | null, storage: Storage = globalThis.localStorage): void => {
   try {
-    if (progress === null) storage.removeItem(STORAGE_KEY);
-    else storage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    if (progress === null) {
+      storage.removeItem(STORAGE_KEY);
+    } else {
+      storage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    }
   } catch {
     return;
   }
-}
+};
 
 export const isOnboardingProgressKey = (key: string | null): boolean => key === STORAGE_KEY;

@@ -16,14 +16,14 @@ const exchange = (question: string): ChatMessage[] => [
   { from: "answer", text: `About ${question}.`, at: AT, citations: [{ startMs: 61_000, endMs: 120_000 }], inSource: true },
 ];
 
-async function withOverview(account: TestAccount) {
+const withOverview = async (account: TestAccount) => {
   const overview = storedOverview();
   const response = await account.inject({ method: "POST", url: "/api/overviews", body: overview });
   assert.equal(response.statusCode, 201);
   return overview;
-}
+};
 
-function chatting(testApp: TestApp, account: TestAccount) {
+const chatting = (testApp: TestApp, account: TestAccount) => {
   const records = new RecordsRepository(testApp.sql, () => testApp.clock.now);
   return (overviewId: string, conversationId: string, messages: ChatMessage[]) =>
     appendChatMessages(
@@ -32,13 +32,15 @@ function chatting(testApp: TestApp, account: TestAccount) {
       { owner: { kind: "overview", id: overviewId }, conversationId, messages },
       testApp.clock.now,
     );
-}
+};
 
 const refusal = async (attempt: Promise<unknown>): Promise<string> => {
   try {
     await attempt;
   } catch (error) {
-    if (isApiError(error)) return error.code;
+    if (isApiError(error)) {
+      return error.code;
+    }
     throw error;
   }
   throw new Error("the write was not refused");

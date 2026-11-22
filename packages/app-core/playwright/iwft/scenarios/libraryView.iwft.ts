@@ -11,7 +11,9 @@ const seedLibrary = (backendSimulator: BackendSimulator) => {
   const apple = titled("Apple", "2026-09-16T00:00:00.000Z");
   const read = titled("Already read", "2026-09-15T00:00:00.000Z");
   const zebra = titled("Zebra", "2026-09-14T00:00:00.000Z");
-  for (const overview of [apple, read, zebra]) backendSimulator.overviews.seed(overview);
+  for (const overview of [apple, read, zebra]) {
+    backendSimulator.overviews.seed(overview);
+  }
   backendSimulator.overviews.seedState(makeOverviewState(read.id, { read: true }));
   return { apple, read, zebra };
 };

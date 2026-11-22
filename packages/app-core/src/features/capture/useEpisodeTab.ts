@@ -23,16 +23,20 @@ export type EpisodeTab = EpisodeTabState & {
 // Design 106k: a Spotify or Apple Podcasts tab beside the panel, read from its address alone by
 // our server, so Chrome is never asked for the site. A show's page is known from the address and
 // isn't sent anywhere. Null where there's no such tab, or no account on a server to read through.
-export function useEpisodeTab(): EpisodeTab | null {
+export const useEpisodeTab = (): EpisodeTab | null => {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
   const url = activeVideoUrl === null && activePage !== null && isPlatformPodcastLink(activePage.url) ? activePage.url : null;
   const show = url !== null && isPodcastShowLink(url);
   const podcast = usePodcastLink(url === null || show ? "" : url);
 
-  if (url === null || !podcast.available) return null;
+  if (url === null || !podcast.available) {
+    return null;
+  }
   const tab = { url, on: podcastPlatform(url) === "apple" ? "Apple Podcasts" : "Spotify", retry: podcast.retry };
-  if (show) return { ...tab, status: "show" };
+  if (show) {
+    return { ...tab, status: "show" };
+  }
 
   const link = podcast.link;
   switch (link.status) {
@@ -46,10 +50,12 @@ export function useEpisodeTab(): EpisodeTab | null {
     case "unreachable":
       return { ...tab, status: "unreachable" };
     case "failed": {
-      if (link.reason === "not-an-episode") return { ...tab, status: "show" };
+      if (link.reason === "not-an-episode") {
+        return { ...tab, status: "show" };
+      }
       const copy = podcastLinkFailureCopy(link.reason, link.showName);
       // The tab is the link, so there's no different one to paste; only trying again is offered.
       return { ...tab, status: "failed", copy: copy.way === "tryAgain" ? copy : { ...copy, way: null, wayLabel: null } };
     }
   }
-}
+};

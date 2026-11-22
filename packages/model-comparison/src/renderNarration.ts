@@ -6,8 +6,13 @@ export interface Narration {
   durationSeconds: number;
 }
 
+interface JsonResponse {
+  status: number;
+  text: string;
+}
+
 // node:http rather than fetch: a long note renders for more than fetch's five-minute header timeout on a laptop CPU.
-const postJson = (url: URL, body: string): Promise<{ status: number; text: string }> =>
+const postJson = (url: URL, body: string): Promise<JsonResponse> =>
   new Promise((resolve, reject) => {
     const sent = request(url, { method: "POST", headers: { "content-type": "application/json" } }, (response) => {
       const chunks: Buffer[] = [];
@@ -19,7 +24,7 @@ const postJson = (url: URL, body: string): Promise<{ status: number; text: strin
     sent.end(body);
   });
 
-export async function renderNarration(ttsUrl: string, overview: Overview): Promise<Narration> {
+export const renderNarration = async (ttsUrl: string, overview: Overview): Promise<Narration> => {
   const { status, text } = await postJson(
     new URL("/render", ttsUrl),
     JSON.stringify({
@@ -29,7 +34,9 @@ export async function renderNarration(ttsUrl: string, overview: Overview): Promi
       renderVersion: NARRATION_RENDER_VERSION,
     }),
   );
-  if (status !== 200) throw new Error(`TTS answered ${status}: ${text}`);
+  if (status !== 200) {
+    throw new Error(`TTS answered ${status}: ${text}`);
+  }
   const rendered = JSON.parse(text) as { durationSeconds: number; audioBase64: string };
   return { audio: Buffer.from(rendered.audioBase64, "base64"), durationSeconds: rendered.durationSeconds };
-}
+};

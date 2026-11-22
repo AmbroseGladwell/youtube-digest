@@ -23,8 +23,12 @@ class InMemoryOverviewStore implements OverviewStore {
 
   async listOverviews(query: OverviewQuery = {}) {
     return [...this.#overviews.values()].filter((overview) => {
-      if (query.unsorted) return overview.topicIds.length === 0;
-      if (query.topicId) return overview.topicIds.includes(query.topicId);
+      if (query.unsorted) {
+        return overview.topicIds.length === 0;
+      }
+      if (query.topicId) {
+        return overview.topicIds.includes(query.topicId);
+      }
       return true;
     });
   }

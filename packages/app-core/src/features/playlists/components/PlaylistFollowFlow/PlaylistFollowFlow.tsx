@@ -1,6 +1,12 @@
-import { sourceKey } from "@overview/domain";
+import {
+  sourceKey,
+  DEFAULT_PLAYLIST_ORDER,
+  DEFAULT_PLAYLIST_PACE,
+  type PlaylistId,
+  type PlaylistOrder,
+  type PlaylistPace,
+} from "@overview/domain";
 import { useEffect, useMemo, useState } from "react";
-import { DEFAULT_PLAYLIST_ORDER, DEFAULT_PLAYLIST_PACE, type PlaylistId, type PlaylistOrder, type PlaylistPace } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useCaptureQueueQuery } from "../../../captureQueue/queries/captureQueueQuery.js";
@@ -35,17 +41,43 @@ export interface PlaylistFollowFlowProps {
   onDone: () => void;
 }
 
-function refusalOf(error: unknown): PlaylistRefusalReason {
-  if (!isSyncRequestError(error)) return "lookupFailed";
-  if (error.code === "playlist_private") return "private";
-  if (error.code === "playlist_not_found") return "gone";
-  if (error.code === "unavailable") return "unavailable";
+const refusalOf = (error: unknown): PlaylistRefusalReason => {
+  if (!isSyncRequestError(error)) {
+    return "lookupFailed";
+  }
+  if (error.code === "playlist_private") {
+    return "private";
+  }
+  if (error.code === "playlist_not_found") {
+    return "gone";
+  }
+  if (error.code === "unavailable") {
+    return "unavailable";
+  }
   return "lookupFailed";
-}
+};
+
+const refusalFor = (target: PlaylistTarget, lookup: ReturnType<typeof usePlaylistLookupQuery>): PlaylistRefusalReason | null => {
+  if (target.kind === "unfollowable") {
+    return target.list;
+  }
+  if (lookup.isError) {
+    return refusalOf(lookup.error);
+  }
+  return lookup.data !== undefined && lookup.data.entries.length === 0 ? "empty" : null;
+};
 
 // A pasted playlist, from lookup to following (designs 27b–27h): a short honest wait, then
 // the preview, or the reason it can't be followed and what to do instead.
-export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThisVideo, onPasteAnother, onDone }: PlaylistFollowFlowProps) {
+export const PlaylistFollowFlow = ({
+  target,
+  pastedUrl,
+  from,
+  stacked,
+  onJustThisVideo,
+  onPasteAnother,
+  onDone,
+}: PlaylistFollowFlowProps) => {
   const analytics = useAnalytics();
   const lookup = usePlaylistLookupQuery(target.kind === "playlist" ? target.playlistId : null);
   const overviews = useOverviewsWithStateQuery();
@@ -69,21 +101,18 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
     [overviews.data, queue.data],
   );
 
-  const refusal: PlaylistRefusalReason | null =
-    target.kind === "unfollowable"
-      ? target.list
-      : lookup.isError
-        ? refusalOf(lookup.error)
-        : lookup.data !== undefined && lookup.data.entries.length === 0
-          ? "empty"
-          : null;
+  const refusal = refusalFor(target, lookup);
 
   useEffect(() => {
-    if (refusal !== null && refusal !== "empty") analytics.playlists.preview.refused({ from, reason: refusal });
+    if (refusal !== null && refusal !== "empty") {
+      analytics.playlists.preview.refused({ from, reason: refusal });
+    }
   }, [refusal, from, analytics]);
 
   const followLookup = (backfill: boolean) => {
-    if (lookup.data === undefined) return;
+    if (lookup.data === undefined) {
+      return;
+    }
     const preview = playlistPreview(lookup.data, held, order);
     follow.mutate(
       { lookup: lookup.data, backfill, pace, order },
@@ -105,16 +134,19 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
     );
   };
 
+  const refusalAction = (reason: PlaylistRefusalReason) => {
+    if (reason === "mix" && target.kind === "unfollowable" && target.videoUrl !== null && onJustThisVideo !== null) {
+      return { label: "Just this video", onSelect: () => onJustThisVideo(target.videoUrl!) };
+    }
+    if (reason === "empty") {
+      return { label: "Follow it anyway", onSelect: () => followLookup(false), busy: follow.isPending };
+    }
+    return reason === "lookupFailed" ? { label: "Try again", onSelect: () => void lookup.refetch() } : null;
+  };
+
   const body = (() => {
     if (refusal !== null) {
-      const action =
-        refusal === "mix" && target.kind === "unfollowable" && target.videoUrl !== null && onJustThisVideo !== null
-          ? { label: "Just this video", onSelect: () => onJustThisVideo(target.videoUrl!) }
-          : refusal === "empty"
-            ? { label: "Follow it anyway", onSelect: () => followLookup(false), busy: follow.isPending }
-            : refusal === "lookupFailed"
-              ? { label: "Try again", onSelect: () => void lookup.refetch() }
-              : null;
+      const action = refusalAction(refusal);
       return <PlaylistRefusal reason={refusal} stacked={stacked} action={action} onPasteAnother={onPasteAnother} />;
     }
 
@@ -172,4 +204,4 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
       )}
     </div>
   );
-}
+};

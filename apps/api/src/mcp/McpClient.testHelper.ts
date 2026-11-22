@@ -17,7 +17,7 @@ export interface McpClient {
   callTool(name: string, args?: Record<string, unknown>): Promise<ToolResult>;
 }
 
-export async function seedLibrary(account: TestAccount, library: SampleLibrary): Promise<void> {
+export const seedLibrary = async (account: TestAccount, library: SampleLibrary): Promise<void> => {
   for (const topic of library.topics) {
     const response = await account.inject({ method: "POST", url: "/api/topics", body: topic });
     assert.equal(response.statusCode, 201, response.body);
@@ -26,12 +26,12 @@ export async function seedLibrary(account: TestAccount, library: SampleLibrary):
     const response = await account.inject({ method: "POST", url: "/api/overviews", body: overview });
     assert.equal(response.statusCode, 201, response.body);
   }
-}
+};
 
 // An assistant connected to the reader's account the way Claude connects, talking to /mcp
 // with the access token it was given; asking for the read scope alone connects as every
 // connection from before the write scope did (docs/features/mcp-connector.md).
-export async function connectMcpClient(testApp: TestApp, account: TestAccount, scope?: string): Promise<McpClient> {
+export const connectMcpClient = async (testApp: TestApp, account: TestAccount, scope?: string): Promise<McpClient> => {
   const assistant = await makeConnectingAssistant(testApp);
   const tokens = await assistant.connect(account, scope === undefined ? {} : { scope });
   let nextId = 1;
@@ -67,4 +67,4 @@ export async function connectMcpClient(testApp: TestApp, account: TestAccount, s
       return { text: result.content[0]!.text, isError: result.isError };
     },
   };
-}
+};

@@ -14,7 +14,7 @@ export interface ShareOverviewVariables {
 // they are the same act (docs/features/sharing.md). The narration is gathered here rather than
 // passed in, so every way of sharing sends the same copy. The transcript never goes: the source's
 // words are each reader's own, not ours to publish on a link (OV-295).
-export function useShareOverviewMutation() {
+export const useShareOverviewMutation = () => {
   const api = useShareApi();
   const narrationApi = useNarrationApi();
   const voice = useSettingsQuery().data?.narrationVoice ?? DEFAULT_NARRATION_VOICE;
@@ -45,4 +45,4 @@ export function useShareOverviewMutation() {
       }
     },
   });
-}
+};

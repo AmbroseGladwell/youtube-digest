@@ -30,7 +30,9 @@ test.describe("Chat across sources", () => {
     const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
     const home = titled(STEW, "2026-11-10T09:00:00.000Z");
     const dinner = { ...makeProject({ name: "Dinner Recipes" }), archivedAt: null };
-    for (const overview of [soup, plants, home]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [soup, plants, home]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.projects.seed(dinner);
     backendSimulator.projects.seedMember(makeProjectMember(dinner, soup.id));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -109,7 +111,9 @@ test.describe("Chat across sources", () => {
       titled(PLANTS, "2026-11-03T09:00:00.000Z"),
       titled(CURRY, "2026-11-04T09:00:00.000Z"),
     ];
-    for (const overview of [...others, titled(STEW, "2026-11-10T09:00:00.000Z")]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [...others, titled(STEW, "2026-11-10T09:00:00.000Z")]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
     await reader.chat.openFromMenu();
@@ -219,7 +223,9 @@ test.describe("Chat across sources", () => {
       titled(SOUP, "2026-11-04T09:00:00.000Z"),
       titled(CURRY, "2026-11-05T09:00:00.000Z"),
     ];
-    for (const overview of [...found, titled(STEW, "2026-11-10T09:00:00.000Z")]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [...found, titled(STEW, "2026-11-10T09:00:00.000Z")]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.chats.answerWith({
       text: "Have **a large handful** of beans a day.",
       found: found.map((overview) => ({ overviewId: overview.id, title: overview.source.title })),
@@ -245,5 +251,41 @@ test.describe("Chat across sources", () => {
 
     await reader.chat.verifyMarkdownRead(0, { code: ["npm test"], links: ["the guide"], blocks: ["npm test  --watch"] });
     await reader.chat.copyCodeBlock(0, 0, "npm test  --watch");
+  });
+
+  test("a code block inside a section's numbered or bulleted item renders as a block, not inline, and copies (OV-372)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seedSynced(titled(STEW, "2026-11-10T09:00:00.000Z"));
+    const rule = 'rules: {\n  "no-explicit-any": "error",\n}';
+    backendSimulator.chats.answerWith({
+      text: "Two rules to start with.",
+      sections: {
+        intro: "Two rules to start with.",
+        introSources: [],
+        sections: [
+          {
+            heading: "Example rules",
+            paragraphs: [],
+            numbered: [{ text: "Run the linter:\n```bash\nnpm run lint\n```", sources: [] }],
+            bullets: [
+              { text: `Ban explicit \`any\`:\n\`\`\`js\n${rule}\n\`\`\`\nThen fix what it finds.`, sources: [] },
+              { text: "Keep tests beside the rules.", sources: [] },
+            ],
+            sources: [],
+          },
+        ],
+        takeaway: "",
+      },
+    });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+
+    await reader.chat.askInNote("What lint rules should I add?");
+
+    await reader.chat.verifyMarkdownRead(0, { code: ["any"], links: [], blocks: ["npm run lint", rule] });
+    await reader.chat.verifyCodeBlocksInListItems(0, 2);
+    await reader.chat.copyCodeBlock(0, 1, rule);
   });
 });

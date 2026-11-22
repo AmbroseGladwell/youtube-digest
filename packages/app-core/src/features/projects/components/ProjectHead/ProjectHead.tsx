@@ -45,7 +45,7 @@ const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText =
 // The top of a project's page: what it's for on the stone tint (1rem, 0.8rem on a phone),
 // counts from code, the verdict spread, then Copy as Markdown and ⋯
 // ("OV-168 2 The Project Page" 168f–168l, 168p, 168bd–168bf).
-export function ProjectHead({
+export const ProjectHead = ({
   summary,
   now,
   assistantConnected,
@@ -60,7 +60,7 @@ export function ProjectHead({
   onCopied,
   suggestionsLine = null,
   purposeAsked = 0,
-}: ProjectHeadProps) {
+}: ProjectHeadProps) => {
   const { project, items, unread, updatedAt } = summary;
   const [renaming, setRenaming] = useState(false);
   const [editingPurpose, setEditingPurpose] = useState(false);
@@ -72,7 +72,9 @@ export function ProjectHead({
   const backLink = useLentBackLink({ to: Routes.projects(), label: "All projects", follow: backToProjects });
 
   useEffect(() => {
-    if (!copied) return;
+    if (!copied) {
+      return;
+    }
     const hide = window.setTimeout(() => setCopied(false), 2400);
     return () => window.clearTimeout(hide);
   }, [copied]);
@@ -93,66 +95,30 @@ export function ProjectHead({
   };
 
   useEffect(() => {
-    if (purposeAsked > 0) startPurpose(editButton);
+    if (purposeAsked > 0) {
+      startPurpose(editButton);
+    }
   }, [purposeAsked]);
 
-  return (
-    <div className={styles.root} data-testid={projectHeadTestIds.root}>
-      <PageLink
-        ref={backLink}
-        className={styles.back}
-        to={Routes.projects()}
-        onClick={backToProjects}
-        data-testid={projectHeadTestIds.backLink}
-      >
-        <StrokeIcon name="arrowLeft" size={15} />
-        All projects
-      </PageLink>
-      <p className={styles.kicker} data-testid={projectHeadTestIds.kicker}>
-        Project
-        <span className={styles.kickerMuted} aria-hidden="true">
-          ·
-        </span>
-        <span className={styles.kickerMuted}>{made}</span>
-      </p>
-
-      {renaming ? (
-        <NameEditor
-          name={project.name}
-          onSave={(name) => {
-            if (name !== project.name) onRename(name);
-            finishEditing(() => setRenaming(false));
-          }}
-          onCancel={() => finishEditing(() => setRenaming(false))}
-        />
-      ) : (
-        <h1 className={styles.name} data-testid={projectHeadTestIds.name}>
-          {project.name}
-        </h1>
-      )}
-
-      {archived && (
-        <p className={styles.strip} data-testid={projectHeadTestIds.archivedStrip}>
-          <b>Archived {projectShortDate(project.archivedAt!, now)}.</b>
-          <span>
-            {assistantConnected ? "Hidden from your projects and from your assistant’s list." : "Hidden from your projects."} Restore brings
-            it back.
-          </span>
-        </p>
-      )}
-
-      {editingPurpose ? (
+  const purposeBlock = () => {
+    if (editingPurpose) {
+      return (
         <PurposeEditor
           purpose={project.purpose ?? ""}
           assistantConnected={assistantConnected}
           assistantWrote={project.purpose !== null && project.purposeBy?.by === "assistant" ? project.purposeBy.name : null}
           onSave={(purpose) => {
-            if (purpose !== project.purpose) onPurpose(purpose);
+            if (purpose !== project.purpose) {
+              onPurpose(purpose);
+            }
             finishEditing(() => setEditingPurpose(false));
           }}
           onCancel={() => finishEditing(() => setEditingPurpose(false))}
         />
-      ) : project.purpose !== null ? (
+      );
+    }
+    if (project.purpose !== null) {
+      return (
         <section className={styles.purpose} aria-label="What it’s for" data-testid={projectHeadTestIds.purpose}>
           <div className={styles.purposeHead}>
             <span className={styles.purposeLabel}>What it’s for</span>
@@ -182,26 +148,78 @@ export function ProjectHead({
             </button>
           </div>
         </section>
+      );
+    }
+    return (
+      <section className={styles.invitation} aria-label="What it’s for" data-testid={projectHeadTestIds.purposeInvitation}>
+        <span className={styles.purposeLabel}>What it’s for</span>
+        <p className={styles.invitationText}>
+          {assistantConnected
+            ? "Say what you’re trying to do. Your assistant works from it, so “Redo the kitchen by March for £18k” gets answers about your kitchen, not kitchens in general."
+            : "Say what you’re trying to do, like “Redo the kitchen by March for £18k”. It sits at the top of the project and of Copy as Markdown."}
+        </p>
+        <button
+          type="button"
+          ref={editButton}
+          className={styles.pill}
+          onClick={() => startPurpose(editButton)}
+          data-testid={projectHeadTestIds.addPurposeButton}
+        >
+          <StrokeIcon name="plus" />
+          Add what it’s for
+        </button>
+      </section>
+    );
+  };
+
+  return (
+    <div className={styles.root} data-testid={projectHeadTestIds.root}>
+      <PageLink
+        ref={backLink}
+        className={styles.back}
+        to={Routes.projects()}
+        onClick={backToProjects}
+        data-testid={projectHeadTestIds.backLink}
+      >
+        <StrokeIcon name="arrowLeft" size={15} />
+        All projects
+      </PageLink>
+      <p className={styles.kicker} data-testid={projectHeadTestIds.kicker}>
+        Project
+        <span className={styles.kickerMuted} aria-hidden="true">
+          ·
+        </span>
+        <span className={styles.kickerMuted}>{made}</span>
+      </p>
+
+      {renaming ? (
+        <NameEditor
+          name={project.name}
+          onSave={(name) => {
+            if (name !== project.name) {
+              onRename(name);
+            }
+            finishEditing(() => setRenaming(false));
+          }}
+          onCancel={() => finishEditing(() => setRenaming(false))}
+        />
       ) : (
-        <section className={styles.invitation} aria-label="What it’s for" data-testid={projectHeadTestIds.purposeInvitation}>
-          <span className={styles.purposeLabel}>What it’s for</span>
-          <p className={styles.invitationText}>
-            {assistantConnected
-              ? "Say what you’re trying to do. Your assistant works from it, so “Redo the kitchen by March for £18k” gets answers about your kitchen, not kitchens in general."
-              : "Say what you’re trying to do, like “Redo the kitchen by March for £18k”. It sits at the top of the project and of Copy as Markdown."}
-          </p>
-          <button
-            type="button"
-            ref={editButton}
-            className={styles.pill}
-            onClick={() => startPurpose(editButton)}
-            data-testid={projectHeadTestIds.addPurposeButton}
-          >
-            <StrokeIcon name="plus" />
-            Add what it’s for
-          </button>
-        </section>
+        <h1 className={styles.name} data-testid={projectHeadTestIds.name}>
+          {project.name}
+        </h1>
       )}
+
+      {archived && (
+        <p className={styles.strip} data-testid={projectHeadTestIds.archivedStrip}>
+          <b>Archived {projectShortDate(project.archivedAt!, now)}.</b>
+          <span>
+            {assistantConnected ? "Hidden from your projects and from your assistant’s list." : "Hidden from your projects."} Restore brings
+            it back.
+          </span>
+        </p>
+      )}
+
+      {purposeBlock()}
 
       <p className={styles.facts} data-testid={projectHeadTestIds.facts}>
         <span>
@@ -304,16 +322,24 @@ export function ProjectHead({
       </div>
     </div>
   );
+};
+
+interface NameEditorProps {
+  name: string;
+  onSave: (name: string) => void;
+  onCancel: () => void;
 }
 
-function NameEditor({ name, onSave, onCancel }: { name: string; onSave: (name: string) => void; onCancel: () => void }) {
+const NameEditor = ({ name, onSave, onCancel }: NameEditorProps) => {
   const [value, setValue] = useState(name);
   const field = useRef<HTMLInputElement | null>(null);
   const helpId = useId();
   useEffect(() => field.current?.select(), []);
   const trimmed = value.trim();
   const save = () => {
-    if (trimmed !== "") onSave(trimmed);
+    if (trimmed !== "") {
+      onSave(trimmed);
+    }
   };
   return (
     <div className={styles.editor}>
@@ -354,21 +380,17 @@ function NameEditor({ name, onSave, onCancel }: { name: string; onSave: (name: s
       </div>
     </div>
   );
-}
+};
 
-function PurposeEditor({
-  purpose,
-  assistantConnected,
-  assistantWrote,
-  onSave,
-  onCancel,
-}: {
+interface PurposeEditorProps {
   purpose: string;
   assistantConnected: boolean;
   assistantWrote: string | null;
   onSave: (purpose: string | null) => void;
   onCancel: () => void;
-}) {
+}
+
+const PurposeEditor = ({ purpose, assistantConnected, assistantWrote, onSave, onCancel }: PurposeEditorProps) => {
   const [value, setValue] = useState(purpose);
   const field = useRef<HTMLTextAreaElement | null>(null);
   const helpId = useId();
@@ -425,4 +447,4 @@ function PurposeEditor({
       </div>
     </section>
   );
-}
+};

@@ -30,22 +30,30 @@ export interface RecipeIngredientsProps {
 const HAS_A_FIGURE = /\d|[¼½¾⅓⅔⅛]/;
 
 // A video's line with nothing to adjust either named no amount or said it in words (122e).
-const unreadableAside = (line: string, fromVideo: boolean): string =>
-  !fromVideo
-    ? "· as written"
-    : HAS_A_FIGURE.test(line) || /\b(?:half|quarter|third|one|two|three|four|five|six|dozen)\b/i.test(line)
-      ? "· as said"
-      : "· no amount said";
+const unreadableAside = (line: string, fromVideo: boolean): string => {
+  if (!fromVideo) {
+    return "· as written";
+  }
+  return HAS_A_FIGURE.test(line) || /\b(?:half|quarter|third|one|two|three|four|five|six|dozen)\b/i.test(line)
+    ? "· as said"
+    : "· no amount said";
+};
 
 // Design 122c–122d: one line under the heading says where a video's list came from.
-export const ingredientsSource = (said: readonly number[], total: number): string =>
-  said.length === total
-    ? "As said in the video. Where no amount is said, the line has none."
-    : said.length === 0
-      ? "From the video’s description."
-      : `From the video’s description, with ${said.length} said in the video.`;
+export const ingredientsSource = (said: readonly number[], total: number): string => {
+  if (said.length === total) {
+    return "As said in the video. Where no amount is said, the line has none.";
+  }
+  return said.length === 0 ? "From the video’s description." : `From the video’s description, with ${said.length} said in the video.`;
+};
 
-function Line({ line, fromVideo, saidAside }: { line: AdjustedIngredient; fromVideo: boolean; saidAside: boolean }) {
+interface LineProps {
+  line: AdjustedIngredient;
+  fromVideo: boolean;
+  saidAside: boolean;
+}
+
+const Line = ({ line, fromVideo, saidAside }: LineProps) => {
   if (line.kind !== "adjusted") {
     return (
       <>
@@ -70,12 +78,12 @@ function Line({ line, fromVideo, saidAside }: { line: AdjustedIngredient; fromVi
       {saidAside && <span className={styles.aside}>· said in the video</span>}
     </>
   );
-}
+};
 
 // Designs 144y–144ab: the ingredients on their own raised card, with servings and units at
 // its top. As written is where every note opens; changed amounts sit on the stone tint, and
 // a line we can't read stays exactly as the page wrote it and says so.
-export function RecipeIngredients({
+export const RecipeIngredients = ({
   adjustment,
   scale,
   units,
@@ -86,7 +94,7 @@ export function RecipeIngredients({
   onScaleChange,
   onUnitsChange,
   onReset,
-}: RecipeIngredientsProps) {
+}: RecipeIngredientsProps) => {
   const headingId = useId();
   const cited = useCitedOverviewPart();
   const groupName = useId();
@@ -211,4 +219,4 @@ export function RecipeIngredients({
       )}
     </section>
   );
-}
+};

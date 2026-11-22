@@ -11,7 +11,7 @@ export interface RecipeCookButtonProps {
 
 // Cooking step by step from the top of the recipe, above the summary, so it's in sight when the
 // note opens (OV-172). The method's own buttons stay where they are.
-export function RecipeCookButton({ placeStep, onStart, onCarryOn }: RecipeCookButtonProps) {
+export const RecipeCookButton = ({ placeStep, onStart, onCarryOn }: RecipeCookButtonProps) => {
   return (
     <button
       type="button"
@@ -23,4 +23,4 @@ export function RecipeCookButton({ placeStep, onStart, onCarryOn }: RecipeCookBu
       {placeStep === null ? "Cook step by step" : `Carry on from step ${placeStep + 1}`}
     </button>
   );
-}
+};

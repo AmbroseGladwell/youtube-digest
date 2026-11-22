@@ -46,46 +46,64 @@ const TranscriptBody = z
 const TranscriptionBody = z.object({ feedUrl: z.url().max(2048), guid: z.string().min(1).max(2048) });
 const TranscriptionParams = z.object({ id: z.uuid() });
 
-const youTubeAskOf = ({ youTubeVideoId, searchYouTube }: z.infer<typeof TranscriptBody>): YouTubeAsk =>
-  youTubeVideoId !== undefined ? { videoId: youTubeVideoId } : searchYouTube === true ? { search: true } : null;
+const youTubeAskOf = ({ youTubeVideoId, searchYouTube }: z.infer<typeof TranscriptBody>): YouTubeAsk => {
+  if (youTubeVideoId !== undefined) {
+    return { videoId: youTubeVideoId };
+  }
+  return searchYouTube === true ? { search: true } : null;
+};
 
-type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<{ transcript: StoredTranscript; answer: PodcastTranscriptAnswer }>;
+const askedOf = (youTube: YouTubeAsk): "check" | "search" | null => {
+  if (youTube === null) {
+    return null;
+  }
+  return "videoId" in youTube ? "check" : "search";
+};
+
+interface ResolvedTranscript {
+  transcript: StoredTranscript;
+  answer: PodcastTranscriptAnswer;
+}
+
+type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<ResolvedTranscript>;
+
+export interface PodcastRoutesOptions {
+  readEpisode: (link: string) => Promise<PodcastRead>;
+  resolveTranscript: ResolveTranscript;
+  checkTranscript: (request: PodcastTranscriptCheckRequest) => Promise<PodcastTranscriptCheck>;
+  // Speech-to-text on our GPU host; absent, no episode is transcribed and none is offered.
+  transcriptions: ReturnType<typeof createPodcastTranscriptions> | null;
+  planOf: (accountId: AccountId) => Promise<Plan>;
+  trials: TrialsRepository;
+  clock: () => Date;
+}
 
 // An account, and never the link, the feed or the episode in a log: what someone listens to is
 // theirs. Signed out, onboarding reads the episode on the trial's reads and checks whether it has
 // words, before an account; finding the words and transcribing wait for one (OV-327,
 // docs/features/podcast-links.md, docs/features/podcast-transcripts.md, docs/features/onboarding.md).
-export function podcastRoutes(
+export const podcastRoutes = (
   app: FastifyInstance,
-  {
-    readEpisode,
-    resolveTranscript,
-    checkTranscript,
-    planOf,
-    trials,
-    transcriptions,
-    clock,
-  }: {
-    readEpisode: (link: string) => Promise<PodcastRead>;
-    resolveTranscript: ResolveTranscript;
-    checkTranscript: (request: PodcastTranscriptCheckRequest) => Promise<PodcastTranscriptCheck>;
-    // Speech-to-text on our GPU host; absent, no episode is transcribed and none is offered.
-    transcriptions: ReturnType<typeof createPodcastTranscriptions> | null;
-    planOf: (accountId: AccountId) => Promise<Plan>;
-    trials: TrialsRepository;
-    clock: () => Date;
-  },
-): void {
+  { readEpisode, resolveTranscript, checkTranscript, planOf, trials, transcriptions, clock }: PodcastRoutesOptions,
+): void => {
   const accountCallerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
-    if (request.session === null) throw new ApiError("unauthenticated", "Sign in to make an overview");
+    if (request.session === null) {
+      throw new ApiError("unauthenticated", "Sign in to make an overview");
+    }
     return { accountId: request.session.accountId, plan: await planOf(request.session.accountId) };
   };
   // The check alone runs signed out, on a trial the server issued.
   const checkCallerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
-    if (request.session !== null) return accountCallerOf(request);
+    if (request.session !== null) {
+      return accountCallerOf(request);
+    }
     const trialToken = request.headers[TRIAL_TOKEN_HEADER];
-    if (typeof trialToken !== "string") throw new ApiError("unauthenticated", "Sign in, or start a trial, to check an episode");
-    if (!(await trials.isKnown(trialToken))) throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
+    if (typeof trialToken !== "string") {
+      throw new ApiError("unauthenticated", "Sign in, or start a trial, to check an episode");
+    }
+    if (!(await trials.isKnown(trialToken))) {
+      throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
+    }
     return { address: request.clientAddress };
   };
 
@@ -149,13 +167,15 @@ export function podcastRoutes(
           reply.header("retry-after", String(error.retryAfterSeconds));
           throw new ApiError("too_many_requests", error.message, { retryAfterSeconds: error.retryAfterSeconds, daily: true });
         }
-        if (!(error instanceof TranscriptFetchError)) throw error;
+        if (!(error instanceof TranscriptFetchError)) {
+          throw error;
+        }
         const unconfirmed = error instanceof MatchUnconfirmedError;
         request.log.info(
           apiLogLines.podcasts.transcript({
             failure: error.failure,
             unconfirmed,
-            asked: youTube === null ? null : "videoId" in youTube ? "check" : "search",
+            asked: askedOf(youTube),
             ms: clock().getTime() - startedAt,
           }),
         );
@@ -181,7 +201,9 @@ export function podcastRoutes(
       const caller = await checkCallerOf(request);
       // Where nothing can be transcribed, the card has nothing to say, so the feed isn't read and
       // no YouTube search is spent: Create looks for the words as it always has.
-      if (transcriptions === null) return { words: "unknown" };
+      if (transcriptions === null) {
+        return { words: "unknown" };
+      }
       const startedAt = clock().getTime();
       const checked = await checkTranscript({ feedUrl: body.feedUrl, guid: body.guid, youTube: youTubeAskOf(body), log: request.log });
       const answer: TranscriptCheck =
@@ -210,7 +232,9 @@ export function podcastRoutes(
       preHandler: rateLimitHook(rateLimits.transcriptionPerAddress, (request) => request.clientAddress, clock),
     },
     async (request, reply): Promise<PodcastTranscription> => {
-      if (transcriptions === null) throw new ApiError("unavailable", "Episodes can't be transcribed here");
+      if (transcriptions === null) {
+        throw new ApiError("unavailable", "Episodes can't be transcribed here");
+      }
       const { feedUrl, guid } = parseOrThrow(TranscriptionBody, request.body, "The episode");
       const caller = await accountCallerOf(request);
       const started = await transcriptions.start(feedUrl, guid, caller, request.log);
@@ -246,11 +270,15 @@ export function podcastRoutes(
 
   // Asked after every few seconds while the reader waits, so held only to the address limit.
   app.get("/podcasts/transcription/:id", async (request): Promise<PodcastTranscription> => {
-    if (transcriptions === null) throw new ApiError("unavailable", "Episodes can't be transcribed here");
+    if (transcriptions === null) {
+      throw new ApiError("unavailable", "Episodes can't be transcribed here");
+    }
     const { id } = parseOrThrow(TranscriptionParams, request.params, "The transcription");
     const caller = await accountCallerOf(request);
     const transcription = await transcriptions.status(id, caller);
-    if (transcription === null) throw new ApiError("not_found", "No such transcription");
+    if (transcription === null) {
+      throw new ApiError("not_found", "No such transcription");
+    }
     return transcription;
   });
-}
+};

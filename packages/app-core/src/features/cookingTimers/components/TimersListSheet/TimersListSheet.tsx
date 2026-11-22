@@ -15,15 +15,21 @@ export interface TimersListSheetProps {
 
 // Design 288p: four or more timers, folded at the foot, listed soonest first, each named by its
 // step and recipe and opening its own controls.
-export function TimersListSheet({ open, onOpen, onClose }: TimersListSheetProps) {
+export const TimersListSheet = ({ open, onOpen, onClose }: TimersListSheetProps) => {
   const { running, now } = useCookingTimers();
   const dialog = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   return (
@@ -36,7 +42,9 @@ export function TimersListSheet({ open, onOpen, onClose }: TimersListSheetProps)
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={timersListSheetTestIds.root}
     >
@@ -71,4 +79,4 @@ export function TimersListSheet({ open, onOpen, onClose }: TimersListSheetProps)
       )}
     </dialog>
   );
-}
+};

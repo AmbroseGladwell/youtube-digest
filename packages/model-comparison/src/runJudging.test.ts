@@ -49,10 +49,10 @@ test("a prompt pair sets a model's note against the same model's note from the e
   );
 });
 
-function memoryStore(previous: JudgeRecord[] = []): RecordStore<JudgeRecord> & { saved: JudgeRecord[] } {
+const memoryStore = (previous: JudgeRecord[] = []): RecordStore<JudgeRecord> & { saved: JudgeRecord[] } => {
   const saved: JudgeRecord[] = [];
   return { saved, all: async () => previous, save: async (record) => void saved.push(record) };
-}
+};
 
 const judged = (candidate: string, videoId: string, outcome: JudgeRecord["outcome"], costDollars = 0.03): JudgeRecord => ({
   videoId,

@@ -20,7 +20,7 @@ const hasBlockInside = (element: Element): boolean => element.querySelector(BLOC
 
 // Blocks rather than the article's whole text, so a section can be pointed at. A page built
 // out of something else falls back to one section (docs/features/article-extraction.md).
-export function articleSections(body: HTMLElement, title: string, pageUrl: string): ArticleSection[] {
+export const articleSections = (body: HTMLElement, title: string, pageUrl: string): ArticleSection[] => {
   const sections: Array<{ heading: string | null; anchor: string | null; blocks: string[]; links: PageLink[] }> = [];
   const linked = new Set<string>();
   for (const element of body.querySelectorAll(BLOCKS)) {
@@ -31,15 +31,22 @@ export function articleSections(body: HTMLElement, title: string, pageUrl: strin
       }
     } else if (!hasBlockInside(element)) {
       const text = clean(element.textContent);
-      if (text === "") continue;
-      if (sections.length === 0) sections.push({ heading: null, anchor: null, blocks: [], links: [] });
-      const section = sections.at(-1)!;
-      for (const link of articleLinks(element, pageUrl)) {
-        if (!linked.has(link.href)) {
-          linked.add(link.href);
-          section.links.push({ ...link, paragraph: section.blocks.length });
-        }
+      if (text === "") {
+        continue;
       }
+      if (sections.length === 0) {
+        sections.push({ heading: null, anchor: null, blocks: [], links: [] });
+      }
+      const section = sections.at(-1)!;
+      const firstSight = (href: string) => {
+        if (linked.has(href)) {
+          return false;
+        }
+        linked.add(href);
+        return true;
+      };
+      const fresh = articleLinks(element, pageUrl).filter((link) => firstSight(link.href));
+      section.links.push(...fresh.map((link) => ({ ...link, paragraph: section.blocks.length })));
       section.blocks.push(text);
     }
   }
@@ -49,7 +56,9 @@ export function articleSections(body: HTMLElement, title: string, pageUrl: strin
     .map(({ heading, anchor, blocks, links }) => ({ heading, anchor, text: blocks.join("\n\n"), links }));
   const whole = clean(body.textContent);
   const keptWords = kept.reduce((total, { text }) => total + wordCount(text), 0);
-  if (keptWords >= wordCount(whole) * TOO_MUCH_LOST) return kept;
+  if (keptWords >= wordCount(whole) * TOO_MUCH_LOST) {
+    return kept;
+  }
   return whole === ""
     ? []
     : [
@@ -60,4 +69,4 @@ export function articleSections(body: HTMLElement, title: string, pageUrl: strin
           links: uniqueLinks(articleLinks(body, pageUrl)).map((link) => ({ ...link, paragraph: 0 })),
         },
       ];
-}
+};

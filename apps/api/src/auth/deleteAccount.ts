@@ -19,13 +19,20 @@ export interface EraseAccountOptions {
   personEraser: PersonEraser | null;
 }
 
+const startingStatus = (hasWork: boolean, configured: boolean): "skipped" | "not_configured" | "pending" => {
+  if (!hasWork) {
+    return "skipped";
+  }
+  return configured ? "pending" : "not_configured";
+};
+
 // One transaction: what the later steps need is captured first, the audit row is written,
 // then everything under the account goes. The foreign keys cascade for every table but
 // three, which are deleted by hand here (docs/features/account-deletion.md, "What goes").
-export async function eraseAccount(
+export const eraseAccount = async (
   sql: SqlClient,
   { accountId, email, now, narrationStore, personEraser }: EraseAccountOptions,
-): Promise<AccountDeletion> {
+): Promise<AccountDeletion> => {
   return sql.transaction(async (tx) => {
     const keys = (await tx.query<{ key: string }>("select key from audio_renders where requested_by = $1", [accountId])).map(
       (row) => row.key,
@@ -39,9 +46,9 @@ export async function eraseAccount(
       accountId,
       anonymousId,
       narrationKeys: keys,
-      narration: keys.length === 0 ? "skipped" : narrationStore === null ? "not_configured" : "pending",
+      narration: startingStatus(keys.length !== 0, narrationStore !== null),
       postHogAccount: personEraser === null ? "not_configured" : "pending",
-      postHogAnonymous: anonymousId === null ? "skipped" : personEraser === null ? "not_configured" : "pending",
+      postHogAnonymous: startingStatus(anonymousId !== null, personEraser !== null),
       now,
     });
     await tx.query("delete from audio_renders where requested_by = $1", [accountId]);
@@ -50,7 +57,7 @@ export async function eraseAccount(
     await tx.query("delete from accounts where id = $1", [accountId]);
     return deletion;
   });
-}
+};
 
 export interface FinishAccountDeletionOptions {
   narrationStore: AudioStore | null;
@@ -80,11 +87,11 @@ const withinTime = <T>(work: Promise<T>, ms: number, step: string): Promise<T> =
 // The steps outside the transaction, each recorded as it ends. A step that fails is left
 // `failed` with its error for `task api:finish-deletions` to retry; a step with nothing
 // configured to run it is left `not_configured`, which the same retry picks up once it is.
-export async function finishAccountDeletion(
+export const finishAccountDeletion = async (
   sql: SqlClient,
   deletion: AccountDeletion,
   { narrationStore, personEraser, log, now, stepTimeoutMs = STEP_TIMEOUT_MS }: FinishAccountDeletionOptions,
-): Promise<AccountDeletion> {
+): Promise<AccountDeletion> => {
   const steps: StepStatuses = {
     narration: deletion.narration,
     postHogAccount: deletion.postHogAccount,
@@ -98,26 +105,31 @@ export async function finishAccountDeletion(
     );
   };
 
-  if (steps.narration === "pending" || steps.narration === "failed" || steps.narration === "not_configured") {
-    if (narrationStore === null) {
-      steps.narration = "not_configured";
-    } else {
-      try {
-        for (const key of deletion.narrationKeys) {
-          await withinTime(narrationStore.delete(key), stepTimeoutMs, "narration");
-        }
-        steps.narration = "done";
-      } catch (error) {
-        steps.narration = "failed";
-        failed("narration", error);
+  const narrationDue = steps.narration === "pending" || steps.narration === "failed" || steps.narration === "not_configured";
+  if (narrationDue && narrationStore === null) {
+    steps.narration = "not_configured";
+  } else if (narrationDue && narrationStore !== null) {
+    try {
+      for (const key of deletion.narrationKeys) {
+        await withinTime(narrationStore.delete(key), stepTimeoutMs, "narration");
       }
+      steps.narration = "done";
+    } catch (error) {
+      steps.narration = "failed";
+      failed("narration", error);
     }
   }
 
   const erase = async (status: ErasureStepStatus, distinctId: string | null, step: string): Promise<ErasureStepStatus> => {
-    if (status !== "pending" && status !== "failed" && status !== "not_configured") return status;
-    if (distinctId === null) return "skipped";
-    if (personEraser === null) return "not_configured";
+    if (status !== "pending" && status !== "failed" && status !== "not_configured") {
+      return status;
+    }
+    if (distinctId === null) {
+      return "skipped";
+    }
+    if (personEraser === null) {
+      return "not_configured";
+    }
     try {
       const answer = await withinTime(personEraser.erase(distinctId), stepTimeoutMs, step);
       return answer === "absent" ? "skipped" : "queued";
@@ -130,4 +142,4 @@ export async function finishAccountDeletion(
   steps.postHogAnonymous = await erase(steps.postHogAnonymous, deletion.anonymousId, "postHogAnonymous");
 
   return new AccountDeletionsRepository(sql).recordSteps(deletion.id, steps, lastError, now());
-}
+};

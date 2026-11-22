@@ -6,12 +6,16 @@ import type { KeyPointsJudgeRecord, KeyPointsResults } from "./KeyPointsJudgeRec
 import { KEY_POINT_DIMENSIONS, KeyPointsAnswer, keyPointsPrompt } from "./keyPointsRubric.js";
 import { isTheModelsDoing, measuredCost } from "./runOne.js";
 
-const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult =>
-  winner === "tie" ? "tie" : (winner === "A") === candidateIsA ? "win" : "loss";
+const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult => {
+  if (winner === "tie") {
+    return "tie";
+  }
+  return (winner === "A") === candidateIsA ? "win" : "loss";
+};
 
 // Judged once in each order. A side wins a dimension only when both orders agree, so a
 // judge that leans towards whichever note it reads first scores a tie, not a win.
-export function combineOrders(candidateFirst: KeyPointsAnswer, candidateSecond: KeyPointsAnswer): KeyPointsResults {
+export const combineOrders = (candidateFirst: KeyPointsAnswer, candidateSecond: KeyPointsAnswer): KeyPointsResults => {
   return Object.fromEntries(
     [...KEY_POINT_DIMENSIONS, "overall" as const].map((dimension) => {
       const first = asCandidate(candidateFirst[dimension].winner, true);
@@ -19,16 +23,16 @@ export function combineOrders(candidateFirst: KeyPointsAnswer, candidateSecond: 
       return [dimension, first === second ? first : "tie"];
     }),
   ) as KeyPointsResults;
-}
+};
 
-export async function judgeKeyPointsPair({
+export const judgeKeyPointsPair = async ({
   fetched,
   baseline,
   candidate,
   keys,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: JudgePairOptions): Promise<KeyPointsJudgeRecord> {
+}: JudgePairOptions): Promise<KeyPointsJudgeRecord> => {
   const judge = judgeFor(parseComparedModel(baseline.name), parseComparedModel(candidate.name));
   const metered = meteredFetch(judge.provider, http, now);
   const client = createGenerationClient({ ...judge, apiKey: keys[judge.provider] ?? "", http: metered.http });
@@ -39,7 +43,9 @@ export async function judgeKeyPointsPair({
   const ask = async (candidateIsA: boolean): Promise<KeyPointsAnswer | null> => {
     const [noteA, noteB] = candidateIsA ? [candidate.overview, baseline.overview] : [baseline.overview, candidate.overview];
     const parsed = KeyPointsAnswer.safeParse(await client(keyPointsPrompt(fetched, noteA, noteB)));
-    if (parsed.success) return parsed.data;
+    if (parsed.success) {
+      return parsed.data;
+    }
     outcome = "failed";
     error = `the judge's answer broke its schema: ${parsed.error.message}`;
     return null;
@@ -69,4 +75,4 @@ export async function judgeKeyPointsPair({
     latencyMs: Math.round(now() - began),
     costDollars: measuredCost(judge, metered.calls),
   };
-}
+};

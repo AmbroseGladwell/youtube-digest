@@ -79,11 +79,11 @@ const refusal = (tool: McpTool) =>
     : `${tool.name} is not available. ${NO_PROFILE_INSTRUCTIONS}`;
 
 class JsonRpcError extends Error {
-  constructor(
-    readonly code: number,
-    message: string,
-  ) {
+  readonly code: number;
+
+  constructor(code: number, message: string) {
     super(message);
+    this.code = code;
   }
 }
 
@@ -93,15 +93,15 @@ export const jsonRpcError = (id: RequestId | null, code: number, message: string
   error: { code, message },
 });
 
-function paramsOf<T>(schema: z.ZodType<T>, params: unknown): T {
+const paramsOf = <T>(schema: z.ZodType<T>, params: unknown): T => {
   const parsed = schema.safeParse(params ?? {});
   if (!parsed.success) {
     throw new JsonRpcError(JSON_RPC_ERRORS.invalidParams, z.prettifyError(parsed.error));
   }
   return parsed.data;
-}
+};
 
-async function callTool(params: unknown, context: McpCallContext): Promise<Record<string, unknown>> {
+const callTool = async (params: unknown, context: McpCallContext): Promise<Record<string, unknown>> => {
   const { name, arguments: args } = paramsOf(CallParams, params);
   const tool = mcpTools.find((candidate) => candidate.name === name);
   if (tool === undefined) {
@@ -126,9 +126,9 @@ async function callTool(params: unknown, context: McpCallContext): Promise<Recor
     context.log.error(apiLogLines.mcp.toolFailed({ ...logged, err: error, durationMs: durationMs() }));
     return { content: [{ type: "text", text: "Something went wrong. Try again shortly." }], isError: true };
   }
-}
+};
 
-function getPrompt(params: unknown): Record<string, unknown> {
+const getPrompt = (params: unknown): Record<string, unknown> => {
   const { name, arguments: args = {} } = paramsOf(PromptParams, params);
   const prompt = mcpPrompts.find((candidate) => candidate.name === name);
   if (prompt === undefined) {
@@ -142,9 +142,9 @@ function getPrompt(params: unknown): Record<string, unknown> {
     description: prompt.description,
     messages: [{ role: "user", content: { type: "text", text: prompt.text(args) } }],
   };
-}
+};
 
-async function answer(method: string, params: unknown, context: McpCallContext): Promise<Record<string, unknown>> {
+const answer = async (method: string, params: unknown, context: McpCallContext): Promise<Record<string, unknown>> => {
   switch (method) {
     case "initialize": {
       const { protocolVersion } = paramsOf(InitializeParams, params);
@@ -178,12 +178,12 @@ async function answer(method: string, params: unknown, context: McpCallContext):
     default:
       throw new JsonRpcError(JSON_RPC_ERRORS.methodNotFound, `Method not found: ${method}`);
   }
-}
+};
 
 // Stateless Streamable HTTP: every request is answered as one JSON body, and nothing is
 // ever sent unasked, so a notification or a client's response needs only accepting
 // (docs/features/mcp-connector.md, "The endpoint").
-export async function handleMcpMessage(message: unknown, context: McpCallContext): Promise<McpReply> {
+export const handleMcpMessage = async (message: unknown, context: McpCallContext): Promise<McpReply> => {
   if (Array.isArray(message)) {
     return { kind: "response", body: jsonRpcError(null, JSON_RPC_ERRORS.invalidRequest, "Batches are not supported") };
   }
@@ -203,4 +203,4 @@ export async function handleMcpMessage(message: unknown, context: McpCallContext
     }
     throw error;
   }
-}
+};

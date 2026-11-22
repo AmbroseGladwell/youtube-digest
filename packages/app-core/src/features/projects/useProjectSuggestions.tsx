@@ -29,7 +29,7 @@ const later = (ms: number, then: () => void) => window.setTimeout(then, prefersR
 
 // Saved overviews that might fit the project on the page, and what adding or turning one
 // down does (docs/features/projects.md, "Offering what's already saved").
-export function useProjectSuggestions(current: ProjectSummary | null, overviews: OverviewWithState[], host: SuggestionsHost) {
+export const useProjectSuggestions = (current: ProjectSummary | null, overviews: OverviewWithState[], host: SuggestionsHost) => {
   const analytics = useAnalytics();
   const setMember = useSetProjectMemberMutation();
   const { projectStore } = useStores();
@@ -53,7 +53,9 @@ export function useProjectSuggestions(current: ProjectSummary | null, overviews:
   const projectId = current?.project.id ?? null;
   // Straight to the store, so one still held when the page closes is kept.
   const commit = (overviewId: string) => {
-    if (projectId === null) return;
+    if (projectId === null) {
+      return;
+    }
     void projectStore
       .turnDownForProject(projectId, overviewId as OverviewId)
       .then(() => queryClient.invalidateQueries({ queryKey: projectKeys.takenOut() }));
@@ -69,12 +71,16 @@ export function useProjectSuggestions(current: ProjectSummary | null, overviews:
     [],
   );
 
-  if (current !== null && open === null) setOpen(current.items.length === 0);
+  if (current !== null && open === null) {
+    setOpen(current.items.length === 0);
+  }
 
   const inProject = new Set<string>(current?.items.map((item) => item.overview.id) ?? []);
   const out = new Set<string>([...held.keys()]);
   for (const member of takenOut ?? []) {
-    if (member.projectId === projectId && !offeredAgain.has(member.overviewId)) out.add(member.overviewId);
+    if (member.projectId === projectId && !offeredAgain.has(member.overviewId)) {
+      out.add(member.overviewId);
+    }
   }
   const offered = !live || takenOut === undefined ? [] : projectSuggestions({ result: meaning.data, overviews, inProject, takenOut: out });
   const byId = new Map<string, OverviewWithState>([
@@ -94,7 +100,9 @@ export function useProjectSuggestions(current: ProjectSummary | null, overviews:
   const empty = current?.items.length === 0;
 
   useEffect(() => {
-    if (count === 0 || shownLogged.current || projectId === null) return;
+    if (count === 0 || shownLogged.current || projectId === null) {
+      return;
+    }
     shownLogged.current = true;
     analytics.projects.suggestions.shown({ projectId, count, empty });
   }, [count, projectId]);
@@ -103,8 +111,11 @@ export function useProjectSuggestions(current: ProjectSummary | null, overviews:
     setPhases((previous) => {
       const next = new Map(previous);
       for (const overviewId of overviewIds) {
-        if (phase === null) next.delete(overviewId);
-        else next.set(overviewId, phase);
+        if (phase === null) {
+          next.delete(overviewId);
+        } else {
+          next.set(overviewId, phase);
+        }
       }
       return next;
     });
@@ -116,42 +127,54 @@ export function useProjectSuggestions(current: ProjectSummary | null, overviews:
     const remaining = rows.filter((row) => row.phase === "shown" && !overviewIds.includes(row.entry.overview.id));
     const after = remaining.find((row) => shownIds.indexOf(row.entry.overview.id) > shownIds.indexOf(overviewIds[0]!));
     const next = after ?? remaining.at(-1);
-    for (const entry of entries) ghosts.current.set(entry.overview.id, entry);
+    for (const entry of entries) {
+      ghosts.current.set(entry.overview.id, entry);
+    }
     setPhase(overviewIds, "leaving");
     later(LEAVE_MS, () => {
       then();
       setPhase(overviewIds, "closing");
-      if (next === undefined) host.focusList();
-      else setFocusAdd(next.entry.overview.id);
+      if (next === undefined) {
+        host.focusList();
+      } else {
+        setFocusAdd(next.entry.overview.id);
+      }
       later(CLOSE_MS, () => {
-        for (const overviewId of overviewIds) ghosts.current.delete(overviewId);
+        for (const overviewId of overviewIds) {
+          ghosts.current.delete(overviewId);
+        }
         setPhase(overviewIds, null);
       });
     });
   };
 
   const add = (entries: OverviewWithState[], how: "one" | "all") => {
-    if (current === null) return;
+    if (current === null) {
+      return;
+    }
     const { project } = current;
     analytics.projects.suggestions.added({ projectId: project.id, count: entries.length, how, empty });
+    const added = entries.map(({ overview }) => overview.id as string);
     leave(entries, () => {
       for (const { overview } of entries) {
         analytics.projects.membership.added({ projectId: project.id, overviewId: overview.id, from: "suggestion" });
         setMember.mutate({ projectId: project.id, overviewId: overview.id, inProject: true });
       }
-      setOfferedAgain(
-        (previous) => new Set([...previous].filter((overviewId) => !entries.some((entry) => entry.overview.id === overviewId))),
-      );
+      setOfferedAgain((previous) => new Set([...previous].filter((overviewId) => !added.includes(overviewId))));
       host.say(entries.length === 1 ? `Added to ${project.name}` : `Added ${entries.length} to ${project.name}`, () => {
         analytics.projects.suggestions.undone({ projectId: project.id, action: "add", count: entries.length });
-        for (const { overview } of entries) setMember.mutate({ projectId: project.id, overviewId: overview.id, inProject: false });
-        setOfferedAgain((previous) => new Set([...previous, ...entries.map(({ overview }) => overview.id as string)]));
+        for (const { overview } of entries) {
+          setMember.mutate({ projectId: project.id, overviewId: overview.id, inProject: false });
+        }
+        setOfferedAgain((previous) => new Set([...previous, ...added]));
       });
     });
   };
 
   const decline = (entry: OverviewWithState) => {
-    if (current === null) return;
+    if (current === null) {
+      return;
+    }
     const { project } = current;
     const overviewId = entry.overview.id as string;
     analytics.projects.suggestions.turnedDown({ projectId: project.id, empty });
@@ -223,4 +246,4 @@ export function useProjectSuggestions(current: ProjectSummary | null, overviews:
     // An empty project with suggestions above it says what else can fill it (318a, 318d).
     offering: count > 0,
   };
-}
+};

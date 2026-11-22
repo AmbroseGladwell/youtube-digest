@@ -32,7 +32,7 @@ const tokenOf = (request: FastifyRequest): ShareToken | null => {
 // written here so a preview in Messages or Slack has something to read; the page itself is
 // the app in read-only mode, booting from the copy already in the document
 // (docs/features/sharing.md).
-export async function sharePagePlugin(app: FastifyInstance, options: SharePagePluginOptions): Promise<void> {
+export const sharePagePlugin = async (app: FastifyInstance, options: SharePagePluginOptions): Promise<void> => {
   const { shares, appUrl, staticRoot, clock } = options;
   const shell = staticRoot === null ? null : await readFile(join(staticRoot, "index.html"), "utf8");
   const limit = rateLimitHook(rateLimits.sharePagePerAddress, (request) => request.clientAddress, clock);
@@ -113,4 +113,4 @@ export async function sharePagePlugin(app: FastifyInstance, options: SharePagePl
     }
     return reply.redirect(`/api/audio/${narration.key}/file`, 302);
   });
-}
+};

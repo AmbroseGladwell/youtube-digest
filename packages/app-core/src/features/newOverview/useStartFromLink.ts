@@ -14,7 +14,7 @@ import { transcribeChoiceOf } from "../podcasts/util/episodeActionOf.js";
 
 // A pasted link handed to the shell's run, which opens the dialog on the progress it makes:
 // one pipeline, wherever the field sits (docs/features/stone-theme.md, "First run").
-export function useStartFromLink() {
+export const useStartFromLink = () => {
   const readiness = useGenerationReadiness();
   const controller = useNewOverviewRunController();
   const analytics = useAnalytics();
@@ -85,4 +85,4 @@ export function useStartFromLink() {
   };
 
   return { readiness, ready: readiness.ready, limit, url, setUrl, validationError, generate, article, podcast, pasted };
-}
+};

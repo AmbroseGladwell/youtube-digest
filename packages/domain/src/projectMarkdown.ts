@@ -30,13 +30,13 @@ const freshness = ({ verdict }: Overview): number => (verdict === null ? FRESHES
 
 // Fresher verdicts first, then newest saved, so an assistant reading a page at a time meets
 // what is least likely to be known already (docs/features/projects.md, "get_project").
-export function projectOrder<T extends { overview: Overview }>(items: readonly T[]): T[] {
+export const projectOrder = <T extends { overview: Overview }>(items: readonly T[]): T[] => {
   return [...items].sort(
     (left, right) => freshness(left.overview) - freshness(right.overview) || right.overview.savedAt.localeCompare(left.overview.savedAt),
   );
-}
+};
 
-export function verdictSpread(overviews: readonly Overview[]): VerdictSpread {
+export const verdictSpread = (overviews: readonly Overview[]): VerdictSpread => {
   const spread: VerdictSpread = { original: 0, fresh_angle: 0, common_knowledge: 0, unjudged: 0, dubious: 0 };
   for (const { verdict } of overviews) {
     if (verdict === null) {
@@ -44,12 +44,14 @@ export function verdictSpread(overviews: readonly Overview[]): VerdictSpread {
       continue;
     }
     spread[verdict.novelty] += 1;
-    if (verdict.dubious) spread.dubious += 1;
+    if (verdict.dubious) {
+      spread.dubious += 1;
+    }
   }
   return spread;
-}
+};
 
-export function verdictSpreadLine(spread: VerdictSpread): string {
+export const verdictSpreadLine = (spread: VerdictSpread): string => {
   const levels = [
     ...FRESHEST_FIRST.filter((novelty) => spread[novelty] > 0).map(
       (novelty) => `${spread[novelty]} ${NOVELTY_LABEL[novelty].toLowerCase()}`,
@@ -57,33 +59,42 @@ export function verdictSpreadLine(spread: VerdictSpread): string {
     ...(spread.unjudged > 0 ? [`${spread.unjudged} without a verdict`] : []),
   ];
   return [levels.join(", "), ...(spread.dubious > 0 ? [`${spread.dubious} dubious`] : [])].filter((part) => part !== "").join(" · ");
-}
+};
 
 export const authorName = (author: ProjectAuthor): string => (author.by === "reader" ? "the reader" : author.name);
 
-function overviewLine({ overview, read, addedBy }: ProjectOverview): string {
+const addedByFact = (addedBy: MemberAuthor): string | null => {
+  if (addedBy.by === "assistant") {
+    return `added by ${addedBy.name}`;
+  }
+  return addedBy.by === "filing" ? "added automatically" : null;
+};
+
+const overviewLine = ({ overview, read, addedBy }: ProjectOverview): string => {
   const facts = [
     sourceName(overview.source),
     overview.verdict === null ? null : `${NOVELTY_LABEL[overview.verdict.novelty]}${overview.verdict.dubious ? ", dubious" : ""}`,
     read ? null : "unread",
-    addedBy.by === "assistant" ? `added by ${addedBy.name}` : addedBy.by === "filing" ? "added automatically" : null,
+    addedByFact(addedBy),
     `saved ${overview.savedAt.slice(0, 10)}`,
     `id ${overview.id}`,
   ].filter((fact) => fact !== null);
   return `- **${overview.source.title}** (${facts.join(" · ")})\n  ${overview.inOneLine}`;
-}
+};
 
-function stepsOf({ overview }: ProjectOverview): string | null {
+const stepsOf = ({ overview }: ProjectOverview): string | null => {
   const items = overview.howToApply?.items ?? [];
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return null;
+  }
   return [`### ${overview.source.title} (id ${overview.id})`, ...items.map((item) => `- ${item}`)].join("\n");
-}
+};
 
 // A project as a brief: its purpose, what is in it counted in code, its overviews freshest
 // first, and every How to apply step in one place. The same text an assistant gets from
 // get_project and the reader copies, so the two never differ. With a page, the counts still
 // cover the whole project and only the listing is cut (docs/features/projects.md).
-export function projectMarkdown(project: Project, items: readonly ProjectOverview[], page?: ProjectPage): string {
+export const projectMarkdown = (project: Project, items: readonly ProjectOverview[], page?: ProjectPage): string => {
   const ordered = projectOrder(items);
   const shown = page === undefined ? ordered : ordered.slice(page.from, page.from + page.count);
   const unread = items.filter((item) => !item.read).length;
@@ -104,7 +115,9 @@ export function projectMarkdown(project: Project, items: readonly ProjectOvervie
   if (shown.length > 0) {
     sections.push(`## Overviews\n\n${shown.map(overviewLine).join("\n")}`);
     const steps = shown.map(stepsOf).filter((block) => block !== null);
-    if (steps.length > 0) sections.push(`## How to apply, from each overview\n\n${steps.join("\n\n")}`);
+    if (steps.length > 0) {
+      sections.push(`## How to apply, from each overview\n\n${steps.join("\n\n")}`);
+    }
   }
   return `${sections.join("\n\n")}\n`;
-}
+};

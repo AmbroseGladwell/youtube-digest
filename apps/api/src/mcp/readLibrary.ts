@@ -24,7 +24,7 @@ interface LiveRecordRow {
 
 // Read whole and filtered in memory, because a filter can only be trusted on a record that
 // has been migrated to the current shape (docs/features/mcp-connector.md, "Search").
-export async function readLibrary(sql: SqlClient, accountId: AccountId): Promise<Library> {
+export const readLibrary = async (sql: SqlClient, accountId: AccountId): Promise<Library> => {
   const rows = await sql.query<LiveRecordRow>(
     `select kind, schema_version, body from records
       where account_id = $1 and not deleted and kind in ('overview', 'overviewState', 'topic', 'project', 'projectMember')`,
@@ -73,4 +73,4 @@ export async function readLibrary(sql: SqlClient, accountId: AccountId): Promise
     .map((overview) => ({ overview, state: states.get(overview.id) ?? null }))
     .sort((left, right) => right.overview.savedAt.localeCompare(left.overview.savedAt));
   return { entries, topics, projects, members, unreadable };
-}
+};

@@ -9,7 +9,9 @@ const cached = async (path: string, make: () => Promise<Embedded>): Promise<Embe
     (text) => JSON.parse(text) as Embedded,
     () => null,
   );
-  if (stored !== null) return stored;
+  if (stored !== null) {
+    return stored;
+  }
   const made = await make();
   await mkdir(join(path, ".."), { recursive: true });
   await writeFile(path, JSON.stringify(made));

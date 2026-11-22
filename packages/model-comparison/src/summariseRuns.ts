@@ -31,7 +31,9 @@ export interface ModelSummary {
 const TWENTY_MINUTES_MS = 20 * 60_000;
 
 const median = (values: number[]): number | null => {
-  if (values.length === 0) return null;
+  if (values.length === 0) {
+    return null;
+  }
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 === 1 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;
@@ -41,7 +43,7 @@ export const videoLengthMs = (fetched: FetchedTranscript): number => fetched.vid
 
 export const isPassed = (record: RunRecord): boolean => record.outcome === "passed-first" || record.outcome === "passed-after-retry";
 
-export function summariseRuns(records: readonly RunRecord[], transcripts: ReadonlyMap<string, FetchedTranscript>): ModelSummary[] {
+export const summariseRuns = (records: readonly RunRecord[], transcripts: ReadonlyMap<string, FetchedTranscript>): ModelSummary[] => {
   const byModel = new Map<string, RunRecord[]>();
   for (const record of records) {
     const name = `${record.provider}:${record.model}`;
@@ -58,11 +60,15 @@ export function summariseRuns(records: readonly RunRecord[], transcripts: Readon
     // A recipe note has none of the argument note's fields to check.
     for (const record of runs.filter((run) => isPassed(run) && run.overview?.recipe == null)) {
       const fetched = transcripts.get(record.videoId);
-      if (fetched === undefined) continue;
+      if (fetched === undefined) {
+        continue;
+      }
       for (const check of checkOverview(record.attempts.at(-1) as GeneratedOutput, fetched)) {
         const tally = (checks[check.check] ??= { area: check.area, passed: 0, total: 0 });
         tally.total += 1;
-        if (check.passed) tally.passed += 1;
+        if (check.passed) {
+          tally.passed += 1;
+        }
       }
     }
 
@@ -89,4 +95,4 @@ export function summariseRuns(records: readonly RunRecord[], transcripts: Readon
       checks,
     };
   });
-}
+};

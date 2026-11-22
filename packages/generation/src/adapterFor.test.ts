@@ -16,7 +16,7 @@ interface Call {
   init: RequestInit;
 }
 
-function recorder(respond: (call: Call) => { status?: number; body: unknown }) {
+const recorder = (respond: (call: Call) => { status?: number; body: unknown }) => {
   const calls: Call[] = [];
   const http = (async (url: string | URL | Request, init: RequestInit = {}) => {
     const call = { url: String(url), init };
@@ -25,7 +25,7 @@ function recorder(respond: (call: Call) => { status?: number; body: unknown }) {
     return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
   }) as unknown as typeof fetch;
   return { calls, http };
-}
+};
 
 const BODIES: Record<string, unknown> = {
   anthropic: { content: [{ type: "text", text: JSON.stringify(answer) }] },
@@ -33,8 +33,12 @@ const BODIES: Record<string, unknown> = {
   chat: { choices: [{ message: { content: JSON.stringify(answer) } }] },
 };
 
-const generationBody = (provider: string) =>
-  provider === "anthropic" ? BODIES.anthropic : provider === "gemini" ? BODIES.gemini : BODIES.chat;
+const generationBody = (provider: string) => {
+  if (provider === "anthropic") {
+    return BODIES.anthropic;
+  }
+  return provider === "gemini" ? BODIES.gemini : BODIES.chat;
+};
 
 test("every provider sends the key to its own origin and parses the answer back out", async () => {
   for (const provider of PROVIDERS) {

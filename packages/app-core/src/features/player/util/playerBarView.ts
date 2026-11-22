@@ -30,20 +30,39 @@ export interface PlayerBarContext {
 
 // The name the note itself prints over the section, which is what a listener sees: the
 // Summary section is headed Premise.
-export function sectionHeadingAt(lines: NoteLine[], index: number): string {
+export const sectionHeadingAt = (lines: NoteLine[], index: number): string => {
   for (let at = Math.min(index, lines.length - 1); at >= 0; at -= 1) {
-    if (lines[at]!.heading) return lines[at]!.text;
+    if (lines[at]!.heading) {
+      return lines[at]!.text;
+    }
   }
   return lines[0]?.section ?? "";
-}
+};
 
 const aboutMinutes = (seconds: number) => `~${Math.max(1, Math.round(seconds / 60))} min`;
 
 const rateLabelFor = (rate: number) => `${rate}×`;
 
+const pacerRestOf = (pacerReason: PlayerSnapshot["pacerReason"], status: PlayerSnapshot["status"], section: string): string => {
+  if (pacerReason === "unavailable") {
+    return "narration is unavailable right now";
+  }
+  if (pacerReason === "dailyCap") {
+    return "you’ve started today’s new narration, more tomorrow";
+  }
+  return status === "ended" ? "finished" : section;
+};
+
+const liveLeadOf = (status: PlayerSnapshot["status"], section: string): string => {
+  if (status === "playing") {
+    return `Now playing · ${section}`;
+  }
+  return status === "paused" ? "Paused" : "Buffering";
+};
+
 // Design Player.dc.html section 1, one state per branch: what the bar says, which button
 // sits in the middle, and what the track is doing. The label line is the live region.
-export function playerBarView(snapshot: PlayerSnapshot, time: number, { read }: PlayerBarContext): PlayerBarView {
+export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: PlayerBarContext): PlayerBarView => {
   const { track, status, source, pacerReason, availability, preparing, timings, rate, voice, narratedVoice } = snapshot;
   const lines = track?.lines ?? [];
   const inOpening = time < (timings.lineStarts[0] ?? 0);
@@ -70,14 +89,7 @@ export function playerBarView(snapshot: PlayerSnapshot, time: number, { read }: 
 
   if (source === "pacer") {
     const started = status !== "ready";
-    const rest =
-      pacerReason === "unavailable"
-        ? "narration is unavailable right now"
-        : pacerReason === "dailyCap"
-          ? "you’ve started today’s new narration, more tomorrow"
-          : status === "ended"
-            ? "finished"
-            : section;
+    const rest = pacerRestOf(pacerReason, status, section);
     return {
       ...base,
       label: { lead: "Read-along · no audio", rest, tone: "ink", pacerTag: true },
@@ -200,7 +212,7 @@ export function playerBarView(snapshot: PlayerSnapshot, time: number, { read }: 
       };
 
     default: {
-      const lead = status === "playing" ? `Now playing · ${section}` : status === "paused" ? "Paused" : "Buffering";
+      const lead = liveLeadOf(status, section);
       return {
         ...base,
         label: { lead, rest: status === "playing" ? null : section, tone: "ink", pacerTag: false },
@@ -214,9 +226,9 @@ export function playerBarView(snapshot: PlayerSnapshot, time: number, { read }: 
       };
     }
   }
-}
+};
 
-function mainFor(status: PlayerSnapshot["status"]): PlayerBarView["main"] {
+const mainFor = (status: PlayerSnapshot["status"]): PlayerBarView["main"] => {
   switch (status) {
     case "playing":
       return { kind: "pause", label: "Pause", disabled: false };
@@ -227,4 +239,4 @@ function mainFor(status: PlayerSnapshot["status"]): PlayerBarView["main"] {
     default:
       return { kind: "play", label: "Play", disabled: false };
   }
-}
+};

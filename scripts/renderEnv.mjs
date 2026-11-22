@@ -8,22 +8,26 @@ const UNQUOTABLE = /["\\\r\n]/;
 // both readers, `fly secrets import` and Node's --env-file, cut an unquoted value at a "#"; a value
 // the quotes cannot carry intact, and a template naming a variable that is not there, are refused
 // whole rather than rendered wrong (docs/conventions/secrets.md, "Quoting").
-export function renderEnvTemplate(template, env) {
+export const renderEnvTemplate = (template, env) => {
   const missing = new Set();
   const unquoted = new Set();
   const unquotable = new Set();
   const rendered = template.replace(PLACEHOLDER, (_match, open, name, close) => {
-    if (open !== '"' || close !== '"') unquoted.add(name);
+    if (open !== '"' || close !== '"') {
+      unquoted.add(name);
+    }
     const value = env[name];
     if (value === undefined || value === "") {
       missing.add(name);
       return `${open}${close}`;
     }
-    if (UNQUOTABLE.test(value)) unquotable.add(name);
+    if (UNQUOTABLE.test(value)) {
+      unquotable.add(name);
+    }
     return `${open}${value}${close}`;
   });
   return { rendered, missing: [...missing], unquoted: [...unquoted], unquotable: [...unquotable] };
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [templatePath, outputPath] = process.argv.slice(2);
@@ -38,7 +42,9 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     unquotable.length > 0 && `has values with a quote, backslash or line break, which no reader takes intact: ${unquotable.join(", ")}`,
   ].filter(Boolean);
   if (refusals.length > 0) {
-    for (const refusal of refusals) console.error(`${templatePath} ${refusal}`);
+    for (const refusal of refusals) {
+      console.error(`${templatePath} ${refusal}`);
+    }
     process.exit(1);
   }
   if (outputPath === "-") {

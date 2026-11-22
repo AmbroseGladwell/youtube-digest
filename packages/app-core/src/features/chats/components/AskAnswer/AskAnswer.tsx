@@ -8,6 +8,11 @@ import { ChatOtherOverviewCitation } from "../ChatOtherOverviewCitation/ChatOthe
 import styles from "./AskAnswer.module.scss";
 import { askAnswerTestIds } from "./AskAnswerTestIds.js";
 
+export interface OverviewImage {
+  url: string | null;
+  wide: boolean;
+}
+
 export interface AskAnswerProps {
   text: string;
   sections: ChatAnswerSections | undefined;
@@ -16,7 +21,7 @@ export interface AskAnswerProps {
   scope: "library" | "project";
   arrived?: boolean;
   holds: (overviewId: string) => boolean;
-  imageOf: (overviewId: string) => { url: string | null; wide: boolean };
+  imageOf: (overviewId: string) => OverviewImage;
   onFollowed: (citation: OtherOverviewCitation) => void;
   onSourcesOpened: (count: number) => void;
   actions: (sources: ReactNode) => ReactNode;
@@ -27,7 +32,7 @@ const othersOf = (cited: readonly ChatCitation[]) => cited.flatMap((citation) =>
 // OV-354, page 4: an answer over the library or a project, the same shape as every chat's: its
 // intro, its sections each with their sources by relation, the Takeaway, then the line counted by
 // code, never written by the model, and Copy with Sources.
-export function AskAnswer({
+export const AskAnswer = ({
   text,
   sections,
   citations,
@@ -39,7 +44,7 @@ export function AskAnswer({
   onFollowed,
   onSourcesOpened,
   actions,
-}: AskAnswerProps) {
+}: AskAnswerProps) => {
   const chipsOf = (cited: readonly ChatCitation[]): ChatChip[] =>
     othersOf(cited).map((citation, index) => {
       const image = imageOf(citation.overviewId);
@@ -79,4 +84,4 @@ export function AskAnswer({
       {actions(sourcesMenu)}
     </div>
   );
-}
+};

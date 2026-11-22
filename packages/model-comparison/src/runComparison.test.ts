@@ -12,10 +12,10 @@ const opus = { provider: "anthropic" as const, model: "claude-opus-5-5" };
 const luna = { provider: "openai" as const, model: "gpt-6-luna" };
 const videos = ["a", "b", "c"].map((id) => makeFetchedTranscript(10, { id: VideoId.parse(id) }));
 
-function memoryStore(previous: RunRecord[] = []): RecordStore<RunRecord> & { saved: RunRecord[] } {
+const memoryStore = (previous: RunRecord[] = []): RecordStore<RunRecord> & { saved: RunRecord[] } => {
   const saved: RunRecord[] = [];
   return { saved, all: async () => previous, save: async (record) => void saved.push(record) };
-}
+};
 
 const costing = (dollars: number) => {
   const ran: string[] = [];

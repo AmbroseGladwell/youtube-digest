@@ -10,7 +10,7 @@ const ERRORS_BODY_LIMIT_BYTES = 64 * 1024;
 
 // With or without an account: an error is operational, not usage
 // (docs/architecture/errors-and-logs.md, "Who is reported").
-export function errorRoutes(app: FastifyInstance, sink: ErrorSink | null, clock: () => Date): void {
+export const errorRoutes = (app: FastifyInstance, sink: ErrorSink | null, clock: () => Date): void => {
   app.post(
     "/errors",
     {
@@ -75,4 +75,4 @@ export function errorRoutes(app: FastifyInstance, sink: ErrorSink | null, clock:
       return reply.status(204).send();
     },
   );
-}
+};

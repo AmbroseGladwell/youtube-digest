@@ -7,18 +7,20 @@ import { BridgeMessage, isRequestOverview } from "./overviewBridge.js";
 let pending: string | null = null;
 const listeners = new Set<() => void>();
 
-async function pull(): Promise<void> {
+const pull = async (): Promise<void> => {
   try {
     const reply = (await chrome.runtime.sendMessage({ type: BridgeMessage.TAKE_REQUEST })) as { videoUrl: string | null } | undefined;
     if (reply?.videoUrl == null) {
       return;
     }
     pending = reply.videoUrl;
-    for (const listener of listeners) listener();
+    for (const listener of listeners) {
+      listener();
+    }
   } catch {
     // No worker to answer. There is nothing waiting that we could act on either.
   }
-}
+};
 
 // A press while the panel is already open opens nothing, so the worker says so out loud
 // rather than the panel finding out at its next mount.

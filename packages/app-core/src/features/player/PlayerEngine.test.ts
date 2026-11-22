@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { OverviewId, type ClientWarningReport, type NarrationRender, type NarrationVoice, type NoteLine } from "@overview/domain";
+import {
+  OverviewId,
+  type ClientWarningReport,
+  type NarrationRender,
+  type NarrationVoice,
+  type NoteLine,
+  MAX_FIRST_SOUND_WAIT_MS,
+} from "@overview/domain";
 import { SyncRequestError, SyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
-import { MAX_FIRST_SOUND_WAIT_MS } from "@overview/domain";
 import {
   OPENING_LINE,
   PACER_TICK_MS,
@@ -64,9 +70,13 @@ class FakeMedia extends EventTarget implements PlayerMedia {
   holdSound = false;
 
   play = (): Promise<void> => {
-    if (this.blockPlay) return Promise.reject(new Error("NotAllowedError"));
+    if (this.blockPlay) {
+      return Promise.reject(new Error("NotAllowedError"));
+    }
     this.paused = false;
-    if (!this.holdSound) this.sound();
+    if (!this.holdSound) {
+      this.sound();
+    }
     return Promise.resolve();
   };
 

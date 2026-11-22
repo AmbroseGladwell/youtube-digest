@@ -46,27 +46,38 @@ export const budgetExhausted = () =>
     { failure: TranscriptFetchFailure.BUDGET_EXHAUSTED, sourceId: "service" },
   );
 
+export interface ThroughService<T> {
+  value: T;
+  via: "direct" | "proxy";
+  proxySessions: number;
+}
+
 // From our own address first, which costs nothing, and through the residential proxy only
 // when YouTube turned that away (docs/architecture/server-side-transcripts.md).
-export async function throughService<T>(
+export const throughService = async <T>(
   fetches: ServiceFetches,
   budget: ProxyBudget,
   operation: (youTubeFetch: YouTubeFetch) => Promise<T>,
-): Promise<{ value: T; via: "direct" | "proxy"; proxySessions: number }> {
+): Promise<ThroughService<T>> => {
   let lastError: unknown;
   try {
     return { value: await operation(fetches.direct), via: "direct", proxySessions: 0 };
   } catch (error) {
-    if (fetches.proxied === null || !isWorthTheProxy(error)) throw error;
+    if (fetches.proxied === null || !isWorthTheProxy(error)) {
+      throw error;
+    }
     lastError = error;
   }
 
-  if (!(await budget.reserve())) throw budgetExhausted();
+  if (!(await budget.reserve())) {
+    throw budgetExhausted();
+  }
 
   let requests = 0;
   let bytes = 0;
   try {
-    for (let session = 1; session <= PROXY_SESSIONS; session += 1) {
+    let worthAnotherSession = true;
+    for (let session = 1; session <= PROXY_SESSIONS && worthAnotherSession; session += 1) {
       const proxied = fetches.proxied(fetches.newSession());
       const counted: YouTubeFetch = async (request) => {
         requests += 1;
@@ -78,22 +89,25 @@ export async function throughService<T>(
         return { value: await operation(counted), via: "proxy", proxySessions: session };
       } catch (error) {
         lastError = error;
-        if (!isWorthTheProxy(error)) break;
+        worthAnotherSession = isWorthTheProxy(error);
       } finally {
         await proxied.close().catch(() => undefined);
       }
     }
     throw lastError;
   } finally {
-    if (requests === 0) await budget.release();
-    else await budget.spend(bytes);
+    if (requests === 0) {
+      await budget.release();
+    } else {
+      await budget.spend(bytes);
+    }
   }
-}
+};
 
-export async function fetchThroughService(fetches: ServiceFetches, budget: ProxyBudget, videoId: string): Promise<ServiceFetchResult> {
+export const fetchThroughService = async (fetches: ServiceFetches, budget: ProxyBudget, videoId: string): Promise<ServiceFetchResult> => {
   const url = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
   const { value, via, proxySessions } = await throughService(fetches, budget, (youTubeFetch) =>
     fetchInnerTubeTranscript(youTubeFetch, videoId, url),
   );
   return { fetched: value, via, proxySessions };
-}
+};

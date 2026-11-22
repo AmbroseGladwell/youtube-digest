@@ -6,7 +6,7 @@ import { isSyncRequestError } from "./SyncRequestError.js";
 
 export type FetchSyncApiOptions = ApiRequesterOptions;
 
-export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
+export const createFetchSyncApi = (options: FetchSyncApiOptions): SyncApi => {
   const request = createApiRequester(options);
   const written = answered<WrittenRecord>;
 
@@ -41,8 +41,10 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
     },
     getTranscript: (videoId) =>
       answered(request("GET", `/transcripts/${encodeURIComponent(videoId)}`, StoredTranscript)).catch((error: unknown) => {
-        if (isSyncRequestError(error) && error.code === "not_found") return null;
+        if (isSyncRequestError(error) && error.code === "not_found") {
+          return null;
+        }
         throw error;
       }),
   };
-}
+};

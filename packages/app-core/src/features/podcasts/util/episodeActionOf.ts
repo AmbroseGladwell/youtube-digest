@@ -13,9 +13,13 @@ export type EpisodeAction =
   | { kind: "free"; offer: Offer<"free"> }
   | { kind: "stop"; offer: Offer<"not-enough" | "too-long"> };
 
-export function episodeActionOf(words: EpisodeWords): EpisodeAction {
-  if (words.state === "checking") return { kind: "waiting" };
-  if (words.state !== "none") return { kind: "create" };
+export const episodeActionOf = (words: EpisodeWords): EpisodeAction => {
+  if (words.state === "checking") {
+    return { kind: "waiting" };
+  }
+  if (words.state !== "none") {
+    return { kind: "create" };
+  }
   const offer = words.transcription;
   switch (offer.status) {
     case "needed":
@@ -29,12 +33,19 @@ export function episodeActionOf(words: EpisodeWords): EpisodeAction {
     case "unavailable":
       return { kind: "create" };
   }
-}
+};
 
 // Whether Create sends the episode's audio to be transcribed rather than looking for its words, and
 // why: the reader chose it on the card, or it costs nothing.
-export const transcribeChoiceOf = (action: EpisodeAction | null): TranscribeChoice | undefined =>
-  action?.kind === "transcribe" ? "chosen" : action?.kind === "free" ? "free" : undefined;
+export const transcribeChoiceOf = (action: EpisodeAction | null): TranscribeChoice | undefined => {
+  if (action?.kind === "transcribe") {
+    return "chosen";
+  }
+  if (action?.kind === "free") {
+    return "free";
+  }
+  return undefined;
+};
 
 // The button's words: "Transcribe and create" only when it spends transcribing (design 305c).
 export const createLabelOf = (action: EpisodeAction, otherwise: string): string =>

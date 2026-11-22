@@ -70,7 +70,9 @@ export class PersonalisationSectionPageObject extends PageObject {
 
   verifyLearned = (...items: string[]) =>
     this.step(`verifyLearned ${items.join(", ")}`, async () => {
-      for (const item of items) await expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedItem(item))).toBeVisible();
+      for (const item of items) {
+        await expect(this.page.getByTestId(whatWeKnowCardTestIds.learnedItem(item))).toBeVisible();
+      }
     });
 
   verifyLearnedSource = (item: string, source: string) =>

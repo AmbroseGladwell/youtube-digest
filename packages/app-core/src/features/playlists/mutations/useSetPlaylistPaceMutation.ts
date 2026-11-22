@@ -18,7 +18,7 @@ export const applyPace = (followed: FollowedPlaylistWithCheck[], { playlist, pac
 
 // Saved as soon as it is chosen, for every device; the queue takes the new pace straight
 // away (docs/features/playlists.md, "A pace for each playlist").
-export function useSetPlaylistPaceMutation() {
+export const useSetPlaylistPaceMutation = () => {
   const { followedPlaylistStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -26,7 +26,9 @@ export function useSetPlaylistPaceMutation() {
     mutationKey: playlistKeys.all,
     mutationFn: async ({ playlist, pace }) => {
       const stored = (await followedPlaylistStore.listFollowed()).find((each) => each.id === playlist.id);
-      if (stored === undefined) return;
+      if (stored === undefined) {
+        return;
+      }
       await followedPlaylistStore.saveFollowed({ ...stored, pace });
     },
     onMutate: async (variables) => {
@@ -38,7 +40,9 @@ export function useSetPlaylistPaceMutation() {
       return { previous };
     },
     onError: (_error, _variables, context) => {
-      if (context?.previous !== undefined) queryClient.setQueryData(playlistKeys.followed(), context.previous);
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(playlistKeys.followed(), context.previous);
+      }
     },
     onSettled: async () => {
       if (queryClient.isMutating({ mutationKey: playlistKeys.all }) === 1) {
@@ -46,4 +50,4 @@ export function useSetPlaylistPaceMutation() {
       }
     },
   });
-}
+};

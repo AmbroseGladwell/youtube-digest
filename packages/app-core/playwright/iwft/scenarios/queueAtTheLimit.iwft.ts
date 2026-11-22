@@ -171,7 +171,9 @@ test("choosing more than the month has left makes what it can now and says when 
   await launcher.appShell.queueStrip.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.startChoosing();
-  for (const video of VIDEOS) await queuePage.choose(video.title);
+  for (const video of VIDEOS) {
+    await queuePage.choose(video.title);
+  }
   await queuePage.verifyChosen(
     "3 chosen",
     "You have 2 left this month, so 2 are made now and the other 1 waits for 1 November. The rest of Psychology keep waiting for you.",

@@ -28,27 +28,27 @@ const AuthorizeQuery = z.record(z.string(), z.string());
 
 const text = (value: unknown): string | undefined => (typeof value === "string" && value !== "" ? value : undefined);
 
-function required(body: Record<string, unknown>, name: string): string {
+const required = (body: Record<string, unknown>, name: string): string => {
   const value = text(body[name]);
   if (value === undefined) {
     throw new OAuthError("invalid_request", `${name} is required`);
   }
   return value;
-}
+};
 
-function parseOrOAuthError<T>(schema: z.ZodType<T>, value: unknown, code: "invalid_request" | "invalid_client_metadata"): T {
+const parseOrOAuthError = <T>(schema: z.ZodType<T>, value: unknown, code: "invalid_request" | "invalid_client_metadata"): T => {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
     throw new OAuthError(code, z.prettifyError(parsed.error));
   }
   return parsed.data;
-}
+};
 
 const noStore = (reply: FastifyReply) => reply.header("cache-control", "no-store").header("pragma", "no-cache");
 
 // The authorization server MCP clients discover and talk to, outside /api because they send
 // none of our clients' headers (docs/features/mcp-connector.md).
-export function oauthRoutes(app: FastifyInstance, { sql, clock, urls }: OAuthRoutesOptions): void {
+export const oauthRoutes = (app: FastifyInstance, { sql, clock, urls }: OAuthRoutesOptions): void => {
   const perAddress = (rateLimit: RateLimit) => rateLimitHook(rateLimit, (request) => request.clientAddress, clock);
 
   app.get("/.well-known/oauth-authorization-server", async () => ({
@@ -139,4 +139,4 @@ export function oauthRoutes(app: FastifyInstance, { sql, clock, urls }: OAuthRou
     }
     return noStore(reply).status(200).send();
   });
-}
+};

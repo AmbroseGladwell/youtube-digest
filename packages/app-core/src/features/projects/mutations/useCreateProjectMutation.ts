@@ -10,7 +10,7 @@ export interface CreateProjectVariables {
 }
 
 // Not optimistic: the page it opens onto needs the project to be there.
-export function useCreateProjectMutation() {
+export const useCreateProjectMutation = () => {
   const { projectStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -27,7 +27,9 @@ export function useCreateProjectMutation() {
         archivedAt: null,
       };
       await projectStore.createProject(project);
-      for (const overviewId of overviewIds) await projectStore.addToProject(project.id, overviewId);
+      for (const overviewId of overviewIds) {
+        await projectStore.addToProject(project.id, overviewId);
+      }
       return project;
     },
     onSettled: () => {
@@ -36,4 +38,4 @@ export function useCreateProjectMutation() {
       }
     },
   });
-}
+};

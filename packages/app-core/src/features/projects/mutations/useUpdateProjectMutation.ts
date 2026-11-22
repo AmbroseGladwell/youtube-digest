@@ -17,7 +17,7 @@ export const applyProjectPatch = (project: Project, patch: ProjectPatch): Projec
   ...Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)),
 });
 
-export function useUpdateProjectMutation() {
+export const useUpdateProjectMutation = () => {
   const { projectStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -33,7 +33,9 @@ export function useUpdateProjectMutation() {
       return { previous };
     },
     onError: (_error, _variables, context) => {
-      if (context) queryClient.setQueryData(projectKeys.list(), context.previous);
+      if (context) {
+        queryClient.setQueryData(projectKeys.list(), context.previous);
+      }
     },
     onSettled: () => {
       if (queryClient.isMutating({ mutationKey: projectKeys.all }) === 1) {
@@ -41,4 +43,4 @@ export function useUpdateProjectMutation() {
       }
     },
   });
-}
+};

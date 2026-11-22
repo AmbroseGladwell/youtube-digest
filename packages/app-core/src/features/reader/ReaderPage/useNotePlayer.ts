@@ -29,7 +29,7 @@ const isBusyElsewhere = (snapshot: PlayerSnapshot) =>
 // can say whether its audio exists, and so is one opened while another note waits paused out
 // of sight; one opened while the mini-player holds another note keeps a reading mark of its
 // own, and takes the player over only when play is pressed on it.
-export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
+export const useNotePlayer = (track: PlayerTrack | null): NotePlayer => {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();
   const time = usePlayerTime();
@@ -41,7 +41,9 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
 
   const overviewId = track?.overviewId ?? null;
   useEffect(() => {
-    if (overviewId === null) return;
+    if (overviewId === null) {
+      return;
+    }
     engine.notePageOpened(overviewId);
     return () => engine.notePageClosed(overviewId);
   }, [engine, overviewId]);
@@ -67,12 +69,20 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
   );
 
   const takeOver = () => {
-    if (track !== null && !current) engine.load(track, restingLine);
+    if (track !== null && !current) {
+      engine.load(track, restingLine);
+    }
   };
   const lines = track?.lines ?? [];
   const activeIndex = current ? engineLine : restingLine;
   const clampLine = (index: number) => Math.min(Math.max(index, 0), Math.max(lines.length - 1, 0));
-  const selectLine = (index: number) => (current ? engine.seekLine(index) : setRestingLine(clampLine(index)));
+  const selectLine = (index: number) => {
+    if (current) {
+      engine.seekLine(index);
+    } else {
+      setRestingLine(clampLine(index));
+    }
+  };
 
   return {
     current,
@@ -83,7 +93,9 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
     selectLine,
     selectSection: (section) => {
       const index = lines.findIndex((line) => line.section === section);
-      if (index !== -1) selectLine(index);
+      if (index !== -1) {
+        selectLine(index);
+      }
     },
     stepLine: (delta) => selectLine(activeIndex + delta),
     main: (from) => {
@@ -95,7 +107,9 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
       engine.play(from);
     },
     pause: () => {
-      if (current) engine.pause();
+      if (current) {
+        engine.pause();
+      }
     },
   };
-}
+};

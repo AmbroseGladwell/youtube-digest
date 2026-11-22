@@ -12,14 +12,16 @@ const REPORT_EVERY_MS = 400;
 // Roughly two seconds of timeupdates with nobody answering.
 const GIVE_UP_AFTER_MISSES = 5;
 
-function publish(next: PlaybackPosition | null): void {
+const publish = (next: PlaybackPosition | null): void => {
   position = next;
-  for (const listener of listeners) listener();
-}
+  for (const listener of listeners) {
+    listener();
+  }
+};
 
 // Serialized and run in the tab, so it closes over nothing and reads its own constants
 // from the arguments (docs/features/following-playback.md).
-function reportPlayback(reportType: string, everyMs: number, giveUpAfter: number): void {
+const reportPlayback = (reportType: string, everyMs: number, giveUpAfter: number): void => {
   interface Reporting {
     __overviewPlaybackStop__?: () => void;
   }
@@ -82,35 +84,39 @@ function reportPlayback(reportType: string, everyMs: number, giveUpAfter: number
   const jumps = ["play", "pause", "seeked"];
 
   document.addEventListener("timeupdate", onTick, { capture: true });
-  for (const jump of jumps) document.addEventListener(jump, onJump, { capture: true });
+  for (const jump of jumps) {
+    document.addEventListener(jump, onJump, { capture: true });
+  }
 
   page.__overviewPlaybackStop__ = () => {
     document.removeEventListener("timeupdate", onTick, true);
-    for (const jump of jumps) document.removeEventListener(jump, onJump, true);
+    for (const jump of jumps) {
+      document.removeEventListener(jump, onJump, true);
+    }
     delete page.__overviewPlaybackStop__;
   };
-}
+};
 
 // Serialized into the tab like the reporter above, and the only thing here that writes
 // to the page. It sets one property on the player and reads nothing
 // (docs/features/following-playback.md).
-function seekPlayback(positionMs: number): void {
+const seekPlayback = (positionMs: number): void => {
   const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ?? document.querySelector("video");
   if (video) {
     video.currentTime = positionMs / 1000;
   }
-}
+};
 
-async function activeYouTubeTabId(): Promise<number | null> {
+const activeYouTubeTabId = async (): Promise<number | null> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url ?? tab?.pendingUrl;
   if (tab?.id === undefined || url === undefined || !isYouTubeUrl(url)) {
     return null;
   }
   return tab.id;
-}
+};
 
-async function seekInActiveTab(positionMs: number): Promise<void> {
+const seekInActiveTab = async (positionMs: number): Promise<void> => {
   const tabId = await activeYouTubeTabId();
   if (tabId === null) {
     return;
@@ -125,9 +131,9 @@ async function seekInActiveTab(positionMs: number): Promise<void> {
     // No host permission for this page, or it went away mid-seek. The video simply does
     // not move; the range beside the button is still there to navigate by.
   }
-}
+};
 
-async function injectIntoActiveTab(): Promise<void> {
+const injectIntoActiveTab = async (): Promise<void> => {
   const tabId = await activeYouTubeTabId();
   if (tabId === null) {
     publish(null);
@@ -144,7 +150,7 @@ async function injectIntoActiveTab(): Promise<void> {
     // nothing is the same as a shell that cannot see a player at all.
     publish(null);
   }
-}
+};
 
 const onMessage = (message: unknown, _sender: chrome.runtime.MessageSender, respond: (ack: boolean) => void) => {
   if (!isPlaybackReport(message)) {

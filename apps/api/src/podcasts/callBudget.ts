@@ -20,10 +20,10 @@ export class BudgetSpentError extends Error {
   }
 }
 
-export function callBudget<Rest extends unknown[]>(
+export const callBudget = <Rest extends unknown[]>(
   fetchJson: (url: string, ...rest: Rest) => Promise<unknown>,
   options: CallBudgetOptions,
-): (url: string, ...rest: Rest) => Promise<unknown> {
+): ((url: string, ...rest: Rest) => Promise<unknown>) => {
   const calls: number[] = [];
   const kept = new Map<string, { until: number; value: unknown }>();
 
@@ -31,27 +31,35 @@ export function callBudget<Rest extends unknown[]>(
     const deadline = options.now() + options.mostWaitMs;
     for (;;) {
       const now = options.now();
-      while (calls.length > 0 && calls[0]! <= now - WINDOW_MS) calls.shift();
+      while (calls.length > 0 && calls[0]! <= now - WINDOW_MS) {
+        calls.shift();
+      }
       if (calls.length < options.perMinute) {
         calls.push(now);
         return;
       }
       const freeAt = calls[0]! + WINDOW_MS;
-      if (freeAt > deadline) throw new BudgetSpentError();
+      if (freeAt > deadline) {
+        throw new BudgetSpentError();
+      }
       await options.sleep(freeAt - now);
     }
   };
 
   return async (url, ...rest) => {
     const hit = kept.get(url);
-    if (hit !== undefined && hit.until > options.now()) return hit.value;
+    if (hit !== undefined && hit.until > options.now()) {
+      return hit.value;
+    }
     await take();
     const value = await fetchJson(url, ...rest);
-    if (kept.size >= MOST_KEPT) kept.delete(kept.keys().next().value!);
+    if (kept.size >= MOST_KEPT) {
+      kept.delete(kept.keys().next().value!);
+    }
     kept.set(url, { until: options.now() + options.keepMs(url), value });
     return value;
   };
-}
+};
 
 const HOUR_MS = 60 * 60_000;
 

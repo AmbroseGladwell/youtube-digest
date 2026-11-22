@@ -34,7 +34,7 @@ const keepInTopThird = (line: HTMLElement) => {
 // "The note follows the voice"). A note opened in silence stays where it was opened —
 // which it did not: every open scrolled the page down to the premise before the reader
 // had asked for anything, and that is the bug this is.
-export function useFollowTheVoice(speaking: boolean): FollowTheVoice {
+export const useFollowTheVoice = (speaking: boolean): FollowTheVoice => {
   const [wanted, setWanted] = useState(true);
   const [spokenLine, setSpokenLine] = useState<HTMLElement | null>(null);
   const following = speaking && wanted;
@@ -70,4 +70,4 @@ export function useFollowTheVoice(speaking: boolean): FollowTheVoice {
     spokenLine: setSpokenLine,
     follow: () => setWanted(true),
   };
-}
+};

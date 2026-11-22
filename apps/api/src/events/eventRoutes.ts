@@ -22,10 +22,12 @@ export interface EventRoutesOptions {
 // Signed in, under the session's account unless it turned sharing off; or with no account,
 // only when the batch carries the anonymous id the reader agreed to keep
 // (docs/features/analytics-consent.md).
-export function eventRoutes(app: FastifyInstance, { sink, records, clock }: EventRoutesOptions): void {
+export const eventRoutes = (app: FastifyInstance, { sink, records, clock }: EventRoutesOptions): void => {
   const optedOut = async (accountId: AccountId): Promise<boolean> => {
     const settings = await records.read(accountId, "settings", SETTINGS_RECORD_ID);
-    if (settings === null || settings.deleted) return false;
+    if (settings === null || settings.deleted) {
+      return false;
+    }
     return (settings.body as { analyticsOptOut?: unknown } | null)?.analyticsOptOut === true;
   };
 
@@ -91,4 +93,4 @@ export function eventRoutes(app: FastifyInstance, { sink, records, clock }: Even
       return reply.status(204).send();
     },
   );
-}
+};

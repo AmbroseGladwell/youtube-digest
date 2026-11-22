@@ -6,20 +6,20 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEFAULT_HOST = "https://eu.posthog.com";
 
-function mapsIn(dir) {
+const mapsIn = (dir) => {
   return readdirSync(dir, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".map"))
     .map((entry) => path.join(entry.parentPath, entry.name));
-}
+};
 
-function runPostHogCli(args, env) {
+const runPostHogCli = (args, env) => {
   execFileSync("npx", ["--no-install", "posthog-cli", ...args], { cwd: REPO_ROOT, env, stdio: "inherit" });
-}
+};
 
 // A build's maps go to PostHog's error tracking, tied to this release, and never ship: the
 // bundle is injected with each chunk's id first, so the injected copy is the one served
 // (docs/architecture/errors-and-logs.md, "Source maps"). With no key the maps are only deleted.
-export function uploadSourceMaps({ dir, releaseName, env = process.env, run = runPostHogCli, log = console.log }) {
+export const uploadSourceMaps = ({ dir, releaseName, env = process.env, run = runPostHogCli, log = console.log }) => {
   const maps = mapsIn(dir);
   const apiKey = env.POSTHOG_CLI_API_KEY?.trim();
   const projectId = env.POSTHOG_CLI_PROJECT_ID?.trim();
@@ -48,9 +48,11 @@ export function uploadSourceMaps({ dir, releaseName, env = process.env, run = ru
   } else if (maps.length > 0) {
     log(`source maps: no POSTHOG_CLI_API_KEY and POSTHOG_CLI_PROJECT_ID, so ${maps.length} deleted without uploading`);
   }
-  for (const map of mapsIn(dir)) rmSync(map);
+  for (const map of mapsIn(dir)) {
+    rmSync(map);
+  }
   return { maps: maps.length, uploaded };
-}
+};
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [dir, releaseName] = process.argv.slice(2);

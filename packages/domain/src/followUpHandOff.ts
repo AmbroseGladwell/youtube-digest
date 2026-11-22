@@ -9,12 +9,14 @@ export type FollowUpHandOff = { kind: "prefill"; url: string } | { kind: "copyTh
 
 // How a question reaches the assistant: in the link that opens it when it can be filled in that
 // way and the link isn't too long, otherwise copied for the reader to paste into it.
-export function followUpHandOff(assistant: FollowUpAssistant, prompt: string): FollowUpHandOff {
+export const followUpHandOff = (assistant: FollowUpAssistant, prompt: string): FollowUpHandOff => {
   const { openUrl, prefillParam } = FOLLOW_UP_ASSISTANTS[assistant];
   if (prefillParam !== null) {
     const url = new URL(openUrl);
     url.searchParams.set(prefillParam, prompt);
-    if (url.href.length <= MOST_PREFILL_URL_LENGTH) return { kind: "prefill", url: url.href };
+    if (url.href.length <= MOST_PREFILL_URL_LENGTH) {
+      return { kind: "prefill", url: url.href };
+    }
   }
   return { kind: "copyThenOpen", url: openUrl, text: prompt };
-}
+};

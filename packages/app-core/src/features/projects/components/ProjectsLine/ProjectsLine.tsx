@@ -28,8 +28,10 @@ const joined = (parts: ReactNode[]): ReactNode[] =>
 
 // Which projects the overview is in, on the From line's quiet scale: up to three by name,
 // four or more as two and how many more ("OV-168 3 Adding and Making" 168r, 168r-3).
-export function ProjectsLine({ projects, webApp, onOpen, onChange }: ProjectsLineProps) {
-  if (projects.length === 0) return null;
+export const ProjectsLine = ({ projects, webApp, onOpen, onChange }: ProjectsLineProps) => {
+  if (projects.length === 0) {
+    return null;
+  }
   const shown = projects.length > SHOWN_IN_FULL ? projects.slice(0, 2) : projects;
   const more = projects.length - shown.length;
   const names = shown.map((project) => <ProjectName key={project.id} project={project} webApp={webApp} onOpen={onOpen} />);
@@ -70,41 +72,63 @@ export function ProjectsLine({ projects, webApp, onOpen, onChange }: ProjectsLin
       </span>
     </p>
   );
+};
+
+interface ProjectLinkCommon {
+  className: string;
+  "aria-describedby": string | undefined;
+  onClick: () => void;
+  "data-testid": string;
 }
 
-function ProjectName({
-  project,
-  webApp,
-  onOpen,
-}: {
+interface ProjectLinkProps {
+  project: Project;
+  webApp: ProjectsLineProps["webApp"];
+  common: ProjectLinkCommon;
+}
+
+const ProjectLink = ({ project, webApp, common }: ProjectLinkProps) => {
+  if (webApp === "here") {
+    return (
+      <PageLink {...common} to={Routes.project(project.id)}>
+        {project.name}
+      </PageLink>
+    );
+  }
+  if (webApp === null) {
+    return (
+      <span className={common.className} data-testid={common["data-testid"]}>
+        {project.name}
+      </span>
+    );
+  }
+  return (
+    <a {...common} href={new URL(Routes.project(project.id), webApp).href} target="_blank" rel="noopener">
+      {project.name}
+      <StrokeIcon name="openOut" size={12} />
+    </a>
+  );
+};
+
+interface ProjectNameProps {
   project: Project;
   webApp: ProjectsLineProps["webApp"];
   onOpen: (project: Project) => void;
-}) {
+}
+
+const ProjectName = ({ project, webApp, onOpen }: ProjectNameProps) => {
   const tipId = useId();
   const cut = project.name.length > CUT_AT;
-  const common = {
+  const common: ProjectLinkCommon = {
     className: `${styles.name} ${cut ? styles.cut : ""}`,
     "aria-describedby": cut ? tipId : undefined,
     onClick: () => onOpen(project),
     "data-testid": projectsLineTestIds.projectLink(project.name),
   };
-  const link =
-    webApp === "here" ? (
-      <PageLink {...common} to={Routes.project(project.id)}>
-        {project.name}
-      </PageLink>
-    ) : webApp === null ? (
-      <span className={common.className} data-testid={common["data-testid"]}>
-        {project.name}
-      </span>
-    ) : (
-      <a {...common} href={new URL(Routes.project(project.id), webApp).href} target="_blank" rel="noopener">
-        {project.name}
-        <StrokeIcon name="openOut" size={12} />
-      </a>
-    );
-  if (!cut) return link;
+  const link = <ProjectLink project={project} webApp={webApp} common={common} />;
+  if (!cut) {
+    return link;
+  }
   return (
     <span className={styles.cutWrap}>
       {link}
@@ -113,4 +137,4 @@ function ProjectName({
       </span>
     </span>
   );
-}
+};

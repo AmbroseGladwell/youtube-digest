@@ -24,6 +24,13 @@ export interface ChatSheetProps {
 
 const DRAG_START_PX = 4;
 
+const scrimOpacityOf = (travel: number, raised: boolean, offset: number): number => {
+  if (travel === 0) {
+    return raised ? 1 : 0;
+  }
+  return Math.min(1, Math.max(0, 1 - offset / travel));
+};
+
 interface Drag {
   pointerId: number;
   startY: number;
@@ -39,7 +46,7 @@ interface Drag {
 // rest; let go, it springs to the nearer, or where it was flicked. Raised it is a modal dialog
 // holding focus; lowered to its header it leaves the page usable, and a citation followed lowers
 // it to say what's playing.
-export function ChatSheet({
+export const ChatSheet = ({
   rest,
   label,
   loweredTitle,
@@ -49,7 +56,7 @@ export function ChatSheet({
   underMasthead,
   onRestChange,
   children,
-}: ChatSheetProps) {
+}: ChatSheetProps) => {
   const sheet = useRef<HTMLDivElement | null>(null);
   const anchor = useRef<HTMLSpanElement | null>(null);
   const [mastheadTop, setMastheadTop] = useState<string | null>(null);
@@ -65,14 +72,18 @@ export function ChatSheet({
 
   // The sheet is portalled above the app's bar, so it reads the masthead's height where it stands.
   useLayoutEffect(() => {
-    if (!underMasthead || anchor.current === null) return;
+    if (!underMasthead || anchor.current === null) {
+      return;
+    }
     const height = getComputedStyle(anchor.current).getPropertyValue("--masthead-height").trim();
     setMastheadTop(height === "" ? null : height);
   }, [underMasthead]);
 
   useLayoutEffect(() => {
     const element = sheet.current;
-    if (element === null) return;
+    if (element === null) {
+      return;
+    }
     const measure = () => setHeight(element.offsetHeight);
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
@@ -82,8 +93,12 @@ export function ChatSheet({
 
   const start = (event: PointerEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
-    if (target.closest("[data-sheet-grab]") === null && (target.closest("[data-sheet-drag]") === null || target.closest("button") !== null))
+    if (
+      target.closest("[data-sheet-grab]") === null &&
+      (target.closest("[data-sheet-drag]") === null || target.closest("button") !== null)
+    ) {
       return;
+    }
     (event.target as Element).setPointerCapture?.(event.pointerId);
     drag.current = {
       pointerId: event.pointerId,
@@ -98,9 +113,13 @@ export function ChatSheet({
 
   const move = (event: PointerEvent<HTMLElement>) => {
     const current = drag.current;
-    if (current === null || event.pointerId !== current.pointerId) return;
+    if (current === null || event.pointerId !== current.pointerId) {
+      return;
+    }
     const delta = event.clientY - current.startY;
-    if (!current.moved && Math.abs(delta) < DRAG_START_PX) return;
+    if (!current.moved && Math.abs(delta) < DRAG_START_PX) {
+      return;
+    }
     const elapsed = Math.max(1, event.timeStamp - current.lastAt);
     drag.current = {
       ...current,
@@ -114,15 +133,18 @@ export function ChatSheet({
 
   const end = (event: PointerEvent<HTMLElement>) => {
     const current = drag.current;
-    if (current === null || event.pointerId !== current.pointerId) return;
+    if (current === null || event.pointerId !== current.pointerId) {
+      return;
+    }
     drag.current = null;
     justDragged.current = current.moved;
-    if (current.moved)
+    if (current.moved) {
       onRestChange(restAfterDrag(resistedOffset(current.startOffset + event.clientY - current.startY, travel), travel, current.velocity));
+    }
     setDragOffset(null);
   };
 
-  const scrim = travel === 0 ? (raised ? 1 : 0) : Math.min(1, Math.max(0, 1 - offset / travel));
+  const scrim = scrimOpacityOf(travel, raised, offset);
 
   return (
     <>
@@ -198,4 +220,4 @@ export function ChatSheet({
       )}
     </>
   );
-}
+};

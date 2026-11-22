@@ -7,7 +7,7 @@ import { useClientSurface } from "../../app/SurfaceContext.js";
 
 // Inside the sync runtime, because a shared link belongs to an account and is found again
 // through its session (docs/features/sharing.md).
-export function ShareRuntime({ children }: { children: ReactNode }) {
+export const ShareRuntime = ({ children }: { children: ReactNode }) => {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;
   const surface = useClientSurface();
@@ -17,4 +17,4 @@ export function ShareRuntime({ children }: { children: ReactNode }) {
   );
 
   return <ShareApiProvider value={api}>{children}</ShareApiProvider>;
-}
+};

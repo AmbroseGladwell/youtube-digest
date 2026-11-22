@@ -2,6 +2,7 @@ import { recipeMinutes, type Plan, type TranscriptionFailure, type Transcription
 import { resetDate } from "../../newOverview/util/usageLine.js";
 
 const HOUR = 3600;
+const A_FEW_MINUTES = "a few minutes";
 
 // "1 hr 56 min", as an episode's length reads (design 305, Notes: Copy).
 export const audioLength = (seconds: number): string => recipeMinutes(Math.max(0, Math.round(seconds / 60)));
@@ -12,7 +13,14 @@ export const transcribeMinutes = (episodeSeconds: number | null): number | null 
 
 const about = (episodeSeconds: number | null): string => {
   const minutes = transcribeMinutes(episodeSeconds);
-  return minutes === null ? "a few minutes" : `about ${minutes} min`;
+  return minutes === null ? A_FEW_MINUTES : `about ${minutes} min`;
+};
+
+const takesOf = (minutes: number | null): string => {
+  if (minutes === null) {
+    return A_FEW_MINUTES;
+  }
+  return minutes === 1 ? "about a minute" : `about ${minutes} minutes`;
 };
 
 const leftOf = (usage: TranscriptionUsage): number => Math.max(0, usage.limitSeconds - usage.usedSeconds);
@@ -24,10 +32,19 @@ export interface TranscriptionNotice {
   body: string;
 }
 
+interface MoreTranscriptionOffer {
+  upsell: string;
+  route: TranscriptionStopRoute;
+}
+
 // What else transcribes more, for a plan that has somewhere to go (design 305h).
-const moreOf = (plan: Plan): { upsell: string; route: TranscriptionStopRoute } => {
-  if (plan === "free") return { upsell: "BYO Plus transcribes 15 hours a month, Plus 30.", route: "plans" };
-  if (plan === "byo-plus") return { upsell: "Plus transcribes 30 hours a month.", route: "plus" };
+const moreOf = (plan: Plan): MoreTranscriptionOffer => {
+  if (plan === "free") {
+    return { upsell: "BYO Plus transcribes 15 hours a month, Plus 30.", route: "plans" };
+  }
+  if (plan === "byo-plus") {
+    return { upsell: "Plus transcribes 30 hours a month.", route: "plus" };
+  }
   return { upsell: "30 is the most any plan gives, so there’s no upgrade for this.", route: null };
 };
 
@@ -59,7 +76,7 @@ export const transcriptionCopy = {
   // 305c-2: asked after Create, when the check couldn't tell.
   ask: (episodeSeconds: number | null): TranscriptionNotice => {
     const minutes = transcribeMinutes(episodeSeconds);
-    const takes = minutes === null ? "a few minutes" : minutes === 1 ? "about a minute" : `about ${minutes} minutes`;
+    const takes = takesOf(minutes);
     return {
       heading: "This episode needs transcribing",
       body: `We couldn’t find a transcript for this episode, so we’ll make one from its audio. It takes ${takes}.`,
@@ -130,9 +147,13 @@ export const transcriptionCopy = {
 
   // 305e: beside the step, never a percentage, in whole minutes.
   progress: (state: "starting" | "transcribing", episodeSeconds: number | null, transcribingForMs: number): string => {
-    if (state === "starting") return "Starting…";
+    if (state === "starting") {
+      return "Starting…";
+    }
     const minutes = transcribeMinutes(episodeSeconds);
-    if (minutes === null) return "This takes a few minutes";
+    if (minutes === null) {
+      return "This takes a few minutes";
+    }
     const left = Math.ceil(minutes - transcribingForMs / 60_000);
     return left <= 1 ? "Almost done" : `About ${left} min left`;
   },

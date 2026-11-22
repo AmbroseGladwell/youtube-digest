@@ -27,14 +27,21 @@ const VideosResponse = z.object({
 // Null where YouTube lists no such video; a failure to ask throws.
 export type VideoReader = (videoId: VideoId) => Promise<VideoSource | null>;
 
+export interface YouTubeDataApiVideoReaderOptions {
+  apiKey: string;
+  youTubeFetch: YouTubeFetch;
+}
+
 // One videos.list call on our key, a single quota unit and no model: enough for onboarding's card
 // before there's an account (docs/features/onboarding.md, "Signed out sees no overviews").
-export function youTubeDataApiVideoReader({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): VideoReader {
+export const youTubeDataApiVideoReader = ({ apiKey, youTubeFetch }: YouTubeDataApiVideoReaderOptions): VideoReader => {
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
   return async (videoId) => {
     const answer = await get("videos", { part: "snippet,contentDetails", id: videoId }, VideosResponse);
     const item = answer?.items[0];
-    if (item === undefined) return null;
+    if (item === undefined) {
+      return null;
+    }
     const { snippet } = item;
     const description = snippet.description ?? "";
     const seconds = isoDurationSeconds(item.contentDetails?.duration);
@@ -51,4 +58,4 @@ export function youTubeDataApiVideoReader({ apiKey, youTubeFetch }: { apiKey: st
       thumbnailUrl: widest ?? null,
     });
   };
-}
+};

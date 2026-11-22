@@ -12,7 +12,7 @@ const Params = z.object({ id: PlaylistId });
 
 // A followed playlist is replaced whole, as an overview is: a device that checks it may
 // learn it went private, and says so for every device (docs/features/playlists.md).
-export function followedPlaylistRoutes(app: FastifyInstance, records: RecordsRepository): void {
+export const followedPlaylistRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
   app.post("/followed-playlists", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The followed playlist");
     const id = parseOrThrow(PlaylistId, body.id, "The playlist's id");
@@ -43,4 +43,4 @@ export function followedPlaylistRoutes(app: FastifyInstance, records: RecordsRep
     }
     return sendWritten(reply, written);
   });
-}
+};

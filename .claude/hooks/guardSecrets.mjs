@@ -74,7 +74,7 @@ const PRINTERS = new Set([
 const DUMPERS = new Set(["env", "printenv", "set", "declare", "export"]);
 const PREFIXES = new Set(["sudo", "command", "exec", "time", "nohup"]);
 
-export function harvest(projectDir) {
+export const harvest = (projectDir) => {
   let templates = [];
   try {
     templates = execFileSync("git", ["ls-files", "*.tpl", "**/*.tpl"], { cwd: projectDir, encoding: "utf8" })
@@ -93,76 +93,102 @@ export function harvest(projectDir) {
     } catch {
       continue;
     }
-    for (const match of text.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g)) secretNames.add(match[1]);
+    for (const match of text.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g)) {
+      secretNames.add(match[1]);
+    }
   }
   return { generatedFiles: [...generatedFiles], secretNames: [...secretNames] };
-}
+};
 
 const unquote = (token) => token.replace(/^['"]|['"]$/g, "");
 
 // Whitespace splits tokens only outside quotes, so a quoted sentence that happens to name
 // a file is one string literal and not a path.
-function splitTokens(stage) {
+const splitTokens = (stage) => {
   const tokens = [];
   let current = "";
   let quote = null;
   for (const char of stage) {
     if (quote !== null) {
       current += char;
-      if (char === quote) quote = null;
+      if (char === quote) {
+        quote = null;
+      }
     } else if (char === "'" || char === '"') {
       quote = char;
       current += char;
     } else if (/\s/.test(char)) {
-      if (current !== "") tokens.push(current);
+      if (current !== "") {
+        tokens.push(current);
+      }
       current = "";
     } else {
       current += char;
     }
   }
-  if (current !== "") tokens.push(current);
+  if (current !== "") {
+    tokens.push(current);
+  }
   return tokens;
-}
+};
 
-function stageTokens(stage) {
+const stageTokens = (stage) => {
   const tokens = splitTokens(stage);
   const comment = tokens.findIndex((token) => token.startsWith("#"));
-  if (comment !== -1) tokens.splice(comment);
-  while (tokens.length > 0 && PREFIXES.has(tokens[0])) tokens.shift();
-  while (tokens.length > 0 && /^[A-Z_][A-Z0-9_]*=/.test(tokens[0])) tokens.shift();
+  if (comment !== -1) {
+    tokens.splice(comment);
+  }
+  while (tokens.length > 0 && PREFIXES.has(tokens[0])) {
+    tokens.shift();
+  }
+  while (tokens.length > 0 && /^[A-Z_][A-Z0-9_]*=/.test(tokens[0])) {
+    tokens.shift();
+  }
   return tokens;
-}
+};
 
-function mentionsGeneratedFile(tokens, generatedFiles) {
+const mentionsGeneratedFile = (tokens, generatedFiles) => {
   for (let i = 1; i < tokens.length; i++) {
     const previous = tokens[i - 1];
     const token = unquote(tokens[i]);
-    if (previous === ">" || previous === ">>" || token.startsWith("--env-file") || /\s/.test(token)) continue;
+    if (previous === ">" || previous === ">>" || token.startsWith("--env-file") || /\s/.test(token)) {
+      continue;
+    }
     const name = basename(token.replace(/^[<>]+/, ""));
-    if (generatedFiles.includes(name)) return name;
+    if (generatedFiles.includes(name)) {
+      return name;
+    }
   }
   return null;
-}
+};
 
-function mentionsSecretName(tokens, secretNames) {
+const mentionsSecretName = (tokens, secretNames) => {
   const text = tokens.join(" ");
   for (const name of secretNames) {
-    if (text.includes(`$${name}`) || text.includes(`\${${name}`) || tokens.includes(name)) return name;
+    if (text.includes(`$${name}`) || text.includes(`\${${name}`) || tokens.includes(name)) {
+      return name;
+    }
   }
   return null;
-}
+};
 
 // set -euo pipefail sets options; set alone lists every variable. The same for export and
 // declare, which dump only with -p.
-function dumpsEnvironment(first, rest) {
-  if (first === "env" || first === "printenv" || first === "set") return rest.length === 0;
-  if (first === "export" || first === "declare") return rest.length === 1 && rest[0] === "-p";
+const dumpsEnvironment = (first, rest) => {
+  if (first === "env" || first === "printenv" || first === "set") {
+    return rest.length === 0;
+  }
+  if (first === "export" || first === "declare") {
+    return rest.length === 1 && rest[0] === "-p";
+  }
   return false;
-}
+};
 
-function decideStage(stage, { generatedFiles, secretNames }) {
+const decideStage = (stage, { generatedFiles, secretNames }) => {
   const tokens = stageTokens(stage);
-  if (tokens.length === 0) return null;
+  if (tokens.length === 0) {
+    return null;
+  }
   const [command, ...rest] = tokens;
   const first = basename(unquote(command).replace(/^[`'"]+/, ""));
   const file = mentionsGeneratedFile(tokens, generatedFiles);
@@ -184,11 +210,11 @@ function decideStage(stage, { generatedFiles, secretNames }) {
     return `${first} would print ${name} into the conversation.`;
   }
   return null;
-}
+};
 
 // Splits a command line into pipelines and each pipeline into stages, at separators that
 // are outside quotes: a semicolon inside a string is text, not a second command.
-export function pipelines(command) {
+export const pipelines = (command) => {
   const result = [];
   let stages = [];
   let current = "";
@@ -207,8 +233,11 @@ export function pipelines(command) {
     const next = command[i + 1];
     if (quote !== null) {
       current += char;
-      if (char === "\\" && quote === '"' && next !== undefined) current += command[++i];
-      else if (char === quote) quote = null;
+      if (char === "\\" && quote === '"' && next !== undefined) {
+        current += command[++i];
+      } else if (char === quote) {
+        quote = null;
+      }
       continue;
     }
     if (char === "'" || char === '"') {
@@ -229,9 +258,9 @@ export function pipelines(command) {
   }
   endPipeline();
   return result;
-}
+};
 
-export function decide({ toolName, toolInput }, harvested) {
+export const decide = ({ toolName, toolInput }, harvested) => {
   if (toolName === "Read") {
     const name = basename(String(toolInput?.file_path ?? ""));
     if (harvested.generatedFiles.includes(name)) {
@@ -239,11 +268,15 @@ export function decide({ toolName, toolInput }, harvested) {
     }
     return null;
   }
-  if (toolName !== "Bash") return null;
+  if (toolName !== "Bash") {
+    return null;
+  }
   for (const stages of pipelines(String(toolInput?.command ?? ""))) {
     const last = stages[stages.length - 1];
     const reason = decideStage(last, harvested);
-    if (reason !== null) return reason;
+    if (reason !== null) {
+      return reason;
+    }
     const upstream = stages.slice(0, -1).map(stageTokens);
     const file = upstream.map((tokens) => mentionsGeneratedFile(tokens, harvested.generatedFiles)).find((name) => name !== null);
     const values = upstream.some(printsBwsValues);
@@ -253,31 +286,39 @@ export function decide({ toolName, toolInput }, harvested) {
     }
   }
   return null;
-}
+};
 
 // What a pipeline that has touched a secret may end in: something that answers a
 // question about the text without repeating it. The first version of this guard allowed
 // any pipe at all, and a head into cut put part of a key into the conversation.
 const SINKS = new Set(["wc", "sha256sum", "shasum", "md5", "md5sum", "cmp", "true", "test", "["]);
 
-function printsBwsValues(tokens) {
+const printsBwsValues = (tokens) => {
   const [command, ...rest] = tokens;
-  if (command === undefined) return false;
+  if (command === undefined) {
+    return false;
+  }
   return basename(unquote(command)) === "bws" && rest[0] === "secret" && (rest[1] === "get" || rest[1] === "list");
-}
+};
 
-function consumesWithoutPrinting(tokens, fromBws) {
+const consumesWithoutPrinting = (tokens, fromBws) => {
   const [command, ...rest] = tokens;
-  if (command === undefined) return false;
+  if (command === undefined) {
+    return false;
+  }
   const first = basename(unquote(command).replace(/^[`'"]+/, ""));
-  if (SINKS.has(first)) return true;
-  if (first === "grep") return rest.some((token) => /^-[a-zA-Z]*[cql]/.test(token));
+  if (SINKS.has(first)) {
+    return true;
+  }
+  if (first === "grep") {
+    return rest.some((token) => /^-[a-zA-Z]*[cql]/.test(token));
+  }
   if (first === "jq" && fromBws) {
     const program = rest.join(" ");
     return /\.(key|id|name)\b/.test(program) && !program.includes("value");
   }
   return false;
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   let input = "";

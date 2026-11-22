@@ -10,7 +10,7 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
-import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
+import type { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
 import { LibraryUnreadableCardPageObject } from "./LibraryUnreadableCardPageObject.testHelper.js";
 import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";
@@ -92,7 +92,9 @@ export class LibraryPageObject extends PageObject {
   // On a phone the search is folded into an icon until it is opened ("OV-168 5" 168au).
   search = (query: string) =>
     this.step(`search ${query}`, async () => {
-      if (await this.get(librarySearchTestIds.openButton).isVisible()) await this.click(librarySearchTestIds.openButton);
+      if (await this.get(librarySearchTestIds.openButton).isVisible()) {
+        await this.click(librarySearchTestIds.openButton);
+      }
       await this.get(librarySearchTestIds.input).fill(query);
     });
 
@@ -101,7 +103,9 @@ export class LibraryPageObject extends PageObject {
   // OV-292: `fill` sets the whole value at once, which hides a dropped key.
   typeInTheSearch = (text: string) =>
     this.step(`typeInTheSearch ${text}`, async () => {
-      if (await this.get(librarySearchTestIds.openButton).isVisible()) await this.click(librarySearchTestIds.openButton);
+      if (await this.get(librarySearchTestIds.openButton).isVisible()) {
+        await this.click(librarySearchTestIds.openButton);
+      }
       await this.get(librarySearchTestIds.input).pressSequentially(text, { delay: 0 });
     });
 
@@ -266,10 +270,15 @@ export class LibraryPageObject extends PageObject {
             const look = () => {
               for (const animation of document.getAnimations()) {
                 const pseudo = (animation.effect as KeyframeEffect | null)?.pseudoElement;
-                if (pseudo) seen.add(pseudo);
+                if (pseudo) {
+                  seen.add(pseudo);
+                }
               }
-              if (names.every((name) => seen.has(name)) || performance.now() - start > 4_000) resolve([...seen]);
-              else requestAnimationFrame(look);
+              if (names.every((name) => seen.has(name)) || performance.now() - start > 4_000) {
+                resolve([...seen]);
+              } else {
+                requestAnimationFrame(look);
+              }
             };
             look();
           }),

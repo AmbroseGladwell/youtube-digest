@@ -7,7 +7,7 @@ import { readableEntries } from "../overviews/types/LibraryEntry.js";
 // dialog makes, over the whole list, so Settings can badge a row without asking the server
 // anything it does not already know (docs/features/sharing.md). A link whose overview this
 // device does not hold is not badged: nothing here can say whether it changed.
-export function useEditedShares(shares: Share[]): ReadonlySet<string> {
+export const useEditedShares = (shares: Share[]): ReadonlySet<string> => {
   const library = useOverviewsWithStateQuery().data;
   const [edited, setEdited] = useState<ReadonlySet<string>>(new Set());
 
@@ -17,12 +17,16 @@ export function useEditedShares(shares: Share[]): ReadonlySet<string> {
     void Promise.all(
       shares.map(async (share) => {
         const overview = held.get(share.overviewId);
-        if (overview === undefined) return null;
+        if (overview === undefined) {
+          return null;
+        }
         const { note } = shareSnapshot({ overview, narration: null });
         return (await shareContentHash(note)) === share.contentHash ? null : share.token;
       }),
     ).then((tokens) => {
-      if (current) setEdited(new Set(tokens.filter((token) => token !== null)));
+      if (current) {
+        setEdited(new Set(tokens.filter((token) => token !== null)));
+      }
     });
     return () => {
       current = false;
@@ -30,4 +34,4 @@ export function useEditedShares(shares: Share[]): ReadonlySet<string> {
   }, [shares, library]);
 
   return edited;
-}
+};

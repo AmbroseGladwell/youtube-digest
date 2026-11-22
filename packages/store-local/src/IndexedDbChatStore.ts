@@ -10,6 +10,13 @@ const readable = (raw: unknown): Chat[] => {
   return read.status === "read" ? [read.record] : [];
 };
 
+const chatsRequestFor = (store: IDBObjectStore, owner: ChatOwner): IDBRequest<unknown[]> => {
+  if (owner.kind === "overview") {
+    return store.index(CHATS_BY_OVERVIEW_INDEX).getAll(owner.id);
+  }
+  return owner.kind === "project" ? store.index(CHATS_BY_PROJECT_INDEX).getAll(owner.id) : store.getAll();
+};
+
 // Chats arrive through sync, written by the server; the only thing a device does to one is
 // delete it (docs/features/chats.md).
 export class IndexedDbChatStore implements ChatStore {
@@ -24,12 +31,7 @@ export class IndexedDbChatStore implements ChatStore {
   // The library's chats have no owner, so no index holds them: they are the ones left over.
   async listChats(owner: ChatOwner): Promise<Chat[]> {
     const store = this.#db.transaction(CHATS_STORE, "readonly").objectStore(CHATS_STORE);
-    const request =
-      owner.kind === "overview"
-        ? store.index(CHATS_BY_OVERVIEW_INDEX).getAll(owner.id)
-        : owner.kind === "project"
-          ? store.index(CHATS_BY_PROJECT_INDEX).getAll(owner.id)
-          : store.getAll();
+    const request = chatsRequestFor(store, owner);
     const chats = (await promisifyRequest<unknown[]>(request))
       .flatMap(readable)
       .filter((chat) => owner.kind !== "library" || chatOwner(chat).kind === "library");
@@ -57,6 +59,8 @@ export class IndexedDbChatStore implements ChatStore {
       existing !== undefined &&
       (await appendPendingWrite(transaction, { kind: "chat", id, updatedAt: new Date().toISOString(), change: { op: "delete" } }));
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 }

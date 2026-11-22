@@ -54,18 +54,24 @@ interface KindCheckRecord {
 }
 
 const expectedOf = new Map<string, NoteKind>();
+const expectKindOf = (record: RunRecord) => {
+  if (record.kindCheck?.noteKind != null) {
+    expectedOf.set(record.videoId, record.kindCheck.noteKind);
+  }
+};
 if (values["expected-from"] === undefined) {
   const listsDirectory = join(comparisonPaths.actionableItems, safePathPart(values.judge));
   for (const file of await readdir(listsDirectory)) {
     const list = JSON.parse(await readFile(join(listsDirectory, file), "utf-8")) as ActionableItemsRecord;
-    if (list.items !== null) expectedOf.set(list.sourceId, list.items.length > 0 ? "process" : "default");
+    if (list.items !== null) {
+      expectedOf.set(list.sourceId, list.items.length > 0 ? "process" : "default");
+    }
   }
 } else {
   const runDirectory = comparisonPaths.run(values["expected-from"]);
   for (const writer of await readdir(runDirectory)) {
     for (const file of await readdir(join(runDirectory, writer))) {
-      const record = JSON.parse(await readFile(join(runDirectory, writer, file), "utf-8")) as RunRecord;
-      if (record.kindCheck?.noteKind != null) expectedOf.set(record.videoId, record.kindCheck.noteKind);
+      expectKindOf(JSON.parse(await readFile(join(runDirectory, writer, file), "utf-8")) as RunRecord);
     }
   }
 }

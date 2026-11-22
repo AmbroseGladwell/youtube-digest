@@ -3,12 +3,19 @@ import { useEffect } from "react";
 import type { Overview } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
-import { generationRunStatus } from "../../util/generationRunStatus.js";
+import { generationRunStatus, type GenerationRunStatus } from "../../util/generationRunStatus.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";
 import { READY_DISMISS_MS } from "./readyDismissMs.js";
 import styles from "./GenerationStatusStrip.module.scss";
 import { generationStatusStripTestIds } from "./GenerationStatusStripTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+
+const stripStateOf = ({ isRunning, isReady }: GenerationRunStatus): "running" | "ready" | "failed" => {
+  if (isRunning) {
+    return "running";
+  }
+  return isReady ? "ready" : "failed";
+};
 
 export interface GenerationStatusStripProps {
   run: NewOverviewRun;
@@ -21,7 +28,7 @@ export interface GenerationStatusStripProps {
 // the bar — a mark, the label, then step, clock and title receding to the muted ink —
 // with a brand-orange bar at its foot while it runs. Ready, it moves to the stone tint
 // and offers the one action that makes something (docs/features/stone-theme.md).
-export function GenerationStatusStrip({ run, onDetails, onDismiss, onReadOverview }: GenerationStatusStripProps) {
+export const GenerationStatusStrip = ({ run, onDetails, onDismiss, onReadOverview }: GenerationStatusStripProps) => {
   const status = generationRunStatus(run);
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
 
@@ -34,7 +41,7 @@ export function GenerationStatusStrip({ run, onDetails, onDismiss, onReadOvervie
     return () => clearTimeout(timer);
   }, [status.isReady, onDismiss]);
 
-  const state = status.isRunning ? "running" : status.isReady ? "ready" : "failed";
+  const state = stripStateOf(status);
 
   return (
     <div className={styles.root} role="status" aria-live="polite" data-state={state} data-testid={generationStatusStripTestIds.root}>
@@ -116,4 +123,4 @@ export function GenerationStatusStrip({ run, onDetails, onDismiss, onReadOvervie
       )}
     </div>
   );
-}
+};

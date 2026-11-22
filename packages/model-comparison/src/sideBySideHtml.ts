@@ -5,7 +5,7 @@ import { checkOverview } from "./checkOverview.js";
 import type { RunRecord } from "./RunRecord.js";
 import { NOTE_CSS, escapeHtml, noteHtml } from "./noteHtml.js";
 
-function overviewCell(record: RunRecord, fetched: FetchedTranscript): string {
+const overviewCell = (record: RunRecord, fetched: FetchedTranscript): string => {
   const heading = `<h3>${escapeHtml(`${record.provider}:${record.model}`)}</h3>
 <p class="meta">${escapeHtml(record.outcome)} · ${(record.latencyMs / 1000).toFixed(1)}s · ${
     record.costDollars === null ? "unpriced" : `$${record.costDollars.toFixed(4)}`
@@ -19,16 +19,18 @@ function overviewCell(record: RunRecord, fetched: FetchedTranscript): string {
 ${failedChecks.length === 0 ? "" : `<ul class="checks">${failedChecks.map((check) => `<li>${escapeHtml(check.check)}: ${escapeHtml(check.detail ?? "")}</li>`).join("")}</ul>`}
 ${noteHtml(record.overview)}
 </section>`;
-}
+};
 
-export function sideBySideHtml(runName: string, records: readonly RunRecord[], transcripts: readonly FetchedTranscript[]): string {
+export const sideBySideHtml = (runName: string, records: readonly RunRecord[], transcripts: readonly FetchedTranscript[]): string => {
   const videos = transcripts
     .map((fetched) => {
       const id = fetched.video.id ?? fetched.video.url;
       const runs = records
         .filter((record) => record.videoId === id)
         .sort((left, right) => `${left.provider}:${left.model}`.localeCompare(`${right.provider}:${right.model}`));
-      if (runs.length === 0) return "";
+      if (runs.length === 0) {
+        return "";
+      }
       return `<article>
 <h2><a href="${escapeHtml(fetched.video.url)}">${escapeHtml(fetched.video.title)}</a></h2>
 <p class="meta">${escapeHtml(fetched.video.channel)} · ${formatTimestamp(fetched.video.durationMs ?? fetched.transcript.at(-1)?.endMs ?? 0)} · ${fetched.transcript.length} segments${fetched.generated ? " · auto-captions" : ""}</p>
@@ -47,4 +49,4 @@ ${NOTE_CSS}
 ${videos}
 </body></html>
 `;
-}
+};

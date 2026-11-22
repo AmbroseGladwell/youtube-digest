@@ -8,12 +8,14 @@ export interface KindChipProps {
 
 // Design 232a: quieter than the verdict's filled pill, so the eye finds the title and the
 // verdict first and the kind when it looks for it.
-export function KindChip({ overview }: KindChipProps) {
+export const KindChip = ({ overview }: KindChipProps) => {
   const label = kindChip(overview);
-  if (label === null) return null;
+  if (label === null) {
+    return null;
+  }
   return (
     <span className={styles.root} data-testid={kindChipTestIds.root}>
       {label}
     </span>
   );
-}
+};

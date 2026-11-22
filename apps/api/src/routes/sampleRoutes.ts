@@ -11,7 +11,7 @@ const Params = z.object({ token: ShareToken });
 // stopped the way any share is, and one that isn't live is left out rather than offered
 // broken. Reading one counts no visit: it's Start's, not a page someone was sent
 // (docs/features/onboarding.md, "Try a sample").
-export function sampleRoutes(app: FastifyInstance, shares: SharesRepository, tokens: readonly ShareToken[]): void {
+export const sampleRoutes = (app: FastifyInstance, shares: SharesRepository, tokens: readonly ShareToken[]): void => {
   const live = async (token: ShareToken): Promise<SharedOverview | null> => {
     const share = await shares.peek(token);
     return share === null || share === "revoked" ? null : share.snapshot;
@@ -21,8 +21,11 @@ export function sampleRoutes(app: FastifyInstance, shares: SharesRepository, tok
     const samples: Sample[] = [];
     for (const token of tokens) {
       const snapshot = await live(token);
-      if (snapshot === null) request.log.warn(apiLogLines.shares.sampleMissing());
-      else samples.push({ token, note: snapshot.note });
+      if (snapshot === null) {
+        request.log.warn(apiLogLines.shares.sampleMissing());
+      } else {
+        samples.push({ token, note: snapshot.note });
+      }
     }
     return { samples };
   });
@@ -30,7 +33,9 @@ export function sampleRoutes(app: FastifyInstance, shares: SharesRepository, tok
   app.get("/samples/:token", { config: { public: true } }, async (request) => {
     const { token } = parseOrThrow(Params, request.params, "The sample");
     const snapshot = tokens.includes(token) ? await live(token) : null;
-    if (snapshot === null) throw new ApiError("not_found", "There's no sample with that token");
+    if (snapshot === null) {
+      throw new ApiError("not_found", "There's no sample with that token");
+    }
     return snapshot;
   });
-}
+};

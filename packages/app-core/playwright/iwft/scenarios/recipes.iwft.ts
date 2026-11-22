@@ -159,9 +159,13 @@ test("the narration runs from the summary through the ingredients into the metho
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
 
-  for (let step = 0; step < 3; step += 1) await page.keyboard.press("]");
+  for (let step = 0; step < 3; step += 1) {
+    await page.keyboard.press("]");
+  }
   await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveText("3 large leeks, trimmed and halved lengthways");
-  for (let step = 0; step < 9; step += 1) await page.keyboard.press("]");
+  for (let step = 0; step < 9; step += 1) {
+    await page.keyboard.press("]");
+  }
   await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveCount(0);
   await expect(page.getByTestId("RecipeMethod.activeStep")).toContainText("Heat the oven");
 });

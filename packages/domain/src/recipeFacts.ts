@@ -2,7 +2,9 @@ import type { Recipe, RecipeStep } from "./Recipe.js";
 
 // "1 hr 5 min", "50 min": a time the page gave, never one we worked out.
 export const recipeMinutes = (minutes: number): string => {
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
   const rest = minutes % 60;
   return `${Math.floor(minutes / 60)} hr${rest === 0 ? "" : ` ${rest} min`}`;
 };
@@ -11,11 +13,18 @@ export const recipeMinutes = (minutes: number): string => {
 // "Serves 6" lead with their own verb, which is taken as the label rather than said twice.
 const YIELD_VERB = /^(makes|serves|yields?|servings?|portions?)\s*:?\s*(?=.*\d)/i;
 
-export function recipeYield(yieldText: string): { label: string; amount: string } {
-  const verb = yieldText.match(YIELD_VERB);
-  if (verb === null) return { label: "Makes", amount: yieldText };
-  return { label: /^(?:serves|servings?|portions?)$/i.test(verb[1]!) ? "Serves" : "Makes", amount: yieldText.slice(verb[0].length) };
+export interface RecipeYield {
+  label: string;
+  amount: string;
 }
+
+export const recipeYield = (yieldText: string): RecipeYield => {
+  const verb = yieldText.match(YIELD_VERB);
+  if (verb === null) {
+    return { label: "Makes", amount: yieldText };
+  }
+  return { label: /^(?:serves|servings?|portions?)$/i.test(verb[1]!) ? "Serves" : "Makes", amount: yieldText.slice(verb[0].length) };
+};
 
 export interface RecipeFigure {
   label: string;
@@ -24,17 +33,23 @@ export interface RecipeFigure {
 
 // Prep, Cook, Total and Makes, only what the page states; a total it didn't give is not summed
 // (design 144f).
-export function recipeFigures(recipe: Pick<Recipe, "prepMinutes" | "cookMinutes" | "totalMinutes" | "yield">): RecipeFigure[] {
+export const recipeFigures = (recipe: Pick<Recipe, "prepMinutes" | "cookMinutes" | "totalMinutes" | "yield">): RecipeFigure[] => {
   const figures: RecipeFigure[] = [];
-  if (recipe.prepMinutes !== null) figures.push({ label: "Prep", value: recipeMinutes(recipe.prepMinutes) });
-  if (recipe.cookMinutes !== null) figures.push({ label: "Cook", value: recipeMinutes(recipe.cookMinutes) });
-  if (recipe.totalMinutes !== null) figures.push({ label: "Total", value: recipeMinutes(recipe.totalMinutes) });
+  if (recipe.prepMinutes !== null) {
+    figures.push({ label: "Prep", value: recipeMinutes(recipe.prepMinutes) });
+  }
+  if (recipe.cookMinutes !== null) {
+    figures.push({ label: "Cook", value: recipeMinutes(recipe.cookMinutes) });
+  }
+  if (recipe.totalMinutes !== null) {
+    figures.push({ label: "Total", value: recipeMinutes(recipe.totalMinutes) });
+  }
   if (recipe.yield !== null) {
     const { label, amount } = recipeYield(recipe.yield);
     figures.push({ label, value: amount });
   }
   return figures;
-}
+};
 
 export const recipeFiguresLine = (figures: RecipeFigure[]): string => figures.map(({ label, value }) => `${label} ${value}`).join(" · ");
 
@@ -47,7 +62,7 @@ export interface RecipeStepGroup {
 
 // Steps grouped under the page's subheads, numbered straight through so "step 9" means one
 // thing (design 144g).
-export function recipeStepGroups(steps: readonly RecipeStep[]): RecipeStepGroup[] {
+export const recipeStepGroups = (steps: readonly RecipeStep[]): RecipeStepGroup[] => {
   const groups: RecipeStepGroup[] = [];
   steps.forEach(({ text, group }, index) => {
     const last = groups.at(-1);
@@ -58,16 +73,23 @@ export function recipeStepGroups(steps: readonly RecipeStep[]): RecipeStepGroup[
     }
   });
   return groups;
+};
+
+export interface ChapterSpan {
+  startMs: number;
+  endMs: number;
 }
 
 // The steps a recipe video's chapter covers, by where each starts: "Steps 1–3", "Step 4", or
 // nothing for a chapter that holds none, the intro or the tasting (design 122j).
-export function chapterStepsLabel(chapter: { startMs: number; endMs: number }, steps: readonly RecipeStep[]): string | null {
+export const chapterStepsLabel = (chapter: ChapterSpan, steps: readonly RecipeStep[]): string | null => {
   const numbers = steps.flatMap(({ range }, index) =>
     range !== undefined && range.startMs >= chapter.startMs && range.startMs < chapter.endMs ? [index + 1] : [],
   );
   const [first] = numbers;
   const last = numbers.at(-1);
-  if (first === undefined || last === undefined) return null;
+  if (first === undefined || last === undefined) {
+    return null;
+  }
   return first === last ? `Step ${first}` : `Steps ${first}–${last}`;
-}
+};

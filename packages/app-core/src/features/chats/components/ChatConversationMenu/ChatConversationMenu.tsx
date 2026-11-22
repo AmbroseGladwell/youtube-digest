@@ -35,23 +35,26 @@ export interface ChatConversationMenuProps {
 
 type Open = "closed" | "menu" | "choose";
 
-function continueDetail(assistant: FollowUpAssistant, connected: boolean, writing: boolean): ReactNode {
-  if (writing) return "Sends the finished answers";
-  if (connected)
+const continueDetail = (assistant: FollowUpAssistant, connected: boolean, writing: boolean): ReactNode => {
+  if (writing) {
+    return "Sends the finished answers";
+  }
+  if (connected) {
     return (
       <>
         <span className={styles.connected}>Connected</span> · reads this conversation
       </>
     );
+  }
   return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
     ? "Copies this conversation; you paste it in"
     : "Opens with this conversation filled in";
-}
+};
 
 // Design 324x–324ag: the chat header's ⋯, holding the overview's other conversations and
 // Continue in {assistant}. A menu under the header on the web, an action sheet on a phone and in
 // the panel. Hidden while it would hold nothing: a new conversation, alone, before its first answer.
-export function ChatConversationMenu({
+export const ChatConversationMenu = ({
   chat,
   overview,
   conversations,
@@ -62,7 +65,7 @@ export function ChatConversationMenu({
   onSaid,
   searchLibrary,
   onSearchLibrary,
-}: ChatConversationMenuProps) {
+}: ChatConversationMenuProps) => {
   const { assistant, connectedTo, anyConnection, choose } = useFollowUpAssistant();
   const analytics = useAnalytics();
   const [open, setOpen] = useState<Open>("closed");
@@ -85,33 +88,43 @@ export function ChatConversationMenu({
   useDismissOnOutside(open === "menu" && !compact, close, menu, root);
 
   useEffect(() => {
-    if (open !== "closed" || !returnFocus.current) return;
+    if (open !== "closed" || !returnFocus.current) {
+      return;
+    }
     returnFocus.current = false;
     trigger.current?.focus({ preventScroll: true });
   }, [open]);
 
   useEffect(() => {
-    if (open !== "menu") return;
-    if (compact && sheet.current !== null && !sheet.current.open) sheet.current.showModal();
+    if (open !== "menu") {
+      return;
+    }
+    if (compact && sheet.current !== null && !sheet.current.open) {
+      sheet.current.showModal();
+    }
     items.current.find((item) => item instanceof HTMLButtonElement)?.focus({ preventScroll: true });
   }, [open, compact]);
 
   const continueIn = (to: FollowUpAssistant) => {
-    if (finished === null) return;
+    if (finished === null) {
+      return;
+    }
     const connected = connectedTo(to);
     const handOff = followUpHandOff(to, chatHandOffPrompt(finished, overview, connected));
     const name = FOLLOW_UP_ASSISTANTS[to].name;
     analytics.reader.chat.continuedIn({ overviewId: overview.id, assistant: to, handOff: handOff.kind, connected });
     close();
     void handOffFollowUp(handOff).then((copied) => {
-      if (handOff.kind === "prefill") onSaid(`Opening ${name} in a new tab`, true);
-      else
+      if (handOff.kind === "prefill") {
+        onSaid(`Opening ${name} in a new tab`, true);
+      } else {
         onSaid(
           copied
             ? `Copied. ${name} is opening in a new tab: paste it there.`
             : `That couldn’t be copied. Copy the answers yourself, then paste them into ${name}.`,
           copied,
         );
+      }
     });
   };
 
@@ -124,12 +137,16 @@ export function ChatConversationMenu({
     }
     const shown = items.current.filter((item) => item instanceof HTMLButtonElement);
     const current = shown.indexOf(document.activeElement as HTMLButtonElement);
-    if (current === -1) return;
+    if (current === -1) {
+      return;
+    }
     const last = shown.length - 1;
     const target = { ArrowDown: current === last ? 0 : current + 1, ArrowUp: current === 0 ? last : current - 1, Home: 0, End: last }[
       event.key
     ];
-    if (target === undefined) return;
+    if (target === undefined) {
+      return;
+    }
     event.preventDefault();
     shown[target]?.focus();
   };
@@ -240,7 +257,13 @@ export function ChatConversationMenu({
         aria-label="More for this conversation"
         aria-haspopup="menu"
         aria-expanded={open === "menu"}
-        onClick={() => (open === "closed" ? setOpen("menu") : close())}
+        onClick={() => {
+          if (open === "closed") {
+            setOpen("menu");
+          } else {
+            close();
+          }
+        }}
         data-testid={chatConversationMenuTestIds.trigger}
       >
         <StrokeIcon name="more" size={16} />
@@ -257,7 +280,9 @@ export function ChatConversationMenu({
                   close();
                 }}
                 onClick={(event) => {
-                  if (event.target === sheet.current) close();
+                  if (event.target === sheet.current) {
+                    close();
+                  }
                 }}
                 data-testid={chatConversationMenuTestIds.sheet}
               >
@@ -294,4 +319,4 @@ export function ChatConversationMenu({
       )}
     </div>
   );
-}
+};

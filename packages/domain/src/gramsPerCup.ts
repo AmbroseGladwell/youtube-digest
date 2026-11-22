@@ -17,11 +17,11 @@ const WEIGHTS: Array<[RegExp, number]> = [
   [/\bchocolate chips\b/, 170],
 ];
 
-export function gramsPerCup(ingredient: string): number | null {
+export const gramsPerCup = (ingredient: string): number | null => {
   const name = ingredient
     .split(/[,(;]/)[0]!
     .trim()
     .toLowerCase()
     .replace(/^of\s+/, "");
   return WEIGHTS.find(([pattern]) => pattern.test(name))?.[1] ?? null;
-}
+};

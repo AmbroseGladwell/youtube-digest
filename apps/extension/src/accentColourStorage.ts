@@ -9,7 +9,7 @@ const isAccentColour = (value: unknown): value is AccentColour => ACCENT_COLOURS
 export const writeAccentColour = (accentColour: AccentColour): Promise<void> =>
   chrome.storage.local.set({ [ACCENT_COLOUR]: accentColour }).catch(() => undefined);
 
-export async function readAccentColour(): Promise<AccentColour> {
+export const readAccentColour = async (): Promise<AccentColour> => {
   try {
     const stored = await chrome.storage.local.get(ACCENT_COLOUR);
     const accentColour = stored[ACCENT_COLOUR];
@@ -17,10 +17,12 @@ export async function readAccentColour(): Promise<AccentColour> {
   } catch {
     return DEFAULT_ACCENT_COLOUR;
   }
-}
+};
 
-export function onAccentColourChanged(listener: () => void): void {
+export const onAccentColourChanged = (listener: () => void): void => {
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && ACCENT_COLOUR in changes) listener();
+    if (area === "local" && ACCENT_COLOUR in changes) {
+      listener();
+    }
   });
-}
+};

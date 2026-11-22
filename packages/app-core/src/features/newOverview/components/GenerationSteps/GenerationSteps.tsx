@@ -12,7 +12,7 @@ export interface GenerationStepsProps {
 // The numbered progress list design 3b draws, shared by the dialog and the side panel's
 // own working screen so both report the same thing the same way
 // (docs/features/extension-panel.md).
-export function GenerationSteps({ run }: GenerationStepsProps) {
+export const GenerationSteps = ({ run }: GenerationStepsProps) => {
   const now = useMinuteClock(run.podcast?.transcription?.state === "transcribing" && run.podcast.words === null);
   return (
     <ol className={styles.root} aria-live="polite" data-testid={generationStepsTestIds.root}>
@@ -37,17 +37,19 @@ export function GenerationSteps({ run }: GenerationStepsProps) {
       ))}
     </ol>
   );
-}
+};
 
 // While an episode transcribes, its estimate counts down in whole minutes, so the steps are drawn
 // again often enough to change on the minute, and its words change at most once a minute.
-function useMinuteClock(ticking: boolean): number {
+const useMinuteClock = (ticking: boolean): number => {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!ticking) return;
+    if (!ticking) {
+      return;
+    }
     setNow(Date.now());
     const timer = setInterval(() => setNow(Date.now()), 15_000);
     return () => clearInterval(timer);
   }, [ticking]);
   return now;
-}
+};

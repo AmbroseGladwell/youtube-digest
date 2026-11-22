@@ -6,7 +6,7 @@ import {
   type TopicSuggestionInput,
   type TopicSuggestionResult,
 } from "@overview/domain";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { GenerationError } from "./GenerationError.js";
 
 const SUGGESTED_AT_MOST = 3;
@@ -15,7 +15,7 @@ const NEW_TOPIC_WORDS = 4;
 // The starter topics a source about to be written belongs under, and at most one more specific
 // interest it's clearly about, offered on onboarding's topics screen before there's an account
 // (docs/features/onboarding.md, "Suggested topics"). Offered, never chosen: the reader picks.
-export async function generateTopicSuggestions(client: GenerationClient, input: TopicSuggestionInput): Promise<TopicSuggestionResult> {
+export const generateTopicSuggestions = async (client: GenerationClient, input: TopicSuggestionInput): Promise<TopicSuggestionResult> => {
   const names = STARTER_TOPICS.map((topic) => topic.name) as [string, ...string[]];
   const Output = z.object({
     starterTopicNames: z.array(z.enum(names)),
@@ -60,4 +60,4 @@ When the ${input.kind} is general, or no such interest stands out, it's null.`,
   // The specific interest is the one most worth offering, so it keeps its place in the three.
   const starter = [...new Set(parsed.data.starterTopicNames)].slice(0, usable ? SUGGESTED_AT_MOST - 1 : SUGGESTED_AT_MOST);
   return { starter, newTopic: usable ? named : null };
-}
+};

@@ -25,7 +25,7 @@ export interface TranscriptionNoticeProps {
 // A stop or a question about transcribing an episode, in place of the action it replaces: a
 // heading, what happened and what's left, and the ways that exist. Stops are alerts, and after
 // Create take focus to their first action, as 95i (design 305, Notes: Accessibility).
-export function TranscriptionNotice({
+export const TranscriptionNotice = ({
   notice,
   primary = null,
   secondary = null,
@@ -33,13 +33,17 @@ export function TranscriptionNotice({
   foot = null,
   takeFocus = false,
   onFollowed,
-}: TranscriptionNoticeProps) {
+}: TranscriptionNoticeProps) => {
   const first = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    if (takeFocus) first.current?.focus();
+    if (takeFocus) {
+      first.current?.focus();
+    }
   }, [takeFocus]);
   const takeFirst = (element: HTMLElement | null) => {
-    if (first.current === null) first.current = element;
+    if (first.current === null) {
+      first.current = element;
+    }
   };
   return (
     <div className={styles.root} role="alert" data-testid={transcriptionNoticeTestIds.root}>
@@ -93,4 +97,4 @@ export function TranscriptionNotice({
       )}
     </div>
   );
-}
+};

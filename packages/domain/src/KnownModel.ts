@@ -126,7 +126,7 @@ export const modelLabel = (provider: Provider, id: string): string => knownModel
 // (CLAUDE.md, "Never let a model count, measure or time anything").
 export const OVERVIEW_TOKENS = { input: 5000, output: 1500 };
 
-export function estimatedOverviewCents(model: KnownModel): number {
+export const estimatedOverviewCents = (model: KnownModel): number => {
   const dollars = (OVERVIEW_TOKENS.input * model.pricePerMillion.input + OVERVIEW_TOKENS.output * model.pricePerMillion.output) / 1_000_000;
   return Math.max(1, Math.round(dollars * 100));
-}
+};

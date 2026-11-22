@@ -33,7 +33,7 @@ const carrying = (entries: OverviewWithState[], tags: readonly string[]) =>
 
 // Design 84j–84n: pick tags, then merge, rename or delete them. Every change lands at once and
 // offers Undo until the dialog closes, rather than asking first (docs/features/tag-reuse.md).
-export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogProps) {
+export const ManageTagsDialog = ({ open, entries, onClose }: ManageTagsDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const headingId = useId();
   const analytics = useAnalytics().library.manageTags;
@@ -51,7 +51,9 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
 
   useEffect(() => {
     const element = dialog.current;
-    if (!element) return;
+    if (!element) {
+      return;
+    }
     if (open && !element.open) {
       setQuery("");
       setSort("used");
@@ -61,7 +63,9 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
       setNotice(null);
       element.showModal();
     }
-    if (!open && element.open) element.close();
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   const usage = open ? tagUsage(entries.map(overviewTags)) : [];
@@ -117,12 +121,18 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
       aria-labelledby={headingId}
       onCancel={(event) => {
         event.preventDefault();
-        if (renaming !== null) setRenaming(null);
-        else if (merging) setMerging(false);
-        else close();
+        if (renaming !== null) {
+          setRenaming(null);
+        } else if (merging) {
+          setMerging(false);
+        } else {
+          close();
+        }
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) close();
+        if (event.target === dialog.current) {
+          close();
+        }
       }}
       data-testid={manageTagsDialogTestIds.root}
     >
@@ -318,27 +328,27 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
       )}
     </dialog>
   );
-}
+};
 
-function CloseButton({ onClose }: { onClose: () => void }) {
+const CloseButton = ({ onClose }: { onClose: () => void }) => {
   return (
     <button type="button" className={styles.close} onClick={onClose} aria-label="Close" data-testid={manageTagsDialogTestIds.closeButton}>
       <StrokeIcon name="close" size={16} />
     </button>
   );
-}
+};
 
-// 84l: the row becomes a field that says what it will save as, refuses a name with nothing
-// in it, and turns into a merge when the name is taken.
-function RenameRow({
-  tag,
-  draft,
-  count,
-  exists,
-  onDraft,
-  onCancel,
-  onSave,
-}: {
+const renameStatus = (target: string | null, merges: boolean, tag: string, count: number): string => {
+  if (target === null) {
+    return REFUSED;
+  }
+  return merges
+    ? `#${target} already exists. Saving merges #${tag} into it: ` +
+        `${overviewsText(count)} ${count === 1 ? "moves" : "move"} to #${target}.`
+    : `Saves as #${target}`;
+};
+
+interface RenameRowProps {
   tag: string;
   draft: string;
   count: number;
@@ -346,7 +356,11 @@ function RenameRow({
   onDraft: (draft: string) => void;
   onCancel: () => void;
   onSave: (target: string) => void;
-}) {
+}
+
+// 84l: the row becomes a field that says what it will save as, refuses a name with nothing
+// in it, and turns into a merge when the name is taken.
+const RenameRow = ({ tag, draft, count, exists, onDraft, onCancel, onSave }: RenameRowProps) => {
   const statusId = useId();
   const row = useRef<HTMLLIElement | null>(null);
   useEffect(() => {
@@ -354,13 +368,7 @@ function RenameRow({
   }, []);
   const target = normaliseTag(draft);
   const merges = target !== null && exists(target);
-  const status =
-    target === null
-      ? REFUSED
-      : merges
-        ? `#${target} already exists. Saving merges #${tag} into it: ` +
-          `${overviewsText(count)} ${count === 1 ? "moves" : "move"} to #${target}.`
-        : `Saves as #${target}`;
+  const status = renameStatus(target, merges, tag, count);
   const canSave = target !== null && target !== tag;
 
   return (
@@ -369,7 +377,9 @@ function RenameRow({
         className={styles.renameForm}
         onSubmit={(event) => {
           event.preventDefault();
-          if (canSave) onSave(target);
+          if (canSave) {
+            onSave(target);
+          }
         }}
       >
         <input
@@ -396,22 +406,9 @@ function RenameRow({
       </p>
     </li>
   );
-}
+};
 
-// 84k: which name the merged tags keep, most used first and chosen already, or a new one.
-function MergeStep({
-  headingId,
-  tags,
-  keep,
-  newName,
-  existing,
-  countTagged,
-  onKeep,
-  onNewName,
-  onBack,
-  onClose,
-  onMerge,
-}: {
+interface MergeStepProps {
   headingId: string;
   tags: TagCount[];
   keep: string;
@@ -423,7 +420,22 @@ function MergeStep({
   onBack: () => void;
   onClose: () => void;
   onMerge: (target: string) => void;
-}) {
+}
+
+// 84k: which name the merged tags keep, most used first and chosen already, or a new one.
+const MergeStep = ({
+  headingId,
+  tags,
+  keep,
+  newName,
+  existing,
+  countTagged,
+  onKeep,
+  onNewName,
+  onBack,
+  onClose,
+  onMerge,
+}: MergeStepProps) => {
   const target = keep === NEW_NAME ? normaliseTag(newName) : keep;
   const others = tags.length - 1;
   const tagged = target === null ? 0 : countTagged([...tags.map(({ tag }) => tag), target]);
@@ -434,7 +446,9 @@ function MergeStep({
       className={styles.step}
       onSubmit={(event) => {
         event.preventDefault();
-        if (target !== null) onMerge(target);
+        if (target !== null) {
+          onMerge(target);
+        }
       }}
     >
       <div className={styles.head}>
@@ -515,4 +529,4 @@ function MergeStep({
       </div>
     </form>
   );
-}
+};

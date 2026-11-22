@@ -1,6 +1,6 @@
 import { episodeFacts } from "../PodcastLinkStatus/PodcastLinkStatus.js";
 import { formatClock } from "@overview/domain";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Overview } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
@@ -40,7 +40,7 @@ export interface NewOverviewDialogProps {
 
 const HEADING_ID = "NewOverviewDialog-heading";
 
-export function NewOverviewDialog({
+export const NewOverviewDialog = ({
   open,
   prefill,
   run,
@@ -52,7 +52,7 @@ export function NewOverviewDialog({
   onReadOverview,
   onCaptureReasonChange,
   onCaptureReasonCommit,
-}: NewOverviewDialogProps) {
+}: NewOverviewDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const activeVideoUrl = useActiveVideoUrl();
@@ -113,14 +113,140 @@ export function NewOverviewDialog({
       onClose();
       return;
     }
-    if (run !== null && run.overview !== null) analytics.capture.newOverviewDialog.runDismissed({ run: "ready" });
-    else analytics.capture.newOverviewDialog.closed({ run: run === null ? "none" : "failed" });
+    if (run !== null && run.overview !== null) {
+      analytics.capture.newOverviewDialog.runDismissed({ run: "ready" });
+    } else {
+      analytics.capture.newOverviewDialog.closed({ run: run === null ? "none" : "failed" });
+    }
     onDismiss();
   };
 
   const handleSubmit = (submittedUrl: string) => {
     setUrl(submittedUrl);
     onSubmit(submittedUrl);
+  };
+
+  const dialogBody = (): ReactNode => {
+    if (playlist !== null && run === null) {
+      return (
+        <>
+          <div className={styles.head}>
+            <h2 className={styles.heading} id={HEADING_ID}>
+              New overview
+            </h2>
+            <button
+              type="button"
+              className={styles.close}
+              onClick={closeForm}
+              aria-label="Close"
+              data-testid={newOverviewDialogTestIds.closeButton}
+            >
+              <StrokeIcon name="close" size={16} />
+            </button>
+          </div>
+          <PlaylistFollowFlow
+            target={playlist.target}
+            pastedUrl={playlist.pastedUrl}
+            from={playlist.from}
+            stacked={phone}
+            onJustThisVideo={(videoUrl) => {
+              setPlaylist(null);
+              handleSubmit(videoUrl);
+            }}
+            onPasteAnother={() => {
+              setPlaylist(null);
+              setUrl("");
+            }}
+            onDone={() => {
+              setPlaylist(null);
+              onDismiss();
+            }}
+          />
+        </>
+      );
+    }
+    // The library already holds this video: nothing to make, one thing to open
+    // (docs/features/one-overview-per-video.md, "Prevention").
+    if (held !== null && run === null) {
+      return (
+        <>
+          <div className={styles.head}>
+            <h2 className={styles.heading} id={HEADING_ID}>
+              You already have this
+            </h2>
+            <button
+              type="button"
+              className={styles.close}
+              onClick={closeForm}
+              aria-label="Close"
+              data-testid={newOverviewDialogTestIds.closeButton}
+            >
+              <StrokeIcon name="close" size={16} />
+            </button>
+          </div>
+          <p className={styles.sourceMeta} data-testid={newOverviewDialogTestIds.alreadyHeld}>
+            {held.readable
+              ? "Your library already holds an overview of this video, so nothing new was made."
+              : "Your library already holds an overview of this video that this version of the app can't read yet, so nothing new was made."}
+          </p>
+          <div className={styles.foot}>
+            <span className={styles.footActions}>
+              <button type="button" className={styles.secondaryAction} onClick={closeForm}>
+                Close
+              </button>
+              <button
+                type="button"
+                className={styles.primaryAction}
+                onClick={() => onOpenHeld(held.overviewId)}
+                data-testid={newOverviewDialogTestIds.openHeldButton}
+              >
+                Open your overview
+              </button>
+            </span>
+          </div>
+        </>
+      );
+    }
+    if (run === null || run.error !== null) {
+      return (
+        <>
+          <div className={styles.head}>
+            <h2 className={styles.heading} id={HEADING_ID}>
+              New overview
+            </h2>
+            <button
+              type="button"
+              className={styles.close}
+              onClick={closeForm}
+              aria-label="Close"
+              data-testid={newOverviewDialogTestIds.closeButton}
+            >
+              <StrokeIcon name="close" size={16} />
+            </button>
+          </div>
+          <GenerateOverviewForm
+            url={url}
+            onUrlChange={setUrl}
+            onSubmit={handleSubmit}
+            onCancel={closeForm}
+            onPlaylist={(target, pastedUrl) => setPlaylist({ target, pastedUrl, from: "dialog" })}
+            generationError={run?.error ?? null}
+            active={open}
+          />
+        </>
+      );
+    }
+    return (
+      <RunProgress
+        run={run}
+        headingId={HEADING_ID}
+        onClose={onClose}
+        onDismiss={onDismiss}
+        onReadOverview={onReadOverview}
+        onCaptureReasonChange={onCaptureReasonChange}
+        onCaptureReasonCommit={onCaptureReasonCommit}
+      />
+    );
   };
 
   return (
@@ -143,121 +269,67 @@ export function NewOverviewDialog({
       <div className={styles.panel} data-testid={newOverviewDialogTestIds.panel}>
         <span className={styles.handle} aria-hidden="true" data-testid={newOverviewDialogTestIds.handle} />
 
-        {playlist !== null && run === null ? (
-          <>
-            <div className={styles.head}>
-              <h2 className={styles.heading} id={HEADING_ID}>
-                New overview
-              </h2>
-              <button
-                type="button"
-                className={styles.close}
-                onClick={closeForm}
-                aria-label="Close"
-                data-testid={newOverviewDialogTestIds.closeButton}
-              >
-                <StrokeIcon name="close" size={16} />
-              </button>
-            </div>
-            <PlaylistFollowFlow
-              target={playlist.target}
-              pastedUrl={playlist.pastedUrl}
-              from={playlist.from}
-              stacked={phone}
-              onJustThisVideo={(videoUrl) => {
-                setPlaylist(null);
-                handleSubmit(videoUrl);
-              }}
-              onPasteAnother={() => {
-                setPlaylist(null);
-                setUrl("");
-              }}
-              onDone={() => {
-                setPlaylist(null);
-                onDismiss();
-              }}
-            />
-          </>
-        ) : held !== null && run === null ? (
-          // The library already holds this video: nothing to make, one thing to open
-          // (docs/features/one-overview-per-video.md, "Prevention").
-          <>
-            <div className={styles.head}>
-              <h2 className={styles.heading} id={HEADING_ID}>
-                You already have this
-              </h2>
-              <button
-                type="button"
-                className={styles.close}
-                onClick={closeForm}
-                aria-label="Close"
-                data-testid={newOverviewDialogTestIds.closeButton}
-              >
-                <StrokeIcon name="close" size={16} />
-              </button>
-            </div>
-            <p className={styles.sourceMeta} data-testid={newOverviewDialogTestIds.alreadyHeld}>
-              {held.readable
-                ? "Your library already holds an overview of this video, so nothing new was made."
-                : "Your library already holds an overview of this video that this version of the app can't read yet, so nothing new was made."}
-            </p>
-            <div className={styles.foot}>
-              <span className={styles.footActions}>
-                <button type="button" className={styles.secondaryAction} onClick={closeForm}>
-                  Close
-                </button>
-                <button
-                  type="button"
-                  className={styles.primaryAction}
-                  onClick={() => onOpenHeld(held.overviewId)}
-                  data-testid={newOverviewDialogTestIds.openHeldButton}
-                >
-                  Open your overview
-                </button>
-              </span>
-            </div>
-          </>
-        ) : run === null || run.error !== null ? (
-          <>
-            <div className={styles.head}>
-              <h2 className={styles.heading} id={HEADING_ID}>
-                New overview
-              </h2>
-              <button
-                type="button"
-                className={styles.close}
-                onClick={closeForm}
-                aria-label="Close"
-                data-testid={newOverviewDialogTestIds.closeButton}
-              >
-                <StrokeIcon name="close" size={16} />
-              </button>
-            </div>
-            <GenerateOverviewForm
-              url={url}
-              onUrlChange={setUrl}
-              onSubmit={handleSubmit}
-              onCancel={closeForm}
-              onPlaylist={(target, pastedUrl) => setPlaylist({ target, pastedUrl, from: "dialog" })}
-              generationError={run?.error ?? null}
-              active={open}
-            />
-          </>
-        ) : (
-          <RunProgress
-            run={run}
-            headingId={HEADING_ID}
-            onClose={onClose}
-            onDismiss={onDismiss}
-            onReadOverview={onReadOverview}
-            onCaptureReasonChange={onCaptureReasonChange}
-            onCaptureReasonCommit={onCaptureReasonCommit}
-          />
-        )}
+        {dialogBody()}
       </div>
     </dialog>
   );
+};
+
+interface RunSourceProps {
+  run: NewOverviewRun;
+  headingId: string;
 }
+
+const RunSource = ({ run, headingId }: RunSourceProps) => {
+  if (run.video) {
+    return (
+      <>
+        <OverviewThumbnail video={run.video} className={styles.thumbnail} />
+        <div className={styles.sourceText}>
+          <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
+            {run.video.title}
+          </h2>
+          <p className={styles.sourceMeta}>
+            {run.video.channel}
+            {run.video.durationMs !== null && ` · ${formatClock(run.video.durationMs / 1000)}`}
+          </p>
+        </div>
+      </>
+    );
+  }
+  if (run.podcast !== null) {
+    return (
+      <div className={styles.sourceText}>
+        <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
+          {run.podcast.title}
+        </h2>
+        <p className={styles.sourceMeta}>
+          {[run.podcast.show, "Podcast", episodeFacts({ durationSeconds: run.podcast.durationSeconds, publishedAt: null }) || null]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      </div>
+    );
+  }
+  if (run.article !== null) {
+    return (
+      <div className={styles.sourceText}>
+        <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
+          {run.article.title}
+        </h2>
+        <p className={styles.sourceMeta}>{run.article.site}</p>
+      </div>
+    );
+  }
+  return (
+    <div className={styles.sourceText}>
+      <h2 className={styles.sourceTitle} id={headingId}>
+        New overview
+      </h2>
+      <p className={styles.sourceMeta}>{run.url}</p>
+    </div>
+  );
+};
 
 interface RunProgressProps {
   run: NewOverviewRun;
@@ -269,7 +341,7 @@ interface RunProgressProps {
   onCaptureReasonCommit: () => void;
 }
 
-function RunProgress({
+const RunProgress = ({
   run,
   headingId,
   onClose,
@@ -277,7 +349,7 @@ function RunProgress({
   onReadOverview,
   onCaptureReasonChange,
   onCaptureReasonCommit,
-}: RunProgressProps) {
+}: RunProgressProps) => {
   const surface = useSurface();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const isDone = run.overview !== null;
@@ -286,45 +358,7 @@ function RunProgress({
   return (
     <>
       <div className={styles.source}>
-        {run.video ? (
-          <>
-            <OverviewThumbnail video={run.video} className={styles.thumbnail} />
-            <div className={styles.sourceText}>
-              <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
-                {run.video.title}
-              </h2>
-              <p className={styles.sourceMeta}>
-                {run.video.channel}
-                {run.video.durationMs !== null && ` · ${formatClock(run.video.durationMs / 1000)}`}
-              </p>
-            </div>
-          </>
-        ) : run.podcast !== null ? (
-          <div className={styles.sourceText}>
-            <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
-              {run.podcast.title}
-            </h2>
-            <p className={styles.sourceMeta}>
-              {[run.podcast.show, "Podcast", episodeFacts({ durationSeconds: run.podcast.durationSeconds, publishedAt: null }) || null]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          </div>
-        ) : run.article !== null ? (
-          <div className={styles.sourceText}>
-            <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
-              {run.article.title}
-            </h2>
-            <p className={styles.sourceMeta}>{run.article.site}</p>
-          </div>
-        ) : (
-          <div className={styles.sourceText}>
-            <h2 className={styles.sourceTitle} id={headingId}>
-              New overview
-            </h2>
-            <p className={styles.sourceMeta}>{run.url}</p>
-          </div>
-        )}
+        <RunSource run={run} headingId={headingId} />
       </div>
 
       <GenerationSteps run={run} />
@@ -399,4 +433,4 @@ function RunProgress({
       </div>
     </>
   );
-}
+};

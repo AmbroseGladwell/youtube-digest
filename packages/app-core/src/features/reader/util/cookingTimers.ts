@@ -35,8 +35,12 @@ export interface CookingTimerStart {
 const MINUTE_MS = 60_000;
 
 export const timeLeftMs = (timer: CookingTimer, now: number): number => {
-  if (timer.rangAt !== null) return 0;
-  if (timer.endsAt !== null) return Math.max(0, timer.endsAt - now);
+  if (timer.rangAt !== null) {
+    return 0;
+  }
+  if (timer.endsAt !== null) {
+    return Math.max(0, timer.endsAt - now);
+  }
   return timer.leftMs ?? 0;
 };
 
@@ -44,10 +48,10 @@ export const isPaused = (timer: CookingTimer): boolean => timer.rangAt === null 
 
 export const isRinging = (timer: CookingTimer): boolean => timer.rangAt !== null;
 
-export function startedTimer(id: number, start: CookingTimerStart, now: number): CookingTimer {
+export const startedTimer = (id: number, start: CookingTimerStart, now: number): CookingTimer => {
   const totalMs = start.source.seconds * 1000;
   return { id, ...start, totalMs, endsAt: now + totalMs, leftMs: null, rangAt: null };
-}
+};
 
 export const pausedTimer = (timer: CookingTimer, now: number): CookingTimer =>
   timer.endsAt === null ? timer : { ...timer, endsAt: null, leftMs: timeLeftMs(timer, now) };
@@ -55,16 +59,18 @@ export const pausedTimer = (timer: CookingTimer, now: number): CookingTimer =>
 export const resumedTimer = (timer: CookingTimer, now: number): CookingTimer =>
   timer.leftMs === null ? timer : { ...timer, endsAt: now + timer.leftMs, leftMs: null };
 
-export function adjustedTimer(timer: CookingTimer, minutes: number, now: number): CookingTimer {
+export const adjustedTimer = (timer: CookingTimer, minutes: number, now: number): CookingTimer => {
   const change = minutes * MINUTE_MS;
   if (timer.rangAt !== null) {
     return change > 0 ? { ...timer, totalMs: timer.totalMs + change, endsAt: now + change, leftMs: null, rangAt: null } : timer;
   }
   const left = timeLeftMs(timer, now) + change;
   const totalMs = Math.max(timer.totalMs + change, MINUTE_MS);
-  if (left <= 0) return { ...timer, totalMs, endsAt: null, leftMs: null, rangAt: now };
+  if (left <= 0) {
+    return { ...timer, totalMs, endsAt: null, leftMs: null, rangAt: now };
+  }
   return timer.endsAt === null ? { ...timer, totalMs, leftMs: left } : { ...timer, totalMs, endsAt: now + left };
-}
+};
 
 export const ranOut = (timers: readonly CookingTimer[], now: number): CookingTimer[] =>
   timers.map((timer) =>

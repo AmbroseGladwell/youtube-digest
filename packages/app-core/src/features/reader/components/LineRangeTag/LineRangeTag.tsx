@@ -13,16 +13,29 @@ import {
 
 export type RangeKind = "keyPoint" | "standsOut" | "watchAnyway" | "recipeStep" | "sourceStep";
 
+export interface NoteLineRange {
+  kind: RangeKind;
+  about: string;
+  step?: number;
+}
+
+const rangeKindOf = (section: NoteLine["section"]): RangeKind => {
+  if (section === WATCH_ANYWAY_SECTION) {
+    return "watchAnyway";
+  }
+  return section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut";
+};
+
 // What a line of the note points at, for the tag at its end. One of the steps a source gives
 // names its number, counted from the note's lines (design 250d).
-export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): { kind: RangeKind; about: string; step?: number } => {
+export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): NoteLineRange => {
   if (line.section === SOURCE_STEPS_SECTION) {
     const steps = lines.filter((each) => each.section === SOURCE_STEPS_SECTION && !each.heading);
     const at = steps.indexOf(line);
     return { kind: "sourceStep", about: line.text, ...(at === -1 ? {} : { step: at + 1 }) };
   }
   return {
-    kind: line.section === WATCH_ANYWAY_SECTION ? "watchAnyway" : line.section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut",
+    kind: rangeKindOf(line.section),
     about: line.text,
   };
 };
@@ -69,7 +82,7 @@ const stickyChromeHeight = (element: HTMLElement) => {
 };
 
 // docs/features/novelty-scale.md, "The time is the handle".
-export function LineRangeTag({
+export const LineRangeTag = ({
   kind,
   about,
   step,
@@ -81,7 +94,7 @@ export function LineRangeTag({
   canReadTranscript,
   onOpenTranscriptAt,
   direct = false,
-}: LineRangeTagProps) {
+}: LineRangeTagProps) => {
   const [open, setOpen] = useState(false);
   const [upward, setUpward] = useState(false);
   const root = useRef<HTMLSpanElement | null>(null);
@@ -139,8 +152,11 @@ export function LineRangeTag({
           className={`${styles.playChip} ${watchAnyway ? styles.playChipRange : ""} ${playing ? styles.tagPlaying : ""}`}
           onClick={() => {
             followed("skip");
-            if (watchAnyway) seek(range.startMs, range.endMs);
-            else seek(range.startMs);
+            if (watchAnyway) {
+              seek(range.startMs, range.endMs);
+            } else {
+              seek(range.startMs);
+            }
           }}
           aria-label={watchAnyway ? `Play ${stretch}` : `Play the episode from ${start}`}
           data-testid={lineRangeTagTestIds.playChip}
@@ -291,7 +307,7 @@ export function LineRangeTag({
       {open && portalled(asSheet, asSheet ? sheet : popover)}
     </span>
   );
-}
+};
 
 // "8 min", how long a range plays before it stops (design 106s).
 const rangeLength = ({ startMs, endMs }: TimeRange): string => {

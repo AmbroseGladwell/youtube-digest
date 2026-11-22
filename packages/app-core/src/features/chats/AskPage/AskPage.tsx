@@ -1,6 +1,6 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
-import { MAX_CHAT_QUESTIONS, ProjectId, sourceImage, type ChatMessage, type Overview } from "@overview/domain";
+import { MAX_CHAT_QUESTIONS, ProjectId, sourceImage, type ChatMessage, type ChatUsage, type Overview } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -27,6 +27,7 @@ import { useAskPage } from "../useAskPage.js";
 import type { PickedOverview } from "../useAskOver.js";
 import { askStarters } from "../util/askStarters.js";
 import { chatWaitCopy, type ShownWait } from "../util/chatWaitCopy.js";
+import { prefersReducedMotion } from "../../../util/prefersReducedMotion.js";
 import styles from "./AskPage.module.scss";
 import { askPageTestIds } from "./AskPageTestIds.js";
 
@@ -34,12 +35,57 @@ const SAID_MS = 3000;
 
 const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "overviews"}`;
 
+// --motion-travel, the drawer's slide in and out.
+const DRAWER_MOTION_MS = 260;
+
+interface WaitFacts {
+  online: boolean;
+  asked: number;
+  refused: ShownWait | null;
+  left: number | null;
+  usage: ChatUsage | null;
+}
+
+const waitOf = ({ online, asked, refused, left, usage }: WaitFacts): ShownWait | null => {
+  if (!online) {
+    return { kind: "offline" };
+  }
+  if (asked >= MAX_CHAT_QUESTIONS) {
+    return { kind: "conversationFull" };
+  }
+  if (refused !== null) {
+    return refused;
+  }
+  return left === 0 && usage !== null ? { kind: "month", resetsOn: usage.resetsOn } : null;
+};
+
+const placeholderOf = (isPhone: boolean, scope: "library" | "project"): string => {
+  if (isPhone) {
+    return "Ask or @ to add sources";
+  }
+  return scope === "project" ? "Ask about this project or @ to add sources" : "Ask your library or @ to add sources";
+};
+
+const drawerMotionOf = (open: boolean, arrives: boolean): "arriving" | "still" | "leaving" => {
+  if (!open) {
+    return "leaving";
+  }
+  return arrives ? "arriving" : "still";
+};
+
+const pickingPhaseOf = (picking: "choosing" | "reading", text: string, sectionCount: number): "choosing" | "reading" | "read" => {
+  if (picking === "choosing") {
+    return "choosing";
+  }
+  return text === "" && sectionCount === 0 ? "reading" : "read";
+};
+
 // OV-354, pages 3 and 4: Ask, a top-level page over the whole library, or one project when opened
 // from it. No header and no close; the top bar is the way back. Empty, the field sits centred under
 // the heading with three starter questions made by code; asked, the conversation runs above it
 // with the picking wait and answers in sections. The drawer holds every library and project
 // conversation (docs/features/chats.md, "The Ask page").
-export function AskPage() {
+export const AskPage = () => {
   const [params] = useSearchParams();
   const parsedProject = ProjectId.safeParse(params.get("project"));
   const projectId = parsedProject.success ? parsedProject.data : null;
@@ -54,13 +100,35 @@ export function AskPage() {
   const topics = useTopicsQuery().data ?? [];
   const library = useOverviewsWithStateQuery().data;
   const [draft, setDraft] = useState("");
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // On the web the drawer starts open beside the page; on a phone, where it is a sheet over it, closed (OV-370).
+  const [drawerOpen, setDrawerOpen] = useState(() => !isPhone);
+  // Closing plays the opening backwards, so the drawer stays for its time on the way out (OV-371).
+  const [drawerLeaving, setDrawerLeaving] = useState(false);
+  const [drawerArrives, setDrawerArrives] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const [said, setSaid] = useState<{ text: string; done: boolean; key: number } | null>(null);
   const [arrivedAt, setArrivedAt] = useState<number | null>(null);
   const drawerButton = useRef<HTMLButtonElement | null>(null);
   const opened = useRef(false);
   const now = new Date();
+
+  const showDrawer = () => {
+    analytics.ask.drawer.opened();
+    setDrawerLeaving(false);
+    setDrawerArrives(!prefersReducedMotion());
+    setDrawerOpen(true);
+  };
+  const hideDrawer = () => {
+    setDrawerOpen(false);
+    setDrawerLeaving(!prefersReducedMotion());
+  };
+  useEffect(() => {
+    if (!drawerLeaving) {
+      return;
+    }
+    const timer = setTimeout(() => setDrawerLeaving(false), DRAWER_MOTION_MS);
+    return () => clearTimeout(timer);
+  }, [drawerLeaving]);
 
   const project = projectId === null ? null : (projects.find((each) => each.id === projectId) ?? null);
   const scope = page.scope;
@@ -84,21 +152,15 @@ export function AskPage() {
   const asked = messages.filter((message) => message.from === "reader").length;
   const left = usage === null ? null : Math.max(0, usage.limit - usage.used);
   const refused = state.status === "waiting" && state.wait.kind !== "noSource" ? state.wait : null;
-  const wait: ShownWait | null = !online
-    ? { kind: "offline" }
-    : asked >= MAX_CHAT_QUESTIONS
-      ? { kind: "conversationFull" }
-      : refused !== null
-        ? refused
-        : left === 0 && usage !== null
-          ? { kind: "month", resetsOn: usage.resetsOn }
-          : null;
+  const wait = waitOf({ online, asked, refused, left, usage });
   const empty = messages.length === 0 && pending === null;
   const latestAnswerAt = messages.map((message) => message.from).lastIndexOf("answer");
   const starters = empty ? askStarters({ overviews: entries, projects, members, topics }, project) : [];
 
   useEffect(() => {
-    if (opened.current) return;
+    if (opened.current) {
+      return;
+    }
     opened.current = true;
     analytics.ask.page.opened({ from: projectId === null ? "topBar" : "project", scope });
   }, [analytics, projectId, scope]);
@@ -109,7 +171,9 @@ export function AskPage() {
   }, [page.conversationId]);
 
   useEffect(() => {
-    if (said === null) return;
+    if (said === null) {
+      return;
+    }
     const timer = setTimeout(() => setSaid(null), SAID_MS);
     return () => clearTimeout(timer);
   }, [said]);
@@ -121,11 +185,17 @@ export function AskPage() {
     previous.current = state;
     if (state.status === "answering") {
       const wasPicking = was.status === "answering" ? was.picking : null;
-      if (state.picking === "choosing" && wasPicking !== "choosing") setAnnouncement("Choosing which overviews to read");
-      else if (state.picking === "reading" && wasPicking !== "reading") setAnnouncement(`Reading ${overviews(state.picked.length)}`);
-      else if (was.status !== "answering" && state.picking === null) setAnnouncement("Writing an answer");
+      if (state.picking === "choosing" && wasPicking !== "choosing") {
+        setAnnouncement("Choosing which overviews to read");
+      } else if (state.picking === "reading" && wasPicking !== "reading") {
+        setAnnouncement(`Reading ${overviews(state.picked.length)}`);
+      } else if (was.status !== "answering" && state.picking === null) {
+        setAnnouncement("Writing an answer");
+      }
     }
-    if (state.status === "stopped") setAnnouncement("Stopped");
+    if (state.status === "stopped") {
+      setAnnouncement("Stopped");
+    }
     if (was.status === "answering" && state.status === "idle") {
       setAnnouncement("Answer ready");
       setArrivedAt(latestAnswerAt);
@@ -140,7 +210,7 @@ export function AskPage() {
     questions[questions.length - 1]?.scrollIntoView({ block: "start" });
   }, [asking, page.conversationId]);
 
-  if (!isConnected(connection))
+  if (!isConnected(connection)) {
     return (
       <main className={styles.root} data-testid={askPageTestIds.root}>
         <div className={styles.signedOut} data-testid={askPageTestIds.signedOut}>
@@ -151,28 +221,39 @@ export function AskPage() {
         </div>
       </main>
     );
+  }
 
   const say = (text: string, done: boolean) => setSaid({ text, done, key: Date.now() });
   const send = (question: string, from: "typed" | "starter") => {
     page.ask(question, from);
-    if (from === "typed") setDraft("");
+    if (from === "typed") {
+      setDraft("");
+    }
   };
 
-  const toast =
-    page.deleting !== null ? (
-      <div key={page.deleting.id} className={styles.toast} role="status" data-testid={askPageTestIds.toast}>
-        <StrokeIcon name="check" size={17} />
-        Conversation deleted
-        <button type="button" className={styles.undo} onClick={page.undoDelete} data-testid={askPageTestIds.undo}>
-          Undo
-        </button>
-      </div>
-    ) : said !== null ? (
-      <div key={said.key} className={styles.toast} role="status" data-testid={askPageTestIds.toast}>
-        <StrokeIcon name={said.done ? "check" : "alertCircle"} size={17} />
-        {said.text}
-      </div>
-    ) : null;
+  const toastFor = (): ReactNode => {
+    if (page.deleting !== null) {
+      return (
+        <div key={page.deleting.id} className={styles.toast} role="status" data-testid={askPageTestIds.toast}>
+          <StrokeIcon name="check" size={17} />
+          Conversation deleted
+          <button type="button" className={styles.undo} onClick={page.undoDelete} data-testid={askPageTestIds.undo}>
+            Undo
+          </button>
+        </div>
+      );
+    }
+    if (said !== null) {
+      return (
+        <div key={said.key} className={styles.toast} role="status" data-testid={askPageTestIds.toast}>
+          <StrokeIcon name={said.done ? "check" : "alertCircle"} size={17} />
+          {said.text}
+        </div>
+      );
+    }
+    return null;
+  };
+  const toast = toastFor();
 
   const composer =
     wait !== null ? (
@@ -191,13 +272,7 @@ export function AskPage() {
         onRemoveSource={page.removeSource}
         onClear={page.clearSources}
         value={draft}
-        placeholder={
-          isPhone
-            ? "Ask or @ to add sources"
-            : scope === "project"
-              ? "Ask about this project or @ to add sources"
-              : "Ask your library or @ to add sources"
-        }
+        placeholder={placeholderOf(isPhone, scope)}
         answering={answering}
         large={empty}
         onChange={setDraft}
@@ -232,8 +307,9 @@ export function AskPage() {
 
   return (
     <main className={styles.root} data-testid={askPageTestIds.root}>
-      {drawerOpen && (
+      {(drawerOpen || drawerLeaving) && (
         <AskDrawer
+          motion={drawerMotionOf(drawerOpen, drawerArrives)}
           chats={page.chats}
           openChatId={page.chat?.id ?? null}
           now={now}
@@ -242,16 +318,20 @@ export function AskPage() {
           sheet={isPhone}
           trigger={drawerButton}
           onNew={() => {
-            if (isPhone) setDrawerOpen(false);
+            if (isPhone) {
+              hideDrawer();
+            }
             page.newConversation();
           }}
           onOpen={(chat) => {
-            if (isPhone) setDrawerOpen(false);
+            if (isPhone) {
+              hideDrawer();
+            }
             page.openConversation(chat);
           }}
           onDelete={page.deleteConversation}
           onClose={() => {
-            setDrawerOpen(false);
+            hideDrawer();
             requestAnimationFrame(() => drawerButton.current?.focus());
           }}
         />
@@ -266,8 +346,11 @@ export function AskPage() {
               aria-label="Show conversations"
               aria-expanded={drawerOpen}
               onClick={() => {
-                if (!drawerOpen) analytics.ask.drawer.opened();
-                setDrawerOpen(!drawerOpen);
+                if (drawerOpen) {
+                  hideDrawer();
+                } else {
+                  showDrawer();
+                }
               }}
               data-testid={askPageTestIds.drawerButton}
             >
@@ -352,13 +435,7 @@ export function AskPage() {
                       {pending.status === "answering" && pending.picking !== null && (
                         <div className={styles.picking}>
                           <AskPickingWait
-                            phase={
-                              pending.picking === "choosing"
-                                ? "choosing"
-                                : pending.text === "" && pending.sections.length === 0
-                                  ? "reading"
-                                  : "read"
-                            }
+                            phase={pickingPhaseOf(pending.picking, pending.text, pending.sections.length)}
                             picked={pending.picked}
                             imageOf={imageOf}
                             holds={holds}
@@ -420,4 +497,4 @@ export function AskPage() {
       </p>
     </main>
   );
-}
+};

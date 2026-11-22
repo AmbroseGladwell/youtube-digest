@@ -76,7 +76,14 @@ const articleByline = (source: WebSource, saved: string, recipe: boolean): strin
     `Saved ${saved}`,
   ].join(" · ");
 
-export function ReaderMasthead({
+const sourceLineKind = (hasRecipe: boolean, isArticle: boolean): string => {
+  if (!hasRecipe) {
+    return "Article";
+  }
+  return isArticle ? "Recipe" : "Recipe video";
+};
+
+export const ReaderMasthead = ({
   overview,
   metaParts,
   savedChip,
@@ -100,7 +107,7 @@ export function ReaderMasthead({
   onChat = null,
   projects,
   ref,
-}: ReaderMastheadProps) {
+}: ReaderMastheadProps) => {
   const analytics = useReaderAnalytics();
   const backToLibrary = useBackTo(Routes.home());
   const homeName = useHomeName();
@@ -121,7 +128,9 @@ export function ReaderMasthead({
   const cited = useCitedOverviewPart();
   const citedDubious = cited?.part === "dubiousClaim" ? cited.followed : null;
   useEffect(() => {
-    if (citedDubious !== null) setExplainingDubious(true);
+    if (citedDubious !== null) {
+      setExplainingDubious(true);
+    }
   }, [citedDubious]);
   const dubiousClaimCount = overview.verdict?.dubiousClaims?.length ?? 0;
   const dubiousLabel = dubiousClaimCount > 1 ? `${dubiousClaimCount} dubious claims` : "Dubious claim";
@@ -147,8 +156,11 @@ export function ReaderMasthead({
   };
   const setHeader = (element: HTMLElement | null) => {
     header.current = element;
-    if (typeof ref === "function") ref(element);
-    else if (ref) ref.current = element;
+    if (typeof ref === "function") {
+      ref(element);
+    } else if (ref) {
+      ref.current = element;
+    }
   };
 
   return (
@@ -234,7 +246,7 @@ export function ReaderMasthead({
           <div className={styles.who}>
             {(isArticle || overview.recipe !== null) && (
               <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
-                {sourceName(overview.source)} · {overview.recipe === null ? "Article" : isArticle ? "Recipe" : "Recipe video"}
+                {sourceName(overview.source)} · {sourceLineKind(overview.recipe !== null, isArticle)}
               </p>
             )}
             <p className={styles.byline}>
@@ -325,4 +337,4 @@ export function ReaderMasthead({
       </div>
     </header>
   );
-}
+};

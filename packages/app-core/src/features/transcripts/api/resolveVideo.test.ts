@@ -29,8 +29,12 @@ const rung = (tier: TranscriptTier, answer: "answers" | "no-answer" | "throws" |
   cost: "free",
   isReady: async () => answer !== "not-ready",
   resolve: async () => {
-    if (answer === "throws") throw new Error("Simulated: the rung failed");
-    if (answer === "daily-cap") throw new TranscriptFetchError("Simulated: the cap", { failure: "daily-cap", sourceId: tier });
+    if (answer === "throws") {
+      throw new Error("Simulated: the rung failed");
+    }
+    if (answer === "daily-cap") {
+      throw new TranscriptFetchError("Simulated: the cap", { failure: "daily-cap", sourceId: tier });
+    }
     return answer === "no-answer" ? null : { video, transcript: segments, generated: false };
   },
 });

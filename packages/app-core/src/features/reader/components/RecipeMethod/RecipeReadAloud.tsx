@@ -18,11 +18,11 @@ export interface RecipeReadAloudProps {
   testId: string;
 }
 
-export function RecipeReadAloud({ voice, label, testId }: RecipeReadAloudProps) {
+export const RecipeReadAloud = ({ voice, label, testId }: RecipeReadAloudProps) => {
   return (
     <button type="button" className={styles.button} onClick={voice.onPress} aria-pressed={voice.reading} data-testid={testId}>
       <StrokeIcon name={voice.reading ? "pause" : "volume"} size={13} />
       {voice.reading ? "Pause reading" : `Read ${label} aloud`}
     </button>
   );
-}
+};

@@ -24,16 +24,20 @@ const storageKey = (accountId: string | null) => `overview.captureQueue.${accoun
 // Paused, folded into the strip, waiting at a limit and what was chosen today are this
 // device's own, kept per account and never synced. A hold whose time has passed, or an
 // earlier day's choices, are not read back (docs/features/capture-queue.md).
-export function readCaptureQueuePreferences(
+export const readCaptureQueuePreferences = (
   accountId: string | null,
   storage: Storage = globalThis.localStorage,
   now: Date = new Date(),
-): CaptureQueuePreferences {
+): CaptureQueuePreferences => {
   try {
     const raw = storage.getItem(storageKey(accountId));
-    if (!raw) return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
+    if (!raw) {
+      return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
+    }
     const parsed = CaptureQueuePreferences.safeParse(JSON.parse(raw));
-    if (!parsed.success) return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
+    if (!parsed.success) {
+      return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
+    }
     const { hold, chosenToday } = parsed.data;
     return {
       ...parsed.data,
@@ -43,24 +47,24 @@ export function readCaptureQueuePreferences(
   } catch {
     return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
   }
-}
+};
 
-export function writeCaptureQueuePreferences(
+export const writeCaptureQueuePreferences = (
   accountId: string | null,
   preferences: CaptureQueuePreferences,
   storage: Storage = globalThis.localStorage,
-): void {
+): void => {
   try {
     storage.setItem(storageKey(accountId), JSON.stringify(preferences));
   } catch {
     return;
   }
-}
+};
 
-export function forgetCaptureQueuePreferences(accountId: string, storage: Storage = globalThis.localStorage): void {
+export const forgetCaptureQueuePreferences = (accountId: string, storage: Storage = globalThis.localStorage): void => {
   try {
     storage.removeItem(storageKey(accountId));
   } catch {
     return;
   }
-}
+};

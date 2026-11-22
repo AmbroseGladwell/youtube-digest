@@ -12,7 +12,7 @@ type WebSignedIn = Extract<SignedIn, { surface: "web" }>;
 // device connects to the account, and the page lands once the account's library is the one
 // open, so whatever comes next, onboarding included, reads the account's library rather than
 // the one being left (docs/features/sign-in.md, docs/features/account-libraries.md).
-export function useWebSignInLanding() {
+export const useWebSignInLanding = () => {
   const navigate = useNavigate();
   const { setConnection } = useSyncConnection();
   const libraryAccountId = useLibraryAccountId();
@@ -33,12 +33,18 @@ export function useWebSignInLanding() {
   );
 
   useEffect(() => {
-    if (landing === null || libraryAccountId !== landing.accountId) return;
+    if (landing === null || libraryAccountId !== landing.accountId) {
+      return;
+    }
     setLanding(null);
     const { returnTo } = landing;
     const state: ConsentPageLocationState = { fromSignInLink: true };
-    void (returnTo === null ? navigate(Routes.home(), { replace: true }) : navigate(returnTo, { replace: true, state }));
+    if (returnTo === null) {
+      void navigate(Routes.home(), { replace: true });
+    } else {
+      void navigate(returnTo, { replace: true, state });
+    }
   }, [landing, libraryAccountId, navigate]);
 
   return { land, landing: landing !== null };
-}
+};

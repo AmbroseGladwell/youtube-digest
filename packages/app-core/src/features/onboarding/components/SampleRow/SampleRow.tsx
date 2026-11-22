@@ -15,7 +15,7 @@ export interface SampleRowProps {
 
 // Design 155d: OV-154's source card made compact for the panel, with the image beside the title,
 // "Source · Kind" over it and the length under it. "Opening…" takes the length's place (155f).
-export function SampleRow({ sample, opening, onOpen, ref }: SampleRowProps) {
+export const SampleRow = ({ sample, opening, onOpen, ref }: SampleRowProps) => {
   const facts = sampleFacts(sample.note);
   return (
     <button
@@ -44,4 +44,4 @@ export function SampleRow({ sample, opening, onOpen, ref }: SampleRowProps) {
       </span>
     </button>
   );
-}
+};

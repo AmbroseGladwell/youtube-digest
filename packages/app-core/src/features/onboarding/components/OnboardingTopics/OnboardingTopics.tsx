@@ -33,7 +33,7 @@ const isStarter = (name: string) => STARTER_TOPICS.some((topic) => sameTopicName
 // Design 327e: up to three suggested for this source, pre-ticked, eight popular, and the rest of the
 // 27 on See all, with anything else typed in there. Nothing is made until Continue, so pressing a
 // chip off again leaves nothing behind (docs/features/onboarding.md, "Starter topics").
-export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving, below, onContinue }: OnboardingTopicsProps) {
+export const OnboardingTopics = ({ chosen: initiallyChosen, suggestions, saving, below, onContinue }: OnboardingTopicsProps) => {
   const [chosen, setChosenHere] = useState<string[]>([...initiallyChosen]);
   const [touched, setTouched] = useState(initiallyChosen.length > 0);
   const [allShown, setAllShown] = useState(false);
@@ -48,7 +48,9 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
   const suggested = [...(suggestions?.names ?? []), ...(suggestions?.newTopic ? [suggestions.newTopic] : [])];
   const suggestedKey = suggested.join("\u0000");
   useEffect(() => {
-    if (!touched && suggestedKey !== "") setChosenHere(suggestedKey.split("\u0000"));
+    if (!touched && suggestedKey !== "") {
+      setChosenHere(suggestedKey.split("\u0000"));
+    }
   }, [touched, suggestedKey]);
   const isSuggested = (name: string) => suggested.some((offered) => sameTopicName(offered, name));
   const popular = [...POPULAR, ...STARTER_TOPICS.map((topic) => topic.name)]
@@ -62,8 +64,12 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
   const pick = (event: FormEvent) => {
     event.preventDefault();
     const name = typing.trim();
-    if (name === "") return;
-    if (!has(name)) setChosen((current) => [...current, name]);
+    if (name === "") {
+      return;
+    }
+    if (!has(name)) {
+      setChosen((current) => [...current, name]);
+    }
     setTyping("");
     field.current?.focus();
   };
@@ -184,9 +190,15 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
       </div>
     </div>
   );
+};
+
+interface TopicChipProps {
+  name: string;
+  pressed: boolean;
+  onToggle: (name: string) => void;
 }
 
-function TopicChip({ name, pressed, onToggle }: { name: string; pressed: boolean; onToggle: (name: string) => void }) {
+const TopicChip = ({ name, pressed, onToggle }: TopicChipProps) => {
   return (
     <button
       type="button"
@@ -199,4 +211,4 @@ function TopicChip({ name, pressed, onToggle }: { name: string; pressed: boolean
       {name}
     </button>
   );
-}
+};

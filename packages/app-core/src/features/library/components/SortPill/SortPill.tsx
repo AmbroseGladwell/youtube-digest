@@ -20,7 +20,7 @@ export interface SortPillProps {
   compact?: boolean;
 }
 
-export function SortPill({ sort, onChange, compact = false }: SortPillProps) {
+export const SortPill = ({ sort, onChange, compact = false }: SortPillProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -74,7 +74,9 @@ export function SortPill({ sort, onChange, compact = false }: SortPillProps) {
             : `${styles.trigger} ${open ? styles.triggerOpen : ""}`
         }
         onClick={() => {
-          if (!open) analytics.library.sortPill.opened();
+          if (!open) {
+            analytics.library.sortPill.opened();
+          }
           setOpen(!open);
         }}
         aria-label={`Sort: ${LIBRARY_SORT_LABEL[sort]}`}
@@ -119,4 +121,4 @@ export function SortPill({ sort, onChange, compact = false }: SortPillProps) {
       )}
     </div>
   );
-}
+};

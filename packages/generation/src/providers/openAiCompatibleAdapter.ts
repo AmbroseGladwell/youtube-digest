@@ -18,7 +18,7 @@ export interface OpenAiCompatibleOptions {
 
 const MAX_TOKENS = 16000;
 
-export function openAiCompatibleAdapter({ baseUrl, structure, tokenLimitField }: OpenAiCompatibleOptions): ProviderAdapter {
+export const openAiCompatibleAdapter = ({ baseUrl, structure, tokenLimitField }: OpenAiCompatibleOptions): ProviderAdapter => {
   return {
     async generate(call: ProviderCall, request: GenerationRequest, http: typeof fetch): Promise<unknown> {
       const schema = providerJsonSchema(request.schema);
@@ -87,4 +87,4 @@ export function openAiCompatibleAdapter({ baseUrl, structure, tokenLimitField }:
       return usableModels(ids.map((model) => model.id));
     },
   };
-}
+};

@@ -58,7 +58,7 @@ import {
 } from "./libraryChatPrompt.js";
 import { recordChatCost } from "./recordChatCost.js";
 import { reserveChatMessage } from "./reserveChatMessage.js";
-import { sectionsSoFar } from "./sectionsSoFar.js";
+import { arrivedSections } from "./arrivedSections.js";
 import { streamChatCompletion, type ChatCompletionStream, type PromptMessage, type ReplyShape } from "./streamChatCompletion.js";
 import type { Passage } from "./transcriptPassages.js";
 import { withoutCitationMarks } from "./withoutCitationMarks.js";
@@ -83,11 +83,39 @@ export interface LibraryChatAnswererOptions {
 
 export type LibraryChatOwner = Exclude<ChatOwner, { kind: "overview" }>;
 
-function readAll<T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrations: readonly RecordMigration[]): T[] {
+const readAll = <T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrations: readonly RecordMigration[]): T[] => {
   return rows.flatMap((row) => {
     const read = readStoredRecord(stampSchemaVersion(row.body ?? {}, row.schemaVersion), schema, migrations);
     return read.status === "read" ? [read.record] : [];
   });
+};
+
+export interface AskAccount {
+  accountId: AccountId;
+  plan: Plan;
+}
+
+export interface LibraryQuestion {
+  conversationId: string;
+  text: string;
+  pins?: { overviews: readonly string[]; projects: readonly string[] };
+  setAside?: readonly string[];
+}
+
+export interface OverviewPassages {
+  overviewId: string;
+  passages: readonly Passage[];
+}
+
+export interface Pins {
+  overviews: readonly string[];
+  projects: readonly string[];
+}
+
+export interface ResolvedScope {
+  scope: LibraryChatScope;
+  overviews: Overview[];
+  stats: ChatScopeStats;
 }
 
 // Answers a reader's question over their whole library or one project, on our key, within the
@@ -102,14 +130,9 @@ export class LibraryChatAnswerer {
   }
 
   async ask(
-    { accountId, plan }: { accountId: AccountId; plan: Plan },
+    { accountId, plan }: AskAccount,
     owner: LibraryChatOwner,
-    question: {
-      conversationId: string;
-      text: string;
-      pins?: { overviews: readonly string[]; projects: readonly string[] };
-      setAside?: readonly string[];
-    },
+    question: LibraryQuestion,
     log: FastifyBaseLogger,
   ): Promise<AsyncGenerator<ChatStreamEvent>> {
     const { records, usage, clock, dailyMessages } = this.#options;
@@ -119,7 +142,9 @@ export class LibraryChatAnswerer {
     }
     const id = chatRecordId(owner, question.conversationId);
     const current = await records.read(accountId, "chat", id);
-    if (current?.deleted === true) throw new ApiError("not_found", "That conversation was deleted");
+    if (current?.deleted === true) {
+      throw new ApiError("not_found", "That conversation was deleted");
+    }
     const conversation = current === null ? null : (readAll([current], Chat, CHAT_MIGRATIONS)[0] ?? null);
     if (conversation !== null && chatQuestionCount(conversation.messages) >= MAX_CHAT_QUESTIONS) {
       throw new ApiError("invalid_request", "This conversation is as long as it can get. Start a new one to keep asking.", {
@@ -146,7 +171,9 @@ export class LibraryChatAnswerer {
       pastSources.map((source) => source.overviewId).filter((id) => !labelOf.has(id)),
     );
     for (const overview of [...outside, ...pinnedNow]) {
-      if (labelOf.has(overview.id)) continue;
+      if (labelOf.has(overview.id)) {
+        continue;
+      }
       const label = `O${labels.size + 1}`;
       labels.set(label, overview);
       labelOf.set(overview.id, label);
@@ -188,11 +215,13 @@ export class LibraryChatAnswerer {
       return entries.length === 0 ? [] : [pickedBlock(entries)];
     };
     const minuteLabels = new Map<string, OtherOverviewCitation>();
-    const minutesMessage = (minutes: ReadonlyArray<{ overviewId: string; passages: readonly Passage[] }>): PromptMessage[] => {
+    const minutesMessage = (minutes: ReadonlyArray<OverviewPassages>): PromptMessage[] => {
       const entries = minutes.flatMap(({ overviewId, passages }) => {
         const label = labelOf.get(overviewId);
         const overview = label === undefined ? undefined : labels.get(label);
-        if (label === undefined || overview === undefined || passages.length === 0) return [];
+        if (label === undefined || overview === undefined || passages.length === 0) {
+          return [];
+        }
         for (const passage of passages) {
           minuteLabels.set(`${label}.${passage.id}`, {
             overviewId: overview.id as OverviewId,
@@ -258,7 +287,9 @@ export class LibraryChatAnswerer {
           yield { type: "picking" };
           const pick = await ask([...before, pickPrompt(question.text)], PICK_SHAPE);
           let raw = "";
-          for await (const piece of pick.pieces) raw += piece;
+          for await (const piece of pick.pieces) {
+            raw += piece;
+          }
           pickUsage = pick.usage();
           assertWhole(pick);
           const labels = PickReply.parse(JSON.parse(raw)).overviews.map((label) => label.split(".")[0] ?? "");
@@ -331,17 +362,19 @@ export class LibraryChatAnswerer {
             yield { type: "text", text: intro.slice(sent.length) };
             sent = intro;
           }
-          const whole = sectionsSoFar(raw);
-          for (; sectionsSent < whole.length; sectionsSent += 1) {
-            const section = ChatReply.shape.sections.element.safeParse(whole[sectionsSent]);
-            if (section.success) yield { type: "section", section: sectionOf(section.data) };
+          const arrived = arrivedSections(raw, sectionsSent);
+          sectionsSent = arrived.seen;
+          for (const section of arrived.sections) {
+            yield { type: "section", section: sectionOf(section) };
           }
         }
         assertWhole(stream);
         const reply = ChatReply.parse(JSON.parse(raw));
         const sections = structuredAnswer(reply, cite, { library: true });
         const text = flattenedAnswer(sections);
-        if (text.length === 0) throw new EmptyAnswerError("the reply had no answer");
+        if (text.length === 0) {
+          throw new EmptyAnswerError("the reply had no answer");
+        }
         const citations = uniqueCitations(
           [...sections.introSources, ...sections.sections.flatMap((section) => section.sources)].map((source) => source.citation),
         );
@@ -419,7 +452,7 @@ export class LibraryChatAnswerer {
 
   // What the reader pinned: overviews, and a project's members, the most recently added 8 of a large
   // one, as an overview's chat caps them. Only live ones.
-  async #pinned(accountId: AccountId, pins: { overviews: readonly string[]; projects: readonly string[] }): Promise<Overview[]> {
+  async #pinned(accountId: AccountId, pins: Pins): Promise<Overview[]> {
     const { records } = this.#options;
     const members: string[] = [];
     for (const project of readAll(await records.readLive(accountId, "project", pins.projects), Project, PROJECT_MIGRATIONS)) {
@@ -444,10 +477,7 @@ export class LibraryChatAnswerer {
 
   // The overviews a question is over, oldest saved first so a new save lands at the end of the
   // cached map, and the counts its answer shows, worked out here.
-  async #scope(
-    accountId: AccountId,
-    owner: LibraryChatOwner,
-  ): Promise<{ scope: LibraryChatScope; overviews: Overview[]; stats: ChatScopeStats }> {
+  async #scope(accountId: AccountId, owner: LibraryChatOwner): Promise<ResolvedScope> {
     const { records } = this.#options;
     const oldestFirst = (overviews: Overview[]) => [...overviews].sort((left, right) => left.savedAt.localeCompare(right.savedAt));
     if (owner.kind === "library") {
@@ -456,7 +486,9 @@ export class LibraryChatAnswerer {
       return { scope: { kind: "library" }, overviews: oldestFirst(overviews), stats: { overviews: overviews.length, projects } };
     }
     const project = readAll(await records.readLive(accountId, "project", [owner.id]), Project, PROJECT_MIGRATIONS)[0];
-    if (project === undefined) throw new ApiError("not_found", "No such project");
+    if (project === undefined) {
+      throw new ApiError("not_found", "No such project");
+    }
     const members = readAll(await records.listLive(accountId, "projectMember", `${project.id}:%`), ProjectMember, PROJECT_MEMBER_MIGRATIONS)
       .filter(isInProject)
       .map((member) => member.overviewId);
@@ -466,12 +498,14 @@ export class LibraryChatAnswerer {
 }
 
 // An overview cited by several points is one citation of each place, and of the whole only once.
-function uniqueCitations(citations: readonly ChatCitation[]): ChatCitation[] {
+const uniqueCitations = (citations: readonly ChatCitation[]): ChatCitation[] => {
   const seen = new Set<string>();
   return citations.filter((citation) => {
     const key = JSON.stringify(citation);
-    if (seen.has(key)) return false;
+    if (seen.has(key)) {
+      return false;
+    }
     seen.add(key);
     return true;
   });
-}
+};

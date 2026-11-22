@@ -14,7 +14,7 @@ const isObject = (value: unknown): value is JsonSchema => typeof value === "obje
 // not enforce it, the prompt and the correction pass do. Keeping the behaviour identical
 // across six providers is the point — the overview format was tuned against a model that
 // could read its own caps in the description.
-function describeUnsupported(schema: JsonSchema, leftovers: JsonSchema): void {
+const describeUnsupported = (schema: JsonSchema, leftovers: JsonSchema): void => {
   const entries = Object.entries(leftovers);
   if (entries.length === 0) {
     return;
@@ -22,9 +22,9 @@ function describeUnsupported(schema: JsonSchema, leftovers: JsonSchema): void {
   const said = `{${entries.map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join(", ")}}`;
   const existing = schema.description;
   schema.description = typeof existing === "string" ? `${existing}\n\n${said}` : said;
-}
+};
 
-function transform(node: unknown): JsonSchema {
+const transform = (node: unknown): JsonSchema => {
   if (!isObject(node)) {
     return {};
   }
@@ -67,11 +67,11 @@ function transform(node: unknown): JsonSchema {
 
   describeUnsupported(out, leftovers);
   return out;
-}
+};
 
 // One shape for all five providers that accept a schema. The sixth, DeepSeek, has no
 // schema mode at all and is given this same object inside the prompt instead
 // (docs/features/byo-providers.md).
-export function providerJsonSchema(schema: z.ZodObject<z.ZodRawShape>): JsonSchema {
+export const providerJsonSchema = (schema: z.ZodObject<z.ZodRawShape>): JsonSchema => {
   return transform(z.toJSONSchema(schema, { io: "output" }));
-}
+};

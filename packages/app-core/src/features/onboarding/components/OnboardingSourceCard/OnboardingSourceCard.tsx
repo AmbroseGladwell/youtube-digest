@@ -14,7 +14,7 @@ export interface OnboardingSourceCardProps {
 
 // One card for every kind (154d–154h): the image, or the site's name on a stone tile, then a
 // kicker naming the source and its kind, the title, and facts that belong to the kind.
-export function OnboardingSourceCard({ kind, found, size = "large" }: OnboardingSourceCardProps) {
+export const OnboardingSourceCard = ({ kind, found, size = "large" }: OnboardingSourceCardProps) => {
   const { kicker, facts } = kind.card(found);
   const factsBeside = size === "large" || size === "row" || kicker === null;
   return (
@@ -36,12 +36,12 @@ export function OnboardingSourceCard({ kind, found, size = "large" }: Onboarding
       {size === "compact" && !factsBeside && <Facts facts={facts} />}
     </div>
   );
-}
+};
 
-function Facts({ facts }: { facts: OnboardingCard["facts"] }) {
+const Facts = ({ facts }: { facts: OnboardingCard["facts"] }) => {
   return facts.line === "" ? null : (
     <span className={styles.line} data-testid={onboardingSourceCardTestIds.facts}>
       {facts.line}
     </span>
   );
-}
+};

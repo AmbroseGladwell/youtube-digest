@@ -3,7 +3,7 @@ import { domainOf, type CaptureEntry, type ExtractedArticle } from "@overview/do
 import { useNewOverviewRunController } from "./NewOverviewRunContext.js";
 
 // The read has happened by the time Generate is pressed, so the run spends it.
-export function useStartArticleFromLink() {
+export const useStartArticleFromLink = () => {
   const { startArticle } = useNewOverviewRunController();
   return useCallback(
     (article: ExtractedArticle, from: CaptureEntry) =>
@@ -20,4 +20,4 @@ export function useStartArticleFromLink() {
       }),
     [startArticle],
   );
-}
+};

@@ -21,7 +21,7 @@ export const CREDENTIAL_NAMES = ["CHROME_PUBLISHER_ID", "CHROME_SERVICE_ACCOUNT_
 const TOKEN_LIFETIME_SECONDS = 3600;
 
 // The JSON key Google Cloud issues, which carries far more than is needed here.
-export function serviceAccountFrom(raw) {
+export const serviceAccountFrom = (raw) => {
   let key;
   try {
     key = JSON.parse(raw);
@@ -39,10 +39,10 @@ export function serviceAccountFrom(raw) {
     );
   }
   return { clientEmail, privateKey };
-}
+};
 
 // What the assertion claims: this account, asking for this scope, for an hour.
-export function assertionClaim({ clientEmail, now }) {
+export const assertionClaim = ({ clientEmail, now }) => {
   const issued = Math.floor(now / 1000);
   return {
     iss: clientEmail,
@@ -51,28 +51,28 @@ export function assertionClaim({ clientEmail, now }) {
     iat: issued,
     exp: issued + TOKEN_LIFETIME_SECONDS,
   };
-}
+};
 
 const base64url = (value) => Buffer.from(value).toString("base64url");
 
 // A service account proves itself by signing its own claim rather than by holding a token
 // somebody minted for it, which is the whole reason it cannot quietly expire.
-export function signedAssertion({ clientEmail, privateKey, now = Date.now() }) {
+export const signedAssertion = ({ clientEmail, privateKey, now = Date.now() }) => {
   const body = [
     base64url(JSON.stringify({ alg: "RS256", typ: "JWT" })),
     base64url(JSON.stringify(assertionClaim({ clientEmail, now }))),
   ].join(".");
   const signature = createSign("RSA-SHA256").update(body).end().sign(privateKey).toString("base64url");
   return `${body}.${signature}`;
-}
+};
 
-export function missingCredentials(env) {
+export const missingCredentials = (env) => {
   return CREDENTIAL_NAMES.filter((name) => (env[name] ?? "") === "");
-}
+};
 
-export function itemPath({ publisherId, itemId }) {
+export const itemPath = ({ publisherId, itemId }) => {
   return `publishers/${publisherId}/items/${itemId}`;
-}
+};
 
 const stateOf = (revision) => revision?.state ?? null;
 
@@ -84,7 +84,7 @@ const spell = (versions) => (versions.length === 0 ? "(no version)" : versions.j
 // What to do with the item as the store currently holds it: the version already published is
 // nothing to do, and a submission already in review is not something to overwrite from CI
 // (docs/architecture/store-listing.md, "What CI does").
-export function submissionDecision(status, version) {
+export const submissionDecision = (status, version) => {
   if (status.takenDown === true) {
     return { publish: false, problem: "the store has taken the item down; the dashboard says why" };
   }
@@ -109,11 +109,11 @@ export function submissionDecision(status, version) {
     };
   }
   return { publish: true, reason: `the store publishes ${spell(versionsOf(published))}` };
-}
+};
 
 // The store answers an upload with the state it reached and the version it read out of the
 // manifest inside the zip, and both have to be the release's before anything is submitted.
-export function uploadProblem(upload, version) {
+export const uploadProblem = (upload, version) => {
   if (upload.uploadState !== "SUCCEEDED") {
     return `the store left the upload in ${upload.uploadState ?? "(no state)"}`;
   }
@@ -121,20 +121,22 @@ export function uploadProblem(upload, version) {
     return `the store read version ${upload.crxVersion ?? "(none)"} out of the zip, not ${version}`;
   }
   return null;
-}
+};
 
 const SUBMITTED_STATES = new Set(["PENDING_REVIEW", "STAGED", "PUBLISHED", "PUBLISHED_TO_TESTERS"]);
 
-export function publishProblem(published) {
+export const publishProblem = (published) => {
   return SUBMITTED_STATES.has(published.state) ? null : `the store put the submission in ${published.state ?? "(no state)"}`;
-}
+};
 
 // Read back rather than believed: a publish call that answered is not a submission the store
 // says it holds (CLAUDE.md, "Verify before reporting").
-export function acceptedProblem(status, version) {
+export const acceptedProblem = (status, version) => {
   const submitted = status.submittedItemRevisionStatus;
   const published = status.publishedItemRevisionStatus;
-  if (versionsOf(published).includes(version)) return null;
+  if (versionsOf(published).includes(version)) {
+    return null;
+  }
   if (submitted === undefined || submitted === null) {
     return `the store holds no submitted revision of ${version} after the publish`;
   }
@@ -142,15 +144,15 @@ export function acceptedProblem(status, version) {
     return `the store's submitted revision is ${spell(versionsOf(submitted))}, not ${version}`;
   }
   return SUBMITTED_STATES.has(stateOf(submitted)) ? null : `the store holds ${version} in ${stateOf(submitted) ?? "(no state)"}`;
-}
+};
 
-export function warningLines(published) {
+export const warningLines = (published) => {
   return (published.warningInfo?.warnings ?? []).map(
     ({ reason, description }) => `${reason ?? "warning"}: ${description ?? "(no description)"}`,
   );
-}
+};
 
-async function answerOf(response, what) {
+const answerOf = async (response, what) => {
   const body = await response.text();
   if (!response.ok) {
     throw new Error(`${what} was refused with ${response.status}: ${body.trim() || "(empty body)"}`);
@@ -160,16 +162,18 @@ async function answerOf(response, what) {
   } catch {
     throw new Error(`${what} answered with something that is not JSON: ${body.slice(0, 200)}`);
   }
-}
+};
 
 // The store's API over fetch, kept behind this seam so the orchestration below can be tested
 // without one (scripts/publishExtension.test.mjs).
-export function storeApi({ credentials, fetch: doFetch = fetch }) {
+export const storeApi = ({ credentials, fetch: doFetch = fetch }) => {
   const name = itemPath({ publisherId: credentials.CHROME_PUBLISHER_ID, itemId: credentials.itemId });
   let token = null;
 
   const authorized = async () => {
-    if (token !== null) return token;
+    if (token !== null) {
+      return token;
+    }
     const answer = await answerOf(
       await doFetch(TOKEN_URL, {
         method: "POST",
@@ -215,28 +219,34 @@ export function storeApi({ credentials, fetch: doFetch = fetch }) {
         body: JSON.stringify({ publishType: "DEFAULT_PUBLISH" }),
       }),
   };
-}
+};
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // An upload the store is still unpacking answers IN_PROGRESS and finishes asynchronously, so
 // the item's own status is what says how it ended.
-async function settledUpload(api, started, { wait = sleep } = {}) {
-  if (started.uploadState !== "IN_PROGRESS") return started;
+const settledUpload = async (api, started, { wait = sleep } = {}) => {
+  if (started.uploadState !== "IN_PROGRESS") {
+    return started;
+  }
   for (let attempt = 0; attempt < UPLOAD_POLL_ATTEMPTS; attempt += 1) {
     await wait(UPLOAD_POLL_MS);
     const status = await api.status();
-    if (status.lastAsyncUploadState === "IN_PROGRESS") continue;
+    if (status.lastAsyncUploadState === "IN_PROGRESS") {
+      continue;
+    }
     const versions = versionsOf(status.submittedItemRevisionStatus);
     return { uploadState: status.lastAsyncUploadState, crxVersion: versions.at(-1) ?? started.crxVersion };
   }
   throw new Error("the store was still unpacking the upload after it was given every chance to finish");
-}
+};
 
-export async function publishExtension({ api, zip, version, log = console.log, wait = sleep }) {
+export const publishExtension = async ({ api, zip, version, log = console.log, wait = sleep }) => {
   const before = await api.status();
   const decision = submissionDecision(before, version);
-  if (decision.problem !== undefined) throw new Error(decision.problem);
+  if (decision.problem !== undefined) {
+    throw new Error(decision.problem);
+  }
   if (!decision.publish) {
     log(`chrome web store: nothing to submit, because ${decision.reason}`);
     return { submitted: false, reason: decision.reason };
@@ -245,32 +255,42 @@ export async function publishExtension({ api, zip, version, log = console.log, w
 
   const upload = await settledUpload(api, await api.upload(zip), { wait });
   const refused = uploadProblem(upload, version);
-  if (refused !== null) throw new Error(`the package was not taken: ${refused}`);
+  if (refused !== null) {
+    throw new Error(`the package was not taken: ${refused}`);
+  }
   log(`chrome web store: the store took ${upload.crxVersion}`);
 
   const published = await api.publish();
-  for (const line of warningLines(published)) log(`chrome web store warning: ${line}`);
+  for (const line of warningLines(published)) {
+    log(`chrome web store warning: ${line}`);
+  }
   const rejected = publishProblem(published);
-  if (rejected !== null) throw new Error(`the submission was not accepted: ${rejected}`);
+  if (rejected !== null) {
+    throw new Error(`the submission was not accepted: ${rejected}`);
+  }
 
   const after = await api.status();
   const unproven = acceptedProblem(after, version);
-  if (unproven !== null) throw new Error(`the submission cannot be confirmed: ${unproven}`);
+  if (unproven !== null) {
+    throw new Error(`the submission cannot be confirmed: ${unproven}`);
+  }
   const state = stateOf(after.submittedItemRevisionStatus) ?? stateOf(after.publishedItemRevisionStatus);
   log(`chrome web store: the store holds ${version} in ${state}`);
   return { submitted: true, state };
-}
+};
 
-function reportCredentials(env) {
+const reportCredentials = (env) => {
   const missing = missingCredentials(env);
   if (missing.length > 0) {
     console.log(
       `::warning::${missing.join(", ")} ${missing.length === 1 ? "isn't" : "aren't"} set, so the extension wasn't submitted to the Chrome Web Store`,
     );
   }
-  if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `ready=${missing.length === 0}\n`);
+  if (env.GITHUB_OUTPUT) {
+    appendFileSync(env.GITHUB_OUTPUT, `ready=${missing.length === 0}\n`);
+  }
   return missing.length === 0;
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -288,7 +308,9 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     }
     const version = given ?? JSON.parse(readFileSync(path.join(rootDir, "package.json"), "utf8")).version;
     const missing = missingCredentials(process.env);
-    if (missing.length > 0) throw new Error(`${missing.join(", ")} missing from the environment`);
+    if (missing.length > 0) {
+      throw new Error(`${missing.join(", ")} missing from the environment`);
+    }
     const manifest = JSON.parse(readFileSync(path.join(rootDir, "apps/extension/manifest.json"), "utf8"));
     if (typeof manifest.key !== "string" || manifest.key === "") {
       throw new Error("manifest.json carries no key, so there is no store item to submit to");

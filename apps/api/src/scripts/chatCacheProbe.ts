@@ -12,10 +12,12 @@ import { transcriptPassages } from "../chats/transcriptPassages.js";
 //
 //   node dist/scripts/chatCacheProbe.js <a sources/<id> dir with transcript.json>
 
-async function main() {
+const main = async () => {
   const [directory] = process.argv.slice(2);
   const apiKey = process.env.OPENAI_API_KEY;
-  if (directory === undefined || apiKey === undefined) throw new Error("usage: chatCacheProbe <source dir>, with OPENAI_API_KEY set");
+  if (directory === undefined || apiKey === undefined) {
+    throw new Error("usage: chatCacheProbe <source dir>, with OPENAI_API_KEY set");
+  }
   const { transcript } = JSON.parse(await readFile(join(directory, "transcript.json"), "utf-8")) as { transcript: TranscriptSegment[] };
   const nonce = randomUUID();
   const system = chatSystemPrompt("video", `Probe ${nonce}. A conversation about this video.`, transcriptPassages(transcript));
@@ -84,12 +86,13 @@ async function main() {
       messages,
       `probe-${nonce}`,
     );
-    for await (const _piece of stream.pieces);
+    for await (const _piece of stream.pieces) {
+    }
     const usage = stream.usage();
     process.stdout.write(
       `${label}: uncached ${usage?.uncachedInputTokens} read ${usage?.cachedInputTokens} written ${usage?.cacheWriteTokens} out ${usage?.outputTokens}\n`,
     );
   }
-}
+};
 
 await main();

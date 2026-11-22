@@ -1,4 +1,4 @@
-import { forwardRef, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MutableRefObject } from "react";
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
 import { MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
@@ -26,7 +26,39 @@ const VISIBLE_CHIPS = 2;
 
 const plural = (count: number, noun: string) => (count === 0 ? null : `${count} ${noun}${count === 1 ? "" : "s"}`);
 
-type RowItem = {
+const announcementOf = (full: boolean, options: PickerOption[]): string => {
+  if (full) {
+    return "You've added 20, the most one question can read.";
+  }
+  if (options.length === 0) {
+    return "Nothing found";
+  }
+  return [
+    plural(options.filter((option) => option.kind === "project").length, "project"),
+    plural(options.filter((option) => option.kind === "overview").length, "overview"),
+  ]
+    .filter((part) => part !== null)
+    .join(", ");
+};
+
+const headLabelOf = (option: PickerOption, query: string): string => {
+  if (option.kind === "project") {
+    return "Projects";
+  }
+  return query === "" ? "Recent overviews" : "Overviews";
+};
+
+const optionDetailOf = (option: PickerOption): string => {
+  if (option.kind === "project") {
+    return `${option.count} ${option.count === 1 ? "overview" : "overviews"}`;
+  }
+  if (option.overview.source.kind === "web") {
+    return "Article";
+  }
+  return option.overview.recipe !== null ? "Recipe" : "Video";
+};
+
+interface RowItem {
   id: string;
   title: string;
   imageUrl: string | null;
@@ -34,15 +66,24 @@ type RowItem = {
   project: boolean;
   deleted: boolean;
   remove: () => void;
-};
+}
 
 // OV-354, page 1: the field with what the next question will send in one row above it, two chips
 // then "+N", and the "@" picker over it, a combobox listing projects and the newest overviews,
 // filtered by title as the reader types.
-export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(function ChatComposer(
-  { exclude: own, pinned, liveSources, onPin, onUnpin, onRemoveSource, onClear, value, onChange, ...field },
+export const ChatComposer = ({
+  exclude: own,
+  pinned,
+  liveSources,
+  onPin,
+  onUnpin,
+  onRemoveSource,
+  onClear,
+  value,
+  onChange,
   ref,
-) {
+  ...field
+}: ChatComposerProps) => {
   const listId = useId();
   const optionId = (index: number) => `${listId}-${index}`;
   const library = useOverviewsWithStateQuery().data ?? [];
@@ -54,8 +95,11 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
   const input = useRef<HTMLTextAreaElement | null>(null);
   const setRefs = (node: HTMLTextAreaElement | null) => {
     input.current = node;
-    if (typeof ref === "function") ref(node);
-    else if (ref !== null) (ref as MutableRefObject<HTMLTextAreaElement | null>).current = node;
+    if (typeof ref === "function") {
+      ref(node);
+    } else if (ref != null) {
+      (ref as MutableRefObject<HTMLTextAreaElement | null>).current = node;
+    }
   };
 
   const overviews = library.flatMap((entry) => (entry.kind === "overview" ? [entry.overview] : []));
@@ -76,7 +120,9 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [below, setBelow] = useState(false);
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const top = rootRef.current?.getBoundingClientRect().top ?? 0;
     const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
     setBelow(top - Math.max(bar, 0) < Math.min(352, window.innerHeight * 0.5));
@@ -118,8 +164,9 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
   };
 
   const choose = (option: PickerOption) => {
-    if (picking !== null)
+    if (picking !== null) {
       onChange(`${value.slice(0, picking.start)}${value.slice(picking.start + 1 + picking.query.length)}`.replace(/ {2,}/g, " "));
+    }
     onPin(
       option.kind === "project"
         ? { kind: "project", id: option.project.id, title: option.project.name, count: option.count }
@@ -130,13 +177,17 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
   };
 
   const pickerKey = (event: KeyboardEvent<HTMLTextAreaElement>): boolean => {
-    if (!open) return false;
+    if (!open) {
+      return false;
+    }
     if (event.key === "Escape") {
       event.preventDefault();
       setPicking(null);
       return true;
     }
-    if (full || options.length === 0) return false;
+    if (full || options.length === 0) {
+      return false;
+    }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       setActive((current) => (current + (event.key === "ArrowDown" ? 1 : options.length - 1)) % options.length);
@@ -164,16 +215,60 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
     });
   };
 
-  const announced = full
-    ? "You've added 20, the most one question can read."
-    : options.length === 0
-      ? "Nothing found"
-      : [
-          plural(options.filter((option) => option.kind === "project").length, "project"),
-          plural(options.filter((option) => option.kind === "overview").length, "overview"),
-        ]
-          .filter((part) => part !== null)
-          .join(", ");
+  const announced = announcementOf(full, options);
+
+  const pickerBodyFor = (query: string): ReactNode => {
+    if (full) {
+      return (
+        <p className={styles.line} data-testid={chatComposerTestIds.pickerLine}>
+          You&rsquo;ve added 20, the most one question can read. Remove one to add another.
+        </p>
+      );
+    }
+    if (options.length === 0) {
+      return (
+        <p className={styles.line} data-testid={chatComposerTestIds.pickerLine}>
+          Nothing called &lsquo;{query}&rsquo;. Try a word from the title, or a project&rsquo;s name.
+        </p>
+      );
+    }
+    return (
+      <ul className={styles.list} id={listId} role="listbox" aria-label="Overviews and projects">
+        {options.map((option, index) => {
+          const head = index === 0 || options[index - 1]!.kind !== option.kind;
+          const title = option.kind === "project" ? option.project.name : option.overview.source.title;
+          return (
+            <li key={option.kind === "project" ? option.project.id : option.overview.id} role="presentation">
+              {head && <p className={styles.head}>{headLabelOf(option, query)}</p>}
+              <div
+                id={optionId(index)}
+                role="option"
+                aria-selected={index === active}
+                className={`${styles.option} ${index === active ? styles.active : ""}`}
+                onMouseDown={(event) => event.preventDefault()}
+                onMouseEnter={() => setActive(index)}
+                onClick={() => choose(option)}
+                data-testid={chatComposerTestIds.option}
+              >
+                <StrokeIcon name={option.kind === "project" ? "folder" : "fileText"} size={15} />
+                <b>
+                  {markedPieces(title, query).map((piece, at) =>
+                    piece.marked ? <strong key={at}>{piece.text}</strong> : <span key={at}>{piece.text}</span>,
+                  )}
+                </b>
+                <small>{optionDetailOf(option)}</small>
+              </div>
+            </li>
+          );
+        })}
+        {more > 0 && (
+          <li role="presentation" className={styles.more}>
+            {more} more · Keep typing to narrow it down.
+          </li>
+        )}
+      </ul>
+    );
+  };
 
   return (
     <div className={styles.root} ref={rootRef}>
@@ -182,62 +277,7 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
           <p className={styles.srOnly} aria-live="polite">
             {announced}
           </p>
-          {full ? (
-            <p className={styles.line} data-testid={chatComposerTestIds.pickerLine}>
-              You&rsquo;ve added 20, the most one question can read. Remove one to add another.
-            </p>
-          ) : options.length === 0 ? (
-            <p className={styles.line} data-testid={chatComposerTestIds.pickerLine}>
-              Nothing called &lsquo;{picking.query}&rsquo;. Try a word from the title, or a project&rsquo;s name.
-            </p>
-          ) : (
-            <ul className={styles.list} id={listId} role="listbox" aria-label="Overviews and projects">
-              {options.map((option, index) => {
-                const head = index === 0 || options[index - 1]!.kind !== option.kind;
-                const title = option.kind === "project" ? option.project.name : option.overview.source.title;
-                return (
-                  <li key={option.kind === "project" ? option.project.id : option.overview.id} role="presentation">
-                    {head && (
-                      <p className={styles.head}>
-                        {option.kind === "project" ? "Projects" : picking.query === "" ? "Recent overviews" : "Overviews"}
-                      </p>
-                    )}
-                    <div
-                      id={optionId(index)}
-                      role="option"
-                      aria-selected={index === active}
-                      className={`${styles.option} ${index === active ? styles.active : ""}`}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onMouseEnter={() => setActive(index)}
-                      onClick={() => choose(option)}
-                      data-testid={chatComposerTestIds.option}
-                    >
-                      <StrokeIcon name={option.kind === "project" ? "folder" : "fileText"} size={15} />
-                      <b>
-                        {markedPieces(title, picking.query).map((piece, at) =>
-                          piece.marked ? <strong key={at}>{piece.text}</strong> : <span key={at}>{piece.text}</span>,
-                        )}
-                      </b>
-                      <small>
-                        {option.kind === "project"
-                          ? `${option.count} ${option.count === 1 ? "overview" : "overviews"}`
-                          : option.overview.source.kind === "web"
-                            ? "Article"
-                            : option.overview.recipe !== null
-                              ? "Recipe"
-                              : "Video"}
-                      </small>
-                    </div>
-                  </li>
-                );
-              })}
-              {more > 0 && (
-                <li role="presentation" className={styles.more}>
-                  {more} more · Keep typing to narrow it down.
-                </li>
-              )}
-            </ul>
-          )}
+          {pickerBodyFor(picking.query)}
         </div>
       )}
       {rows.length > 0 && (
@@ -318,4 +358,4 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
       />
     </div>
   );
-});
+};

@@ -13,24 +13,37 @@ export interface SourceOfferProps {
   video?: boolean;
 }
 
+type OfferedRecipe = NonNullable<SourceOfferProps["recipe"]> | null;
+
+const factsOf = (video: boolean, recipe: OfferedRecipe, words: number | null): string | null => {
+  if (video) {
+    return null;
+  }
+  if (recipe !== null) {
+    return recipeCounts(recipe, " · ");
+  }
+  return words !== null ? `${words.toLocaleString("en-GB")} words · ${articleReadMinutes(words)} min read` : null;
+};
+
+const kindLabelOf = (video: boolean, recipe: OfferedRecipe): string => {
+  if (video) {
+    return "Video";
+  }
+  return recipe === null ? "Article" : "Recipe";
+};
+
 // Designs 77ab–77ae and 205f: what's being offered, so the reader can tell it's the right
 // thing. One card for a video and a page alike, which is what makes the panel's home read
 // as one screen with a changing subject rather than several screens. Before Create that is
 // only what the tab says: we promise not to read a page until then, and a video's length
 // is not drawn here either.
-export function SourceOffer({ source, title, words = null, recipe = null, video = false }: SourceOfferProps) {
-  const facts = video
-    ? null
-    : recipe !== null
-      ? recipeCounts(recipe, " · ")
-      : words !== null
-        ? `${words.toLocaleString("en-GB")} words · ${articleReadMinutes(words)} min read`
-        : null;
+export const SourceOffer = ({ source, title, words = null, recipe = null, video = false }: SourceOfferProps) => {
+  const facts = factsOf(video, recipe, words);
 
   return (
     <div className={styles.card} data-testid={sourceOfferTestIds.card}>
       <p className={styles.site} data-testid={sourceOfferTestIds.site}>
-        {source} · {video ? "Video" : recipe === null ? "Article" : "Recipe"}
+        {source} · {kindLabelOf(video, recipe)}
       </p>
       <h2 className={styles.title} data-testid={sourceOfferTestIds.title}>
         {title}
@@ -42,4 +55,4 @@ export function SourceOffer({ source, title, words = null, recipe = null, video 
       )}
     </div>
   );
-}
+};

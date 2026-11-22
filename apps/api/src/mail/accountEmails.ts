@@ -15,7 +15,7 @@ export const changedOnLine = (changedAt: string): string => {
 // button, and the old address's notice has one, its way back
 // (docs/features/account-changes.md, "The mails"). The step-up's mail says what the code
 // is about to allow (design 14h·2, docs/features/account-deletion.md).
-export function accountEmail(mail: AccountMail, siteUrl: string): EmailContent {
+export const accountEmail = (mail: AccountMail, siteUrl: string): EmailContent => {
   switch (mail.kind) {
     case "verificationCode":
       return compose({
@@ -102,7 +102,7 @@ export function accountEmail(mail: AccountMail, siteUrl: string): EmailContent {
         reason: "You’re getting this because the email on your account changed.",
       });
   }
-}
+};
 
 interface Composed {
   siteUrl: string;
@@ -116,7 +116,7 @@ interface Composed {
   reason: string;
 }
 
-function compose({ siteUrl, subject, preview, heading, body, code, action, notes, reason }: Composed): EmailContent {
+const compose = ({ siteUrl, subject, preview, heading, body, code, action, notes, reason }: Composed): EmailContent => {
   const text = [
     body,
     "",
@@ -143,4 +143,4 @@ function compose({ siteUrl, subject, preview, heading, body, code, action, notes
       siteUrl,
     }),
   };
-}
+};

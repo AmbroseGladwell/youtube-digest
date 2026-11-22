@@ -53,9 +53,11 @@ export interface ConversationSetup {
 
 const PROVIDER: Provider = "openai";
 
-export async function runChatConversation(setup: ConversationSetup): Promise<ChatConversationRecord> {
+export const runChatConversation = async (setup: ConversationSetup): Promise<ChatConversationRecord> => {
   const price = priceOf({ provider: PROVIDER, model: setup.model });
-  if (price === undefined) throw new Error(`no price for ${setup.model}`);
+  if (price === undefined) {
+    throw new Error(`no price for ${setup.model}`);
+  }
   const uncached = (usage: TokenUsage) =>
     costInDollars(price, {
       uncachedInputTokens: promptTokensOf(usage),
@@ -124,4 +126,4 @@ export async function runChatConversation(setup: ConversationSetup): Promise<Cha
     turns,
     costDollars: turns.reduce((sum, turn) => sum + turn.costDollars + turn.queryEmbeddingDollars, 0),
   };
-}
+};

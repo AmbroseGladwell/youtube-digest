@@ -48,7 +48,7 @@ const FIND_ABOVE = 8;
 
 // A dialog on the web and a sheet on a phone. Each tick saves as it's made, and Done only
 // closes ("OV-168 3 Adding and Making" 168t, 168u; "OV-168 5" 168as).
-export function ChecklistPicker({
+export const ChecklistPicker = ({
   heading,
   hint,
   groupLabel,
@@ -60,7 +60,7 @@ export function ChecklistPicker({
   foot,
   onClose,
   testIds,
-}: ChecklistPickerProps) {
+}: ChecklistPickerProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const [query, setQuery] = useState("");
   const [naming, setNaming] = useState<string | null>(null);
@@ -81,7 +81,9 @@ export function ChecklistPicker({
 
   const create = (event: FormEvent) => {
     event.preventDefault();
-    if (naming === null || typeof onNew === "function" || naming.trim() === "" || refusal !== null) return;
+    if (naming === null || typeof onNew === "function" || naming.trim() === "" || refusal !== null) {
+      return;
+    }
     onNew.onCreate(naming.trim());
     setNaming(null);
   };
@@ -96,7 +98,9 @@ export function ChecklistPicker({
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={testIds.root}
     >
@@ -130,7 +134,9 @@ export function ChecklistPicker({
                 className={styles.checkbox}
                 checked={option.state === "all"}
                 ref={(element) => {
-                  if (element) element.indeterminate = option.state === "some";
+                  if (element) {
+                    element.indeterminate = option.state === "some";
+                  }
                 }}
                 onChange={() => onToggle(option.id, option.state !== "all")}
               />
@@ -149,7 +155,13 @@ export function ChecklistPicker({
             <button
               type="button"
               className={`${styles.option} ${styles.newProject}`}
-              onClick={() => (typeof onNew === "function" ? onNew() : setNaming(""))}
+              onClick={() => {
+                if (typeof onNew === "function") {
+                  onNew();
+                } else {
+                  setNaming("");
+                }
+              }}
               data-testid={testIds.newProjectButton}
             >
               <span className={styles.plus} aria-hidden="true">
@@ -203,4 +215,4 @@ export function ChecklistPicker({
       </div>
     </dialog>
   );
-}
+};

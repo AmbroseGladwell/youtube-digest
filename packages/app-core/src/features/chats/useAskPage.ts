@@ -16,11 +16,16 @@ const newConversationId = (): string => crypto.randomUUID();
 
 export const askScopeOfChat = (chat: Chat): "library" | "project" | "overview" => chatOwner(chat).kind;
 
+export interface AskPageTarget {
+  project: ProjectId | null;
+  chat: string | null;
+}
+
 // The Ask page (OV-354, page 3): one conversation over the library or a project at a time, named
 // in the address so it survives a reload; the drawer's history of every conversation, an
 // overview's opening on that overview (OV-363), a deleted one undoable for six seconds; and what
 // the next question pins.
-export function useAskPage(projectId: ProjectId | null, chatParam: string | null) {
+export const useAskPage = (projectId: ProjectId | null, chatParam: string | null) => {
   const owner: AskOwner = projectId === null ? { kind: "library" } : { kind: "project", id: projectId };
   const scope = askScopeOf(owner);
   const navigate = useNavigate();
@@ -47,16 +52,22 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
 
   const focusField = () => requestAnimationFrame(() => field.current?.focus());
 
-  const goTo = (at: { project: ProjectId | null; chat: string | null }) => {
+  const goTo = (at: AskPageTarget) => {
     resetNext();
-    if (at.chat === null) setFresh(newConversationId());
+    if (at.chat === null) {
+      setFresh(newConversationId());
+    }
     navigate(Routes.ask(at));
   };
 
   const ask = (question: string, from: AskOverFrom) => {
     const text = question.trim();
-    if (text === "") return;
-    if (chatParam === null) navigate(Routes.ask({ project: projectId, chat: conversationId }), { replace: true });
+    if (text === "") {
+      return;
+    }
+    if (chatParam === null) {
+      navigate(Routes.ask({ project: projectId, chat: conversationId }), { replace: true });
+    }
     void asking.ask(conversationId, text, from, {
       pins: {
         overviews: pinned.flatMap((item) => (item.kind === "overview" ? [item.id] : [])),
@@ -68,7 +79,9 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
   };
 
   const pin = (item: PinnedItem) => {
-    if (pinned.length + liveSources.length >= MAX_CHAT_PINS || pinned.some((each) => each.id === item.id)) return;
+    if (pinned.length + liveSources.length >= MAX_CHAT_PINS || pinned.some((each) => each.id === item.id)) {
+      return;
+    }
     setPinned((current) => [...current, item]);
     setRemoved((current) => current.filter((id) => id !== item.id));
     analytics.ask.chat.sourcePinned({ scope, kind: item.kind });
@@ -102,13 +115,17 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
   commitLater.current = commitDelete;
   useEffect(
     () => () => {
-      if (stillDeleting.current !== null) commitLater.current(stillDeleting.current);
+      if (stillDeleting.current !== null) {
+        commitLater.current(stillDeleting.current);
+      }
     },
     [],
   );
 
   useEffect(() => {
-    if (deleting === null) return;
+    if (deleting === null) {
+      return;
+    }
     const timer = setTimeout(() => {
       commitDelete(deleting);
       setDeleting(null);
@@ -134,13 +151,19 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
   };
 
   const deleteConversation = (gone: Chat) => {
-    if (deleting !== null) commitDelete(deleting);
+    if (deleting !== null) {
+      commitDelete(deleting);
+    }
     setDeleting(gone);
-    if (gone.id === chat?.id) goTo({ project: projectId, chat: null });
+    if (gone.id === chat?.id) {
+      goTo({ project: projectId, chat: null });
+    }
   };
 
   const undoDelete = () => {
-    if (deleting !== null) analytics.ask.drawer.deleteUndone({ scope: askScopeOfChat(deleting) });
+    if (deleting !== null) {
+      analytics.ask.drawer.deleteUndone({ scope: askScopeOfChat(deleting) });
+    }
     setDeleting(null);
   };
 
@@ -172,4 +195,4 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
     stop,
     dismiss: asking.dismiss,
   };
-}
+};

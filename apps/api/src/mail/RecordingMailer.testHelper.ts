@@ -17,7 +17,7 @@ export interface RecordingMailer extends Mailer {
   failNext(error: Error): void;
 }
 
-export function makeRecordingMailer(): RecordingMailer {
+export const makeRecordingMailer = (): RecordingMailer => {
   const sent: MagicLinkMail[] = [];
   const accountMails: AccountMail[] = [];
   const failures: Error[] = [];
@@ -70,4 +70,4 @@ export function makeRecordingMailer(): RecordingMailer {
       return new URLSearchParams(new URL(last.link).hash.slice(1)).get("token")!;
     },
   };
-}
+};

@@ -59,7 +59,9 @@ const answer = (inOneLine: string) => ({
 const ownClient =
   (outcome: "made" | Error): GenerationClient =>
   async ({ schema }) => {
-    if (outcome instanceof Error) throw outcome;
+    if (outcome instanceof Error) {
+      throw outcome;
+    }
     return "noteKind" in schema.shape ? { noteKind: "default" } : answer("Made on the reader's key.");
   };
 
@@ -68,7 +70,7 @@ const refusal = (code: ApiErrorCode, details?: Record<string, unknown>) =>
 
 // Our server as the device meets it: each call recorded, our key answering with the
 // overview it made or the refusal it was told to give, reservations likewise.
-function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error } = {}) {
+const fakeServer = ({ generate, reserve }: { generate?: Error; reserve?: Error } = {}) => {
   const calls: string[] = [];
   const api: GenerationApi = {
     status: async () => ({ available: true }),
@@ -80,12 +82,16 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     },
     generate: async ({ input: sent }) => {
       calls.push("generate");
-      if (generate !== undefined) throw generate;
+      if (generate !== undefined) {
+        throw generate;
+      }
       return { ...(await generateOverviewOf(async () => answer("Made on our key."), sent, meta)), filedProjectIds: [] };
     },
     reserve: async () => {
       calls.push("reserve");
-      if (reserve !== undefined) throw reserve;
+      if (reserve !== undefined) {
+        throw reserve;
+      }
       return { plan: "free", resetsOn: "2026-11-01", ours: { used: 0, limit: 5 }, own: { used: 1, limit: 10 } };
     },
     release: async () => {
@@ -94,7 +100,7 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     startTrial: async () => ({ token: "trial-token" }),
   };
   return { api, calls };
-}
+};
 
 describe("makeOverviewOnKeys", () => {
   it("makes it on the reader's key when that comes first, reserving the slot before, and says no key was passed over", async () => {

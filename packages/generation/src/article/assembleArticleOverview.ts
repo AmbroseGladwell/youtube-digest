@@ -8,8 +8,6 @@ import {
   wordCount,
   type DubiousBasis,
   type Novelty,
-  type OverviewId,
-  type SourceKey,
 } from "@overview/domain";
 import { GenerationError } from "../GenerationError.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
@@ -20,6 +18,7 @@ import { resolvedBigPicture } from "../sections/bigPicturePrompt.js";
 import { resolvedFollowUpQuestions } from "../sections/followUpQuestionsSection.js";
 import { sourceStepsOf } from "../sourceStepsOf.js";
 import type { ArticleChapterShape } from "./sections/articleChaptersSection.js";
+import type { AssembledOverviewMeta } from "../OverviewMeta.js";
 
 export interface GeneratedArticleOutput {
   inOneLine: string;
@@ -52,11 +51,11 @@ export interface GeneratedArticleOutput {
 const chapterHolding = (paragraphIndex: number, chapters: ArticleChapterShape[]): number =>
   chapters.reduce((held, { startParagraphIndex }, index) => (startParagraphIndex <= paragraphIndex ? index : held), 0);
 
-export function assembleArticleOverview(
+export const assembleArticleOverview = (
   input: ArticleGenerationInput,
   output: GeneratedArticleOutput,
-  meta: { id: OverviewId; savedAt: string; sourceId: SourceKey },
-): Overview {
+  meta: AssembledOverviewMeta,
+): Overview => {
   const paragraphs = articleParagraphs(input.article);
   const paragraphAt = (index: number): ArticleParagraph => {
     const paragraph = paragraphs[index];
@@ -135,4 +134,4 @@ export function assembleArticleOverview(
       ...(resources.length === 0 ? {} : { resources }),
     },
   });
-}
+};

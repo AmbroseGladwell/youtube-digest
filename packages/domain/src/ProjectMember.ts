@@ -30,21 +30,21 @@ const laterOf = (left: unknown, right: unknown): boolean => {
   return Number.isNaN(r) ? false : Number.isNaN(l) || r > l;
 };
 
-export function isInProject(member: Pick<ProjectMember, "addedAt" | "removedAt">): boolean {
+export const isInProject = (member: Pick<ProjectMember, "addedAt" | "removedAt">): boolean => {
   return member.removedAt === null || timeOf(member.addedAt) > timeOf(member.removedAt);
-}
+};
 
 // A change to a membership record is always later than the last one this device knows of, so the
 // reader's latest act wins even within a millisecond or against a clock that runs ahead.
-export function memberChangeTime(base: Record<string, unknown> | undefined, now: Date): string {
+export const memberChangeTime = (base: Record<string, unknown> | undefined, now: Date): string => {
   const known = [base?.addedAt, base?.removedAt].map(timeOf).filter((time) => !Number.isNaN(time));
   return new Date(Math.max(now.getTime(), ...known.map((time) => time + 1))).toISOString();
-}
+};
 
 // One function, run by the local store, the server and the rebase. It keeps the latest add
 // with whoever made it and the latest removal, so it commutes (docs/features/projects.md).
-export function mergeProjectMember(base: Record<string, unknown>, change: Record<string, unknown>): Record<string, unknown> {
+export const mergeProjectMember = (base: Record<string, unknown>, change: Record<string, unknown>): Record<string, unknown> => {
   const added = laterOf(base.addedAt, change.addedAt) ? { addedAt: change.addedAt, addedBy: change.addedBy } : {};
   const removed = laterOf(base.removedAt, change.removedAt) ? { removedAt: change.removedAt } : {};
   return { removedAt: null, ...base, ...added, ...removed };
-}
+};

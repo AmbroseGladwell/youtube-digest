@@ -23,12 +23,14 @@ export const environmentOfBucket = (bucketName) => (bucketName.endsWith("-dev") 
 
 const areaOfService = (serviceFamily) => (serviceFamily === "R2" ? "storage" : serviceFamily.toLowerCase().replace(/[^a-z0-9]+/g, "_"));
 
-export function cloudflareCostRowsOf({ dates, usage }) {
+export const cloudflareCostRowsOf = ({ dates, usage }) => {
   const wanted = new Set(dates);
   const totals = new Map();
   for (const charge of usage) {
     const date = charge.ChargePeriodStart.slice(0, 10);
-    if (!wanted.has(date)) continue;
+    if (!wanted.has(date)) {
+      continue;
+    }
     const area = areaOfService(charge.ServiceFamilyName);
     const key = `${date}|${area}`;
     const total = totals.get(key) ?? { date, provider: "cloudflare", environment: "unsplit", area, dollars: 0, source: "bill" };
@@ -37,13 +39,15 @@ export function cloudflareCostRowsOf({ dates, usage }) {
   }
   const earliest = usage.map((charge) => charge.ChargePeriodStart.slice(0, 10)).sort()[0] ?? null;
   return { rows: [...totals.values()], earliest };
-}
+};
 
-export function cloudflareUsageRowsOf({ dates, storage, operations }) {
+export const cloudflareUsageRowsOf = ({ dates, storage, operations }) => {
   const wanted = new Set(dates);
   const totals = new Map();
   const add = (date, bucketName, unit, quantity) => {
-    if (!wanted.has(date)) return;
+    if (!wanted.has(date)) {
+      return;
+    }
     const environment = environmentOfBucket(bucketName);
     const key = `${date}|${environment}|${unit}`;
     const total = totals.get(key) ?? {
@@ -59,24 +63,29 @@ export function cloudflareUsageRowsOf({ dates, storage, operations }) {
     total.quantity += quantity;
     totals.set(key, total);
   };
-  for (const group of storage)
+  for (const group of storage) {
     add(group.dimensions.date, group.dimensions.bucketName, "storage_gb", (group.max.payloadSize + group.max.metadataSize) / GB);
-  for (const group of operations) add(group.dimensions.date, group.dimensions.bucketName, "r2_requests", group.sum.requests);
+  }
+  for (const group of operations) {
+    add(group.dimensions.date, group.dimensions.bucketName, "r2_requests", group.sum.requests);
+  }
   return [...totals.values()];
-}
+};
 
-async function readCloudflare(fetch, url, apiToken, init = {}) {
+const readCloudflare = async (fetch, url, apiToken, init = {}) => {
   const response = await fetch(url, { ...init, headers: { Authorization: `Bearer ${apiToken}`, "content-type": "application/json" } });
-  if (!response.ok) throw new ProviderReadError(`Cloudflare answered ${response.status}`);
+  if (!response.ok) {
+    throw new ProviderReadError(`Cloudflare answered ${response.status}`);
+  }
   const body = await response.json();
   if (body.success === false || (Array.isArray(body.errors) && body.errors.length > 0)) {
     const [first] = body.errors ?? [];
     throw new ProviderReadError(`Cloudflare answered with an error: ${first?.code ?? first?.extensions?.code ?? "unknown"}`);
   }
   return body;
-}
+};
 
-export async function cloudflareSpend({ apiToken, accountId, fetch, dates }) {
+export const cloudflareSpend = async ({ apiToken, accountId, fetch, dates }) => {
   const billable = await readCloudflare(fetch, `${CLOUDFLARE_API}/accounts/${accountId}/billable-usage`, apiToken);
   const storage = [];
   const operations = [];
@@ -97,4 +106,4 @@ export async function cloudflareSpend({ apiToken, accountId, fetch, dates }) {
     readable: (date) => earliest !== null && date >= earliest,
     outOfRange: BEFORE_BILLING_PERIOD,
   };
-}
+};

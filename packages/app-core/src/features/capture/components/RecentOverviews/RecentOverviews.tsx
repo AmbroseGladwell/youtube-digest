@@ -21,12 +21,14 @@ const SHOWN = 3;
 // Design 205f-2 ends it with the way to the whole library, which is the web app's: the panel
 // is one video, not a list (docs/features/extension-panel.md). A row leads with its kind as a
 // library row does (design 232i).
-export function RecentOverviews({ entries }: RecentOverviewsProps) {
+export const RecentOverviews = ({ entries }: RecentOverviewsProps) => {
   const recent = readableEntries(orderLibraryEntriesBySavedAt(entries)).slice(0, SHOWN);
   const sync = useSync();
   const { connection } = useSyncConnection();
   const library = sync.connected && connection.apiUrl !== null ? new URL(Routes.home(), connection.apiUrl).href : null;
-  if (recent.length === 0) return null;
+  if (recent.length === 0) {
+    return null;
+  }
 
   return (
     <section className={styles.root} aria-labelledby="recent-overviews" data-testid={recentOverviewsTestIds.root}>
@@ -58,4 +60,4 @@ export function RecentOverviews({ entries }: RecentOverviewsProps) {
       )}
     </section>
   );
-}
+};

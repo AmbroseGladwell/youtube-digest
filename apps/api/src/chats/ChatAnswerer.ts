@@ -39,7 +39,7 @@ import type { StoredRecord } from "../records/StoredRecord.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { answerSoFar } from "./answerSoFar.js";
-import { sectionsSoFar } from "./sectionsSoFar.js";
+import { arrivedSections } from "./arrivedSections.js";
 import { outsideCode } from "./outsideCode.js";
 import { flattenedAnswer, structuredAnswer, withoutDashes } from "./structuredAnswer.js";
 import { assertWhole, CHAT_FAILED as FAILED, EmptyAnswerError, reasonOf, statusOf } from "./chatFailure.js";
@@ -99,6 +99,11 @@ const readChat = (record: StoredRecord): Chat | null => {
   return read.status === "read" ? read.record : null;
 };
 
+export interface SourcePassages {
+  kind: ChatSourceKind;
+  passages: ReturnType<typeof transcriptPassages>;
+}
+
 // Answers a reader's question about one overview from their own transcript, on our key,
 // within their plan's monthly allowance. Everything that can refuse is settled before the
 // answer starts to stream; once it has, a failure gives the message back and says so in
@@ -122,7 +127,9 @@ export class ChatAnswerer {
     const { kind, passages } = await this.#source(accountId, overview);
     const id = chatRecordId(overviewId, question.conversationId);
     const current = await records.read(accountId, "chat", id);
-    if (current?.deleted === true) throw new ApiError("not_found", "That conversation was deleted");
+    if (current?.deleted === true) {
+      throw new ApiError("not_found", "That conversation was deleted");
+    }
     const conversation = current === null ? null : readChat(current);
     if (conversation !== null && chatQuestionCount(conversation.messages) >= MAX_CHAT_QUESTIONS) {
       throw new ApiError("invalid_request", "This conversation is as long as it can get. Start a new one to keep asking.", {
@@ -238,23 +245,24 @@ export class ChatAnswerer {
             yield { type: "text", text: text.slice(sent.length) };
             sent = text;
           }
-          const whole = sectionsSoFar(raw);
-          for (; sectionsSent < whole.length; sectionsSent += 1) {
-            const section = ChatReply.shape.sections.element.safeParse(whole[sectionsSent]);
-            if (!section.success) continue;
-            // A passage cited before inSource is known shows as a moment; the stored answer settles it.
-            const [shown] = structuredAnswer(
-              { intro: "", introSources: [], sections: [section.data], takeaway: "" },
-              (ids) => cite(ids, true).citations,
-            ).sections;
-            if (shown !== undefined) yield { type: "section", section: shown };
+          const arrived = arrivedSections(raw, sectionsSent);
+          sectionsSent = arrived.seen;
+          // A passage cited before inSource is known shows as a moment; the stored answer settles it.
+          const shown = structuredAnswer(
+            { intro: "", introSources: [], sections: arrived.sections, takeaway: "" },
+            (ids) => cite(ids, true).citations,
+          ).sections;
+          for (const section of shown) {
+            yield { type: "section", section };
           }
         }
         assertWhole(stream);
         const reply = ChatReply.parse(JSON.parse(raw));
         const answerSections = structuredAnswer(reply, (ids) => cite(ids, reply.inSource).citations);
         const text = flattenedAnswer(answerSections);
-        if (text.length === 0) throw new EmptyAnswerError("the reply had no answer");
+        if (text.length === 0) {
+          throw new EmptyAnswerError("the reply had no answer");
+        }
         const cited = cite(allIds(reply), reply.inSource);
         const messages: ChatMessage[] = [
           {
@@ -427,22 +435,25 @@ export class ChatAnswerer {
 
   async #overview(accountId: AccountId, overviewId: string): Promise<Overview> {
     const record = await this.#options.records.read(accountId, "overview", overviewId);
-    if (record === null || record.deleted) throw new ApiError("not_found", "No such overview");
+    if (record === null || record.deleted) {
+      throw new ApiError("not_found", "No such overview");
+    }
     const read = readStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), Overview, OVERVIEW_MIGRATIONS);
-    if (read.status !== "read") throw new ApiError("not_found", "No such overview");
+    if (read.status !== "read") {
+      throw new ApiError("not_found", "No such overview");
+    }
     return read.record;
   }
 
   // Only what the account holds itself: no transcript, no chat, and the panel hides
   // (docs/features/chats.md, "No transcript, no chat").
-  async #source(
-    accountId: AccountId,
-    overview: Overview,
-  ): Promise<{ kind: ChatSourceKind; passages: ReturnType<typeof transcriptPassages> }> {
+  async #source(accountId: AccountId, overview: Overview): Promise<SourcePassages> {
     const { source } = overview;
     const kind = chatSourceKind(overview);
     // An article or a recipe page is answered from its overview alone: no page text is kept (OV-320).
-    if (answeredFromOverviewAlone(kind) || source.kind === "web") return { kind, passages: [] };
+    if (answeredFromOverviewAlone(kind) || source.kind === "web") {
+      return { kind, passages: [] };
+    }
     const key = sourceKey(source);
     const stored = key === null ? null : StoredTranscript.safeParse(await this.#options.transcripts.get(accountId, key));
     const passages = stored?.success === true ? transcriptPassages(stored.data.segments) : [];

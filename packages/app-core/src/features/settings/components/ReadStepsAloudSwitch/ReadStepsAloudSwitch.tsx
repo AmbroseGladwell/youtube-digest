@@ -7,7 +7,7 @@ import { readStepsAloudSwitchTestIds } from "./ReadStepsAloudSwitchTestIds.js";
 
 // Designs 289i–289l: above Timer sound, the same setting as cooking mode's Mute, read the
 // other way round. It saves at once and syncs.
-export function ReadStepsAloudSwitch() {
+export const ReadStepsAloudSwitch = () => {
   const analytics = useAnalytics();
   const settings = useSettingsQuery().data;
   const updateSettings = useUpdateSettingsMutation();
@@ -42,4 +42,4 @@ export function ReadStepsAloudSwitch() {
       </button>
     </div>
   );
-}
+};

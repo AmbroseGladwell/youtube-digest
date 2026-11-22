@@ -4,6 +4,6 @@ export type McpAssistant = FollowUpAssistant | "other";
 
 // Which assistant a connection is, from the name it registered with, which it chose itself:
 // logged as one of a few, never as written (docs/features/mcp-connector.md, "Logging").
-export function mcpAssistant(clientName: string | null): McpAssistant {
+export const mcpAssistant = (clientName: string | null): McpAssistant => {
   return connectionAssistant(clientName) ?? "other";
-}
+};

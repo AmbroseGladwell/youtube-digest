@@ -6,8 +6,12 @@ export type ColumnScale = "full" | "narrow" | "compact";
 export const NARROW_UNDER_PX = 720;
 export const COMPACT_UNDER_PX = 480;
 
-export const columnScale = (width: number): ColumnScale =>
-  width < COMPACT_UNDER_PX ? "compact" : width < NARROW_UNDER_PX ? "narrow" : "full";
+export const columnScale = (width: number): ColumnScale => {
+  if (width < COMPACT_UNDER_PX) {
+    return "compact";
+  }
+  return width < NARROW_UNDER_PX ? "narrow" : "full";
+};
 
 export interface CookingColumnScale {
   gauge: RefCallback<HTMLElement>;
@@ -19,7 +23,7 @@ export interface CookingColumnScale {
 // laid out at the column's settled width (design 190g). Opening the drawer takes the smaller
 // size at the start; closing it takes the larger one only once the drawer has gone (190i), so
 // text never grows into a column that is still shrinking.
-export function useCookingColumnScale(drawerOpen: boolean): CookingColumnScale {
+export const useCookingColumnScale = (drawerOpen: boolean): CookingColumnScale => {
   const [gauge, setGauge] = useState<HTMLElement | null>(null);
   const [width, setWidth] = useState<number | null>(null);
   const [lastOpen, setLastOpen] = useState(drawerOpen);
@@ -27,7 +31,9 @@ export function useCookingColumnScale(drawerOpen: boolean): CookingColumnScale {
   const [held, setHeld] = useState<ColumnScale>("full");
 
   useEffect(() => {
-    if (gauge === null) return;
+    if (gauge === null) {
+      return;
+    }
     const publish = () => setWidth(gauge.getBoundingClientRect().width);
     publish();
     const observer = new ResizeObserver(publish);
@@ -41,11 +47,13 @@ export function useCookingColumnScale(drawerOpen: boolean): CookingColumnScale {
   }
 
   const measured = width === null ? "full" : columnScale(width);
-  if (!holding && held !== measured) setHeld(measured);
+  if (!holding && held !== measured) {
+    setHeld(measured);
+  }
 
   return {
     gauge: setGauge,
     scale: holding ? held : measured,
     onDrawerSettled: () => setHolding(false),
   };
-}
+};

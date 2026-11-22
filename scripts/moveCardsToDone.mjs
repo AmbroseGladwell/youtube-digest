@@ -6,7 +6,7 @@ const TITLE_CARD = /^\s*OV-(\d+)\b/i;
 const BRANCH_CARD = /^ov-(\d+)(?:-|$)/i;
 const CLOSES_LINE = /^[ \t]*(?:[-*][ \t]+)?closes[ \t]+(?:OV-(\d+)\b|https:\/\/trello\.com\/c\/([A-Za-z0-9]{8}))/gim;
 
-export function cardReferencesIn({ title, body, branch } = {}) {
+export const cardReferencesIn = ({ title, body, branch } = {}) => {
   const titleNumber = title?.match(TITLE_CARD)?.[1];
   const branchNumber = branch?.match(BRANCH_CARD)?.[1];
   const closing = [...(body ?? "").matchAll(CLOSES_LINE)];
@@ -17,9 +17,9 @@ export function cardReferencesIn({ title, body, branch } = {}) {
       ? [`The title names OV-${Number(titleNumber)} but the branch names OV-${Number(branchNumber)}, so both move`]
       : [];
   return { shortLinks: [...new Set(shortLinks)], cardNumbers: [...new Set(cardNumbers)], warnings };
-}
+};
 
-export async function moveCardsToDone({ shortLinks, cardNumbers, boardId, doneListId, apiKey, token, fetch }) {
+export const moveCardsToDone = async ({ shortLinks, cardNumbers, boardId, doneListId, apiKey, token, fetch }) => {
   const headers = {
     Authorization: `OAuth oauth_consumer_key="${apiKey}", oauth_token="${token}"`,
     Accept: "application/json",
@@ -28,8 +28,11 @@ export async function moveCardsToDone({ shortLinks, cardNumbers, boardId, doneLi
   const toMove = new Set(shortLinks);
   for (const cardNumber of cardNumbers) {
     const found = await fetch(`${TRELLO_API}/boards/${boardId}/cards/${cardNumber}?fields=shortLink`, { headers });
-    if (found.ok) toMove.add((await found.json()).shortLink);
-    else results.push({ card: `OV-${cardNumber}`, moved: false, reason: `no card OV-${cardNumber} on the board (${found.status})` });
+    if (found.ok) {
+      toMove.add((await found.json()).shortLink);
+    } else {
+      results.push({ card: `OV-${cardNumber}`, moved: false, reason: `no card OV-${cardNumber} on the board (${found.status})` });
+    }
   }
   for (const shortLink of toMove) {
     const moved = await fetch(`${TRELLO_API}/cards/${shortLink}?idList=${doneListId}`, { method: "PUT", headers });
@@ -46,12 +49,14 @@ export async function moveCardsToDone({ shortLinks, cardNumbers, boardId, doneLi
     );
   }
   return results;
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { PR_TITLE, PR_BODY, PR_BRANCH, TRELLO_BOARD_ID, TRELLO_DONE_LIST_ID, TRELLO_API_KEY, TRELLO_TOKEN } = process.env;
   const { shortLinks, cardNumbers, warnings } = cardReferencesIn({ title: PR_TITLE, body: PR_BODY, branch: PR_BRANCH });
-  for (const warning of warnings) console.log(`::warning::${warning}`);
+  for (const warning of warnings) {
+    console.log(`::warning::${warning}`);
+  }
   const referenced = shortLinks.length + cardNumbers.length;
   if (referenced === 0) {
     console.log(

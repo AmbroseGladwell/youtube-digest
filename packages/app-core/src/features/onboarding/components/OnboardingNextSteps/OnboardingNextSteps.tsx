@@ -18,11 +18,13 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 // extension is offered only where it can be added (useExtensionOffered); elsewhere the AI
 // connection alone. After a sample, making
 // one of their own comes first (155k).
-export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) {
+export const OnboardingNextSteps = ({ overviewId }: { overviewId: OverviewId }) => {
   const analytics = useAnalytics();
   const extensionOffered = useExtensionOffered();
   const [nextSteps, setNextSteps] = useState(readNextSteps);
-  if (nextSteps === null || nextSteps.overviewId !== overviewId) return null;
+  if (nextSteps === null || nextSteps.overviewId !== overviewId) {
+    return null;
+  }
 
   const shown = (step: NextStep) => !nextSteps.dismissed.includes(step) && (extensionOffered || step !== "extension");
   const dismiss = (step: NextStep) => {
@@ -32,7 +34,9 @@ export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) 
     setNextSteps(next);
   };
   const ownShown = nextSteps.sample && shown("own");
-  if (!ownShown && !shown("extension") && !shown("ai")) return null;
+  if (!ownShown && !shown("extension") && !shown("ai")) {
+    return null;
+  }
 
   return (
     <section className={styles.root} aria-label="Next steps" data-testid={onboardingNextStepsTestIds.root}>
@@ -83,17 +87,19 @@ export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) 
       </div>
     </section>
   );
-}
+};
 
 // Design 155k: after a sample, the first next step is making one of their own, with its own
 // field, so the next overview can start without leaving the page. It's the shell's own run, as
 // the empty library's field starts, and it hides when there's no way to make one.
-function TryYourOwn({ onDismiss }: { onDismiss: () => void }) {
+const TryYourOwn = ({ onDismiss }: { onDismiss: () => void }) => {
   const analytics = useAnalytics();
   const { ready, limit, url, setUrl, validationError, generate, article, podcast, pasted } = useStartFromLink();
   const headingId = useId();
   const fieldId = useId();
-  if (!ready || limit !== null) return null;
+  if (!ready || limit !== null) {
+    return null;
+  }
   return (
     <section className={`${styles.card} ${styles.own}`} aria-labelledby={headingId} data-testid={onboardingNextStepsTestIds.card("own")}>
       <DismissButton label="Now try your own" onDismiss={onDismiss} step="own" />
@@ -146,9 +152,15 @@ function TryYourOwn({ onDismiss }: { onDismiss: () => void }) {
       )}
     </section>
   );
+};
+
+interface DismissButtonProps {
+  label: string;
+  step: NextStep;
+  onDismiss: () => void;
 }
 
-function DismissButton({ label, step, onDismiss }: { label: string; step: NextStep; onDismiss: () => void }) {
+const DismissButton = ({ label, step, onDismiss }: DismissButtonProps) => {
   return (
     <button
       type="button"
@@ -160,4 +172,4 @@ function DismissButton({ label, step, onDismiss }: { label: string; step: NextSt
       <StrokeIcon name="close" size={16} />
     </button>
   );
-}
+};

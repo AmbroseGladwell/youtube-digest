@@ -31,7 +31,12 @@ const titleWords = (title: string): string[] =>
     .replace(/[̀-ͯ]/g, "")
     .match(/[a-z0-9]+/g) ?? [];
 
-const lengthWithin = (episode: number | null, upload: number | null, slack: { seconds: number; share: number }): boolean =>
+interface LengthSlack {
+  seconds: number;
+  share: number;
+}
+
+const lengthWithin = (episode: number | null, upload: number | null, slack: LengthSlack): boolean =>
   episode !== null && upload !== null && Math.abs(episode - upload) <= Math.max(slack.seconds, slack.share * episode);
 
 // "Part 2" and "Part 1" share every word but one. A number on one side only is fine, since
@@ -44,9 +49,11 @@ const numbersDisagree = (a: readonly string[], b: readonly string[]): boolean =>
 
 // The episode's title, nearly word for word, on an upload of nearly its length. A clip has the
 // title and not the length, so it is never taken for the episode.
-export function titleMatch<Upload extends ListedUpload>(episode: EpisodeToFind, uploads: readonly Upload[]): Upload | null {
+export const titleMatch = <Upload extends ListedUpload>(episode: EpisodeToFind, uploads: readonly Upload[]): Upload | null => {
   const words = titleWords(episode.title);
-  if (words.length < 2) return null;
+  if (words.length < 2) {
+    return null;
+  }
   return (
     uploads.find((upload) => {
       const uploadWords = titleWords(upload.title);
@@ -59,7 +66,7 @@ export function titleMatch<Upload extends ListedUpload>(episode: EpisodeToFind, 
       );
     }) ?? null
   );
-}
+};
 
 export const retitledLengthMatches = (episode: EpisodeToFind, uploadSeconds: number | null): boolean =>
   lengthWithin(episode.durationSeconds, uploadSeconds, CANDIDATE_LENGTH_SLACK);
@@ -67,12 +74,14 @@ export const retitledLengthMatches = (episode: EpisodeToFind, uploadSeconds: num
 export const daysAgo = (iso: string, now: Date): number => (now.getTime() - Date.parse(iso)) / DAY_MS;
 
 // Listed around the episode's date, by YouTube's rounded "3 weeks ago".
-export function listedNearItsDate(episode: EpisodeToFind, upload: ListedUpload, now: Date): boolean {
+export const listedNearItsDate = (episode: EpisodeToFind, upload: ListedUpload, now: Date): boolean => {
   const age = upload.age === null ? null : ageInDays(upload.age);
-  if (episode.publishedAt === null || age === null) return false;
+  if (episode.publishedAt === null || age === null) {
+    return false;
+  }
   const episodeDaysAgo = daysAgo(episode.publishedAt, now);
   return episodeDaysAgo >= age.fewest - CANDIDATE_DAYS_SLACK && episodeDaysAgo <= age.most + CANDIDATE_DAYS_SLACK;
-}
+};
 
 // Published within three days of the episode, by an exact date.
 export const publishedNearItsDate = (episode: EpisodeToFind, publishedAt: string | null, now: Date): boolean =>
@@ -109,13 +118,13 @@ export const namesTheShow = (channelTitle: string, showName: string): boolean =>
 // show's own channel, its date too, since a short title can recur on another show. This finds a
 // show published on its publisher's channel ("New York Times Podcasts" for The Daily), which the
 // channel route never reaches (docs/features/podcast-on-youtube.md, "How it finds the episode").
-export function searchedVideoMatch<Video extends ListedUpload & { channelTitle: string }>(
+export const searchedVideoMatch = <Video extends ListedUpload & { channelTitle: string }>(
   episode: EpisodeToFind,
   videos: readonly Video[],
   nearItsDate: (video: Video) => boolean,
-): Video | null {
+): Video | null => {
   return titleMatch(
     episode,
     videos.filter((video) => namesTheShow(video.channelTitle, episode.showName) || nearItsDate(video)),
   );
-}
+};

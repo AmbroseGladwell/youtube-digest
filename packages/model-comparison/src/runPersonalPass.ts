@@ -18,7 +18,7 @@ export interface RunPersonalPassOptions {
   now?: () => number;
 }
 
-export async function runPersonalPass({
+export const runPersonalPass = async ({
   model,
   apiKey,
   fetched,
@@ -27,7 +27,7 @@ export async function runPersonalPass({
   withTranscript,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: RunPersonalPassOptions): Promise<RunRecord> {
+}: RunPersonalPassOptions): Promise<RunRecord> => {
   const metered = meteredFetch(model.provider, http, now);
   const client = createGenerationClient({ ...model, apiKey, http: metered.http });
   const { systemPrompt, userMessage, schema } = personalisePrompt(fetched, profile, shared, withTranscript);
@@ -50,7 +50,9 @@ export async function runPersonalPass({
   let overview: Overview | null = null;
   try {
     let { raw, parsed } = await attempt();
-    if (!parsed.success) ({ raw, parsed } = await attempt(correctionRequest(raw, parsed.error)));
+    if (!parsed.success) {
+      ({ raw, parsed } = await attempt(correctionRequest(raw, parsed.error)));
+    }
     if (parsed.success) {
       overview = personalisedOverview(shared, profile, parsed.data as unknown as PersonalOutput);
       outcome = attempts.length === 1 ? "passed-first" : "passed-after-retry";
@@ -76,4 +78,4 @@ export async function runPersonalPass({
     attempts,
     overview,
   };
-}
+};

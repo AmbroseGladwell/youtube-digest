@@ -22,13 +22,15 @@ interface FakeChannel {
 
 // search, channels, playlistItems and videos, answered in the Data API's own shapes, and refused
 // without the key in its header. The video search finds `searchFinds`, by default every video.
-function dataApiOver(channels: FakeChannel[], searchFinds?: readonly string[]) {
+const dataApiOver = (channels: FakeChannel[], searchFinds?: readonly string[]) => {
   const asked: string[] = [];
   const youTubeFetch: YouTubeFetch = async (request) => {
     const url = new URL(request.url);
     const path = url.pathname.replace("/youtube/v3/", "");
     asked.push(path);
-    if (request.headers["x-goog-api-key"] !== API_KEY || url.searchParams.has("key")) return { status: 400, body: "{}" };
+    if (request.headers["x-goog-api-key"] !== API_KEY || url.searchParams.has("key")) {
+      return { status: 400, body: "{}" };
+    }
     const json = (body: unknown) => ({ status: 200, body: JSON.stringify(body) });
     const every = channels.flatMap((channel) => channel.videos);
     if (path === "search") {
@@ -76,7 +78,7 @@ function dataApiOver(channels: FakeChannel[], searchFinds?: readonly string[]) {
     return { status: 404, body: "{}" };
   };
   return { episodes: youTubeDataApiEpisodes({ apiKey: API_KEY, youTubeFetch, now: () => NOW }), asked };
-}
+};
 
 const EPISODE: EpisodeToFind = {
   showName: "The Rest Is Politics: US",

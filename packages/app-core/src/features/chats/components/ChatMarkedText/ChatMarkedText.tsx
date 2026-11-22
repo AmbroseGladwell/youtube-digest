@@ -26,23 +26,33 @@ const withSettingsLinks = (text: string): ReactNode =>
     </Fragment>
   ));
 
-export function MarkedPieceView({ piece, className }: { piece: MarkedPiece; className?: string | undefined }) {
+export interface MarkedPieceViewProps {
+  piece: MarkedPiece;
+  className?: string | undefined;
+}
+
+export const MarkedPieceView = ({ piece, className }: MarkedPieceViewProps) => {
   let node: ReactNode = piece.code ? <code className={styles.code}>{piece.text}</code> : withSettingsLinks(piece.text);
-  if (piece.href !== undefined)
+  if (piece.href !== undefined) {
     node = (
       <a className={styles.link} href={piece.href} target="_blank" rel="noopener noreferrer" data-testid={chatMarkedTextTestIds.link}>
         {node}
         <span className={styles.hidden}> (opens in a new tab)</span>
       </a>
     );
-  if (piece.italic) node = <em>{node}</em>;
-  if (piece.bold) node = <strong>{node}</strong>;
+  }
+  if (piece.italic) {
+    node = <em>{node}</em>;
+  }
+  if (piece.bold) {
+    node = <strong>{node}</strong>;
+  }
   return className === undefined ? <>{node}</> : <span className={className}>{node}</span>;
-}
+};
 
 // An answer's words with their inline Markdown drawn, in every chat (OV-362, OV-364): bold, italics,
 // inline code and links that open in a new tab. Nothing else is read, so raw HTML stays text.
-export function ChatMarkedText({ text }: { text: string }) {
+export const ChatMarkedText = ({ text }: { text: string }) => {
   return (
     <>
       {inlineMarks(text).map((piece, index) => (
@@ -50,4 +60,4 @@ export function ChatMarkedText({ text }: { text: string }) {
       ))}
     </>
   );
-}
+};

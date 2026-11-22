@@ -6,7 +6,7 @@ export type StopReason = Extract<SyncPhase, "offline" | "failed" | "signedOut" |
 // A failure that ends the cycle rather than the one write: nothing later in the outbox
 // would fare any better, and a retry later might. Anything else is the write's own fault
 // and is parked (docs/features/sync-client.md).
-export function stopReasonFor(error: unknown): StopReason | null {
+export const stopReasonFor = (error: unknown): StopReason | null => {
   if (isSyncTransportError(error)) {
     return "offline";
   }
@@ -25,6 +25,6 @@ export function stopReasonFor(error: unknown): StopReason | null {
     default:
       return null;
   }
-}
+};
 
 export const describe = (error: unknown): string => (error instanceof Error ? error.message : String(error));

@@ -9,17 +9,19 @@ const StoredLibraryAccount = z.string().nullable();
 export const writeLibraryAccount = (accountId: string | null): Promise<void> =>
   chrome.storage.local.set({ [LIBRARY_ACCOUNT]: accountId }).catch(() => undefined);
 
-export async function readLibraryAccount(): Promise<string | null> {
+export const readLibraryAccount = async (): Promise<string | null> => {
   try {
     const stored = await chrome.storage.local.get(LIBRARY_ACCOUNT);
     return StoredLibraryAccount.catch(null).parse(stored[LIBRARY_ACCOUNT] ?? null);
   } catch {
     return null;
   }
-}
+};
 
-export function onLibraryAccountChanged(listener: () => void): void {
+export const onLibraryAccountChanged = (listener: () => void): void => {
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && LIBRARY_ACCOUNT in changes) listener();
+    if (area === "local" && LIBRARY_ACCOUNT in changes) {
+      listener();
+    }
   });
-}
+};

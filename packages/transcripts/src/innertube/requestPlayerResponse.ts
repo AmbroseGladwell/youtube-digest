@@ -6,11 +6,11 @@ import { PlayerResponse } from "./PlayerResponse.js";
 
 const PLAYER_URL = "https://www.youtube.com/youtubei/v1/player";
 
-export async function requestPlayerResponse(
+export const requestPlayerResponse = async (
   youTubeFetch: YouTubeFetch,
   videoId: string,
   client: InnerTubeClientConfig,
-): Promise<PlayerResponse> {
+): Promise<PlayerResponse> => {
   const response = await youTubeFetch({
     url: PLAYER_URL,
     method: "POST",
@@ -60,4 +60,4 @@ export async function requestPlayerResponse(
     );
   }
   return result.data;
-}
+};

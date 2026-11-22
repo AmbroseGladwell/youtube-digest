@@ -18,10 +18,19 @@ const timerLabel = (timer: CookingTimer, now: number, here: string): string => {
   return `${where}, ${isPaused(timer) ? "paused, " : ""}${timeLeftWords(timeLeftMs(timer, now))} left`;
 };
 
+const chipName = (timer: CookingTimer, here: string, solo: boolean): string => {
+  if (timer.source.recipe !== here) {
+    return `${timerShortName(timer)} · ${timer.recipeTitle}`;
+  }
+  return solo ? timerFullName(timer) : timerShortName(timer);
+};
+
 // Designs 284g–284o: the running timers under the step dots on every screen of the mode,
 // soonest first. One is named by its verb and step; two or more by the verb alone.
-export function CookingTimerStrip({ timers, now, here, onOpen }: CookingTimerStripProps) {
-  if (timers.length === 0) return null;
+export const CookingTimerStrip = ({ timers, now, here, onOpen }: CookingTimerStripProps) => {
+  if (timers.length === 0) {
+    return null;
+  }
   const solo = timers.length === 1;
   return (
     <div
@@ -34,12 +43,7 @@ export function CookingTimerStrip({ timers, now, here, onOpen }: CookingTimerStr
       {timers.map((timer) => {
         const left = timeLeftMs(timer, now);
         const paused = isPaused(timer);
-        const name =
-          timer.source.recipe !== here
-            ? `${timerShortName(timer)} · ${timer.recipeTitle}`
-            : solo
-              ? timerFullName(timer)
-              : timerShortName(timer);
+        const name = chipName(timer, here, solo);
         return (
           <button
             key={timer.id}
@@ -64,4 +68,4 @@ export function CookingTimerStrip({ timers, now, here, onOpen }: CookingTimerStr
       })}
     </div>
   );
-}
+};

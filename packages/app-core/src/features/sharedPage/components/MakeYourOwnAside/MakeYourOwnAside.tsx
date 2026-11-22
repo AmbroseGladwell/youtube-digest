@@ -19,7 +19,7 @@ const PLUS = [
 
 // Design 30e: the page is also the way in. The pasted link starts onboarding, as Start's does,
 // so the visitor is asked what shapes it before the account (docs/features/sharing.md).
-export function MakeYourOwnAside() {
+export const MakeYourOwnAside = () => {
   const startOnboarding = useStartOnboarding();
   const [url, setUrl] = useState("");
   const [refused, setRefused] = useState(false);
@@ -111,4 +111,4 @@ export function MakeYourOwnAside() {
       </div>
     </aside>
   );
-}
+};

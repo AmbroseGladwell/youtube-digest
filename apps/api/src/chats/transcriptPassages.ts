@@ -11,14 +11,16 @@ export interface Passage {
 // (docs/architecture/in-app-chat.md, "Retrieval, measured first").
 export const PASSAGE_WINDOW_MS = 60_000;
 
-export function transcriptPassages(segments: readonly TranscriptSegment[], windowMs = PASSAGE_WINDOW_MS): Passage[] {
+export const transcriptPassages = (segments: readonly TranscriptSegment[], windowMs = PASSAGE_WINDOW_MS): Passage[] => {
   const passages: Passage[] = [];
   let current: TranscriptSegment[] = [];
 
   const close = () => {
     const first = current[0];
     const last = current.at(-1);
-    if (first === undefined || last === undefined) return;
+    if (first === undefined || last === undefined) {
+      return;
+    }
     passages.push({
       id: `p${passages.length + 1}`,
       startMs: first.startMs,
@@ -33,9 +35,11 @@ export function transcriptPassages(segments: readonly TranscriptSegment[], windo
 
   for (const segment of segments) {
     const opening = current[0];
-    if (opening !== undefined && segment.startMs - opening.startMs >= windowMs) close();
+    if (opening !== undefined && segment.startMs - opening.startMs >= windowMs) {
+      close();
+    }
     current.push(segment);
   }
   close();
   return passages;
-}
+};

@@ -6,7 +6,7 @@ import { makeProject } from "./makeProject.js";
 
 const anOverviewId = () => OverviewId.parse(randomUUID());
 
-export function defineProjectStoreConformanceSuite(label: string, createStore: () => ProjectStore | Promise<ProjectStore>): void {
+export const defineProjectStoreConformanceSuite = (label: string, createStore: () => ProjectStore | Promise<ProjectStore>): void => {
   const behaviour = (description: string) => `${label} ProjectStore: ${description}`;
 
   test(behaviour("holds no projects and no members until one is made"), async () => {
@@ -203,4 +203,4 @@ export function defineProjectStoreConformanceSuite(label: string, createStore: (
       );
     },
   );
-}
+};

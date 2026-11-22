@@ -19,12 +19,15 @@ import {
   type FollowUpAssistant,
   type Settings,
   type ThemeMode,
+  type ModelByProvider,
+  type Provider,
 } from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { OnboardingRunPhase } from "../../src/features/onboarding/useOnboardingRun.js";
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
-import { BackendSimulator, SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../network/BackendSimulator.testHelper.js";
+import type { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
+import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../network/BackendSimulator.testHelper.js";
 import type { InMemoryStoreRead } from "../network/InMemoryOverviewStore.testHelper.js";
 import type { TestContext } from "./TestContext.testHelper.js";
 import { IwftAppRoot } from "./IwftAppRoot.testHelper.js";
@@ -33,8 +36,8 @@ import { CapturePageObject } from "../pageObjects/CapturePageObject.testHelper.j
 import { ErrorStatePageObject } from "../pageObjects/ErrorStatePageObject.testHelper.js";
 import { HomePageObject } from "../pageObjects/HomePageObject.testHelper.js";
 import { homePageTestIds } from "../../src/features/home/HomePage/HomePageTestIds.js";
-import { GenerateOverviewFormPageObject } from "../pageObjects/GenerateOverviewFormPageObject.testHelper.js";
-import { LibraryPageObject } from "../pageObjects/LibraryPageObject.testHelper.js";
+import type { GenerateOverviewFormPageObject } from "../pageObjects/GenerateOverviewFormPageObject.testHelper.js";
+import type { LibraryPageObject } from "../pageObjects/LibraryPageObject.testHelper.js";
 import { MiniPlayerPageObject } from "../pageObjects/MiniPlayerPageObject.testHelper.js";
 import { AppShellPageObject } from "../pageObjects/AppShellPageObject.testHelper.js";
 import { ReaderPageObject } from "../pageObjects/ReaderPageObject.testHelper.js";
@@ -63,7 +66,6 @@ import { LearnedNoticePageObject } from "../pageObjects/LearnedNoticePageObject.
 import { OnboardingNextStepsPageObject } from "../pageObjects/OnboardingNextStepsPageObject.testHelper.js";
 import { FirstOverviewMilestonePageObject } from "../pageObjects/FirstOverviewMilestonePageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
-import type { ModelByProvider, Provider } from "@overview/domain";
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
@@ -118,11 +120,15 @@ export interface LaunchOptions {
 }
 
 export class Launcher {
-  constructor(
-    private readonly mount: ComponentFixtures["mount"],
-    private readonly page: Page,
-    readonly backendSimulator: BackendSimulator,
-  ) {}
+  private readonly mount: ComponentFixtures["mount"];
+  private readonly page: Page;
+  readonly backendSimulator: BackendSimulator;
+
+  constructor(mount: ComponentFixtures["mount"], page: Page, backendSimulator: BackendSimulator) {
+    this.mount = mount;
+    this.page = page;
+    this.backendSimulator = backendSimulator;
+  }
 
   private get testContext(): TestContext {
     return { page: this.page, backendSimulator: this.backendSimulator };
@@ -173,7 +179,9 @@ export class Launcher {
     });
 
   private mountApp = async (options: LaunchOptions): Promise<void> => {
-    if (options.plan !== undefined) this.backendSimulator.auth.accountIsOn(options.plan);
+    if (options.plan !== undefined) {
+      this.backendSimulator.auth.accountIsOn(options.plan);
+    }
     await this.backendSimulator.handleNetworking();
     await this.mount(<IwftAppRoot />, {
       hooksConfig: {

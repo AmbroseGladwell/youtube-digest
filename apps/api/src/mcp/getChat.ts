@@ -21,17 +21,20 @@ export const getChat = mcpTool({
   run: async ({ id, cursor }, { sql, accountId }) => {
     const [library, chat] = await Promise.all([readLibrary(sql, accountId), readChat(sql, accountId, id)]);
     const owner = chat === null ? null : chatOwner(chat);
-    const about =
-      owner === null
-        ? undefined
-        : owner.kind === "overview"
-          ? library.entries.find((candidate) => candidate.overview.id === owner.id)?.overview
-          : owner.kind === "project"
-            ? (() => {
-                const project = library.projects.find((candidate) => candidate.id === owner.id);
-                return project === undefined ? undefined : { kind: "project" as const, name: project.name, id: project.id };
-              })()
-            : { kind: "library" as const };
+    const aboutOwner = () => {
+      if (owner === null) {
+        return undefined;
+      }
+      if (owner.kind === "overview") {
+        return library.entries.find((candidate) => candidate.overview.id === owner.id)?.overview;
+      }
+      if (owner.kind === "project") {
+        const project = library.projects.find((candidate) => candidate.id === owner.id);
+        return project === undefined ? undefined : { kind: "project" as const, name: project.name, id: project.id };
+      }
+      return { kind: "library" as const };
+    };
+    const about = aboutOwner();
     if (chat === null || about === undefined) {
       return toolError(`There is no conversation with id ${id} in this library. list_chats names every conversation.`);
     }

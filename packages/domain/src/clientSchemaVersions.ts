@@ -128,7 +128,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
   },
 ];
 
-export function schemaVersionsForClient(clientVersion: number): SchemaVersions {
+export const schemaVersionsForClient = (clientVersion: number): SchemaVersions => {
   let matched = CLIENT_SCHEMA_VERSIONS[0]!;
   for (const row of CLIENT_SCHEMA_VERSIONS) {
     if (row.clientVersion <= clientVersion) {
@@ -136,4 +136,4 @@ export function schemaVersionsForClient(clientVersion: number): SchemaVersions {
     }
   }
   return matched.schemaVersions;
-}
+};

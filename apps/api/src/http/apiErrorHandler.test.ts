@@ -17,7 +17,9 @@ test("an unknown /api route is a 404 in the envelope", async () => {
 const databaseFailsPastSignIn = (testApp: Awaited<ReturnType<typeof createTestApp>>) => {
   const { query } = testApp.sql;
   testApp.sql.query = async (text, params) => {
-    if (text.includes("sessions")) return query(text, params);
+    if (text.includes("sessions")) {
+      return query(text, params);
+    }
     throw new Error("Connection terminated unexpectedly");
   };
 };

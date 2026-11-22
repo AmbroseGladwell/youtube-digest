@@ -23,7 +23,7 @@ const MS_PER_MINUTE = 60_000;
 // The video's length at 1×, minus the reading time the reader is shown, minus any part
 // the verdict says to watch. Whole minutes, so the totals add up to the pills
 // (docs/features/time-saved.md, "Counted honestly").
-function articleTimeSaved(overview: SharedNote, words: number): OverviewTimeSaved {
+const articleTimeSaved = (overview: SharedNote, words: number): OverviewTimeSaved => {
   const read = overview.article?.readAnyway ?? null;
   if (read?.answer === "yes") {
     return { kind: "watchVerdict" };
@@ -36,9 +36,9 @@ function articleTimeSaved(overview: SharedNote, words: number): OverviewTimeSave
     minutes: Math.max(0, Math.floor((articleReadMs(words - toReadWords) - noteMs) / MS_PER_MINUTE)),
     lessPartToWatch: named.length > 0,
   };
-}
+};
 
-export function overviewTimeSaved(overview: SharedNote): OverviewTimeSaved {
+export const overviewTimeSaved = (overview: SharedNote): OverviewTimeSaved => {
   // Reading time is the wrong measure for something the reader means to cook
   // (docs/features/recipe-notes.md, "Time saved").
   if (overview.recipe != null) {
@@ -63,9 +63,14 @@ export function overviewTimeSaved(overview: SharedNote): OverviewTimeSaved {
     minutes: Math.max(0, Math.floor((durationMs - readingMs - toWatchMs) / MS_PER_MINUTE)),
     lessPartToWatch: range !== null,
   };
+};
+
+export interface SharedNoteState {
+  overview: SharedNote;
+  state: { read: boolean };
 }
 
-export function timeSavedSummary(entries: ReadonlyArray<{ overview: SharedNote; state: { read: boolean } }>): TimeSavedSummary {
+export const timeSavedSummary = (entries: ReadonlyArray<SharedNoteState>): TimeSavedSummary => {
   const summary: TimeSavedSummary = { minutes: 0, counted: 0, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0, recipe: 0 };
   for (const { overview, state } of entries) {
     if (!state.read) {
@@ -81,4 +86,4 @@ export function timeSavedSummary(entries: ReadonlyArray<{ overview: SharedNote; 
     }
   }
   return summary;
-}
+};

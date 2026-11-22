@@ -187,4 +187,5 @@ test("a client at an older version can still share: the overview it posts with a
   const response = await share(account, { overview: { ...rest, video } });
   assert.equal(response.statusCode, 201);
   assert.equal(response.json<Share>().title, source.title);
+  await app.close();
 });

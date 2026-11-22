@@ -29,7 +29,9 @@ export const useRevokeConnectionMutation = () => {
     },
     onSuccess: () => analytics.mcp.settingsConnections.revoked(),
     onError: (_error, _connectionId, context) => {
-      for (const [queryKey, data] of context?.previous ?? []) queryClient.setQueryData(queryKey, data);
+      for (const [queryKey, data] of context?.previous ?? []) {
+        queryClient.setQueryData(queryKey, data);
+      }
     },
     onSettled: async () => {
       if (queryClient.isMutating({ mutationKey: connectionKeys.all }) === 1) {

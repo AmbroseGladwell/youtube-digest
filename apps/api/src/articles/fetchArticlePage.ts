@@ -20,12 +20,14 @@ export interface ArticlePageFetcherOptions extends PublicWebFetchOptions {
 }
 
 // docs/features/pasted-article-links.md
-export function createArticlePageFetcher({ mostBytes = MOST_BYTES, ...options }: ArticlePageFetcherOptions = {}) {
+export const createArticlePageFetcher = ({ mostBytes = MOST_BYTES, ...options }: ArticlePageFetcherOptions = {}) => {
   const fetchPublicWeb = createPublicWebFetch(options);
 
   return async function fetchArticlePage(link: string): Promise<FetchedPage> {
     const answer = await fetchPublicWeb(link, { accept: "text/html,application/xhtml+xml" });
-    if (answer.status === "failed") return failed(ARTICLE_FAILURE[answer.reason]);
+    if (answer.status === "failed") {
+      return failed(ARTICLE_FAILURE[answer.reason]);
+    }
     const { response, url } = answer;
     if (!/\b(text\/html|application\/xhtml\+xml)\b/i.test(response.headers.get("content-type") ?? "")) {
       await response.body?.cancel();
@@ -38,4 +40,4 @@ export function createArticlePageFetcher({ mostBytes = MOST_BYTES, ...options }:
       return failed("no-answer");
     }
   };
-}
+};

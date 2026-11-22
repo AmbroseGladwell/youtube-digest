@@ -16,10 +16,12 @@ export interface UsageLineProps {
 }
 
 // What's left of the quota the next overview will use, in words (designs 95b, 95c and 95m).
-export function UsageLine({ testIds, narrow = false, onPlanFollowed }: UsageLineProps) {
+export const UsageLine = ({ testIds, narrow = false, onPlanFollowed }: UsageLineProps) => {
   const next = useNextQuota();
   const plan = useOverviewUsageQuery().data?.plan ?? null;
-  if (next === null) return null;
+  if (next === null) {
+    return null;
+  }
   const { parts, link } = usageLineOf(next, { narrow, plan });
   const segments = [
     ...parts,
@@ -48,4 +50,4 @@ export function UsageLine({ testIds, narrow = false, onPlanFollowed }: UsageLine
       ))}
     </p>
   );
-}
+};

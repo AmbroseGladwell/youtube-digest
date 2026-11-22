@@ -45,14 +45,14 @@ const NO_VOICE: RecipeListVoice = {
 // Listen plays straight through; a list's Read aloud plays its own stretch of the same audio
 // and stops at the end of it, and each list tints the line being read. Tapping an ingredient
 // or a step moves the voice there, as tapping a line of the note does (OV-149).
-export function useRecipeVoice(
+export const useRecipeVoice = (
   track: PlayerTrack | null,
   lines: readonly NoteLine[],
   actions: readonly RecipeAction[],
   stepCount: number,
   notePlayer: NotePlayer,
   analytics: OverviewPageAnalytics,
-): RecipeVoice | null {
+): RecipeVoice | null => {
   const engine = usePlayer();
   const [stopAfter, setStop] = useState<number | null>(null);
   const { activeIndex, playing } = notePlayer;
@@ -65,7 +65,9 @@ export function useRecipeVoice(
   // The engine stops at the line's end itself; this only forgets a stop the voice has gone past,
   // by a seek or by reaching the end.
   useEffect(() => {
-    if (stopAfter === null) return;
+    if (stopAfter === null) {
+      return;
+    }
     if (ended || activeIndex > stopAfter) {
       setStop(null);
       engine.stopAfterLine(null);
@@ -74,11 +76,15 @@ export function useRecipeVoice(
 
   const ingredients = stretchOf(lines, INGREDIENTS_SECTION);
   const method = stretchOf(lines, METHOD_SECTION);
-  if (track === null || ingredients === null) return null;
+  if (track === null || ingredients === null) {
+    return null;
+  }
 
   const within = (stretch: Stretch) => activeIndex >= stretch.first && activeIndex <= stretch.last;
   const voiceOf = (stretch: Stretch | null): RecipeListVoice => {
-    if (stretch === null) return NO_VOICE;
+    if (stretch === null) {
+      return NO_VOICE;
+    }
     const here = within(stretch);
     const reading = playing && here;
     return {
@@ -97,27 +103,34 @@ export function useRecipeVoice(
       },
       onSelect: (index) => {
         analytics.readAlong.lineChosen();
-        if (stopAfter !== stretch.last) setStopAfter(null);
+        if (stopAfter !== stretch.last) {
+          setStopAfter(null);
+        }
         notePlayer.selectLine(stretch.first + index);
       },
     };
   };
 
   const position = (stretch: Stretch) => `${activeIndex - stretch.first + 1} of ${stretch.last - stretch.first + 1}`;
+  const nowReadingLine = (): string | null => {
+    if (!playing) {
+      return null;
+    }
+    if (method !== null && within(method)) {
+      return `Method · step ${(actions[activeIndex - method.first]?.step ?? 0) + 1} of ${stepCount}`;
+    }
+    return within(ingredients) ? `Ingredients · ${position(ingredients)}` : null;
+  };
   return {
     ingredients: voiceOf(ingredients),
     method: voiceOf(method),
-    nowReading: !playing
-      ? null
-      : method !== null && within(method)
-        ? `Method · step ${(actions[activeIndex - method.first]?.step ?? 0) + 1} of ${stepCount}`
-        : within(ingredients)
-          ? `Ingredients · ${position(ingredients)}`
-          : null,
+    nowReading: nowReadingLine(),
     release: () => setStopAfter(null),
     methodAction: method !== null && within(method) ? activeIndex - method.first : null,
     readAction: (action) => {
-      if (method === null) return;
+      if (method === null) {
+        return;
+      }
       const line = method.first + action;
       engine.load(track, line);
       engine.seekLine(line);
@@ -125,11 +138,13 @@ export function useRecipeVoice(
       engine.play("readAloud");
     },
     holdAt: (action) => {
-      if (method === null) return;
+      if (method === null) {
+        return;
+      }
       engine.load(track, method.first + action);
       engine.pause();
       engine.seekLine(method.first + action);
       setStopAfter(null);
     },
   };
-}
+};

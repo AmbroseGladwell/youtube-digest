@@ -43,12 +43,12 @@ type Answer = { body: string; type: string } | "down";
 const NOW = new Date("2026-11-13T09:00:00.000Z");
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function ladderOver(
+const ladderOver = (
   web: Record<string, Answer>,
   known: EpisodeWordSource | null = null,
   youTube: { service: PodcastTranscriptsOptions["youTubeService"]; episodes: YouTubeEpisodes } | null = null,
   knownSince: Date = NOW,
-) {
+) => {
   const asked: string[] = [];
   const sources = new Map<string, KnownWordSource>();
   const kept = () => [...sources.values()].map(({ source }) => source);
@@ -56,12 +56,18 @@ function ladderOver(
   const fetchPublicWeb = async (link: string): Promise<PublicWebAnswer> => {
     asked.push(link);
     const answer = web[link];
-    if (answer === undefined) return { status: "failed", reason: "missing" };
-    if (answer === "down") return { status: "failed", reason: "no-answer" };
+    if (answer === undefined) {
+      return { status: "failed", reason: "missing" };
+    }
+    if (answer === "down") {
+      return { status: "failed", reason: "no-answer" };
+    }
     return { status: "answered", url: link, response: new Response(answer.body, { headers: { "content-type": answer.type } }) };
   };
   const ready = podcastSourceKey(EPISODE).then((key) => {
-    if (known !== null) sources.set(key, { source: known, foundAt: knownSince });
+    if (known !== null) {
+      sources.set(key, { source: known, foundAt: knownSince });
+    }
   });
   const podcastTranscripts = createPodcastTranscripts({
     fetchPublicWeb,
@@ -91,7 +97,7 @@ function ladderOver(
     return podcastTranscripts.check(request);
   };
   return { resolve, remembered, check, asked, kept, keptSince };
-}
+};
 
 const failureOf = async (promise: Promise<unknown>) => {
   try {
@@ -229,7 +235,7 @@ const CAPTIONS: StoredTranscript = {
 // Our server's YouTube, scripted: what the Data API's check says of a video, what its search
 // finds, and the captions any video has. The matching rules themselves are
 // youTubeDataApiEpisodes.test.ts's.
-function youTubeOver({ confirms = null, finds = null }: { confirms?: "title" | "description" | null; finds?: string | null }) {
+const youTubeOver = ({ confirms = null, finds = null }: { confirms?: "title" | "description" | null; finds?: string | null }) => {
   const calls: string[] = [];
   const episodes: YouTubeEpisodes = {
     confirm: async (_episode, videoId) => {
@@ -248,7 +254,7 @@ function youTubeOver({ confirms = null, finds = null }: { confirms?: "title" | "
     },
   };
   return { youTube: { service, episodes }, calls };
-}
+};
 
 const feedWithoutTags = { [FEED_URL]: { body: feedOf(NOTES_ITEM), type: "application/rss+xml" } };
 

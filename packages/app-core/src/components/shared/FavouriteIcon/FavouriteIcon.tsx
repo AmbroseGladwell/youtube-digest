@@ -17,7 +17,7 @@ const HEART =
 //
 // The pop confirms a mark that was just made, so it has to know one just happened: a
 // library of favourited rows would otherwise pop every heart on arrival.
-export function FavouriteIcon({ filled }: FavouriteIconProps) {
+export const FavouriteIcon = ({ filled }: FavouriteIconProps) => {
   const wasFilled = useRef(filled);
   const marking = filled && !wasFilled.current;
 
@@ -40,4 +40,4 @@ export function FavouriteIcon({ filled }: FavouriteIconProps) {
       <path className={`${styles.fill} ${filled ? styles.fillOn : ""} ${marking ? styles.marking : ""}`} d={HEART} fill="currentColor" />
     </svg>
   );
-}
+};

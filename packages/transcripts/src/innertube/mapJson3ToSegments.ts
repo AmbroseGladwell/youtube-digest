@@ -17,7 +17,7 @@ interface Json3Event {
 // A 200 with no events at all is what a caption URL looks like once it has been gated,
 // which is the source being turned away rather than a video without captions
 // (docs/features/transcript-retrieval.md).
-export function mapJson3ToSegments(body: string): TranscriptSegment[] {
+export const mapJson3ToSegments = (body: string): TranscriptSegment[] => {
   let parsed: { events?: Json3Event[] };
   try {
     parsed = JSON.parse(body) as { events?: Json3Event[] };
@@ -29,10 +29,14 @@ export function mapJson3ToSegments(body: string): TranscriptSegment[] {
   const segments: TranscriptSegment[] = [];
 
   for (const event of events) {
-    if (event.aAppend === 1 || !event.segs || event.tStartMs === undefined) continue;
+    if (event.aAppend === 1 || !event.segs || event.tStartMs === undefined) {
+      continue;
+    }
 
     const text = event.segs.map((segment) => segment.utf8 ?? "").join("");
-    if (text.trim() === "") continue;
+    if (text.trim() === "") {
+      continue;
+    }
 
     // endMs is the start plus YouTube's own duration, never the next cue's start and
     // never a length inferred from the words. A cue with no duration is a cue we were
@@ -50,4 +54,4 @@ export function mapJson3ToSegments(body: string): TranscriptSegment[] {
     throw innerTubeError("the caption track came back empty", TranscriptFetchFailure.SOURCE_BLOCKED);
   }
   return segments;
-}
+};

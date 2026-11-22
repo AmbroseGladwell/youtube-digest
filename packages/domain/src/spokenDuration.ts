@@ -1,6 +1,6 @@
 const unit = (count: number, singular: string) => `${count} ${singular}${count === 1 ? "" : "s"}`;
 
-export function spokenDuration(ms: number): string {
+export const spokenDuration = (ms: number): string => {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -15,4 +15,4 @@ export function spokenDuration(ms: number): string {
     return named.join(" ");
   }
   return minutes > 0 ? [...named, String(seconds)].join(" ") : `${named.join(" ")} and ${unit(seconds, "second")}`;
-}
+};

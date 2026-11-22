@@ -1,12 +1,12 @@
 import type { FastifyInstance } from "fastify";
 import {
+  type TrialToken,
   apiLogLines,
   OurKeyGenerationRequest,
   ProfilePassInput,
   TRIAL_TOKEN_HEADER,
   TopicMatchInput,
   TopicSuggestionInput,
-  TrialToken,
   type TopicMatchResult,
   type TopicSuggestionResult,
   type OurKeyGenerationStatus,
@@ -34,10 +34,14 @@ import type { TrialsRepository } from "../usage/TrialsRepository.js";
 // A two-hour transcript with a reader's whole library of topics, claims and tags.
 const GENERATION_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
 
-export function generationRoutes(
-  app: FastifyInstance,
-  { generator, trials, sql, clock }: { generator: OurKeyGenerator | null; trials: TrialsRepository; sql: SqlClient; clock: () => Date },
-): void {
+export interface GenerationRoutesOptions {
+  generator: OurKeyGenerator | null;
+  trials: TrialsRepository;
+  sql: SqlClient;
+  clock: () => Date;
+}
+
+export const generationRoutes = (app: FastifyInstance, { generator, trials, sql, clock }: GenerationRoutesOptions): void => {
   app.get("/generations", { config: { public: true } }, async () => {
     const status: OurKeyGenerationStatus = generator === null ? { available: false } : { available: true, ...ourKeyModel };
     return status;
@@ -158,4 +162,4 @@ export function generationRoutes(
       throw error;
     }
   });
-}
+};

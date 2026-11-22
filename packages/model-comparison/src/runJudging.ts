@@ -18,18 +18,20 @@ export interface JudgingPair {
 const nameOf = (record: RunRecord) => `${record.provider}:${record.model}`;
 export const pairKey = (videoId: string, candidate: string) => `${candidate}:${videoId}`;
 
-export function judgingPairs(
+export const judgingPairs = (
   runs: readonly RunRecord[],
   transcripts: ReadonlyMap<string, FetchedTranscript>,
   baseline: string,
-): JudgingPair[] {
+): JudgingPair[] => {
   const passed = runs.filter((record) => isPassed(record) && record.overview !== null);
   return passed
     .filter((record) => nameOf(record) !== baseline)
     .flatMap((record) => {
       const reference = passed.find((other) => other.videoId === record.videoId && nameOf(other) === baseline);
       const fetched = transcripts.get(record.videoId);
-      if (reference === undefined || fetched === undefined) return [];
+      if (reference === undefined || fetched === undefined) {
+        return [];
+      }
       return [
         {
           fetched,
@@ -38,20 +40,22 @@ export function judgingPairs(
         },
       ];
     });
-}
+};
 
-export function promptPairs(
+export const promptPairs = (
   candidateRuns: readonly RunRecord[],
   baselineRuns: readonly RunRecord[],
   transcripts: ReadonlyMap<string, FetchedTranscript>,
-): JudgingPair[] {
+): JudgingPair[] => {
   const passedBaselines = baselineRuns.filter((record) => isPassed(record) && record.overview !== null);
   return candidateRuns
     .filter((record) => isPassed(record) && record.overview !== null)
     .flatMap((record) => {
       const reference = passedBaselines.find((other) => other.videoId === record.videoId && nameOf(other) === nameOf(record));
       const fetched = transcripts.get(record.videoId);
-      if (reference === undefined || fetched === undefined) return [];
+      if (reference === undefined || fetched === undefined) {
+        return [];
+      }
       return [
         {
           fetched,
@@ -60,7 +64,7 @@ export function promptPairs(
         },
       ];
     });
-}
+};
 
 export interface RunJudgingOptions {
   pairs: readonly JudgingPair[];
@@ -71,7 +75,7 @@ export interface RunJudgingOptions {
   log: (line: string) => void;
 }
 
-export async function runJudging(options: RunJudgingOptions): Promise<SpendOutcome & { skipped: number }> {
+export const runJudging = async (options: RunJudgingOptions): Promise<SpendOutcome & { skipped: number }> => {
   const previous = await options.store.all();
   const settled = new Set(
     previous.filter((record) => record.outcome !== "errored").map((record) => pairKey(record.videoId, record.candidate)),
@@ -103,4 +107,4 @@ export async function runJudging(options: RunJudgingOptions): Promise<SpendOutco
     log: options.log,
   });
   return { ...outcome, skipped };
-}
+};

@@ -11,7 +11,7 @@ export interface ConsentSignInCardProps {
 
 // Signed out, the request stays in view and the permissions wait: the link asked for here
 // comes back to this request (design 58d).
-export function ConsentSignInCard({ initialEmail, sending, refused, onSubmit }: ConsentSignInCardProps) {
+export const ConsentSignInCard = ({ initialEmail, sending, refused, onSubmit }: ConsentSignInCardProps) => {
   return (
     <div className={styles.root} data-testid={consentSignInCardTestIds.root}>
       <p className={styles.label}>Sign in to answer</p>
@@ -26,4 +26,4 @@ export function ConsentSignInCard({ initialEmail, sending, refused, onSubmit }: 
       />
     </div>
   );
-}
+};

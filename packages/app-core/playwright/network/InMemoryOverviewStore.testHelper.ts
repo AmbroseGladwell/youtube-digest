@@ -37,8 +37,12 @@ export class InMemoryOverviewStore implements OverviewStore {
   async listOverviews(query: OverviewQuery = {}) {
     this.#throwIfFailing("overviews");
     return [...this.#overviews.values()].filter((overview) => {
-      if (query.unsorted) return overview.topicIds.length === 0;
-      if (query.topicId) return overview.topicIds.includes(query.topicId);
+      if (query.unsorted) {
+        return overview.topicIds.length === 0;
+      }
+      if (query.topicId) {
+        return overview.topicIds.includes(query.topicId);
+      }
       return true;
     });
   }
@@ -107,13 +111,17 @@ export class InMemoryOverviewStore implements OverviewStore {
   }
 
   async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>) {
-    if (this.#failingStateWrites.has(overviewId)) throw new Error(`the state write for ${overviewId} was told to fail`);
+    if (this.#failingStateWrites.has(overviewId)) {
+      throw new Error(`the state write for ${overviewId} was told to fail`);
+    }
     const current = await this.getOverviewState(overviewId);
     this.#states.set(overviewId, { ...current, ...patch });
   }
 
   #throwIfFailing(read: InMemoryStoreRead): void {
-    if (this.#failing.has(read)) throw new Error(`the ${read} read was told to fail`);
+    if (this.#failing.has(read)) {
+      throw new Error(`the ${read} read was told to fail`);
+    }
   }
 
   // Test-only seeding helpers — not part of the OverviewStore interface.

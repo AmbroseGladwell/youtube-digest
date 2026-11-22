@@ -49,7 +49,7 @@ const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 // Where the note's head uses the phone arrangement and scrolls away (ReaderMasthead.module.scss).
 const HEAD_SCROLLS_AWAY_QUERY = "(max-width: 61.9375rem)";
 
-export function AppShell() {
+export const AppShell = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isPanel = useIsPanel();
@@ -78,7 +78,9 @@ export function AppShell() {
   const gated = accountNeeded && (pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
   const signedIn = sync.connected;
   useEffect(() => {
-    if (signedIn) markAccountSeen();
+    if (signedIn) {
+      markAccountSeen();
+    }
   }, [signedIn]);
   const libraryMoved = useLibraryMove().move !== null;
   // With a note open and the tab moved on under it, the band says so (design 205e).
@@ -121,7 +123,9 @@ export function AppShell() {
   useLayoutEffect(() => {
     const leaving = backInBar ? brandLink.current : barBackLink.current;
     const arriving = backInBar ? barBackLink.current : brandLink.current;
-    if (leaving !== null && document.activeElement === leaving) arriving?.focus({ preventScroll: true });
+    if (leaving !== null && document.activeElement === leaving) {
+      arriving?.focus({ preventScroll: true });
+    }
   }, [backInBar]);
 
   // Design 205c-2: in the panel + New is a way to paste a link, not a place to watch a
@@ -129,14 +133,18 @@ export function AppShell() {
   // the panel back to home, which is where creating from the offer would have left it.
   const panelRunStarted = newOverview.run !== null && newOverview.dialogOpen && isPanel;
   useEffect(() => {
-    if (!panelRunStarted) return;
+    if (!panelRunStarted) {
+      return;
+    }
     newOverview.close();
     void navigate(Routes.home(), { replace: true });
   }, [panelRunStarted, newOverview, navigate]);
 
   const panelOpened = useRef(false);
   useEffect(() => {
-    if (!isPanel || panelOpened.current) return;
+    if (!isPanel || panelOpened.current) {
+      return;
+    }
     panelOpened.current = true;
     analytics.extension.sidePanel.opened();
   }, [isPanel, analytics]);
@@ -169,6 +177,44 @@ export function AppShell() {
       </NewOverviewRunProvider>
     );
   }
+
+  const runOrQueueStrip = () => {
+    if (!isPanel && newOverview.run && !newOverview.dialogOpen) {
+      return (
+        <GenerationStatusStrip
+          run={newOverview.run}
+          onDetails={newOverview.open}
+          onDismiss={newOverview.dismiss}
+          onReadOverview={readOverview}
+        />
+      );
+    }
+    if (!isPanel && !newOverview.run && captureQueue.strip !== null) {
+      return (
+        <CaptureQueueStripView
+          strip={captureQueue.strip}
+          compact={isPhone}
+          folded={
+            onHome && captureQueue.folded
+              ? { attention: captureQueue.attention.length, onUnfold: () => captureQueue.setFolded(false) }
+              : null
+          }
+          onPause={() => captureQueue.setPaused(true)}
+          onResume={() => captureQueue.setPaused(false)}
+          onDetails={() => setQueueDetailsOpen(true)}
+          onDismiss={captureQueue.dismissStrip}
+        />
+      );
+    }
+    return !isPanel && !newOverview.run && libraryMoved && <LibraryMoveNotice />;
+  };
+
+  const paneContent = () => {
+    if (belowWriteFloor) {
+      return <WriteFloorWall generating={newOverview.run !== null} />;
+    }
+    return gated ? <SignedOutGate panel={isPanel} /> : <Outlet />;
+  };
 
   return (
     <NewOverviewRunProvider value={newOverview}>
@@ -309,40 +355,11 @@ export function AppShell() {
 
                 {onThisTab !== null && <OnThisTabLine tab={onThisTab} onStartVideo={(url) => newOverview.start(url, { from: "panel" })} />}
 
-                {!isPanel && newOverview.run && !newOverview.dialogOpen ? (
-                  <GenerationStatusStrip
-                    run={newOverview.run}
-                    onDetails={newOverview.open}
-                    onDismiss={newOverview.dismiss}
-                    onReadOverview={readOverview}
-                  />
-                ) : !isPanel && !newOverview.run && captureQueue.strip !== null ? (
-                  <CaptureQueueStripView
-                    strip={captureQueue.strip}
-                    compact={isPhone}
-                    folded={
-                      onHome && captureQueue.folded
-                        ? { attention: captureQueue.attention.length, onUnfold: () => captureQueue.setFolded(false) }
-                        : null
-                    }
-                    onPause={() => captureQueue.setPaused(true)}
-                    onResume={() => captureQueue.setPaused(false)}
-                    onDetails={() => setQueueDetailsOpen(true)}
-                    onDismiss={captureQueue.dismissStrip}
-                  />
-                ) : (
-                  !isPanel && !newOverview.run && libraryMoved && <LibraryMoveNotice />
-                )}
+                {runOrQueueStrip()}
               </header>
 
               <div className={styles.pane} data-testid={appShellTestIds.pane}>
-                {belowWriteFloor ? (
-                  <WriteFloorWall generating={newOverview.run !== null} />
-                ) : gated ? (
-                  <SignedOutGate panel={isPanel} />
-                ) : (
-                  <Outlet />
-                )}
+                {paneContent()}
               </div>
 
               <CookingTimerDock>
@@ -382,4 +399,4 @@ export function AppShell() {
       </CaptureQueueProvider>
     </NewOverviewRunProvider>
   );
-}
+};

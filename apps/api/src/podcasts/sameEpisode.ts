@@ -24,8 +24,10 @@ const lengthsAgree = (a: number | null, b: number | null): boolean =>
 // The same episode named from two places: the same title, and nothing known that disagrees.
 // A show that reruns an episode under its old title is told apart by the date
 // (docs/features/podcast-links.md, "Matching an episode").
-export function sameEpisode(wanted: EpisodeFacts, candidate: EpisodeFacts): boolean {
-  if (wanted.title === null || candidate.title === null) return false;
+export const sameEpisode = (wanted: EpisodeFacts, candidate: EpisodeFacts): boolean => {
+  if (wanted.title === null || candidate.title === null) {
+    return false;
+  }
   const key = episodeTitleKey(wanted.title);
   return (
     key !== "" &&
@@ -33,12 +35,14 @@ export function sameEpisode(wanted: EpisodeFacts, candidate: EpisodeFacts): bool
     datesAgree(wanted.publishedAt, candidate.publishedAt) &&
     lengthsAgree(wanted.durationSeconds, candidate.durationSeconds)
   );
-}
+};
 
-export function pickEpisode<T extends EpisodeFacts>(wanted: EpisodeFacts, candidates: readonly T[]): T | null {
+export const pickEpisode = <T extends EpisodeFacts>(wanted: EpisodeFacts, candidates: readonly T[]): T | null => {
   const matches = candidates.filter((candidate) => sameEpisode(wanted, candidate));
-  if (matches.length <= 1 || wanted.publishedAt === null) return matches[0] ?? null;
+  if (matches.length <= 1 || wanted.publishedAt === null) {
+    return matches[0] ?? null;
+  }
   const target = Date.parse(wanted.publishedAt);
   const distance = (candidate: T) => (candidate.publishedAt === null ? Infinity : Math.abs(Date.parse(candidate.publishedAt) - target));
   return matches.reduce((best, candidate) => (distance(candidate) < distance(best) ? candidate : best));
-}
+};

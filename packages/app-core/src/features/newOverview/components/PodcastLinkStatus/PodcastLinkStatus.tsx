@@ -35,7 +35,7 @@ export const episodeFacts = (episode: Pick<PodcastEpisode, "durationSeconds" | "
     .join(" · ");
 
 // Designs 106a–106f: under the field, the episode our server found, or why it can't be used.
-export function PodcastLinkStatus({ link, url, onRetry, onClear, onOpened }: PodcastLinkStatusProps) {
+export const PodcastLinkStatus = ({ link, url, onRetry, onClear, onOpened }: PodcastLinkStatusProps) => {
   switch (link.status) {
     case "none":
       return null;
@@ -89,19 +89,17 @@ export function PodcastLinkStatus({ link, url, onRetry, onClear, onOpened }: Pod
       return <ArticleFailureNotice copy={copy} onWay={copy.way === "tryAgain" ? onRetry : onClear} />;
     }
   }
+};
+
+export interface EpisodeWordsNoteProps {
+  words: EpisodeWords;
+  episodeSeconds: number | null;
+  onFollowed?: (() => void) | undefined;
 }
 
 // Designs 305c, 305d, 305h and 305j: under the card, what Create will spend, why it spends nothing,
 // or the stop in its place. Nothing while the check runs, or when it found the words.
-export function EpisodeWordsNote({
-  words,
-  episodeSeconds,
-  onFollowed,
-}: {
-  words: EpisodeWords;
-  episodeSeconds: number | null;
-  onFollowed?: (() => void) | undefined;
-}) {
+export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed }: EpisodeWordsNoteProps) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const action = episodeActionOf(words);
   switch (action.kind) {
@@ -124,16 +122,24 @@ export function EpisodeWordsNote({
     default:
       return null;
   }
-}
+};
 
 // The line under the episode's facts: checking for its words, then whether it needs transcribing.
 const wordsLine = (words: EpisodeWords, episodeSeconds: number | null): string | null => {
-  if (words.state === "checking") return "Checking for a transcript…";
+  if (words.state === "checking") {
+    return "Checking for a transcript…";
+  }
   const action = episodeActionOf(words);
   return action.kind === "transcribe" ? transcriptionCopy.needs(episodeSeconds) : null;
 };
 
-function EpisodeCard({ episode, from, words }: { episode: PodcastEpisode; from: string; words: EpisodeWords }) {
+interface EpisodeCardProps {
+  episode: PodcastEpisode;
+  from: string;
+  words: EpisodeWords;
+}
+
+const EpisodeCard = ({ episode, from, words }: EpisodeCardProps) => {
   const line = wordsLine(words, episode.durationSeconds);
   const [failed, setFailed] = useState(false);
   return (
@@ -165,7 +171,7 @@ function EpisodeCard({ episode, from, words }: { episode: PodcastEpisode; from: 
       </span>
     </div>
   );
-}
+};
 
 const hostOf = (url: string): string => {
   try {

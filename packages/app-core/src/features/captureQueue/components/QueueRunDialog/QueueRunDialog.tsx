@@ -18,16 +18,22 @@ const HEADING_ID = "QueueRunDialog-heading";
 
 // The strip's Details: the progress of the video the queue is making, as the New dialog
 // shows a run (design 5a). Closing it leaves the queue running.
-export function QueueRunDialog({ making, open, onClose }: QueueRunDialogProps) {
+export const QueueRunDialog = ({ making, open, onClose }: QueueRunDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const shown = open && making !== null;
   const elapsedSeconds = useElapsedSeconds(making?.run.startedAt ?? Date.now(), making?.run.finishedAt ?? null);
 
   useEffect(() => {
     const element = dialog.current;
-    if (!element) return;
-    if (shown && !element.open) element.showModal();
-    if (!shown && element.open) element.close();
+    if (!element) {
+      return;
+    }
+    if (shown && !element.open) {
+      element.showModal();
+    }
+    if (!shown && element.open) {
+      element.close();
+    }
   }, [shown]);
 
   return (
@@ -73,4 +79,4 @@ export function QueueRunDialog({ making, open, onClose }: QueueRunDialogProps) {
       )}
     </dialog>
   );
-}
+};

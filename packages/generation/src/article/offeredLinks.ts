@@ -10,7 +10,7 @@ export interface OfferedLink extends PageLink {
 
 // Numbered across the piece, so the model names a link and code copies it. Past the cap a
 // long read's citations are cut rather than the prompt grown (docs/features/article-resources.md).
-export function offeredLinks({ sections }: Pick<ExtractedArticle, "sections">): OfferedLink[] {
+export const offeredLinks = ({ sections }: Pick<ExtractedArticle, "sections">): OfferedLink[] => {
   let before = 0;
   return sections
     .flatMap(({ text, links }) => {
@@ -20,4 +20,4 @@ export function offeredLinks({ sections }: Pick<ExtractedArticle, "sections">): 
     })
     .slice(0, MOST_LINKS_OFFERED)
     .map((link, index) => ({ ...link, index }));
-}
+};

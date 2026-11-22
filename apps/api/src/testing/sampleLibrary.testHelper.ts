@@ -35,23 +35,29 @@ const ITEM_START = /^\s*(?:\d+\.|-)\s+/;
 
 // The prototype wrote actions as a numbered list in some notes and a dashed one in others,
 // with items wrapped over several lines and prose after them (CLAUDE.md, "samples/").
-function actionItems(text: string): string[] {
+const actionItems = (text: string): string[] => {
   const items: string[] = [];
   let open: string | null = null;
   for (const line of text.split("\n")) {
     if (ITEM_START.test(line)) {
-      if (open !== null) items.push(open);
+      if (open !== null) {
+        items.push(open);
+      }
       open = line.replace(ITEM_START, "").trim();
     } else if (line.trim() === "") {
-      if (open !== null) items.push(open);
+      if (open !== null) {
+        items.push(open);
+      }
       open = null;
     } else if (open !== null) {
       open = `${open} ${line.trim()}`;
     }
   }
-  if (open !== null) items.push(open);
+  if (open !== null) {
+    items.push(open);
+  }
   return items;
-}
+};
 
 export interface SampleNote {
   file: string;
@@ -67,7 +73,7 @@ export interface SampleLibrary {
 
 // The five real notes in samples/records, as the records this build stores: real content
 // rather than invented fixtures, with the prototype's variance intact (CLAUDE.md).
-export function sampleLibrary(): SampleLibrary {
+export const sampleLibrary = (): SampleLibrary => {
   const files = readdirSync(SAMPLES)
     .filter((file) => file.endsWith(".json"))
     .sort();
@@ -120,4 +126,4 @@ export function sampleLibrary(): SampleLibrary {
     };
   });
   return { topics, notes };
-}
+};

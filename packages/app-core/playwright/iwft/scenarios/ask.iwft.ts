@@ -65,7 +65,9 @@ test.describe("Ask", () => {
   }) => {
     const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
-    for (const overview of [plants, stew, titled(CURRY, "2026-11-05T09:00:00.000Z")]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew, titled(CURRY, "2026-11-05T09:00:00.000Z")]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.chats.answerWith({
       text: "Beans and greens come up again and again.",
       citations: [cite(plants), cite(stew)],
@@ -117,7 +119,9 @@ test.describe("Ask", () => {
     const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
     const dinner = { ...makeProject({ name: "Dinner Recipes" }), archivedAt: null };
-    for (const overview of [plants, stew]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.projects.seed(dinner);
     backendSimulator.projects.seedMember(makeProjectMember(dinner, plants.id));
     backendSimulator.projects.seedMember(makeProjectMember(dinner, stew.id));
@@ -162,7 +166,7 @@ test.describe("Ask", () => {
     await ask.verifyPinnedRead(0, [PLANTS]);
   });
 
-  test("the drawer is a column at the left listing library, project and overview conversations by day; it opens a library or project one beside it, and a deleted one comes back with Undo", async ({
+  test("on the web the drawer starts open (OV-370), a column at the left listing library, project and overview conversations by day; it opens a library or project one beside it, and a deleted one comes back with Undo", async ({
     launcher,
     backendSimulator,
     page,
@@ -187,7 +191,7 @@ test.describe("Ask", () => {
     await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(1);
     const ask = await launcher.appShell.openAsk();
 
-    await ask.openDrawer();
+    await ask.verifyDrawerIsOpen(true);
 
     await ask.verifyDrawerIsSheet(false);
     await ask.verifyDrawerReads([
@@ -220,6 +224,11 @@ test.describe("Ask", () => {
     await ask.closeDrawer();
 
     await ask.verifyDrawerIsOpen(false);
+
+    await ask.openDrawer();
+
+    await ask.verifyDrawerIsOpen(true);
+    await expect.poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "ask.drawer.opened")).toHaveLength(1);
   });
 
   test("an overview's conversation in the drawer opens on that overview with its chat open on it, and deletes with Undo (OV-363)", async ({
@@ -240,7 +249,7 @@ test.describe("Ask", () => {
     await launcher.launchExpectingLibrary(SIGNED_IN);
     await expect.poll(() => backendSimulator.chats.list(plants.id)).toHaveLength(2);
     const ask = await launcher.appShell.openAsk();
-    await ask.openDrawer();
+    await ask.verifyDrawerIsOpen(true);
     await ask.verifyDrawerReads([`Today: How much a day? · ${PLANTS}, Which beans? · ${PLANTS}`]);
 
     await ask.deleteDrawerConversation(0);
@@ -272,7 +281,66 @@ test.describe("Ask", () => {
     await reader.chat.verifyIsOpen(false);
   });
 
-  test("on a phone Ask is a page, its drawer is a bottom sheet, and the last conversation's menu opens where it can be seen", async ({
+  test("in the drawer a cut-off question shows in full in a tip on hover, one that fits shows none, and New chat stays at the top as the list scrolls (OV-371)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    const long = "Which of the overviews I saved about sleep, caffeine and training agree on when to stop drinking coffee each day?";
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    const now = Date.now();
+    backendSimulator.chats.seed(conversation("library:0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d", long, new Date(now).toISOString()));
+    backendSimulator.chats.seed(
+      conversation("library:1b2c3d4e-5f6a-4b7c-9d8e-0f1a2b3c4d5e", "Short one?", new Date(now - 60_000).toISOString()),
+    );
+    for (let day = 1; day <= 20; day += 1) {
+      backendSimulator.chats.seed(
+        conversation(
+          `library:${String(day).padStart(8, "0")}-2c3d-4e5f-8a6b-7c8d9e0f1a2b`,
+          `Earlier question ${day}?`,
+          new Date(now - day * 86_400_000).toISOString(),
+        ),
+      );
+    }
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(22);
+    const ask = await launcher.appShell.openAsk();
+    await ask.verifyDrawerIsOpen(true);
+
+    await ask.hoverDrawerConversation(0);
+
+    await ask.verifyDrawerTipReads(0, long);
+
+    await ask.hoverDrawerConversation(1);
+
+    await ask.verifyDrawerTipReads(1, null);
+    await ask.verifyDrawerTopIsPinned(false);
+
+    await ask.scrollDrawerToEnd();
+
+    await ask.verifyDrawerTopIsPinned(true);
+  });
+
+  test("on a phone a cut-off question's tip shows on a long press, which doesn't open the conversation (OV-371)", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(PHONE);
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    const long = "Which of the overviews I saved about sleep, caffeine and training agree on when to stop drinking coffee each day?";
+    backendSimulator.chats.seed(conversation("library:0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d", long, new Date().toISOString()));
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(1);
+    const ask = await launcher.appShell.openAsk();
+    await ask.openDrawer();
+
+    await ask.holdDrawerConversation(0);
+
+    await ask.verifyDrawerIsOpen(true);
+    await expect(page).toHaveURL(/\/ask$/);
+  });
+
+  test("on a phone Ask is a page, its drawer starts closed and is a bottom sheet, and the last conversation's menu opens where it can be seen", async ({
     launcher,
     backendSimulator,
     page,
@@ -289,6 +357,8 @@ test.describe("Ask", () => {
     await ask.verifyHeadingReads("Ask across everything you’ve saved.");
     await ask.verifyPlaceholderReads("Ask or @ to add sources");
     await ask.verifyPageDoesNotScrollSideways();
+
+    await ask.verifyDrawerIsOpen(false);
 
     await ask.openDrawer();
 
@@ -316,7 +386,9 @@ test.describe("Ask", () => {
     plants.source.title = PLANTS;
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
     const curry = titled(CURRY, "2026-11-05T09:00:00.000Z");
-    for (const overview of [plants, stew, curry]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew, curry]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     const beans: ChatCitation = {
       overviewId: plants.id,
       title: PLANTS,
@@ -365,8 +437,9 @@ test.describe("Ask", () => {
   });
 
   test("in the empty page the @ picker opens below the field, where there's room", async ({ launcher, backendSimulator }) => {
-    for (const [index, title] of [PLANTS, STEW, CURRY].entries())
+    for (const [index, title] of [PLANTS, STEW, CURRY].entries()) {
       backendSimulator.overviews.seedSynced(titled(title, `2026-11-0${index + 3}T09:00:00.000Z`));
+    }
     await launcher.launchExpectingLibrary(SIGNED_IN);
     const ask = await launcher.appShell.openAsk();
 
@@ -429,7 +502,9 @@ test.describe("Ask", () => {
     plants.source.title = PLANTS;
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
     const curry = titled(CURRY, "2026-11-05T09:00:00.000Z");
-    for (const overview of [plants, stew, curry]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew, curry]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     const step: ChatCitation = {
       overviewId: plants.id,
       title: PLANTS,

@@ -16,7 +16,7 @@ export interface CaptureReasonLineProps {
 // Design 20c and 21b: the reason reads back as one line above the premise, the reminder it
 // was in the prototype, and only when there is one. 21d: editing turns the same line into
 // the field, with Enter to save and Escape to cancel (docs/features/capture-reason.md).
-export function CaptureReasonLine({ overview, editing, compact, onEditingChange }: CaptureReasonLineProps) {
+export const CaptureReasonLine = ({ overview, editing, compact, onEditingChange }: CaptureReasonLineProps) => {
   const setCaptureReason = useSetOverviewCaptureReasonMutation();
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement | null>(null);
@@ -39,9 +39,13 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
   };
 
   const save = (captureReason: string | null) => {
-    if (captureReason !== null) analytics.captureReason.saved({ edited: overview.captureReason !== null });
-    else if (overview.captureReason !== null) analytics.captureReason.removed();
-    else analytics.captureReason.cancelled();
+    if (captureReason !== null) {
+      analytics.captureReason.saved({ edited: overview.captureReason !== null });
+    } else if (overview.captureReason !== null) {
+      analytics.captureReason.removed();
+    } else {
+      analytics.captureReason.cancelled();
+    }
     if (captureReason !== overview.captureReason) {
       setCaptureReason.mutate({ overview, captureReason });
     }
@@ -109,4 +113,4 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
       </span>
     </div>
   );
-}
+};

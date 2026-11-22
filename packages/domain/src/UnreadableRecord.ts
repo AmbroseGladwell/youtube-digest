@@ -29,7 +29,12 @@ export interface UnreadableRecordFailure {
   detail: string;
 }
 
-export function unreadableRecord(kind: UnreadableRecordKind, id: string, failure: UnreadableRecordFailure, raw: unknown): UnreadableRecord {
+export const unreadableRecord = (
+  kind: UnreadableRecordKind,
+  id: string,
+  failure: UnreadableRecordFailure,
+  raw: unknown,
+): UnreadableRecord => {
   return {
     kind,
     id,
@@ -38,4 +43,4 @@ export function unreadableRecord(kind: UnreadableRecordKind, id: string, failure
     detail: failure.detail,
     salvaged: kind === "overview" ? salvageOverview(raw) : null,
   };
-}
+};

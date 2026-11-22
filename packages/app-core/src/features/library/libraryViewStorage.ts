@@ -28,13 +28,17 @@ const storageKey = (accountId: string | null) => `overview.libraryView.${account
 
 // The list's filters and order as this account last left them on this device. Never synced:
 // each origin keeps its own (docs/features/library-view.md). The search is not kept.
-export function readLibraryView(accountId: string | null, storage: Storage = globalThis.localStorage): RestoredLibraryView | null {
+export const readLibraryView = (accountId: string | null, storage: Storage = globalThis.localStorage): RestoredLibraryView | null => {
   let saved: Record<string, unknown>;
   try {
     const raw = storage.getItem(storageKey(accountId));
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     const parsed = SavedLibraryView.safeParse(JSON.parse(raw));
-    if (!parsed.success) return null;
+    if (!parsed.success) {
+      return null;
+    }
     saved = parsed.data;
   } catch {
     return null;
@@ -43,7 +47,9 @@ export function readLibraryView(accountId: string | null, storage: Storage = glo
   const dropped: SavedLibraryViewField[] = [];
   const field = <K extends SavedLibraryViewField>(name: K, fallback: z.infer<(typeof FIELDS)[K]>) => {
     const parsed = FIELDS[name].safeParse(saved[name]);
-    if (parsed.success) return parsed.data as z.infer<(typeof FIELDS)[K]>;
+    if (parsed.success) {
+      return parsed.data as z.infer<(typeof FIELDS)[K]>;
+    }
     dropped.push(name);
     return fallback;
   };
@@ -62,13 +68,13 @@ export function readLibraryView(accountId: string | null, storage: Storage = glo
     sort: field("sort", DEFAULT_LIBRARY_SORT),
   };
   return { view, dropped };
-}
+};
 
-export function writeLibraryView(
+export const writeLibraryView = (
   accountId: string | null,
   { filters, sort }: LibraryView,
   storage: Storage = globalThis.localStorage,
-): void {
+): void => {
   try {
     storage.setItem(
       storageKey(accountId),
@@ -86,12 +92,12 @@ export function writeLibraryView(
   } catch {
     return;
   }
-}
+};
 
-export function forgetLibraryView(accountId: string, storage: Storage = globalThis.localStorage): void {
+export const forgetLibraryView = (accountId: string, storage: Storage = globalThis.localStorage): void => {
   try {
     storage.removeItem(storageKey(accountId));
   } catch {
     return;
   }
-}
+};

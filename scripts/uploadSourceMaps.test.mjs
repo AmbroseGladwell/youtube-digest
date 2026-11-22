@@ -5,14 +5,14 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { uploadSourceMaps } from "./uploadSourceMaps.mjs";
 
-function builtApp() {
+const builtApp = () => {
   const dir = mkdtempSync(path.join(tmpdir(), "uploadSourceMaps-test-"));
   mkdirSync(path.join(dir, "assets"));
   writeFileSync(path.join(dir, "assets", "index-abc.js"), "export {};");
   writeFileSync(path.join(dir, "assets", "index-abc.js.map"), "{}");
   writeFileSync(path.join(dir, "assets", "chunk-def.js.map"), "{}");
   return dir;
-}
+};
 
 const recording = () => {
   const runs = [];

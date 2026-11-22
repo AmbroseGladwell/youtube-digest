@@ -203,7 +203,7 @@ declare module "fastify" {
 // Hook order inside /api is address limit, parse, floor, session, account limit: a flood is
 // refused before it costs a database round trip, and a client below the floor is told to
 // update before it is told to sign in (docs/architecture/api.md).
-export async function buildApp({
+export const buildApp = async ({
   config,
   sql: untimedSql,
   mailer,
@@ -225,7 +225,7 @@ export async function buildApp({
   podcastIndex = null,
   youTubeEpisodes = null,
   readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb, appleBudget: APPLE_BUDGET, podcastIndex }),
-}: BuildAppOptions): Promise<FastifyInstance> {
+}: BuildAppOptions): Promise<FastifyInstance> => {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
     requestIdHeader: false,
@@ -493,4 +493,4 @@ export async function buildApp({
   }
 
   return app;
-}
+};

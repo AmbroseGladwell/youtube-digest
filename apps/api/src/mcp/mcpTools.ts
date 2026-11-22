@@ -40,7 +40,7 @@ const Cursor = z.string().regex(/^\d+$/).optional().describe("Where to carry on 
 const topicNames = (topics: Topic[], entry: LibraryEntry) =>
   entry.overview.topicIds.flatMap((id) => topics.find((topic) => topic.id === id)?.name ?? []);
 
-function resolveFilters(library: Library, { topic, project, ...filters }: LibraryFilters): ResolvedFilters | McpToolOutcome {
+const resolveFilters = (library: Library, { topic, project, ...filters }: LibraryFilters): ResolvedFilters | McpToolOutcome => {
   let resolved: ResolvedFilters = filters;
   if (topic !== undefined) {
     const found = library.topics.find((candidate) => candidate.id === topic || sameTopicName(candidate.name, topic));
@@ -51,15 +51,17 @@ function resolveFilters(library: Library, { topic, project, ...filters }: Librar
   }
   if (project !== undefined) {
     const found = resolveProject(library, project);
-    if (!isProject(found)) return found;
+    if (!isProject(found)) {
+      return found;
+    }
     resolved = { ...resolved, inProject: new Set(projectOverviews(library, found.id).map(({ overview }) => overview.id)) };
   }
   return resolved;
-}
+};
 
 const isOutcome = (value: ResolvedFilters | McpToolOutcome): value is McpToolOutcome => "text" in value;
 
-function listingLine(library: Library, entry: LibraryEntry, byMeaning: boolean): string {
+const listingLine = (library: Library, entry: LibraryEntry, byMeaning: boolean): string => {
   const { overview } = entry;
   const facts = [
     byMeaning ? "matched by meaning" : null,
@@ -70,13 +72,13 @@ function listingLine(library: Library, entry: LibraryEntry, byMeaning: boolean):
     `id ${overview.id}`,
   ].filter((fact) => fact !== null);
   return `- **${overview.source.title}** (${facts.join(" · ")})\n  ${overview.inOneLine}`;
-}
+};
 
-function overviewText(library: Library, entry: LibraryEntry, byMeaning: boolean): string {
+const overviewText = (library: Library, entry: LibraryEntry, byMeaning: boolean): string => {
   const topics = topicNames(library.topics, entry);
   const matched = byMeaning ? "\nMatched by meaning, not by word" : "";
   return `Overview id: ${entry.overview.id}\nTopics: ${topics.join(", ") || "none"}${matched}\n\n${overviewMarkdown(entry.overview)}`;
-}
+};
 
 interface McpSearch extends LibrarySearch {
   notes: string[];
@@ -84,11 +86,11 @@ interface McpSearch extends LibrarySearch {
 
 // Degrade visibly: when meaning cannot be matched, the assistant is told it is reading word
 // matches only, rather than handed a shorter list that looks complete.
-async function searchEntries(
+const searchEntries = async (
   entries: LibraryEntry[],
   filters: ResolvedFilters,
   { meaning, accountId, log }: McpToolContext,
-): Promise<McpSearch> {
+): Promise<McpSearch> => {
   const query = filters.query?.trim() ?? "";
   if (query === "") {
     return { ...searchWithMeaning(entries, filters, []), notes: [] };
@@ -107,9 +109,9 @@ async function searchEntries(
     ...found,
     notes: result.available ? [] : ["Matching by meaning is unavailable right now, so these match by word only."],
   };
-}
+};
 
-function pageFooter(page: Page<unknown>, noun: string): string[] {
+const pageFooter = (page: Page<unknown>, noun: string): string[] => {
   const lines = [];
   if (page.items.length > 0 && page.total > page.items.length) {
     lines.push(`These are ${noun} ${page.first + 1}–${page.first + page.items.length} of ${page.total}.`);
@@ -118,7 +120,7 @@ function pageFooter(page: Page<unknown>, noun: string): string[] {
     lines.push(`More remain: call again with cursor "${page.next}" for the next ${noun}.`);
   }
   return lines;
-}
+};
 
 // Degrade visibly: a record this server cannot read is left out, and the assistant is
 // told so rather than handed a library that silently looks smaller.

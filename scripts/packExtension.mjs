@@ -10,7 +10,7 @@ const UNRELEASED_VERSION = "0.0.0";
 // The zip the Web Store takes: the built extension with its manifest's key removed, since
 // the store refuses a key on a new item and needs it on no upload
 // (docs/architecture/deploy.md, "The extension").
-export function storeManifest(manifest) {
+export const storeManifest = (manifest) => {
   if (manifest.version === undefined || manifest.version === UNRELEASED_VERSION) {
     throw new Error(
       `manifest.json is at version ${manifest.version ?? "(none)"}, which is not a release: the build stamps it from the root package.json`,
@@ -18,21 +18,21 @@ export function storeManifest(manifest) {
   }
   const { key: _key, ...rest } = manifest;
   return rest;
-}
+};
 
-export function hasStoreKey(manifest) {
+export const hasStoreKey = (manifest) => {
   return typeof manifest.key === "string" && manifest.key !== "";
-}
+};
 
-export function keyedZipName(version) {
+export const keyedZipName = (version) => {
   return `the-overview-${version}-unpacked.zip`;
-}
+};
 
-export function storeZipName(version) {
+export const storeZipName = (version) => {
   return `the-overview-${version}.zip`;
-}
+};
 
-function zipWithManifest({ distDir, releaseDir, zipPath, manifest }) {
+const zipWithManifest = ({ distDir, releaseDir, zipPath, manifest }) => {
   const staging = mkdtempSync(path.join(tmpdir(), "overview-extension-"));
   try {
     cpSync(distDir, staging, { recursive: true });
@@ -53,13 +53,13 @@ function zipWithManifest({ distDir, releaseDir, zipPath, manifest }) {
     throw new Error(`${zipPath} does not carry the manifest that was written into it`);
   }
   return { zipPath, files };
-}
+};
 
 // Two zips, because the store's and a person's needs are opposite: the store refuses a
 // manifest with a key, and a build loaded unpacked without one gets an id derived from
 // its directory, which the API does not vouch for (docs/architecture/deploy.md,
 // "The extension").
-export function packExtension({ distDir, releaseDir }) {
+export const packExtension = ({ distDir, releaseDir }) => {
   const manifestPath = path.join(distDir, "manifest.json");
   if (!existsSync(manifestPath)) {
     throw new Error(`${distDir} holds no manifest.json: build the extension first`);
@@ -91,7 +91,7 @@ export function packExtension({ distDir, releaseDir }) {
     });
   }
   return { version, zips };
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const extensionDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../apps/extension");

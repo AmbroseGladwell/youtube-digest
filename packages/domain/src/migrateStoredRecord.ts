@@ -11,7 +11,7 @@ export type StoredRecordMigration =
 // The chain runs forward only, so a record above this client's version is held back
 // rather than read loosely: stripping what this client does not know is a data-loss bug
 // waiting for its first write-back (docs/features/record-migrations.md).
-export function migrateStoredRecord(raw: unknown, migrations: readonly RecordMigration[]): StoredRecordMigration {
+export const migrateStoredRecord = (raw: unknown, migrations: readonly RecordMigration[]): StoredRecordMigration => {
   const schemaVersion = storedSchemaVersion(raw);
 
   if (schemaVersion > currentSchemaVersion(migrations)) {
@@ -45,4 +45,4 @@ export function migrateStoredRecord(raw: unknown, migrations: readonly RecordMig
   }
 
   return { status: "migrated", record: migrated as Record<string, unknown>, schemaVersion };
-}
+};

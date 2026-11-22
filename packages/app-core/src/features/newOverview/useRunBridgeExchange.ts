@@ -17,7 +17,7 @@ import { useAnalytics } from "../analytics/AnalyticsContext.js";
 //
 // It lives beside the run rather than on the page the request lands on, because the
 // panel can be anywhere when the button is pressed.
-export function useRunBridgeExchange(controller: NewOverviewRunController): void {
+export const useRunBridgeExchange = (controller: NewOverviewRunController): void => {
   const bridge = useRunBridge();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -90,4 +90,4 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
     take();
     return bridge.subscribe(take);
   }, [bridge, readiness, navigate, start, queryClient, overviewStore, analytics]);
-}
+};

@@ -35,18 +35,22 @@ const LABELLED_ID = /^([SO][1-9]\d*)(?:\.(.+))?$/;
 
 // Its label, or an item of it (S2.kp1, O3.step2). Unknown labels and items are dropped, and an
 // overview cited by an item isn't cited again on its own.
-export function overviewCitationsOf(ids: readonly string[], labels: ReadonlyMap<string, CitableOverview>): OtherOverviewCitation[] {
+export const overviewCitationsOf = (ids: readonly string[], labels: ReadonlyMap<string, CitableOverview>): OtherOverviewCitation[] => {
   const cited: OtherOverviewCitation[] = [];
   for (const id of new Set(ids)) {
     const [, label, item] = LABELLED_ID.exec(id) ?? [];
     const entry = label === undefined ? undefined : labels.get(label);
-    if (entry === undefined) continue;
+    if (entry === undefined) {
+      continue;
+    }
     const { overviewId, title, brief } = entry;
     const found =
       item === undefined || brief === true
         ? undefined
         : overviewParts(entry.overview).find(({ part, index }) => overviewPartId(part, index) === item);
-    if (item !== undefined && brief !== true && found === undefined) continue;
+    if (item !== undefined && brief !== true && found === undefined) {
+      continue;
+    }
     cited.push({
       overviewId,
       title,
@@ -59,7 +63,7 @@ export function overviewCitationsOf(ids: readonly string[], labels: ReadonlyMap<
       citation.item !== null ||
       (!byItem.has(citation.overviewId) && cited.findIndex((each) => each.overviewId === citation.overviewId) === index),
   );
-}
+};
 
 const citable = (sources: ReadonlyMap<string, LabelledSource>): Map<string, CitableOverview> =>
   new Map(
@@ -74,14 +78,14 @@ const citable = (sources: ReadonlyMap<string, LabelledSource>): Map<string, Cita
 // any id it wasn't given.
 // An answer is in the source only when it cites the transcript: the overview and another chat
 // are never the source (docs/features/chats.md).
-export function citationsOf(
+export const citationsOf = (
   reply: CitedIds,
   passages: readonly Passage[],
   parts: readonly OverviewPartItem[],
   chatLabels: ReadonlyMap<string, Extract<ChatCitation, { chatId: string }>>,
   sources: ReadonlyMap<string, LabelledSource> = new Map(),
   minuteLabels: ReadonlyMap<string, OtherOverviewCitation> = new Map(),
-): CitedAnswer {
+): CitedAnswer => {
   const byId = new Map(passages.map((passage) => [passage.id, passage]));
   const cited = reply.inSource
     ? [...new Set(reply.passages)]
@@ -118,4 +122,4 @@ export function citationsOf(
     otherOverviewCitations: others.length + minutes.length,
     minuteCitations: minutes.length,
   };
-}
+};

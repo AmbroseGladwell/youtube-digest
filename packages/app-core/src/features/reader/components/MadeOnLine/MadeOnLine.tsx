@@ -6,7 +6,7 @@ import { madeOnLineTestIds } from "./MadeOnLineTestIds.js";
 
 // On the byline's scale, under the playlist line: provenance, not a warning. Only a
 // fallback earns it (docs/architecture/tiers.md, "Which key an overview uses").
-export function MadeOnLine({ overview }: { overview: Overview }) {
+export const MadeOnLine = ({ overview }: { overview: Overview }) => {
   const line = madeOnLine(overview.madeOn);
   return line === null ? null : (
     <p className={styles.root} data-testid={madeOnLineTestIds.root}>
@@ -16,4 +16,4 @@ export function MadeOnLine({ overview }: { overview: Overview }) {
       <span>{line}</span>
     </p>
   );
-}
+};

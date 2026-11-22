@@ -4,22 +4,31 @@ import { ApiError } from "../http/ApiError.js";
 import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
 import type { TrialsRepository } from "./TrialsRepository.js";
 
+export interface ReserveTrialReadOptions {
+  trials: TrialsRepository;
+  clock: () => Date;
+}
+
 // Signed out, a link is read on the device's trial, which allows a few reads beside its one
 // overview, whether the link is an article or a podcast episode (docs/features/onboarding.md,
 // "Any kind of link"). An account reads without counting.
-export async function reserveTrialRead(
+export const reserveTrialRead = async (
   request: FastifyRequest,
   reply: FastifyReply,
-  { trials, clock }: { trials: TrialsRepository; clock: () => Date },
-): Promise<void> {
-  if (request.session !== null) return;
+  { trials, clock }: ReserveTrialReadOptions,
+): Promise<void> => {
+  if (request.session !== null) {
+    return;
+  }
   const trialToken = request.headers[TRIAL_TOKEN_HEADER];
   if (typeof trialToken !== "string") {
     throw new ApiError("unauthenticated", "Sign in, or start a trial, to read a link");
   }
   const now = clock();
   const reservation = await trials.reserveRead(now, trialToken, request.clientAddress);
-  if (reservation.reserved) return;
+  if (reservation.reserved) {
+    return;
+  }
   if (reservation.reason === "unknown") {
     throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
   }
@@ -34,4 +43,4 @@ export async function reserveTrialRead(
     quota: "trial-reads-address",
     retryAfterSeconds,
   });
-}
+};

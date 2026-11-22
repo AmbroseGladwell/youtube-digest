@@ -35,7 +35,7 @@ export interface ProjectSuggestionsProps {
 
 // Saved overviews that might fit a project, found by meaning from its name and what it's for:
 // lighter than a library row, still an overview ("OV-318 3" 318m, 318n).
-export function ProjectSuggestions({
+export const ProjectSuggestions = ({
   id,
   projectName,
   hasPurpose,
@@ -49,12 +49,14 @@ export function ProjectSuggestions({
   onTurnDown,
   onOpen,
   onAddPurpose,
-}: ProjectSuggestionsProps) {
+}: ProjectSuggestionsProps) => {
   const addButtons = useRef(new Map<string, HTMLButtonElement>());
   const offered = rows.filter((row) => row.phase === "shown");
 
   useEffect(() => {
-    if (focusAdd === null) return;
+    if (focusAdd === null) {
+      return;
+    }
     addButtons.current.get(focusAdd)?.focus({ preventScroll: true });
     onFocused();
   }, [focusAdd]);
@@ -144,8 +146,11 @@ export function ProjectSuggestions({
                       <button
                         type="button"
                         ref={(button) => {
-                          if (button === null) addButtons.current.delete(overview.id);
-                          else addButtons.current.set(overview.id, button);
+                          if (button === null) {
+                            addButtons.current.delete(overview.id);
+                          } else {
+                            addButtons.current.set(overview.id, button);
+                          }
                         }}
                         className={styles.pill}
                         onClick={() => onAdd(entry)}
@@ -175,4 +180,4 @@ export function ProjectSuggestions({
       </section>
     </div>
   );
-}
+};

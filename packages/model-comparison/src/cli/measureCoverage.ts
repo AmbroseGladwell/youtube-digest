@@ -58,7 +58,7 @@ type LoadedSource =
   | { source: CoverageSource; kind: "video"; fetched: FetchedTranscript }
   | { source: CoverageSource; kind: "article"; article: ExtractedArticle };
 
-async function loadSource(source: CoverageSource): Promise<LoadedSource | null> {
+const loadSource = async (source: CoverageSource): Promise<LoadedSource | null> => {
   const directory = source.kind === "video" ? comparisonPaths.coverageTranscripts : comparisonPaths.coverageArticles;
   await mkdir(directory, { recursive: true });
   const path = join(directory, source.kind === "video" ? `${videoIdOf(source.url)}.json` : articleFileOf(source.url));
@@ -77,20 +77,24 @@ async function loadSource(source: CoverageSource): Promise<LoadedSource | null> 
   }
   const saved = JSON.parse(await readFile(path, "utf-8"));
   return source.kind === "video" ? { source, kind: "video", fetched: saved } : { source, kind: "article", article: saved };
-}
+};
 
-async function fetchArticle(url: string): Promise<ExtractedArticle> {
+const fetchArticle = async (url: string): Promise<ExtractedArticle> => {
   const response = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 (compatible; overview-model-comparison)" } });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
   const dom = new JSDOM(await response.text(), { url });
   try {
     const read = readArticle(dom.window.document, url);
-    if (read.status !== "read") throw new Error(`not readable: ${read.reason}`);
+    if (read.status !== "read") {
+      throw new Error(`not readable: ${read.reason}`);
+    }
     return read.article;
   } finally {
     dom.window.close();
   }
-}
+};
 
 const sourceIdOf = (loaded: LoadedSource) =>
   loaded.kind === "video" ? (loaded.fetched.video.id ?? loaded.fetched.video.url) : loaded.article.url;
@@ -125,7 +129,9 @@ if (!values["measure-only"]) {
       `$${(record.costDollars ?? 0).toFixed(4)} (spent $${spent.toFixed(4)} of $${budgetDollars.toFixed(2)})`,
     log,
   });
-  if (outcome.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget.`);
+  if (outcome.stoppedForBudget) {
+    log(`Stopped at the $${budgetDollars.toFixed(2)} budget.`);
+  }
 }
 
 const records = new Map(
@@ -134,7 +140,7 @@ const records = new Map(
 const passed = (record: RunRecord | undefined) =>
   record !== undefined && (record.outcome === "passed-first" || record.outcome === "passed-after-retry");
 
-function videoRow(fetched: FetchedTranscript, record: RunRecord | undefined): CoverageRow {
+const videoRow = (fetched: FetchedTranscript, record: RunRecord | undefined): CoverageRow => {
   const words = fetched.transcript.reduce((total, { text }) => total + wordCount(text), 0);
   const length = `${formatTimestamp(fetched.video.durationMs ?? fetched.transcript.at(-1)?.endMs ?? 0)}, ${words.toLocaleString("en-GB")} words`;
   const coverage = passed(record) ? measureCoverage(videoCoverageInput(fetched, record!.attempts.at(-1) as GeneratedOutput)) : null;
@@ -148,9 +154,9 @@ function videoRow(fetched: FetchedTranscript, record: RunRecord | undefined): Co
     coverage,
     gapPlace: coverage?.largestGap ? place(coverage.largestGap) : null,
   };
-}
+};
 
-function articleRow(article: ExtractedArticle, record: RunRecord | undefined): CoverageRow {
+const articleRow = (article: ExtractedArticle, record: RunRecord | undefined): CoverageRow => {
   const coverage = passed(record)
     ? measureCoverage(articleCoverageInput(article, record!.attempts.at(-1) as GeneratedArticleOutput))
     : null;
@@ -163,7 +169,7 @@ function articleRow(article: ExtractedArticle, record: RunRecord | undefined): C
     coverage,
     gapPlace: coverage?.largestGap ? `paragraphs ${coverage.largestGap.start + 1}–${coverage.largestGap.end + 1}` : null,
   };
-}
+};
 
 const rows = loaded.map((source) =>
   source.kind === "video"

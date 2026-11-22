@@ -24,7 +24,7 @@ export const CATALOGUE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export const catalogueIsStale = (catalogue: ModelCatalogue, now: Date): boolean =>
   now.getTime() - new Date(catalogue.fetchedAt).getTime() > CATALOGUE_MAX_AGE_MS;
 
-export function readCatalogues(storage: Storage = globalThis.localStorage): Catalogues {
+export const readCatalogues = (storage: Storage = globalThis.localStorage): Catalogues => {
   const raw = storage.getItem(STORAGE_KEY);
   if (raw === null) {
     return {};
@@ -35,17 +35,17 @@ export function readCatalogues(storage: Storage = globalThis.localStorage): Cata
   } catch {
     return {};
   }
-}
+};
 
-export function writeCatalogue(provider: Provider, catalogue: ModelCatalogue, storage: Storage = globalThis.localStorage): void {
+export const writeCatalogue = (provider: Provider, catalogue: ModelCatalogue, storage: Storage = globalThis.localStorage): void => {
   storage.setItem(STORAGE_KEY, JSON.stringify({ ...readCatalogues(storage), [provider]: catalogue }));
-}
+};
 
-export function forgetCatalogue(provider: Provider, storage: Storage = globalThis.localStorage): void {
+export const forgetCatalogue = (provider: Provider, storage: Storage = globalThis.localStorage): void => {
   const { [provider]: _gone, ...rest } = readCatalogues(storage);
   storage.setItem(STORAGE_KEY, JSON.stringify(rest));
-}
+};
 
-export function forgetAllCatalogues(storage: Storage = globalThis.localStorage): void {
+export const forgetAllCatalogues = (storage: Storage = globalThis.localStorage): void => {
   storage.removeItem(STORAGE_KEY);
-}
+};

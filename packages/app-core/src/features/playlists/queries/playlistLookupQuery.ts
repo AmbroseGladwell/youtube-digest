@@ -12,10 +12,10 @@ export const playlistLookupQueryOptions = (api: PlaylistApi | null, apiUrl: stri
     retry: false,
   });
 
-export function usePlaylistLookupQuery(playlistId: PlaylistId | null) {
+export const usePlaylistLookupQuery = (playlistId: PlaylistId | null) => {
   const playlistApi = usePlaylistApi();
   return useQuery({
     ...playlistLookupQueryOptions(playlistApi?.api ?? null, playlistApi?.apiUrl ?? null, playlistId ?? ("" as PlaylistId)),
     enabled: playlistApi !== null && playlistId !== null,
   });
-}
+};

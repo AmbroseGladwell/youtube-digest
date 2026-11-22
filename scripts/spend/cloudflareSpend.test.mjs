@@ -84,7 +84,7 @@ test("R2 storage and requests add up per environment as usage, with no dollars",
   assert.ok(rows.every((row) => row.source === "usage" && row.dollars === null));
 });
 
-function fakeCloudflare({ status = 200, errors = [], billable = usage } = {}) {
+const fakeCloudflare = ({ status = 200, errors = [], billable = usage } = {}) => {
   const calls = [];
   const fetch = async (url, init = {}) => {
     calls.push({
@@ -93,7 +93,9 @@ function fakeCloudflare({ status = 200, errors = [], billable = usage } = {}) {
       authorization: init.headers.Authorization,
       body: init.body ? JSON.parse(init.body) : null,
     });
-    if (status !== 200) return { ok: false, status };
+    if (status !== 200) {
+      return { ok: false, status };
+    }
     return {
       ok: true,
       json: async () =>
@@ -106,7 +108,7 @@ function fakeCloudflare({ status = 200, errors = [], billable = usage } = {}) {
     };
   };
   return { fetch, calls };
-}
+};
 
 test("the bill and R2 analytics are read with the token, and only days in the billing period are readable", async () => {
   const cloudflare = fakeCloudflare();

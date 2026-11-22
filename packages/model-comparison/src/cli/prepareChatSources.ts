@@ -24,7 +24,7 @@ const { values, positionals } = parseArgs({
 });
 const [command] = positionals;
 
-async function fetchTranscripts(): Promise<number> {
+const fetchTranscripts = async (): Promise<number> => {
   let failures = 0;
   for (const source of CHAT_SOURCES) {
     const directory = chatSourceDirectory(source.overviewId);
@@ -57,15 +57,17 @@ async function fetchTranscripts(): Promise<number> {
     }
   }
   return failures;
-}
+};
 
-async function printPassages(overviewId: string, windowMs: number): Promise<number> {
+const printPassages = async (overviewId: string, windowMs: number): Promise<number> => {
   const fetched = JSON.parse(await readFile(join(chatSourceDirectory(overviewId), "transcript.json"), "utf-8")) as FetchedTranscript;
-  for (const passage of transcriptPassages(fetched.transcript, windowMs)) console.log(passageBlock(passage));
+  for (const passage of transcriptPassages(fetched.transcript, windowMs)) {
+    console.log(passageBlock(passage));
+  }
   return 0;
-}
+};
 
-async function checkQuestions(): Promise<number> {
+const checkQuestions = async (): Promise<number> => {
   let problems = 0;
   for (const source of CHAT_SOURCES) {
     const directory = chatSourceDirectory(source.overviewId);
@@ -98,15 +100,21 @@ async function checkQuestions(): Promise<number> {
   }
   console.error(problems === 0 ? "every quote found" : `${problems} problem(s)`);
   return problems;
-}
+};
 
 const usage = "usage: npm run chat-prepare -- fetch | passages --overview <id> [--window <seconds>] | check";
-const outcome =
-  command === "fetch"
-    ? await fetchTranscripts()
-    : command === "passages" && values.overview !== undefined
-      ? await printPassages(values.overview, Number(values.window) * 1000)
-      : command === "check"
-        ? await checkQuestions()
-        : (console.error(usage), 1);
+const runCommand = async (): Promise<number> => {
+  if (command === "fetch") {
+    return fetchTranscripts();
+  }
+  if (command === "passages" && values.overview !== undefined) {
+    return printPassages(values.overview, Number(values.window) * 1000);
+  }
+  if (command === "check") {
+    return checkQuestions();
+  }
+  console.error(usage);
+  return 1;
+};
+const outcome = await runCommand();
 process.exit(outcome === 0 ? 0 : 1);

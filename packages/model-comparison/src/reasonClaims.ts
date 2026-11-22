@@ -9,7 +9,7 @@ const CLAIMS: RegExp[] = [
   /\b(?:most|much)\s+of\s+it\b/gi,
 ];
 
-export function reasonClaims(reason: string): string[] {
+export const reasonClaims = (reason: string): string[] => {
   const found = CLAIMS.flatMap((pattern) => [...reason.matchAll(pattern)].map((match) => match[0].trim()));
   return [...new Set(found)].filter((claim) => claim !== "");
-}
+};

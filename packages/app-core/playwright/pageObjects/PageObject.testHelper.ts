@@ -7,11 +7,13 @@ const TEXT_LIKE_FIELDS =
 
 export abstract class PageObject {
   protected readonly name: string;
+  readonly testContext: TestContext;
+  protected readonly locator?: Locator | undefined;
 
-  constructor(
-    readonly testContext: TestContext,
-    protected readonly locator?: Locator,
-  ) {
+  constructor(testContext: TestContext, locator?: Locator) {
+    this.testContext = testContext;
+    this.locator = locator;
+
     const constructorName = this.constructor.name;
     if (!constructorName.endsWith("PageObject")) {
       throw new Error(`Expected constructor name to end with 'PageObject', but got: ${constructorName}`);

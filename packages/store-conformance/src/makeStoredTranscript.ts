@@ -1,6 +1,6 @@
 import { VideoId, type StoredTranscript } from "@overview/domain";
 
-export function makeStoredTranscript(overrides: Partial<StoredTranscript> = {}): StoredTranscript {
+export const makeStoredTranscript = (overrides: Partial<StoredTranscript> = {}): StoredTranscript => {
   const videoId = overrides.videoId ?? VideoId.parse("example");
   return {
     videoId,
@@ -22,4 +22,4 @@ export function makeStoredTranscript(overrides: Partial<StoredTranscript> = {}):
     },
     ...overrides,
   };
-}
+};

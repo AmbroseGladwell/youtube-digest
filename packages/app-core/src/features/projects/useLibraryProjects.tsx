@@ -50,7 +50,7 @@ export interface AddedByLine {
 
 // Everything projects bring to the library: the rail's group, and, on a project's page, its
 // head, which overviews are in it and what an empty one says (docs/features/projects.md).
-export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithState[], host: LibraryProjectsHost) {
+export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithState[], host: LibraryProjectsHost) => {
   const { summaries, loaded } = useProjectSummaries(overviews);
   const assistants = useAssistantConnections();
   const analytics = useAnalytics();
@@ -158,9 +158,13 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     );
 
   const addedByFor = (overviewId: OverviewId): AddedByLine | null => {
-    if (current === null) return null;
+    if (current === null) {
+      return null;
+    }
     const item = current.items.find((each) => each.overview.id === overviewId);
-    if (item === undefined || item.addedBy.by === "reader") return null;
+    if (item === undefined || item.addedBy.by === "reader") {
+      return null;
+    }
     const { project } = current;
     const { addedBy } = item;
     return {
@@ -175,11 +179,15 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
   };
 
   const removeFromCurrent = (overviewIds: OverviewId[]): Promise<unknown>[] => {
-    if (current === null) return [];
+    if (current === null) {
+      return [];
+    }
     const writes: Promise<unknown>[] = [];
     for (const overviewId of overviewIds) {
       const item = current.items.find((each) => each.overview.id === overviewId);
-      if (item === undefined) continue;
+      if (item === undefined) {
+        continue;
+      }
       analytics.projects.membership.removed({ projectId: current.project.id, overviewId, addedBy: item.addedBy.by, from: "selection" });
       writes.push(setMember.mutateAsync({ projectId: current.project.id, overviewId, inProject: false }));
     }
@@ -193,7 +201,9 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
 
   const fileSelection = (projectId: ProjectId, inProject: boolean) => {
     const summary = summaries.find(({ project }) => project.id === projectId);
-    if (filing === null || summary === undefined) return;
+    if (filing === null || summary === undefined) {
+      return;
+    }
     const change = filing.changes.get(projectId);
     if (change === undefined) {
       filing.changes.set(projectId, { place: summary.project.name, heldBefore: holding(projectId, filing.overviews), given: inProject });
@@ -202,7 +212,9 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     }
     for (const { overview } of filing.overviews) {
       const item = summary.items.find((each) => each.overview.id === overview.id);
-      if (inProject === (item !== undefined)) continue;
+      if (inProject === (item !== undefined)) {
+        continue;
+      }
       if (inProject) {
         analytics.projects.membership.added({ projectId, overviewId: overview.id, from: "selection" });
       } else {
@@ -274,4 +286,4 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     removeFromCurrent,
     dialogs,
   };
-}
+};

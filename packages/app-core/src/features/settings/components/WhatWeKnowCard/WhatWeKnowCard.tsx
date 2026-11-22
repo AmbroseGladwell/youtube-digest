@@ -23,7 +23,9 @@ import styles from "./WhatWeKnowCard.module.scss";
 import { whatWeKnowCardTestIds } from "./WhatWeKnowCardTestIds.js";
 
 const learningLine = (count: number, keepLearning: boolean) => {
-  if (!keepLearning) return count === 0 ? "Keep learning is off" : `${things(count)} learned · Keep learning is off`;
+  if (!keepLearning) {
+    return count === 0 ? "Keep learning is off" : `${things(count)} learned · Keep learning is off`;
+  }
   return count === 0 ? "Nothing learned yet · Keep learning is on" : `${things(count)} learned from your overviews · Keep learning is on`;
 };
 const things = (count: number) => (count === 1 ? "1 thing" : `${count} things`);
@@ -39,7 +41,7 @@ interface SwitchRowProps {
   testId: string;
 }
 
-function SwitchRow({ title, hint, on, onSwitch, testId }: SwitchRowProps) {
+const SwitchRow = ({ title, hint, on, onSwitch, testId }: SwitchRowProps) => {
   const labelId = useId();
   const hintId = useId();
   return (
@@ -66,7 +68,7 @@ function SwitchRow({ title, hint, on, onSwitch, testId }: SwitchRowProps) {
       </button>
     </div>
   );
-}
+};
 
 // Designs 141k and 141l: the sentence as it reads, then in place with its sections editable,
 // what was learned and Keep learning. Listing an item shows it to the reader as the library's
@@ -74,7 +76,7 @@ function SwitchRow({ title, hint, on, onSwitch, testId }: SwitchRowProps) {
 // now on is written for, so the card says where it goes on us. Where no key can run the pass,
 // learning isn't offered, but items already held stay readable and removable, since they're
 // still sent (docs/features/personalisation.md).
-export function WhatWeKnowCard() {
+export const WhatWeKnowCard = () => {
   const settings = useSettingsQuery().data;
   const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
   const learned = keptLearnedItems(settings?.learned ?? {});
@@ -91,7 +93,9 @@ export function WhatWeKnowCard() {
   const unnoticedTexts = unnoticed.map(({ text }) => text).join("\n");
 
   useEffect(() => {
-    if (unnoticed.length === 0) return;
+    if (unnoticed.length === 0) {
+      return;
+    }
     const at = new Date().toISOString();
     updateSettings.mutate({
       learned: Object.fromEntries(unnoticed.map((item) => [learnedItemKey(item.text), { ...item, noticedAt: at }])),
@@ -273,4 +277,4 @@ export function WhatWeKnowCard() {
       </div>
     </div>
   );
-}
+};

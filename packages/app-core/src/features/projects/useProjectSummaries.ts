@@ -8,9 +8,11 @@ export interface ProjectSummariesResult {
   loaded: boolean;
 }
 
-export function useProjectSummaries(overviews: OverviewWithState[]): ProjectSummariesResult {
+export const useProjectSummaries = (overviews: OverviewWithState[]): ProjectSummariesResult => {
   const projects = useProjectsQuery();
   const members = useProjectMembersQuery();
-  if (projects.data === undefined || members.data === undefined) return { summaries: [], loaded: false };
+  if (projects.data === undefined || members.data === undefined) {
+    return { summaries: [], loaded: false };
+  }
   return { summaries: projectSummaries(projects.data, members.data, overviews), loaded: true };
-}
+};

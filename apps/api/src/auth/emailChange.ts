@@ -29,12 +29,19 @@ export interface IssuedEmailChange {
   expiresAt: string;
 }
 
+export interface IssueEmailChangeOptions {
+  accountId: AccountId;
+  oldEmail: string;
+  newEmail: string;
+  now: Date;
+}
+
 // Null inside the cooldown. Whether the address is taken is decided here and told only to
 // that inbox, so the route's answer is the same either way.
-export async function issueEmailChange(
+export const issueEmailChange = async (
   sql: SqlClient,
-  { accountId, oldEmail, newEmail: rawNewEmail, now }: { accountId: AccountId; oldEmail: string; newEmail: string; now: Date },
-): Promise<IssuedEmailChange | null> {
+  { accountId, oldEmail, newEmail: rawNewEmail, now }: IssueEmailChangeOptions,
+): Promise<IssuedEmailChange | null> => {
   const newEmail = normaliseEmail(rawNewEmail);
   const recent = await sql.query<{ id: string }>(
     "select id from email_changes where account_id = $1 and new_email = $2 and created_at > $3::timestamptz limit 1",
@@ -52,7 +59,7 @@ export async function issueEmailChange(
     [accountId, oldEmail, newEmail, code === null ? null : hashToken(code), now.toISOString(), expiresAt],
   );
   return { newEmail, code: code === null ? null : formatLinkCode(code), expiresAt };
-}
+};
 
 export type ConfirmedEmailChange =
   | { outcome: "changed"; oldEmail: string; newEmail: string; revertToken: string }
@@ -62,7 +69,7 @@ export type ConfirmedEmailChange =
 // The code is spent first, then the account moves only if its email is still the one the
 // change started from, so a change confirmed on two devices moves it once. A unique
 // violation is an address that gained an account between the ask and the confirm.
-export async function confirmEmailChange(sql: SqlClient, accountId: AccountId, code: string, now: Date): Promise<ConfirmedEmailChange> {
+export const confirmEmailChange = async (sql: SqlClient, accountId: AccountId, code: string, now: Date): Promise<ConfirmedEmailChange> => {
   const consumed = await sql.query<{ id: string; old_email: string; new_email: string }>(
     `update email_changes set consumed_at = $3::timestamptz
       where account_id = $1 and code_hash = $2 and consumed_at is null and expires_at > $3::timestamptz
@@ -96,7 +103,7 @@ export async function confirmEmailChange(sql: SqlClient, accountId: AccountId, c
     new Date(now.getTime() + EMAIL_CHANGE_REVERT_MS).toISOString(),
   ]);
   return { outcome: "changed", oldEmail: change.old_email, newEmail: change.new_email, revertToken };
-}
+};
 
 export type RevertedEmailChange =
   | { outcome: "reverted"; accountId: AccountId; email: string }
@@ -107,7 +114,7 @@ export type RevertedEmailChange =
 // The link in the old address's mail. It moves the account back only while the account's
 // email is still the one that change made, and then ends every session, the one that made
 // the change included (docs/features/account-changes.md, "Moving it back").
-export async function revertEmailChange(sql: SqlClient, token: string, now: Date): Promise<RevertedEmailChange> {
+export const revertEmailChange = async (sql: SqlClient, token: string, now: Date): Promise<RevertedEmailChange> => {
   const tokenHash = hashToken(token);
   const rows = await sql.query<{ id: string; account_id: string; old_email: string; new_email: string }>(
     `update email_changes set reverted_at = $2::timestamptz
@@ -148,4 +155,4 @@ export async function revertEmailChange(sql: SqlClient, token: string, now: Date
     now.toISOString(),
   ]);
   return { outcome: "reverted", accountId, email: change.old_email };
-}
+};

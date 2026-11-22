@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import { feedDurationSeconds, readFeedEpisode, type FeedItem } from "./readFeedEpisode.js";
 import { feedOf, FEED_ITEM_NEWEST, FEED_ITEM_OLDER } from "./podcastFeedFixtures.testHelper.js";
 
-async function* inPieces(text: string, size = 7): AsyncGenerator<string> {
-  for (let start = 0; start < text.length; start += size) yield text.slice(start, start + size);
-}
+const inPieces = async function* (text: string, size = 7): AsyncGenerator<string> {
+  for (let start = 0; start < text.length; start += size) {
+    yield text.slice(start, start + size);
+  }
+};
 
 const byGuid = (guid: string) => (item: FeedItem) => item.guid === guid;
 

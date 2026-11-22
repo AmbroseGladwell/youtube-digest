@@ -30,7 +30,7 @@ const count = (n: number) => n.toLocaleString("en-GB");
 // its name with its pace and today's count. A big backfill shows two and the rest behind
 // "N more", so it never floods the page. On a phone or in the panel, rows keep one action
 // and Remove lives in choosing (95ae).
-export function PacedQueueGroup({
+export const PacedQueueGroup = ({
   group,
   waitsFor,
   stacked,
@@ -40,7 +40,7 @@ export function PacedQueueGroup({
   onChooseAll,
   onMakeNow,
   onRemove,
-}: PacedQueueGroupProps) {
+}: PacedQueueGroupProps) => {
   const [expanded, setExpanded] = useState(false);
   const listId = useId();
   const { playlist, captures } = group;
@@ -115,4 +115,4 @@ export function PacedQueueGroup({
       )}
     </section>
   );
-}
+};

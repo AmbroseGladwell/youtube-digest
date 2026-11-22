@@ -1,5 +1,5 @@
 import { SPOKEN_WORDS_PER_MINUTE, overviewNoteLines, wordCount, type Overview } from "@overview/domain";
-import type { ActionableItemsRecord } from "./extractActionableItems.js";
+import type { ActionableItem, ActionableItemsRecord } from "./extractActionableItems.js";
 import type { CarriedVerdict, StepsJudgeRecord } from "./judgeStepsCarried.js";
 import { reasonClaims } from "./reasonClaims.js";
 import type { RunRecord } from "./RunRecord.js";
@@ -20,13 +20,31 @@ const spokenSecondsOf = (overview: Overview) =>
     (overviewNoteLines(overview).reduce((total, line) => total + wordCount(line.spoken ?? line.text), 0) / SPOKEN_WORDS_PER_MINUTE) * 60,
   );
 
+const stepItemsOf = (
+  items: ActionableItem[] | undefined,
+  source: StepsSource,
+  judged: StepsJudgeRecord | undefined,
+): StepsNote["items"] => {
+  if (items === undefined) {
+    return "not listed";
+  }
+  return items.length === 0
+    ? "no steps"
+    : items.map((item, index) => ({
+        text: item.text,
+        place: item.start < 0 ? null : source.placeOf(item.start),
+        verdict: judged?.labels?.items[index]?.verdict ?? null,
+        reason: judged?.labels?.items[index]?.reason ?? null,
+      }));
+};
+
 // Joined by code from what the two passes recorded, never estimated (docs/prototype/constraints.md).
-export function stepsNotes(
+export const stepsNotes = (
   runs: readonly RunRecord[],
   sources: ReadonlyMap<string, StepsSource>,
   lists: readonly ActionableItemsRecord[],
   judgments: readonly StepsJudgeRecord[],
-): StepsNote[] {
+): StepsNote[] => {
   const listOf = new Map(lists.filter((list) => list.items !== null).map((list) => [list.sourceId, list.items!]));
   return runs
     .filter((run) => run.overview !== null && run.overview.recipe == null && sources.has(run.videoId))
@@ -42,25 +60,20 @@ export function stepsNotes(
         writer,
         watchAnswer: overview.watchAnyway?.answer ?? null,
         spokenSeconds: spokenSecondsOf(overview),
-        items:
-          items === undefined
-            ? "not listed"
-            : items.length === 0
-              ? "no steps"
-              : items.map((item, index) => ({
-                  text: item.text,
-                  place: item.start < 0 ? null : source.placeOf(item.start),
-                  verdict: judged?.labels?.items[index]?.verdict ?? null,
-                  reason: judged?.labels?.items[index]?.reason ?? null,
-                })),
+        items: stepItemsOf(items, source, judged),
         claims: overview.watchAnyway ? reasonClaims(overview.watchAnyway.reason) : [],
       };
     });
-}
+};
 
 const share = (part: number, whole: number) => (whole === 0 ? "–" : `${Math.round((part / whole) * 100)}%`);
 
-export function stepsMarkdown(notes: readonly StepsNote[], runName: string): string {
+export interface LineItem {
+  text: string;
+  place: string | null;
+}
+
+export const stepsMarkdown = (notes: readonly StepsNote[], runName: string): string => {
   const writers = [...new Set(notes.map((note) => note.writer))].sort();
   const judgedItems = (note: StepsNote) => (Array.isArray(note.items) ? note.items.filter((item) => item.verdict !== null) : []);
   const summary = writers.map((writer) => {
@@ -89,13 +102,16 @@ export function stepsMarkdown(notes: readonly StepsNote[], runName: string): str
       if (Array.isArray(note.items)) {
         const by = (verdict: CarriedVerdict) =>
           note.items !== "no steps" && note.items !== "not listed" ? note.items.filter((item) => item.verdict === verdict) : [];
-        const line = (item: { text: string; place: string | null }) => `- ${item.text}${item.place ? ` (${item.place})` : ""}`;
+        const line = (item: LineItem) => `- ${item.text}${item.place ? ` (${item.place})` : ""}`;
         lines.push("", `**Missing:** ${by("missing").length === 0 ? "none" : ""}`, ...by("missing").map(line));
-        if (by("partly").length > 0) lines.push("", "**Partly:**", ...by("partly").map(line));
+        if (by("partly").length > 0) {
+          lines.push("", "**Partly:**", ...by("partly").map(line));
+        }
         lines.push("", `Carried: ${by("carried").length} of ${note.items.length}`);
       }
-      if (note.claims.length > 0)
+      if (note.claims.length > 0) {
         lines.push("", `**Counts or times in the reason:** ${note.claims.map((claim) => `"${claim}"`).join(", ")}`);
+      }
       return lines.join("\n");
     });
 
@@ -110,4 +126,4 @@ export function stepsMarkdown(notes: readonly StepsNote[], runName: string): str
     "",
     ...perNote.flatMap((block) => [block, ""]),
   ].join("\n");
-}
+};

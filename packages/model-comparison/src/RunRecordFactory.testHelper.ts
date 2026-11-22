@@ -1,7 +1,7 @@
 import type { RunRecord } from "./RunRecord.js";
 import { makeGeneratedOutput } from "./GeneratedOutputFactory.testHelper.js";
 
-export function makeRunRecord(overrides: Partial<RunRecord> = {}): RunRecord {
+export const makeRunRecord = (overrides: Partial<RunRecord> = {}): RunRecord => {
   return {
     videoId: "video-one",
     provider: "anthropic",
@@ -16,4 +16,4 @@ export function makeRunRecord(overrides: Partial<RunRecord> = {}): RunRecord {
     overview: null,
     ...overrides,
   };
-}
+};

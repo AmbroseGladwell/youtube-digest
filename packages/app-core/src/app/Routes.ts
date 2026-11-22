@@ -10,6 +10,11 @@ import {
 } from "@overview/domain";
 import type { SettingsSectionId } from "../features/settings/SettingsSectionId.js";
 
+export interface AskRouteTarget {
+  project?: ProjectId | string | null;
+  chat?: string | null;
+}
+
 // The single place that knows every path this app has (docs/conventions/frontend-architecture-guide.md
 // 1.2). Call sites (navigate(), <Link>, tests) go through this rather than a string
 // literal, so adding more routes later doesn't mean hunting down inlined paths.
@@ -43,10 +48,14 @@ export const Routes = {
   projects: () => "/projects",
   project: (projectId: ProjectId | string) => `/projects/${projectId}`,
   // The Ask page over the whole library, or one project, at one of its conversations (OV-354, page 3).
-  ask: (at: { project?: ProjectId | string | null; chat?: string | null } = {}) => {
+  ask: (at: AskRouteTarget = {}) => {
     const query = new URLSearchParams();
-    if (at.project) query.set("project", at.project);
-    if (at.chat) query.set("chat", at.chat);
+    if (at.project) {
+      query.set("project", at.project);
+    }
+    if (at.chat) {
+      query.set("chat", at.chat);
+    }
     return query.size === 0 ? "/ask" : `/ask?${query}`;
   },
   // The address the API writes into every shared link, so the two cannot drift

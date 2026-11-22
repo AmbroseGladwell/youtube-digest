@@ -57,7 +57,7 @@ export interface SettingsSectionSummary {
 
 // The sections this shell can show, in the design's order (docs/features/settings.md). A
 // section whose panel would have nothing to show is left out, row and route alike.
-export function useSettingsSections(): SettingsSectionSummary[] {
+export const useSettingsSections = (): SettingsSectionSummary[] => {
   const sync = useSync();
   const { connection } = useSyncConnection();
   const narrationApi = useNarrationApi();
@@ -78,6 +78,12 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const shareUsage = useShareUsageState();
   const followed = useFollowedPlaylistsQuery();
   const appearance = useAppearance();
+  const planValue = (): string => {
+    if (planStatus === "known") {
+      return planRowValue(PLAN_LABEL[plan], planRowCount(nextQuota), transcribingLeftOf(usage.data?.transcription));
+    }
+    return planStatus === "checking" ? CHECKING_ROW_VALUE : UNREACHABLE_ROW_VALUE;
+  };
 
   return [
     ...(sync.available
@@ -92,12 +98,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
     {
       id: "plan",
       title: "Plan",
-      value:
-        planStatus === "known"
-          ? planRowValue(PLAN_LABEL[plan], planRowCount(nextQuota), transcribingLeftOf(usage.data?.transcription))
-          : planStatus === "checking"
-            ? CHECKING_ROW_VALUE
-            : UNREACHABLE_ROW_VALUE,
+      value: planValue(),
     },
     {
       id: "keys",
@@ -160,7 +161,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
     ...(knownApiUrl !== null ? [{ id: "privacy" as const, title: "Privacy", value: shareUsageRowValue(shareUsage) }] : []),
     ...(build !== null ? [{ id: "about" as const, title: "About", value: aboutRowValue(build) }] : []),
   ];
-}
+};
 
 // Design 305o: the Plan row names transcribing only once some was used this month.
 const transcribingLeftOf = (transcription: TranscriptionUsage | undefined): string | null =>

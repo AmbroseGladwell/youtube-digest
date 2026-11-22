@@ -63,7 +63,7 @@ interface Setup {
   ask(conversationId: string, text: string, overviewId?: string, extra?: Record<string, unknown>): ReturnType<TestAccount["inject"]>;
 }
 
-async function setUp(
+const setUp = async (
   t: TestContext,
   answers: FakeChatAnswer[],
   {
@@ -72,7 +72,7 @@ async function setUp(
     logger,
     embedder,
   }: { dailyChatMessages?: number; transcript?: boolean; logger?: FastifyBaseLogger; embedder?: Embedder } = {},
-): Promise<Setup> {
+): Promise<Setup> => {
   const openAi = makeFakeChatOpenAi(...answers);
   const waits: number[] = [];
   const testApp = await createTestApp(
@@ -108,7 +108,7 @@ async function setUp(
     ask: (conversationId, text, overviewId = overview.id, extra = {}) =>
       account.inject({ method: "POST", url: `/api/chats/${overviewId}/messages`, body: { conversationId, text, ...extra } }),
   };
-}
+};
 
 // The stored answer without its structured shape, which tests of the shape check on their own.
 const withoutSections = (message: ChatMessage | undefined) => {
@@ -601,15 +601,15 @@ const titled = <T extends Overview>(overview: T, title: string): T => ({ ...over
 
 const otherAnswer = (text: string, overviewParts: string[]) => answer(text, [], [], false, overviewParts);
 
-async function saved(setup: Setup, ...overviews: Overview[]): Promise<void> {
+const saved = async (setup: Setup, ...overviews: Overview[]): Promise<void> => {
   for (const overview of overviews) {
     const response = await setup.account.inject({ method: "POST", url: "/api/overviews", body: overview });
     assert.equal(response.statusCode, 201, response.body);
   }
   await setup.testApp.drainEmbeddings();
-}
+};
 
-async function projectOf(setup: Setup, overviews: Overview[], name = "Leadership"): Promise<string> {
+const projectOf = async (setup: Setup, overviews: Overview[], name = "Leadership"): Promise<string> => {
   const project = { ...makeProject({ name }), schemaVersion: CURRENT_SCHEMA_VERSIONS.project, updatedAt: UPDATED_AT };
   assert.equal((await setup.account.inject({ method: "POST", url: "/api/projects", body: project })).statusCode, 201);
   for (const [index, overview] of overviews.entries()) {
@@ -621,7 +621,7 @@ async function projectOf(setup: Setup, overviews: Overview[], name = "Leadership
     assert.ok(added.statusCode < 300, added.body);
   }
   return project.id;
-}
+};
 
 const readerMessages = async (setup: Setup, conversation: string) =>
   ((await setup.account.change("chat", chatRecordId(setup.overviewId, conversation))).body as { messages: ChatMessage[] }).messages.filter(
@@ -838,13 +838,13 @@ test("a reply cut off at its token cap fails as one, gives the question back, an
   assert.equal(lines.find((line) => line.logCode === "api.chat.failed")?.["reason"], "AnswerCutOffError");
 });
 
-async function keptWithTranscript(setup: Setup, title: string, segments: Array<{ text: string; startMs: number; endMs: number }>) {
+const keptWithTranscript = async (setup: Setup, title: string, segments: Array<{ text: string; startMs: number; endMs: number }>) => {
   const stored = makeStoredTranscript({ videoId: VideoId.parse(randomUUID().slice(0, 11)), segments });
   const overview = titled(storedOverview({ source: youTubeSource(stored.video!) }), title);
   assert.equal((await setup.account.inject({ method: "POST", url: "/api/overviews", body: overview })).statusCode, 201);
   assert.equal((await setup.account.inject({ method: "PUT", url: `/api/transcripts/${stored.videoId}`, body: stored })).statusCode, 204);
   return overview;
-}
+};
 
 const minuteOf = (index: number, text: string) => ({ text, startMs: index * 60_000, endMs: index * 60_000 + 50_000 });
 
@@ -996,8 +996,9 @@ test("only an overview close to the question is found for it, never the merely n
   // sits at 0.38 to it, the band where the owner's unrelated overviews scored.
   const vectorOf = (text: string) => {
     const vector = new Array<number>(EMBEDDING_DIMENSIONS).fill(0);
-    if (/close/i.test(text)) vector[0] = 1;
-    else {
+    if (/close/i.test(text)) {
+      vector[0] = 1;
+    } else {
       vector[0] = 0.38;
       vector[1] = Math.sqrt(1 - 0.38 ** 2);
     }

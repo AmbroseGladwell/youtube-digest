@@ -80,7 +80,9 @@ interface Fraction {
 
 const readAmount = (amount: string): Fraction => {
   const mixed = amount.match(new RegExp(`^(\\d+)?[\\s-]?(?:([${FRACTION_CHARS}])|(\\d)\\/(\\d{1,2}))$`, "u"));
-  if (mixed === null) return { whole: null, parts: null, plain: amount };
+  if (mixed === null) {
+    return { whole: null, parts: null, plain: amount };
+  }
   const parts: [number, number] = mixed[2] ? UNICODE_FRACTION[mixed[2]]! : [Number(mixed[3]), Number(mixed[4])];
   const named = parts[0] < parts[1] && (parts[1] === 2 || PART_NAME[parts[1]] !== undefined);
   return named
@@ -88,13 +90,21 @@ const readAmount = (amount: string): Fraction => {
     : { whole: null, parts: null, plain: amount };
 };
 
-const partWords = ([count, of]: [number, number]) =>
-  of === 2 ? "a half" : count === 1 ? `a ${PART_NAME[of]}` : `${COUNT_NAME[count]} ${PART_NAME[of]}s`;
+const partWords = ([count, of]: [number, number]) => {
+  if (of === 2) {
+    return "a half";
+  }
+  return count === 1 ? `a ${PART_NAME[of]}` : `${COUNT_NAME[count]} ${PART_NAME[of]}s`;
+};
 
 const article = (word: string) => (/^[aeiou]/i.test(word) ? "an" : "a");
 
-const amountWords = ({ whole, parts, plain }: Fraction) =>
-  parts === null ? plain : whole === null ? partWords(parts).replace(/^a /, "") : `${whole} and ${partWords(parts)}`;
+const amountWords = ({ whole, parts, plain }: Fraction) => {
+  if (parts === null) {
+    return plain;
+  }
+  return whole === null ? partWords(parts).replace(/^a /, "") : `${whole} and ${partWords(parts)}`;
+};
 
 const isOne = ({ whole, parts, plain }: Fraction) => (parts === null ? plain === "1" : whole === null);
 
@@ -119,8 +129,14 @@ const measure = (_: string, from: string, to: string | undefined, unit: string, 
   return `${amountWords(first)} ${describes || isOne(first) ? one : many}`;
 };
 
-const temperature = (_: string, degrees: string, scale: string | undefined) =>
-  `${degrees} degrees${scale === undefined ? "" : scale.toUpperCase() === "C" ? " Celsius" : " Fahrenheit"}`;
+const scaleWords = (scale: string | undefined): string => {
+  if (scale === undefined) {
+    return "";
+  }
+  return scale.toUpperCase() === "C" ? " Celsius" : " Fahrenheit";
+};
+
+const temperature = (_: string, degrees: string, scale: string | undefined) => `${degrees} degrees${scaleWords(scale)}`;
 
 const lonePart = (_: string, whole: string | undefined, char: string) => {
   const words = partWords(UNICODE_FRACTION[char]!);
@@ -131,11 +147,13 @@ const lonePart = (_: string, whole: string | undefined, char: string) => {
 const packShare = (_: string, whole: string | undefined, char: string, size: string) => {
   const parts = UNICODE_FRACTION[char]!;
   const a = /^(?:8|1[18](?!\d))/.test(size) ? "an" : "a";
-  if (whole !== undefined) return `${whole} and ${partWords(parts)} `;
+  if (whole !== undefined) {
+    return `${whole} and ${partWords(parts)} `;
+  }
   return parts[1] === 2 ? `half ${a} ` : `${partWords(parts)} of ${a} `;
 };
 
-export function spokenMeasures(text: string): string {
+export const spokenMeasures = (text: string): string => {
   return text
     .replace(/\s+\([^()]*\)/g, "")
     .replace(/(?<![\p{L}\d.])(\d+)(?:\s?°\s?([CF])|\s?º\s?([CF])|([CF]))(?![\p{L}\d])/gu, (whole, degrees, a, b, c) =>
@@ -154,4 +172,4 @@ export function spokenMeasures(text: string): string {
     .replace(/\s\+\s/g, " plus ")
     .replace(/\s{2,}/g, " ")
     .trim();
-}
+};

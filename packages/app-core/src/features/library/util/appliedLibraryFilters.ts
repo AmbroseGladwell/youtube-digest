@@ -7,7 +7,7 @@ export interface AppliedLibraryFilter {
   clear: Partial<LibraryFilters>;
 }
 
-export function appliedLibraryFilters(filters: LibraryFilters, topics: Topic[]): AppliedLibraryFilter[] {
+export const appliedLibraryFilters = (filters: LibraryFilters, topics: Topic[]): AppliedLibraryFilter[] => {
   const applied: AppliedLibraryFilter[] = [];
 
   if (filters.source !== "all") {
@@ -49,4 +49,4 @@ export function appliedLibraryFilters(filters: LibraryFilters, topics: Topic[]):
   }
 
   return applied;
-}
+};

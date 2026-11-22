@@ -52,14 +52,14 @@ const LATEST_REPORT = "overview/latest-report";
 const PENDING_PAGE = "overview/pending-page";
 const PAGE_MENU_ITEM = "overview/create-from-page";
 
-async function readSession<T>(key: string): Promise<T | null> {
+const readSession = async <T>(key: string): Promise<T | null> => {
   const stored = await chrome.storage.session.get(key);
   return (stored[key] as T | undefined) ?? null;
-}
+};
 
 const databases = new Map<string, Promise<IDBDatabase>>();
 
-async function openCurrentLibrary(): Promise<IDBDatabase> {
+const openCurrentLibrary = async (): Promise<IDBDatabase> => {
   const name = localDatabaseName(await readLibraryAccount());
   let database = databases.get(name);
   if (database === undefined) {
@@ -68,13 +68,13 @@ async function openCurrentLibrary(): Promise<IDBDatabase> {
     databases.set(name, database);
   }
   return database;
-}
+};
 
 // Existence checks see the whole store, quarantined records included: a record that
 // cannot be rendered is still one the reader owns, and offering to generate it again is
 // offering to buy it twice (docs/features/record-migrations.md). null is "could not tell",
 // which is not the same answer as "no".
-async function holdsOverviewOf(videoId: string): Promise<boolean | null> {
+const holdsOverviewOf = async (videoId: string): Promise<boolean | null> => {
   try {
     const store = new IndexedDbOverviewStore(await openCurrentLibrary());
     return (await heldOverviewOf(store, videoId)) !== null;
@@ -82,15 +82,15 @@ async function holdsOverviewOf(videoId: string): Promise<boolean | null> {
     void errors.report(error, { handled: true });
     return null;
   }
-}
+};
 
-async function stateFor(videoId: string, report: RunReport | null): Promise<ButtonState> {
+const stateFor = async (videoId: string, report: RunReport | null): Promise<ButtonState> => {
   return overviewButtonState({ videoId, report, held: await holdsOverviewOf(videoId) });
-}
+};
 
 // Every watch tab, because the panel belongs to a window and a run is for one video:
 // each button decides for itself whether the report is about the video it sits on.
-async function broadcast(report: RunReport | null): Promise<void> {
+const broadcast = async (report: RunReport | null): Promise<void> => {
   const tabs = await chrome.tabs.query({ url: "https://www.youtube.com/watch*" });
 
   await Promise.all(
@@ -103,7 +103,7 @@ async function broadcast(report: RunReport | null): Promise<void> {
       await chrome.tabs.sendMessage(tab.id, { type: BridgeMessage.BUTTON_STATE_CHANGED, videoId, state }).catch(() => undefined);
     }),
   );
-}
+};
 
 // An update fires this too, and the item survives one, so a create alone would collide.
 chrome.runtime.onInstalled.addListener(() => {
@@ -121,7 +121,9 @@ chrome.runtime.onInstalled.addListener(() => {
 // before the first await spends it. A video goes the injected button's way, since a run for
 // one needs no access to the page (docs/features/article-panel.md).
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId !== PAGE_MENU_ITEM || tab?.id === undefined || tab.url === undefined) return;
+  if (info.menuItemId !== PAGE_MENU_ITEM || tab?.id === undefined || tab.url === undefined) {
+    return;
+  }
   const opening = chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => undefined);
   const { hostname, pathname } = new URL(tab.url);
   const isVideo = hostname.endsWith("youtube.com") && pathname === "/watch";

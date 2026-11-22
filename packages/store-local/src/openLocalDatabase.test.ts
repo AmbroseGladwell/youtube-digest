@@ -18,7 +18,7 @@ import { LocalDatabaseBlockedError } from "./LocalDatabaseBlockedError.js";
 import { openLocalDatabase } from "./openLocalDatabase.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 
-function openVersionOneDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
+const openVersionOneDatabase = (indexedDB: IDBFactory): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, 1);
     request.onupgradeneeded = () => {
@@ -31,9 +31,9 @@ function openVersionOneDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
-}
+};
 
-function openVersionTwoDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
+const openVersionTwoDatabase = (indexedDB: IDBFactory): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, 2);
     request.onupgradeneeded = () => {
@@ -46,9 +46,9 @@ function openVersionTwoDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
-}
+};
 
-function openVersionThreeDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
+const openVersionThreeDatabase = (indexedDB: IDBFactory): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, 3);
     request.onupgradeneeded = () => {
@@ -62,16 +62,16 @@ function openVersionThreeDatabase(indexedDB: IDBFactory): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
-}
+};
 
-function getAll(db: IDBDatabase, store: string) {
+const getAll = (db: IDBDatabase, store: string) => {
   return promisifyRequest<unknown[]>(db.transaction(store, "readonly").objectStore(store).getAll());
-}
+};
 
-function put(db: IDBDatabase, store: string, value: unknown, key?: string) {
+const put = (db: IDBDatabase, store: string, value: unknown, key?: string) => {
   const objectStore = db.transaction(store, "readwrite").objectStore(store);
   return promisifyRequest(key === undefined ? objectStore.put(value) : objectStore.put(value, key));
-}
+};
 
 test("opening a database written before the novelty rename drops the stored overviews", async () => {
   const indexedDB = new IDBFactory();
@@ -137,7 +137,7 @@ test("adding the sync stores keeps every record and transcript a reader already 
   }
 });
 
-function openNextVersion(indexedDB: IDBFactory): Promise<IDBDatabase> {
+const openNextVersion = (indexedDB: IDBFactory): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION + 1);
     request.onupgradeneeded = () => undefined;
@@ -145,7 +145,7 @@ function openNextVersion(indexedDB: IDBFactory): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
-}
+};
 
 test("an open that an older connection blocks rejects rather than never settling", async () => {
   const indexedDB = new IDBFactory();

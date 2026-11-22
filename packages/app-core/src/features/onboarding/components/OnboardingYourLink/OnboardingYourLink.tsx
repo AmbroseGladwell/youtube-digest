@@ -23,11 +23,18 @@ export interface OnboardingYourLinkProps {
   onChooseVideo: (videoId: string) => void;
 }
 
+const sourceCardSize = (hasPlaylist: boolean, isPanel: boolean): "small" | "compact" | "row" => {
+  if (hasPlaylist) {
+    return "small";
+  }
+  return isPanel ? "compact" : "row";
+};
+
 // Design 327c, and 327s–327v by kind: their own link, read for free, as the proof of what they'll
 // get, so they can say it's the wrong one before anything is written. One centred column on every
 // width; a playlist adds a choice of its videos. The heading takes focus again when the read
 // changes what it's called.
-export function OnboardingYourLink({
+export const OnboardingYourLink = ({
   kind,
   linkKind,
   link,
@@ -37,7 +44,7 @@ export function OnboardingYourLink({
   onLooksRight,
   onDifferentLink,
   onChooseVideo,
-}: OnboardingYourLinkProps) {
+}: OnboardingYourLinkProps) => {
   const [choosing, setChoosing] = useState(false);
   const isPanel = useIsPanel();
   const entries = playlist?.entries.filter((entry) => entry.availability === "available") ?? [];
@@ -46,6 +53,31 @@ export function OnboardingYourLink({
   const words = found === null || kind === null ? null : kind.yourLink(found, minutes);
   const stop = words?.stop ?? null;
   const heading = words?.heading ?? (playlist !== null ? "Here’s the playlist you saved." : "Here’s what you saved.");
+
+  const sourceCard = () => {
+    if (found !== null && kind !== null) {
+      return <OnboardingSourceCard kind={kind} found={found} size={sourceCardSize(playlist !== null, isPanel)} />;
+    }
+    if (pending !== null) {
+      return (
+        <div className={styles.pending}>
+          <span className={styles.domain}>{pending}</span>
+          <span className={styles.skeleton} aria-hidden="true">
+            <span />
+            <span style={{ width: "72%" }} />
+          </span>
+          <p className={styles.reading} role="status" data-testid={onboardingYourLinkTestIds.finding}>
+            {kind?.finding}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <p className={styles.finding} data-testid={onboardingYourLinkTestIds.finding}>
+        {failed ? (kind?.notFound ?? "We couldn't find that video.") : (kind?.finding ?? "Finding the video…")}
+      </p>
+    );
+  };
 
   return (
     <div className={styles.root} data-testid={onboardingYourLinkTestIds.root}>
@@ -70,24 +102,7 @@ export function OnboardingYourLink({
           </span>
         )}
         {playlist !== null && <span className={styles.startWith}>We'll start with the first video</span>}
-        {found !== null && kind !== null ? (
-          <OnboardingSourceCard kind={kind} found={found} size={playlist !== null ? "small" : isPanel ? "compact" : "row"} />
-        ) : pending !== null ? (
-          <div className={styles.pending}>
-            <span className={styles.domain}>{pending}</span>
-            <span className={styles.skeleton} aria-hidden="true">
-              <span />
-              <span style={{ width: "72%" }} />
-            </span>
-            <p className={styles.reading} role="status" data-testid={onboardingYourLinkTestIds.finding}>
-              {kind?.finding}
-            </p>
-          </div>
-        ) : (
-          <p className={styles.finding} data-testid={onboardingYourLinkTestIds.finding}>
-            {failed ? (kind?.notFound ?? "We couldn't find that video.") : (kind?.finding ?? "Finding the video…")}
-          </p>
-        )}
+        {sourceCard()}
         {playlist !== null && entries.length > 1 && !choosing && (
           <button
             type="button"
@@ -171,4 +186,4 @@ export function OnboardingYourLink({
       </div>
     </div>
   );
-}
+};

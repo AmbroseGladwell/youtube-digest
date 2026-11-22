@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 // The library's select mode: the select button is the one way in ("OV-168 5" 168au). It ends
 // when the place changes, so a selection never follows the reader to another project.
-export function useOverviewSelection(placeKey: string) {
+export const useOverviewSelection = (placeKey: string) => {
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
   const [heldFor, setHeldFor] = useState(placeKey);
@@ -19,9 +19,13 @@ export function useOverviewSelection(placeKey: string) {
   };
 
   useEffect(() => {
-    if (!selecting) return;
+    if (!selecting) {
+      return;
+    }
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && document.querySelector("dialog[open]") === null) stop();
+      if (event.key === "Escape" && document.querySelector("dialog[open]") === null) {
+        stop();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -35,9 +39,12 @@ export function useOverviewSelection(placeKey: string) {
     toggle: (id: string) =>
       setPicked((current) => {
         const next = new Set(current);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
         return next;
       }),
   };
-}
+};

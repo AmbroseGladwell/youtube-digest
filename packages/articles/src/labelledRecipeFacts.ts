@@ -41,27 +41,39 @@ const linesBefore = (body: HTMLElement, end: Element): string[] => {
   let line = "";
   let ended = false;
   const endLine = () => {
-    if (tidied(line) !== "") lines.push(tidied(line));
+    if (tidied(line) !== "") {
+      lines.push(tidied(line));
+    }
     line = "";
   };
   const visit = (node: Node): void => {
-    if (ended) return;
+    if (ended) {
+      return;
+    }
     if (node.nodeType === TEXT_NODE) {
       line += node.textContent ?? "";
       return;
     }
-    if (node.nodeType !== ELEMENT_NODE) return;
+    if (node.nodeType !== ELEMENT_NODE) {
+      return;
+    }
     const element = node as Element;
     const tag = element.tagName.toUpperCase();
     if (element === end) {
       ended = true;
       return;
     }
-    if (UNREAD.has(tag) || isPageFurniture(element)) return;
+    if (UNREAD.has(tag) || isPageFurniture(element)) {
+      return;
+    }
     const isBlock = !INLINE.has(tag);
-    if (isBlock) endLine();
+    if (isBlock) {
+      endLine();
+    }
     element.childNodes.forEach(visit);
-    if (isBlock) endLine();
+    if (isBlock) {
+      endLine();
+    }
   };
   visit(body);
   endLine();
@@ -70,6 +82,6 @@ const linesBefore = (body: HTMLElement, end: Element): string[] => {
 
 // The times and yield a recipe read from markup labels as text, ahead of its method
 // (docs/features/recipe-notes.md, "Read from the page itself").
-export function labelledRecipeFacts(body: HTMLElement, method: Element): Facts {
+export const labelledRecipeFacts = (body: HTMLElement, method: Element): Facts => {
   return recipeFactsInLines(linesBefore(body, method));
-}
+};

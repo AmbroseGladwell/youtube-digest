@@ -46,7 +46,9 @@ export class OnboardingPageObject extends PageObject {
   verifyOnScreen = (step: OnboardingStep, heading?: string) =>
     this.step(`verifyOnScreen ${step}`, async () => {
       await this.expectToBeVisible(SCREEN_ROOT[step]);
-      if (heading === undefined) return;
+      if (heading === undefined) {
+        return;
+      }
       // The account step's heading is the sign-in form's own (327l).
       const focused = step === "account" ? this.get(authScreenTestIds.title) : this.page.getByRole("heading", { level: 1 });
       await expect(focused).toHaveText(heading);
@@ -88,10 +90,16 @@ export class OnboardingPageObject extends PageObject {
         .or(this.get(onboardingSavingMomentTestIds.root))
         .or(this.get(onboardingTopicsTestIds.root));
       await expect(first).toBeVisible();
-      if (await this.get(onboardingAnalyticsTestIds.root).isVisible()) await this.declineAnalytics();
-      if (await this.get(onboardingYourLinkTestIds.root).isVisible()) await this.confirmVideo();
+      if (await this.get(onboardingAnalyticsTestIds.root).isVisible()) {
+        await this.declineAnalytics();
+      }
+      if (await this.get(onboardingYourLinkTestIds.root).isVisible()) {
+        await this.confirmVideo();
+      }
       await expect(this.get(onboardingSavingMomentTestIds.root).or(this.get(onboardingTopicsTestIds.root))).toBeVisible();
-      if (await this.get(onboardingSavingMomentTestIds.root).isVisible()) await this.skip();
+      if (await this.get(onboardingSavingMomentTestIds.root).isVisible()) {
+        await this.skip();
+      }
       for (const step of ["topics", "knowledgeBase", "stepsForYou"] as const) {
         await this.verifyOnScreen(step);
         await this.skip();
@@ -107,7 +115,9 @@ export class OnboardingPageObject extends PageObject {
 
   verifyFound = ({ kicker, facts }: { kicker?: string; facts: string | RegExp }) =>
     this.step(`verifyFound ${facts}`, async () => {
-      if (kicker !== undefined) await expect(this.#yourLink(onboardingSourceCardTestIds.kicker)).toHaveText(kicker);
+      if (kicker !== undefined) {
+        await expect(this.#yourLink(onboardingSourceCardTestIds.kicker)).toHaveText(kicker);
+      }
       await expect(this.#yourLink(onboardingSourceCardTestIds.facts)).toHaveText(facts);
     });
 
@@ -197,7 +207,9 @@ export class OnboardingPageObject extends PageObject {
 
   verifyOffersTheExtension = (offered: boolean) =>
     this.step(`verifyOffersTheExtension ${offered}`, async () => {
-      if (!offered) return this.expectToHaveCount(onboardingSavingMomentTestIds.addToChrome, 0);
+      if (!offered) {
+        return this.expectToHaveCount(onboardingSavingMomentTestIds.addToChrome, 0);
+      }
       const link = this.get(onboardingSavingMomentTestIds.addToChrome);
       await expect(link).toHaveAttribute("href", CHROME_EXTENSION_URL);
       await expect(link).toHaveAttribute("target", "_blank");
@@ -213,7 +225,9 @@ export class OnboardingPageObject extends PageObject {
   // Topics (327e).
   pickTopics = (...names: string[]) =>
     this.step(`pickTopics ${names.join(", ")}`, async () => {
-      for (const name of names) await this.click(onboardingTopicsTestIds.chip(name));
+      for (const name of names) {
+        await this.click(onboardingTopicsTestIds.chip(name));
+      }
     });
 
   verifySuggests = (heading: string, ...names: string[]) =>
@@ -299,8 +313,11 @@ export class OnboardingPageObject extends PageObject {
     this.step(`verifyAccountCard ${title}`, async () => {
       const saved = this.get(onboardingPageTestIds.root).getByRole("region", { name: "Saved with your account" });
       await expect(saved.getByTestId(onboardingSourceCardTestIds.title)).toHaveText(title);
-      if (answers.length === 0) await expect(saved.getByRole("list", { name: "Your answers" })).toHaveCount(0);
-      else await expect(saved.getByRole("list", { name: "Your answers" }).getByRole("listitem")).toHaveText(answers);
+      if (answers.length === 0) {
+        await expect(saved.getByRole("list", { name: "Your answers" })).toHaveCount(0);
+      } else {
+        await expect(saved.getByRole("list", { name: "Your answers" }).getByRole("listitem")).toHaveText(answers);
+      }
     });
 
   verifyAccountHasNoCard = () =>
@@ -387,7 +404,9 @@ export class OnboardingPageObject extends PageObject {
   #foot = (continueTestId: string) =>
     this.get(continueTestId).evaluate((button) => {
       let foot: Element | null = button;
-      while (foot !== null && getComputedStyle(foot).position !== "sticky") foot = foot.parentElement;
+      while (foot !== null && getComputedStyle(foot).position !== "sticky") {
+        foot = foot.parentElement;
+      }
       const box = foot!.getBoundingClientRect();
       return { top: box.top, bottom: box.bottom, fade: Number(getComputedStyle(foot!, "::before").opacity) };
     });
@@ -412,8 +431,11 @@ export class OnboardingPageObject extends PageObject {
   verifyStepOverflows = (overflows: boolean) =>
     this.step(`verifyStepOverflows ${overflows}`, async () => {
       const room = await this.#scroller().evaluate((scroller) => scroller.scrollHeight - scroller.clientHeight);
-      if (overflows) expect(room).toBeGreaterThan(0);
-      else expect(room).toBeLessThanOrEqual(0);
+      if (overflows) {
+        expect(room).toBeGreaterThan(0);
+      } else {
+        expect(room).toBeLessThanOrEqual(0);
+      }
     });
 
   verifyFootFadeIsShown = (continueTestId: string, shown: boolean) =>
