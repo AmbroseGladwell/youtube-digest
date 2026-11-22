@@ -15,3 +15,5 @@ export * from "./podcastOnYouTube/youTubeListings.js";
 export * from "./podcastOnYouTube/matchUpload.js";
 export * from "./podcastOnYouTube/findEpisodeOnYouTube.js";
 export * from "./tiktok/readTikTokPage.js";
+export * from "./captions/htmlToText.js";
+export * from "./captions/parsePodcastTranscript.js";

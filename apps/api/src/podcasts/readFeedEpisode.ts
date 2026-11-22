@@ -1,6 +1,6 @@
 import type { PodcastTranscriptLink } from "@overview/domain";
 import { Parser } from "htmlparser2";
-import { htmlToText } from "./htmlToText.js";
+import { htmlToText } from "@overview/transcripts";
 
 export interface FeedItem {
   guid: string | null;

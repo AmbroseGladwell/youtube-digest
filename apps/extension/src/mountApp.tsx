@@ -23,6 +23,7 @@ import { adoptLibraryIntoAccount, deleteLocalLibrary, LocalDatabaseBlockedError,
 import { writeAccentColour } from "./accentColourStorage.js";
 import { appBuild } from "./appBuild.js";
 import { chromeProviderPermissions } from "./chromeProviderPermissions.js";
+import { chromeTikTokPages } from "./chromeTikTokPages.js";
 import { writeErrorDestination } from "./errorDestination.js";
 import { writeLibraryAccount } from "./libraryAccount.js";
 import { PRODUCTION_API_URL } from "./productionApiUrl.js";
@@ -108,6 +109,7 @@ export const mountApp = async ({
         layout={layout}
         activeVideo={activeVideo}
         articlePages={articlePages}
+        tiktokPages={chromeTikTokPages}
         playback={playback}
         runBridge={runBridge}
         youTubeFetch={youTubeFetch}

@@ -5,6 +5,7 @@ export type { ActiveVideoSource } from "./app/ActiveVideoContext.js";
 export type { AppLayout } from "./app/LayoutContext.js";
 export type { PlaybackPosition, PlaybackSource } from "./app/PlaybackContext.js";
 export type { ActivePage, ArticlePages } from "./app/ArticlePagesContext.js";
+export type { OwnTikTokRead, TikTokPages } from "./app/TikTokPagesContext.js";
 export type { RunBridge } from "./app/RunBridgeContext.js";
 export type { AccentMirror } from "./app/AccentMirrorContext.js";
 export type { ErrorDestination, ErrorDestinationMirror } from "./app/ErrorDestinationMirrorContext.js";

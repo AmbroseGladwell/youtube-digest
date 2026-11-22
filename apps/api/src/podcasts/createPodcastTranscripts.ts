@@ -8,7 +8,6 @@ import {
   type PodcastTranscriptLink,
   type SourceKey,
 } from "@overview/domain";
-import { episodeKeywords, TranscriptFetchError, TranscriptFetchFailure, type EpisodeToFind } from "@overview/transcripts";
 import { readBodyText, type createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js";
 import type { ServiceCaller, ServiceTranscripts } from "../transcripts/ServiceTranscripts.js";
 import { transcriptFault } from "../transcripts/transcriptFault.js";
@@ -16,11 +15,15 @@ import type { EpisodeWordSource, EpisodeWordSources, KnownWordSource } from "./E
 import { feedItemGuid, fetchFeedEpisode } from "./fetchFeedEpisode.js";
 import type { YouTubeEpisodes } from "./youTubeDataApiEpisodes.js";
 import {
+  episodeKeywords,
   FORMAT_PREFERENCE,
   parsePodcastTranscript,
   podcastTranscriptFormat,
+  TranscriptFetchError,
+  TranscriptFetchFailure,
+  type EpisodeToFind,
   type PodcastTranscriptFormat,
-} from "./parsePodcastTranscript.js";
+} from "@overview/transcripts";
 
 export type PodcastTranscriptAnswer =
   | { via: "remembered"; from: EpisodeWordSource["via"] }
