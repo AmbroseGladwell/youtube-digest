@@ -120,5 +120,35 @@ Every cost but search grows with the rows in the page, about 37 DOM nodes a row:
   library returned to the top.
 - Scrolling itself stayed smooth at every size.
 
+### Only the rows near the screen are in the page
+
+So the library list is virtualised (`LibraryList`, `@tanstack/react-virtual` on the window's
+scroll; the owner's choice over loading more as the reader scrolls, 22 Nov 2026). After, same
+machine and settings:
+
+| Overviews | Rows in the page | DOM nodes | JS heap | First row | Ask, and back | Overview, and Back | Search (worst key) | Unread filter (glide ready) |
+|---|---|---|---|---|---|---|---|---|
+| 300 | 8 | 700 | 13 MB | 1.0 s | 81 / 72 ms | 79 / 85 ms | 16 ms | 88 ms |
+| 500 | 8 | 700 | 19 MB | 0.7 s | 66 / 76 ms | 78 / 105 ms | 16 ms | 65 ms |
+| 2,000 | 8 | 700 | 51 MB | 1.6 s | 86 / 97 ms | 71 / 134 ms | 24 ms | 91 ms |
+| 5,000 | 8 | 1,700 | 105 MB | 5.6 s | 79 / 101 ms | 103 / 163 ms | 40 ms | 154 ms |
+
+How it keeps what a full list gave:
+
+- **Back lands on the same row.** Each row's measured height is kept for the session, per list
+  width (`libraryRowHeights`), and each history entry's scroll position (`libraryScrollPositions`).
+  So the first render after Back already holds the right rows at their real heights, the list is
+  its full height from the start, and the router's scroll restoration lands exactly.
+- **Tab walks the whole list.** Rows sit in normal flow between two spacers, with six past each
+  edge of the screen, so the next row is always there to take focus, and focusing it scrolls more in.
+- **Screen readers hear a list.** The list is `role="list"`, and each row says its place in the
+  whole: `aria-setsize` and `aria-posinset`.
+- **The filter glide names only the rows in the page,** which is what made it fast.
+- **Find in page (Cmd+F) finds only the rows near the screen.** Accepted: the library's own search
+  covers every overview.
+
+The first row at 5,000 is still 5.6 s. That is the data, not the list: the harness syncs every
+overview, and the library reads each one's state separately. OV-383 has it.
+
 Not measured here: the load from IndexedDB (the harness uses the in-memory store) and the
 extension panel at 400 px.
