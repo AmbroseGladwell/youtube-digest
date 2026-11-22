@@ -20,3 +20,10 @@ export const chatUsageAllowances = {
 } as const satisfies Record<Plan, number>;
 
 export const chatUnitsOf = (costDollars: number): number => Math.max(0, Math.round(costDollars * 1_000_000));
+
+export const CHAT_UNITS_PER_ACCOUNT_DAILY = CHAT_MESSAGES_PER_ACCOUNT_DAILY * CHAT_UNITS_PER_QUESTION;
+
+// A library or project question goes ahead only with room for its worst case left; measured at about 10.5 questions.
+export const CHAT_LIBRARY_RESERVE_UNITS = 12 * CHAT_UNITS_PER_QUESTION;
+
+export type ChatScopeKind = "overview" | "library";

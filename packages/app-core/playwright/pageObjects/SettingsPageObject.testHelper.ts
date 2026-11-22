@@ -167,7 +167,13 @@ export class SettingsPageObject extends PageObject {
   verifyPlanUsagePeriodReads = (text: string) =>
     this.step(`verifyPlanUsagePeriodReads ${text}`, () => expect(this.get(planUsageTestIds.period)).toHaveText(text));
 
-  verifyPlanUsageCellReads = (quota: "ours" | "own" | "questions" | "transcribing", lines: string[]) =>
+  verifyChatMeterReads = (percent: string, foot: string[]) =>
+    this.step(`verifyChatMeterReads ${percent}`, async () => {
+      await expect(this.get(planUsageTestIds.chatPercent)).toHaveText(percent);
+      await expect(this.get(planUsageTestIds.chatMeter).locator("p").last().locator("span")).toHaveText(foot);
+    });
+
+  verifyPlanUsageCellReads = (quota: "ours" | "own" | "transcribing", lines: string[]) =>
     this.step(`verifyPlanUsageCellReads ${quota} ${lines.join(" ")}`, () =>
       expect(this.get(planUsageTestIds.cell(quota)).locator("dd")).toHaveText(lines),
     );

@@ -347,22 +347,6 @@
   }
 }
 
-.left {
-  margin: 0.5rem 0.125rem 0;
-  font: 500 0.75rem/1.4 var(--font-body);
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-
-  b {
-    font-weight: 600;
-    color: var(--ink);
-  }
-}
-
-.listFoot {
-  margin: 0;
-  padding: 0 1.125rem 1rem;
-}
 
 .live {
   position: absolute;

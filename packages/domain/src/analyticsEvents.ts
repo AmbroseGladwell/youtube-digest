@@ -97,9 +97,11 @@ const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink",
 const ChatAbout = z.enum(["video", "episode", "article", "recipe"]);
 const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation", "otherOverview"]);
 const AskScope = z.enum(["library", "project"]);
+// OV-376: what the chat meter showed: the quiet line, the warning, the month spent, or too little left for a library question.
+const ChatMeterState = z.enum(["half", "warning", "month", "library"]);
 // What a conversation in the Ask drawer is over: the drawer lists overviews' too (OV-363).
 const AskDrawerScope = z.enum([...AskScope.options, "overview"]);
-const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
+const ChatWait = z.enum(["month", "libraryMonth", "day", "everyone", "conversationFull"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
@@ -469,7 +471,11 @@ export const analyticsEvents = {
       closed: event("The reader closes chat"),
       stopped: event("The reader stops an answer while it is being written; it isn't stored or counted"),
       answerCopied: event("The reader copies an answer"),
-      plansFollowed: event("The reader follows a spent month's wait in chat to Settings › Plan"),
+      plansFollowed: event("The reader follows a spent month's wait, or the meter's warning, in chat to Settings › Plan"),
+      meterShown: event("The chat meter first shows a state in an overview's chat, once per state while the panel is open (OV-376)", {
+        state: ChatMeterState,
+        plan: Plan,
+      }),
       continuedIn: event(
         "The reader takes the conversation to their assistant, which one, filled in or copied, and whether it is connected",
         {
@@ -1409,7 +1415,14 @@ export const analyticsEvents = {
         all: z.boolean(),
       }),
       overviewFollowed: event("The reader follows an overview an Ask answer cited or read", { scope: AskScope }),
-      plansFollowed: event("The reader follows a spent month's wait on the Ask page to Settings › Plan", { scope: AskScope }),
+      plansFollowed: event("The reader follows a spent month's wait, or the meter's warning, on the Ask page to Settings › Plan", {
+        scope: AskScope,
+      }),
+      meterShown: event("The chat meter first shows a state on the Ask page, once per state while it is open (OV-376)", {
+        scope: AskScope,
+        state: ChatMeterState,
+        plan: Plan,
+      }),
     },
     drawer: {
       opened: event("The reader opens the Ask page's drawer of conversations"),

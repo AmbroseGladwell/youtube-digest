@@ -25,7 +25,7 @@ const limit = (quota: string, details: Record<string, unknown> = {}) => ({
   details: { quota, retryAfterSeconds: 3600, ...details },
 });
 
-test.describe("Chat's waits and what's left", () => {
+test.describe("Chat's waits and its usage meter", () => {
   test("a spent month takes the field's place, says when it's back and offers the plans that give more", async ({
     launcher,
     backendSimulator,
@@ -34,13 +34,13 @@ test.describe("Chat's waits and what's left", () => {
     backendSimulator.chats.refuseWith(429, limit("chat-month", { resetsOn: "2026-12-01" }));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
-    backendSimulator.chats.setUsage({ used: 100, resetsOn: "2026-12-01" });
+    backendSimulator.chats.setUsage({ used: 100, share: 1, libraryFits: false, resetsOn: "2026-12-01" });
 
     await reader.chat.askInNote("How much lean mass?");
 
     await reader.chat.verifyWaitReads(
-      "You’ve asked this month’s 100 questions on us",
-      "More on 1 December. BYO Plus gives 500 a month, Plus 1,000. Making overviews isn’t affected.",
+      "You’ve used this month’s chat",
+      "More on 1 December. Your overviews, and everything you’ve saved, keep working.",
       "See plans",
     );
     await expect
@@ -49,20 +49,20 @@ test.describe("Chat's waits and what's left", () => {
 
     await reader.chat.clickWaitAction();
 
-    await launcher.settingsPage.verifyPlanUsageCellReads("questions", ["0 of 100 left", "None left. More on 1 December."]);
+    await launcher.settingsPage.verifyChatMeterReads("100% used", ["Nearly used up", "Resets 1 December"]);
   });
 
   test("with BYO Plus's month spent before asking, chat opens on the wait, offering Plus", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seedSynced(creatine());
-    backendSimulator.chats.setUsage({ plan: "byo-plus", used: 500, limit: 500, resetsOn: "2026-12-01" });
+    backendSimulator.chats.setUsage({ plan: "byo-plus", used: 412, limit: 500, share: 1.02, libraryFits: false, resetsOn: "2026-12-01" });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
 
     await reader.chat.openFromMenu();
 
     await reader.chat.verifyWaitReads(
-      "You’ve asked this month’s 500 questions on us",
-      "More on 1 December. Plus gives 1,000 a month. Making overviews isn’t affected.",
+      "You’ve used this month’s chat",
+      "More on 1 December. Your overviews, and everything you’ve saved, keep working.",
       "See Plus",
     );
   });
@@ -76,8 +76,8 @@ test.describe("Chat's waits and what's left", () => {
     await reader.chat.askInNote("How much lean mass?");
 
     await reader.chat.verifyWaitReads(
-      "That’s the most questions for one day",
-      "Ask again tomorrow. The rest of this month’s questions are still yours.",
+      "That’s the most chat for one day",
+      "Ask again tomorrow. The rest of this month’s chat is still yours.",
       null,
     );
   });
@@ -91,30 +91,83 @@ test.describe("Chat's waits and what's left", () => {
     await reader.chat.askInNote("How much lean mass?");
 
     await reader.chat.verifyWaitReads(
-      "Questions are paused for everyone today",
-      "So many readers asked today that we’ve hit our own limit. Ask again tomorrow.",
+      "Chat is paused for everyone today",
+      "So many readers asked today that we’ve hit our own limit. Ask again tomorrow. Your allowance isn’t touched.",
       null,
     );
   });
 
-  test("ten or fewer left shows a line under the field; the list's foot always says what's left", async ({
+  test("under half used nothing shows under the field (376a)", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.chats.setUsage({ used: 30, share: 0.43, resetsOn: "2026-12-01" });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+
+    await reader.chat.openFromMenu();
+
+    await reader.chat.verifyMeterReads(null);
+  });
+
+  test("from half a quiet line in tens sits under the field, and Settings always has the full meter (376b, 376i)", async ({
     launcher,
     backendSimulator,
   }) => {
-    const overview = creatine();
-    backendSimulator.overviews.seedSynced(overview);
-    backendSimulator.chats.setUsage({ used: 89, limit: 100, resetsOn: "2026-12-01" });
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.chats.setUsage({ used: 40, share: 0.67, resetsOn: "2026-12-01" });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
+
     await reader.chat.openFromMenu();
-    await reader.chat.verifyLeftReads(null);
 
-    await reader.chat.ask("How much lean mass?");
+    await reader.chat.verifyMeterReads("60% of chat used · Resets 1 December");
+    const settings = await (await launcher.appShell.openSettings()).openSection("plan");
+    await settings.verifyChatMeterReads("67% used", [
+      "Questions about one overview use the least; questions across your library use more.",
+      "Resets 1 December",
+    ]);
+  });
 
-    await reader.chat.verifyLeftReads("10 questions left this month, on us");
-    await reader.chat.close();
-    await reader.chat.openListFromNote();
-    await reader.chat.verifyLeftReads("10 of 100 questions left this month, on us. More on 1 December.");
+  test("from 90% the line warns once, and offers the plans that give more (376c)", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.chats.setUsage({ used: 80, share: 0.927, libraryFits: false, resetsOn: "2026-12-01" });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+
+    await reader.chat.openFromMenu();
+
+    await reader.chat.verifyMeterReads("92% of chat used · Resets 1 December · See plans", "92% of chat used · Resets 1 December");
+    await expect
+      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "reader.chat.meterShown"))
+      .toEqual([{ name: "reader.chat.meterShown", props: expect.objectContaining({ state: "warning", plan: "free" }) }]);
+    await reader.chat.followMeterPlans();
+    await launcher.settingsPage.verifyChatMeterReads("92% used", ["Nearly used up", "Resets 1 December"]);
+  });
+
+  test("on the Ask page, too little left for a library question says overview questions still work (376h)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.chats.setUsage({ used: 88, share: 0.97, libraryFits: false, resetsOn: "2026-12-01" });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.verifyWaitReads(
+      "Not enough chat left for a library question",
+      "A question across your library needs more than you have left this month. Questions about one overview still work until 1 December.",
+      "See plans",
+    );
+  });
+
+  test("on the Ask page the quiet line sits under the field from half used (376g)", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.chats.setUsage({ used: 50, share: 0.72, resetsOn: "2026-12-01" });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.verifyMeterReads("70% of chat used · Resets 1 December");
   });
 
   test("a conversation at 50 questions offers a new one in the field's place, which can see it", async ({ launcher, backendSimulator }) => {

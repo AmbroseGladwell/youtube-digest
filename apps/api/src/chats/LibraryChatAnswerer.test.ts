@@ -2,8 +2,10 @@ import test, { type TestContext } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import {
+  CHAT_LIBRARY_RESERVE_UNITS,
   chatRecordId,
   chatUnitsOf,
+  chatUsageAllowances,
   CURRENT_SCHEMA_VERSIONS,
   overviewPartHash,
   type ChatMessage,
@@ -343,6 +345,31 @@ test("the routes ask over the library or a project, and refuse a project that is
   assert.equal(response.statusCode, 200);
   assert.match(response.body, /"type":"section"/);
   assert.match(response.body, /"type":"answered"/);
+});
+
+test("near the end of the month a library question is refused while there's room for an overview question, and says so (OV-376)", async (t) => {
+  const setup = await setUp(t, [sectioned([{ heading: "Scope", points: [{ text: "One.", sources: ["O1"] }] }])]);
+  await saved(setup, titled("Only", "2026-11-01T09:00:00.000Z"));
+  const today = setup.testApp.clock.now.toISOString().slice(0, 10);
+  await setup.testApp.sql.query("insert into chat_usage (day, account_id, messages, units) values ($1::date, $2, 90, $3)", [
+    today,
+    setup.account.accountId,
+    chatUsageAllowances.free - CHAT_LIBRARY_RESERVE_UNITS + 1,
+  ]);
+
+  const refused = await setup.account.inject({
+    method: "POST",
+    url: "/api/chats/library/messages",
+    body: { conversationId: randomUUID(), text: "What's in here?" },
+  });
+
+  assert.equal(refused.statusCode, 429);
+  assert.equal(refused.json().error.details.quota, "chat-month");
+  assert.equal(refused.json().error.details.scope, "library");
+  assert.equal(setup.openAi.requests.length, 0);
+  const usage = (await setup.account.inject({ method: "GET", url: "/api/chat-usage" })).json() as { share: number; libraryFits: boolean };
+  assert.equal(usage.libraryFits, false);
+  assert.ok(usage.share < 1);
 });
 
 test("a large project's chat also sends the best minutes of its members' transcripts, and a point cites one as a time (OV-352)", async (t) => {

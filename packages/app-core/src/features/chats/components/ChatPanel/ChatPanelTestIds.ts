@@ -19,7 +19,6 @@ export const chatPanelTestIds = {
   differentQuestions: "ChatPanel.differentQuestions",
   suggestion: "ChatPanel.suggestion",
   slow: "ChatPanel.slow",
-  left: "ChatPanel.left",
   announcement: "ChatPanel.announcement",
   toast: "ChatPanel.toast",
 };
