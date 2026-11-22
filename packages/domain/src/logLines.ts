@@ -210,6 +210,11 @@ export const apiLogLines = coded("api", {
     notKept: line("warn", "transcript not kept", "A client's transcript was taken but not kept: no note of the account's uses it."),
     refused: line("warn", "transcript refused", "A transcript failed its checks; `fault` says which."),
     forgotten: line("info", "transcripts forgotten", "Transcripts were dropped with the overview they belonged to."),
+    searched: line(
+      "info",
+      "transcripts searched",
+      "A search looked for words said in the reader's transcripts: where from (`app` or `mcp`) and how many overviews matched. Never the query.",
+    ),
   },
   serviceTranscripts: {
     fetched: line("info", "service transcript fetched", "Our own server fetched captions, direct or through the proxy."),

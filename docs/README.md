@@ -142,6 +142,9 @@ Five folders, five different questions.
   beside the library and keyed to the record's rev, a worker that is woken rather than polled,
   word matches first and the closest few by meaning after, the route the app calls, and why no
   search ever crosses accounts.
+- `transcript-search.md` — finding words said in a transcript but not in its overview: the
+  server search over chat's minute index, phrases and one-minute words, code-cut snippets and
+  moments, the `search_transcripts` tool, and `get_transcript` read in parts.
 - `pasted-article-links.md` — our server fetching a pasted link: what it will and won't reach, and
   what the field says.
 - `podcast-links.md` — an Apple, Spotify or show-page link turned into one episode of its show's

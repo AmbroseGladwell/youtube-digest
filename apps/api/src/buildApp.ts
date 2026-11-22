@@ -48,6 +48,7 @@ import { overviewUsageRoutes } from "./routes/overviewUsageRoutes.js";
 import { generationRoutes } from "./routes/generationRoutes.js";
 import { healthRoutes } from "./routes/healthRoutes.js";
 import { meaningSearchRoutes } from "./routes/meaningSearchRoutes.js";
+import { transcriptSearchRoutes } from "./routes/transcriptSearchRoutes.js";
 import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js";
 import { articleRoutes } from "./routes/articleRoutes.js";
 import { videoRoutes } from "./routes/videoRoutes.js";
@@ -300,6 +301,7 @@ export const buildApp = async ({
       overviewRoutes(api, records, transcripts, reservations);
       topicRoutes(api, records);
       meaningSearchRoutes(api, meaningSearch);
+      transcriptSearchRoutes(api, { passages: new TranscriptPassagesRepository(sql), records, transcripts });
       followedPlaylistRoutes(api, records);
       projectRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });

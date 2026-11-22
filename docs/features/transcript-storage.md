@@ -344,6 +344,8 @@ the passage's times and a `tsvector`, under a GIN index (`V0039`).
 - **Ranking:** Postgres's `ts_rank` knows nothing of how rare a word is. So each question word is
   weighted by its inverse document frequency over the account's passages, as BM25 does. That put
   the right source in the closest 3 for 76 of 78 questions, against 75 for the harness's BM25.
+- **Search uses it too** (OV-346): finding words said, from MCP's `search_transcripts` and the
+  library, with every word in one minute or a quoted phrase (`transcript-search.md`).
 
 ## What this does not do
 

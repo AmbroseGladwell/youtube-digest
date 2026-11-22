@@ -136,7 +136,9 @@ const sections: readonly LegalSection[] = [
           <strong>Your own copy.</strong> The words behind each of your overviews, a video's captions or an episode's transcript, are your
           copy. Your device keeps them, and with an account they are stored on our server under your account, so your other devices read the
           same words. They are never shown to another reader, and a shared link doesn't carry them. When you open an overview on a device
-          that doesn't have its words yet, our server fetches them for you and keeps them as your copy.
+          that doesn't have its words yet, our server fetches them for you and keeps them as your copy. An assistant you connected can
+          search your copies for words that were said, and read one a part at a time. That search runs on our server, over the search index
+          described under asking questions below, and what it looks for goes nowhere else.
         </p>
         <p>
           Captions the extension fetched only because a video was open in YouTube stay on your device and are never sent to us unless you

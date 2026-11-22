@@ -246,7 +246,8 @@ assistant sees is what has reached the server through sync.
 | `list_tags` | every tag, the video's own and the reader's, with how many overviews carry it, most used first (OV-84) |
 | `get_overview` | one note in full, ending with the ids of the reader's conversations about it, if any |
 | `get_overviews` | many notes in full, chosen by `ids`, the search filters, or both. 10 a call |
-| `get_transcript` | one video's transcript, by its overview's id |
+| `get_transcript` | one video's or episode's transcript, by its overview's id, in parts of at most 30,000 characters, from a time or a cursor (OV-346) |
+| `search_transcripts` | words said in the reader's transcripts: up to 30 overviews, most minutes first, each with up to 3 moments linked to the video and the sentence said; `id` keeps to one (OV-346, `transcript-search.md`) |
 | `list_chats` | the reader's conversations about their overviews in the app, newest first, by `overview`, by `project` or across the library: first question, overview, question count, last date, id. 50 a page (OV-311) |
 | `get_chat` | one conversation, `chatMarkdown`: each question and answer, each answer's citations as timestamp links (times alone for an episode) or the other conversation it built on, and a flag on an answer the source didn't cover. 20 messages a page (OV-311) |
 | `get_profile` | what is known about the reader, with each learned item's source; profile scope only, and only while the reader shares it (OV-221) |
@@ -421,6 +422,10 @@ roughly 1.3–1.8k tokens. Claude Code warns when one tool result passes 10,000 
 refuses past 25,000 (`MAX_MCP_OUTPUT_TOKENS`), so twenty a call, the first guess, would
 break there. Ten sits near the warning with room to spare, and the cursor pages the rest.
 Re-measure once real notes with chapters exist. Transcripts are never included.
+
+`get_transcript` reads at most **30,000 characters a call** (OV-346), about 7,500 tokens, in
+whole paragraphs, with a cursor for the next part. A whole transcript over about two hours
+passed the 25,000-token refusal, so it was unreadable from Claude Code before this.
 
 `get_project` lists **25 overviews a page**, with their How to apply steps (at most three
 each, by the schema). A full page built from the five sample notes, which carry two or three
