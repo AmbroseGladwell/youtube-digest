@@ -104,10 +104,7 @@ export interface SourcePassages {
   passages: ReturnType<typeof transcriptPassages>;
 }
 
-// Answers a reader's question about one overview from their own transcript, on our key,
-// within their plan's monthly allowance. Everything that can refuse is settled before the
-// answer starts to stream; once it has, a failure gives the message back and says so in
-// the stream (docs/features/chats.md, "Asking").
+// Why every refusal is settled before streaming starts: docs/features/chats.md, "Asking".
 export class ChatAnswerer {
   #options: ChatAnswererOptions;
 
@@ -330,9 +327,7 @@ export class ChatAnswerer {
         );
         yield { type: "failed", message: FAILED };
       } finally {
-        // The reader stopped, or went, before the answer was stored: stop asking, store
-        // nothing, and give the question back. The provider reports tokens only at the end,
-        // so what it billed for the part already written can't be priced.
+        // Stopped before the answer was stored: docs/features/chats.md, "Asking".
         if (!settled) {
           await stream.pieces.return(undefined);
           await release();
@@ -343,8 +338,7 @@ export class ChatAnswerer {
     return answer.call(this);
   }
 
-  // The other overviews this conversation has held, question by question, and what this question
-  // adds or sets aside. Each source keeps its label, so earlier questions' blocks rebuild exactly.
+  // Each source keeps its label, so earlier questions' blocks rebuild exactly.
   async #otherSources(
     accountId: AccountId,
     home: Overview,
@@ -362,7 +356,6 @@ export class ChatAnswerer {
     const setAside = live.filter((source) => question.setAside.includes(source.overviewId)).map((source) => source.label);
     const stillLive = live.filter((source) => !setAside.includes(source.label));
     const inConversation = new Set(stillLive.map((source) => source.overviewId));
-    // Search my library off (OV-354): only what the reader pinned is read.
     const searching = question.searchLibrary;
     const choice = await chooseOtherSources(records, searching ? meaningSearch : null, {
       accountId,
@@ -372,9 +365,7 @@ export class ChatAnswerer {
       setAside: new Set(all.map((source) => source.overviewId).filter((id) => !inConversation.has(id))),
       nextLabel: Math.max(0, ...all.map((source) => Number(source.label.slice(1)))) + 1,
     });
-    // OV-352: the 8 best minutes for the question's words, each with its neighbours, searched only in
-    // the overviews this question reads: pinned, found or already in the conversation. Words alone
-    // never add an overview, since a shared word says nothing about relevance (OV-362).
+    // Which overviews minutes come from: docs/features/chats.md, "Details from other transcripts".
     const added = choice.added;
     const sources = [...all, ...added];
     const overviews = await this.#overviewsOf(
@@ -445,12 +436,10 @@ export class ChatAnswerer {
     return read.record;
   }
 
-  // Only what the account holds itself: no transcript, no chat, and the panel hides
-  // (docs/features/chats.md, "No transcript, no chat").
+  // docs/features/chats.md, "No transcript, no chat".
   async #source(accountId: AccountId, overview: Overview): Promise<SourcePassages> {
     const { source } = overview;
     const kind = chatSourceKind(overview);
-    // An article or a recipe page is answered from its overview alone: no page text is kept (OV-320).
     if (answeredFromOverviewAlone(kind) || source.kind === "web") {
       return { kind, passages: [] };
     }

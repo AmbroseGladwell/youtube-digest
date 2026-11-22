@@ -14,8 +14,7 @@ const FORMAT_BY_TYPE: Record<string, PodcastTranscriptFormat> = {
   "text/plain": "text",
 };
 
-// Timed cues before anything else, then word timings, then paragraph times; the order the
-// formats are tried in when an episode offers several (docs/features/podcast-transcripts.md).
+// Why this order: docs/features/podcast-transcripts.md, "The formats".
 export const FORMAT_PREFERENCE: readonly PodcastTranscriptFormat[] = ["vtt", "srt", "json", "html", "text"];
 
 export const podcastTranscriptFormat = (type: string): PodcastTranscriptFormat | null =>
@@ -66,8 +65,7 @@ const JsonTranscript = z.object({
   ),
 });
 
-// Hosts often time every word. Words are joined into lines at a sentence's end, a speaker's
-// change or a pause, so a line reads like a caption.
+// Words join into lines at a sentence's end, a speaker's change or a pause, so a line reads like a caption.
 const wordTimings = (text: string): TranscriptSegment[] => {
   let parsed: z.infer<typeof JsonTranscript>;
   try {
@@ -104,8 +102,7 @@ const wordTimings = (text: string): TranscriptSegment[] => {
   return segments;
 };
 
-// A paragraph's time is where it starts. It ends there too, rather than where the next one
-// begins, because no end was given (docs/features/transcript-retrieval.md, "Cue times").
+// Why a paragraph ends where it starts: docs/features/podcast-transcripts.md, "The formats".
 const paragraphTimes = (text: string): TranscriptSegment[] => {
   const segments: TranscriptSegment[] = [];
   for (const match of text.matchAll(/<time>([^<]+)<\/time>\s*<p>([\s\S]*?)<\/p>/gi)) {
@@ -139,9 +136,7 @@ const timedText = (text: string): TranscriptSegment[] => {
   return segments;
 };
 
-// Hosts' cue times sometimes run backwards for a few seconds, where an ad was spliced in. Those
-// cues are dropped rather than the whole file, unless there are enough of them to distrust it
-// (docs/features/podcast-transcripts.md, "Times that run backwards").
+// Why backward cues are dropped: docs/features/podcast-transcripts.md, "Times that run backwards".
 const inOrder = (segments: TranscriptSegment[]): TranscriptSegment[] => {
   const kept: TranscriptSegment[] = [];
   for (const segment of segments) {
@@ -152,7 +147,7 @@ const inOrder = (segments: TranscriptSegment[]): TranscriptSegment[] => {
   return segments.length - kept.length > MOST_SHARE_OUT_OF_ORDER * segments.length ? [] : kept;
 };
 
-// An untimed transcript gives nothing to link a point to, so it reads as no transcript here.
+// An untimed transcript gives a point nothing to link to, so it reads as no transcript.
 export const parsePodcastTranscript = (text: string, format: PodcastTranscriptFormat): TranscriptSegment[] => {
   return inOrder(segmentsOf(text, format));
 };

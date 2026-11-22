@@ -27,22 +27,17 @@ export type PodcastTranscriptAnswer =
   | { via: "tag"; format: PodcastTranscriptFormat }
   | { via: "youtube"; matchedBy: "title" | "description"; searchedBy: "extension" | "server" };
 
-// How the YouTube rung is asked: with the video a reader's extension found, to be checked, or
-// for our server to search itself, when the reader has no extension.
 export type YouTubeAsk = { videoId: string } | { search: true } | null;
 
 export interface PodcastTranscriptRequest {
   feedUrl: string;
   guid: string;
   youTube: YouTubeAsk;
-  // An account, or signed out the address a trial asks from, as our server's YouTube fetching
-  // counts either (docs/features/server-side-transcripts.md).
   caller: ServiceCaller;
   log: FastifyBaseLogger;
 }
 
-// Whether the words can be found, and the rung that said so, fetching none: `unknown` when a rung
-// couldn't be asked, so Create looks again. `episode` is the feed's, for what transcribing would take.
+// What each answer means: docs/features/speech-to-text.md, "The server rung".
 export type PodcastTranscriptCheck =
   | { words: "found"; via: "remembered" | "tag" | "youtube" }
   | { words: "none"; episode: { sourceKey: SourceKey; durationSeconds: number | null; audioUrl: string | null } }
@@ -53,15 +48,11 @@ export type PodcastTranscriptCheckRequest = Omit<PodcastTranscriptRequest, "call
 export interface PodcastTranscriptsOptions {
   fetchPublicWeb: ReturnType<typeof createPublicWebFetch>;
   sources: EpisodeWordSources;
-  // Our server's caption fetching; absent, the YouTube rung can't be asked here.
   youTubeService: Pick<ServiceTranscripts, "resolve"> | null;
-  // Finding and checking the episode's video through the YouTube Data API; absent, the same.
   youTubeEpisodes: YouTubeEpisodes | null;
   clock: () => Date;
 }
 
-// The video a reader's extension found isn't the episode by the rules our server checks with, so
-// nothing is kept for everyone. The reader can still use the captions it fetched.
 export class MatchUnconfirmedError extends TranscriptFetchError {
   constructor() {
     super("That video couldn't be confirmed as this episode", { failure: TranscriptFetchFailure.NO_CAPTIONS, sourceId: "podcast-youtube" });
@@ -69,9 +60,7 @@ export class MatchUnconfirmedError extends TranscriptFetchError {
 }
 
 const MOST_TRANSCRIPT_BYTES = 10 * 1024 * 1024;
-// The Data API's policies have what it answered refreshed or deleted within 30 days, and a video
-// matched to an episode was checked by it, so a match older than that is checked again
-// (docs/features/podcast-on-youtube.md, "Keeping a match").
+// Why 30 days: docs/features/podcast-on-youtube.md, "Keeping a match".
 const MATCH_KEPT_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface FeedEpisode {
@@ -93,7 +82,6 @@ const byPreference = (links: readonly PodcastTranscriptLink[]) =>
 const noCaptions = (message: string, sourceId: string) =>
   new TranscriptFetchError(message, { failure: TranscriptFetchFailure.NO_CAPTIONS, sourceId });
 
-// The Data API refused or didn't answer, most likely because the day's quota is spent.
 const dataApiUnavailable = (error: unknown): never => {
   throw new TranscriptFetchError("YouTube couldn't be searched just now", {
     failure: TranscriptFetchFailure.SOURCE_UNAVAILABLE,
@@ -107,12 +95,7 @@ export interface ResolvedTranscript {
   answer: PodcastTranscriptAnswer;
 }
 
-// The podcast rungs, each asked only if the one before couldn't answer. What is kept for everyone
-// is where the words were found, never the words: a show's transcript is its own work, so each
-// reader fetches it from its source for themselves, and the search isn't repeated
-// (docs/features/podcast-transcripts.md, "Each reader's own copy"; OV-297). The episode is read
-// again from its own feed, never taken from the caller, and a video a caller names is checked
-// against it by our server, so nothing a caller sends decides where an episode's words are.
+// Why only where the words are is kept: docs/features/podcast-transcripts.md, "Each reader's own copy".
 export const createPodcastTranscripts = ({
   fetchPublicWeb,
   sources,
@@ -190,9 +173,7 @@ export const createPodcastTranscripts = ({
     };
   };
 
-  // A match kept past its 30 days, checked again against the episode for one quota unit, and kept
-  // another 30 if it still is the episode.
-  const refreshed = async (key: SourceKey, episode: EpisodeToFind, videoId: string, request: PodcastTranscriptRequest) => {
+  const recheckExpiredMatch = async (key: SourceKey, episode: EpisodeToFind, videoId: string, request: PodcastTranscriptRequest) => {
     if (youTubeEpisodes === null || (await youTubeEpisodes.confirm(episode, videoId).catch(() => null)) === null) {
       return null;
     }
@@ -203,7 +184,6 @@ export const createPodcastTranscripts = ({
     return transcript;
   };
 
-  // The words, fetched afresh from where they were found before; null where that no longer answers.
   const fromSource = async (
     key: SourceKey,
     source: EpisodeWordSource,
@@ -216,9 +196,7 @@ export const createPodcastTranscripts = ({
     return captionsOf(key, source.videoId, caller, log).catch(() => null);
   };
 
-  // An episode's words by its key alone, for a reader's other device, which knows the key but
-  // not the feed: only where they were found before, and a match only within its 30 days, since
-  // checking it again needs the feed (docs/features/podcast-transcripts.md).
+  // By key alone, for another device: docs/features/podcast-transcripts.md, "Each reader's own copy".
   const remembered = async (key: SourceKey, caller: ServiceCaller, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {
     const known = await sources.get(key);
     return known === null || !isFresh(known) ? null : fromSource(key, known.source, caller, log);
@@ -267,7 +245,7 @@ export const createPodcastTranscripts = ({
       keywords: episodeKeywords(item.notes, neighbourNotes),
     };
     if (toRefresh !== null) {
-      const words = await refreshed(key, episode, toRefresh, request);
+      const words = await recheckExpiredMatch(key, episode, toRefresh, request);
       if (words !== null) {
         return { transcript: words, answer: { via: "remembered", from: "youtube" } };
       }
@@ -281,10 +259,6 @@ export const createPodcastTranscripts = ({
     return { transcript: answered.transcript, answer: answered.answer };
   };
 
-  // The ladder's rungs asked only far enough to say whether words are there, before the reader
-  // chooses: a remembered source and a feed's tag by their presence, a video by the Data API's word
-  // that it is the episode. A video found by our server's search is remembered, so Create doesn't
-  // spend a second search on it; its captions are fetched only then (designs 305c, 305c-2).
   const check = async (request: PodcastTranscriptCheckRequest): Promise<PodcastTranscriptCheck> => {
     const key = await podcastSourceKey(request);
     const known = await sources.get(key);
@@ -323,8 +297,7 @@ export const createPodcastTranscripts = ({
       if (request.youTube === null) {
         return none;
       }
-      // A video the reader's extension found is theirs to fetch captions from even when our server
-      // can't confirm it, as Create does (podcastTranscript on the client).
+      // The extension's own video is the reader's to fetch captions from even unconfirmed, as in Create.
       if ("videoId" in request.youTube) {
         return { words: "found", via: "youtube" };
       }

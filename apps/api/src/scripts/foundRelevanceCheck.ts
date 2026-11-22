@@ -7,15 +7,7 @@ import { ClaimEmbeddingsRepository } from "../meaning/ClaimEmbeddingsRepository.
 import { createOpenAiEmbedder, EMBEDDING_MODEL } from "../meaning/createOpenAiEmbedder.js";
 import { TranscriptPassagesRepository } from "../transcripts/TranscriptPassagesRepository.js";
 
-// OV-362: how close is what Found for you adds, for the questions one reader really asked? Lists,
-// for each question in their overview chats, the closest overviews by meaning with their similarity
-// and the overviews the keyword minutes come from with their best score, so the floors that keep
-// unrelated overviews out can be read off real questions. Three steps, so production is only ever
-// read, and only the evals key embeds:
-//
-//   DATABASE_URL=… node dist/scripts/foundRelevanceCheck.js questions <email> <questions.json>   # overview-prod, read only
-//   OPENAI_API_KEY=… node dist/scripts/foundRelevanceCheck.js embed <questions.json>             # overview-evals
-//   DATABASE_URL=… node dist/scripts/foundRelevanceCheck.js score <questions.json> <out.json>     # overview-prod, read only
+// OV-362's floor check, and how to run it: docs/architecture/in-app-chat.md, "Running it again".
 
 interface Asked {
   accountId: string;

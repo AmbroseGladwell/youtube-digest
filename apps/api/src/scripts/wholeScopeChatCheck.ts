@@ -35,7 +35,7 @@ import {
 import { ChatPlan, planScope, type OverviewMarks } from "../chats/planScope.js";
 import type { PromptMessage } from "../chats/streamChatCompletion.js";
 
-// OV-373 whole-scope harness: docs/architecture/in-app-chat.md, "Answering from the whole scope" and "Running it again".
+// docs/architecture/in-app-chat.md, "Answering from the whole scope" and "Running it again".
 
 const ARMS = ["shipped", "plan5", "plan-budget", "plan-whole", "production"] as const;
 type ArmName = (typeof ARMS)[number];

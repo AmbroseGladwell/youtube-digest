@@ -59,8 +59,7 @@ export interface EnqueueAudio {
   now: Date;
 }
 
-// The queue the render workers drain, in Postgres so it outlives a stopped machine
-// (docs/features/tts-pre-rendered-speech.md, "The API side").
+// In Postgres so the queue outlives a stopped machine.
 export class AudioRendersRepository {
   #sql: SqlClient;
 
@@ -81,8 +80,7 @@ export class AudioRendersRepository {
     return rows.map(fromRow);
   }
 
-  // Only the account that asked for a render can throw it away, and never a voice sample,
-  // which no account asked for.
+  // Never a voice sample, which no account asked for.
   async deleteRequestedBy(key: string, accountId: AccountId): Promise<boolean> {
     const rows = await this.#sql.query<{ key: string }>("delete from audio_renders where key = $1 and requested_by = $2 returning key", [
       key,
@@ -104,9 +102,7 @@ export class AudioRendersRepository {
     return Number(rows[0]?.count ?? 0);
   }
 
-  // One of the account's new renders for the UTC day, refused at the cap. Only a render
-  // that has to be made counts: narration already made or already queued is free
-  // (docs/architecture/tiers.md, "What an own-key overview costs us").
+  // Why only new renders count: docs/architecture/tiers.md, "What an own-key overview costs us".
   async takeDailyRender(now: Date, accountId: AccountId, limit: number): Promise<boolean> {
     const rows = await this.#sql.query(
       `insert into narration_render_usage (day, account_id, renders) values ($1::date, $2, 1)
@@ -118,8 +114,7 @@ export class AudioRendersRepository {
     return rows.length > 0;
   }
 
-  // A request for audio already queued only ever makes it more urgent, and a request for
-  // audio that failed for good starts it again from nothing.
+  // Queued audio only becomes more urgent; audio that failed for good starts again from nothing.
   async enqueue({ key, voice, renderVersion, lines, priority, requestedBy, now }: EnqueueAudio): Promise<AudioRender> {
     const rows = await this.#sql.query<AudioRenderRow>(
       `insert into audio_renders
@@ -137,8 +132,7 @@ export class AudioRendersRepository {
     return fromRow(rows[0]!);
   }
 
-  // One job, most urgent then oldest, that no other worker holds. A render whose worker
-  // went quiet past staleBefore is taken again, and one out of attempts is failed instead.
+  // Most urgent then oldest; a render whose worker went quiet is retaken, or failed once out of attempts.
   async claimNext(now: Date, staleBefore: Date, maxAttempts: number): Promise<AudioRender | null> {
     return this.#sql.transaction(async (tx) => {
       await tx.query(

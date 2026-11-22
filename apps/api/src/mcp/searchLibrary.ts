@@ -10,8 +10,7 @@ const words = (query: string) =>
     .split(/\s+/)
     .filter((word) => word !== "");
 
-// The library's own haystack, so a search here finds what the library's search finds, but
-// every word rather than the whole phrase: an assistant sends keywords, not a phrase it saw.
+// Every word, not the whole phrase: an assistant sends keywords, not a phrase it saw.
 export const searchLibrary = (entries: LibraryEntry[], filters: ResolvedFilters): LibraryEntry[] => {
   const wanted = words(filters.query ?? "");
   const tag = filters.tag?.trim().toLowerCase();
@@ -55,9 +54,7 @@ export const searchLibrary = (entries: LibraryEntry[], filters: ResolvedFilters)
   });
 };
 
-// Keyword first, then meaning: a word the reader remembers still finds its note at the top,
-// and the closest few by meaning that no word matched come after
-// (docs/features/search-by-meaning.md, "Word and meaning together").
+// Why keyword first: docs/features/search-by-meaning.md, "Word and meaning together".
 export const MEANING_RESULTS = 5;
 
 export interface LibrarySearch {

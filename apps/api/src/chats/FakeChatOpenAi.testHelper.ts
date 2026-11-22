@@ -10,9 +10,7 @@ export interface FakeChatOpenAi {
 
 export const CHAT_USAGE = { prompt_tokens: 10_000, completion_tokens: 80, prompt_tokens_details: { cached_tokens: 8_000 } };
 
-// OpenAI's streamed chat completions as chat meets them: each call takes the next answer,
-// the last one repeating. A reply that isn't a string is sent as its JSON, a few characters
-// a chunk, so the answer has to be read as it arrives.
+// Each call takes the next answer, the last repeating; a non-string reply streams as JSON in small chunks.
 export const makeFakeChatOpenAi = (...answers: FakeChatAnswer[]): FakeChatOpenAi => {
   const fake: FakeChatOpenAi = {
     answers,

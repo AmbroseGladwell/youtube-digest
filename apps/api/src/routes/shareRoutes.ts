@@ -7,8 +7,7 @@ import type { ShareRow, SharesRepository } from "../shares/SharesRepository.js";
 
 const SHARE_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
 
-// Enough for anyone sending overviews to people, and short of this service becoming
-// somewhere to host a library (docs/features/sharing.md).
+// Why 50: docs/features/sharing.md, "Limits".
 export const MAX_LIVE_SHARES_PER_ACCOUNT = 50;
 
 const Params = z.object({ token: ShareToken });

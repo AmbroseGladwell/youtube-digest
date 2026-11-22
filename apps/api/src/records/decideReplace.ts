@@ -14,11 +14,7 @@ export interface ReplaceRequest {
   ifMatch: number | null;
 }
 
-// A whole-record write over a record the client has not read is the clobber the docs
-// exist to prevent, so without If-Match it is create-only (docs/features/sync-api.md). An
-// account holds one overview per video: a second is refused naming the first, and a
-// regeneration under the same id is a replace and unaffected
-// (docs/features/one-overview-per-video.md).
+// Create-only without If-Match: docs/features/sync-api.md, "`If-Match`: required to replace, optional to patch".
 export const decideReplace = (
   kind: RecordKind,
   current: StoredRecord | null,

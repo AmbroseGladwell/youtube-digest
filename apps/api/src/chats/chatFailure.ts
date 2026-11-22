@@ -4,8 +4,6 @@ export const CHAT_FAILED = "Something went wrong answering that. Try again in a 
 
 export class EmptyAnswerError extends Error {}
 
-// The reply ran into its token cap before it was whole (OV-353 found OV-307's empty "@ project"
-// replies were this: the reasoning used the whole cap).
 export class AnswerCutOffError extends Error {}
 
 export const assertWhole = (stream: { finishReason: () => string | null }): void => {
@@ -14,6 +12,5 @@ export const assertWhole = (stream: { finishReason: () => string | null }): void
   }
 };
 
-// What a failed answer's log line names: the error's class, and the provider's status when it gave one.
 export const reasonOf = (error: unknown): string => (error instanceof Error ? error.constructor.name : "unknown");
 export const statusOf = (error: unknown): number | null => (error instanceof ChatProviderError ? error.status : null);

@@ -15,8 +15,7 @@ const envelope = (error: ApiError): ApiErrorEnvelope => ({
 const isFastifyError = (error: unknown): error is FastifyError =>
   typeof error === "object" && error !== null && "code" in error && "statusCode" in error;
 
-// One shape for every failure under /api, and nothing about an unexpected error's cause
-// reaches the client (docs/architecture/api.md).
+// One failure shape: docs/architecture/api.md, "Errors".
 export const registerApiErrorHandler = (app: FastifyInstance, reporting: RequestErrorReporting): void => {
   app.setErrorHandler((error, request, reply) => {
     if (isApiError(error)) {

@@ -38,7 +38,6 @@ export interface ShowWithEpisodes {
   episodes: DirectoryEpisode[];
 }
 
-// What a Spotify link needs of a directory: the show by its name, and its newest episodes.
 export interface ShowDirectory {
   searchShows(name: string): Promise<DirectoryShow[]>;
   showWithEpisodes(showId: string): Promise<ShowWithEpisodes | null>;
@@ -79,8 +78,6 @@ export interface ShowEpisode {
   episode: DirectoryEpisode;
 }
 
-// Apple's free directory: a show's feed, and the guids of its newest episodes
-// (docs/features/podcast-links.md, "From a link to an episode").
 export const appleDirectory = (fetchJson: FetchJson) => {
   return {
     async showWithEpisodes(showId: string): Promise<ShowWithEpisodes | null> {

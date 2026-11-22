@@ -5,8 +5,7 @@ export type TokenEndpointAuthMethod = z.infer<typeof TokenEndpointAuthMethod>;
 
 const GRANT_TYPES = ["authorization_code", "refresh_token"];
 
-// RFC 7591's metadata, the part of it this server acts on. Anything else a client sends is
-// ignored rather than refused, as the RFC asks.
+// Unknown metadata is ignored rather than refused, as RFC 7591 asks.
 export const ClientRegistration = z.looseObject({
   redirect_uris: z.array(z.string()).min(1).max(10),
   client_name: z

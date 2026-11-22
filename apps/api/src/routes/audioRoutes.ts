@@ -12,9 +12,7 @@ import { parseOrThrow } from "../http/parseOrThrow.js";
 import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
 
 export const MAX_OUTSTANDING_RENDERS_PER_ACCOUNT = 3;
-// New renders an account may start in a UTC day, so no account renders a whole library in
-// every voice. Narration renders when it is first played, so this is about listening
-// (docs/architecture/tiers.md).
+// Why a daily cap: docs/architecture/tiers.md, "What an own-key overview costs us".
 export const MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY = 30;
 export const MAX_KEYS_PER_LOOKUP = 32;
 
@@ -51,10 +49,7 @@ const describe = (render: AudioRender) => ({
     : {}),
 });
 
-// Narration by content: the key is a hash of what is said, in which voice, rendered how.
-// The file itself is public, because an <audio> element sends no bearer and the key can
-// only be computed by someone who already holds the words
-// (docs/features/tts-pre-rendered-speech.md, "The API side").
+// Why the audio file is public: docs/features/tts-pre-rendered-speech.md, "The API side".
 export const audioRoutes = (app: FastifyInstance, audio: AudioServices | null, clock: () => Date): void => {
   const services = (): AudioServices => {
     if (audio === null) {
@@ -106,8 +101,7 @@ export const audioRoutes = (app: FastifyInstance, audio: AudioServices | null, c
     return reply.status(202).send(describe(render));
   });
 
-  // Whichever of these keys exist, in any state: how a note finds narration it was given in
-  // another voice (docs/features/narration-voice.md, "Old audio").
+  // Finds narration given in another voice: docs/features/narration-voice.md, "Old audio".
   app.post("/audio/lookup", async (request) => {
     const { renders } = services();
     const { keys } = parseOrThrow(AudioLookup, request.body, "The audio lookup");

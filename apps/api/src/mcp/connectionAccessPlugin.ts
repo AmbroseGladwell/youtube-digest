@@ -19,9 +19,7 @@ declare module "fastify" {
   }
 }
 
-// Only an assistant's access token opens /mcp, never a session, as only /mcp honours one
-// (docs/features/mcp-connector.md). The challenge names the metadata an MCP client follows
-// to find the authorization server (RFC 9728).
+// Only /mcp honours an access token, and never a session: docs/features/mcp-connector.md, "The endpoint".
 export const connectionAccessPlugin = fp<ConnectionAccessPluginOptions>(async (app, { sql, clock, urls }) => {
   app.decorateRequest("connectionAccess", null);
   app.addHook("onRequest", async (request, reply) => {

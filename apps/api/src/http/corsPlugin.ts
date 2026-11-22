@@ -6,9 +6,7 @@ export interface CorsPluginOptions {
   allowedOrigins: string[];
 }
 
-// The extension is a separate origin, so the browser asks this server to vouch for it
-// before every sync call. Only the origins named in config are vouched for
-// (docs/architecture/api.md).
+// Why the extension needs CORS: docs/architecture/api.md, "Origins".
 export const corsPlugin = fp<CorsPluginOptions>(async (app, { allowedOrigins }) => {
   await app.register(cors, {
     origin: allowedOrigins,

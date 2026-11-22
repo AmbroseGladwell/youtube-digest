@@ -15,8 +15,7 @@ export interface SharePageHtmlInput {
   shell: string | null;
 }
 
-// A JSON island is inert to a parser and to any script but the one that reads it, as long
-// as nothing in it can close the element that carries it.
+// Escaping < keeps anything in the payload from closing the element that carries it.
 const payloadScript = (payload: SharePayload) =>
   `<script id="${SHARE_PAYLOAD_ELEMENT_ID}" type="application/json">${JSON.stringify(payload).replace(/</g, "\\u003c")}</script>`;
 
@@ -31,9 +30,7 @@ const GONE_COPY: Record<"revoked" | "unknown", { heading: string; line: string }
   },
 };
 
-// Served when this process has no built web app beside it — an API-only deploy, and every
-// route test. The document is real and readable rather than a placeholder, but the reader's
-// own layout is the app's job (docs/features/sharing.md).
+// For a process with no built web app beside it: an API-only deploy, and every route test.
 const fallbackBody = (payload: SharePayload): string => {
   if (payload.state !== "shared") {
     const { heading, line } = GONE_COPY[payload.state];
@@ -63,8 +60,7 @@ const wayOut = ({ source, recipe }: SharedNote): string => {
 export const sharePageHtml = ({ head, payload, shell }: SharePageHtmlInput): string => {
   const injected = `${head}\n    ${payloadScript(payload)}`;
   if (shell !== null && shell.includes("</head>")) {
-    // The shell's own <title> goes, or a crawler reads that one and every shared link
-    // previews as the app's name.
+    // Drops the shell's <title>, or every shared link previews as the app's name.
     return shell.replace(/\s*<title>[\s\S]*?<\/title>/i, "").replace("</head>", `    ${injected}\n  </head>`);
   }
   return `<!doctype html>

@@ -53,9 +53,7 @@ const codeEmailOf = (request: FastifyRequest): string | null => {
   return parsed.success ? normaliseEmail(parsed.data.email) : null;
 };
 
-// Every answer here is the same whether or not the address has an account, and an account
-// is only ever made by a consumed create-account link. Only the mail differs
-// (docs/features/sign-in.md, "Which mail an address gets").
+// Same answer whether or not there is an account: docs/features/sign-in.md, "Which mail an address gets".
 export const authRoutes = (
   app: FastifyInstance,
   { sql, clock, mailer, appUrl, sessionTtlDays, sessionCookieSecure, eventSink }: AuthRoutesOptions,
@@ -195,8 +193,7 @@ export const authRoutes = (
     return linked;
   });
 
-  // The button in the old address's mail: public, because every session is about to end,
-  // and the token is the whole proof (docs/features/account-changes.md, "Moving it back").
+  // Public, as every session is about to end: docs/features/account-changes.md, "Moving it back".
   app.post("/auth/email-change/revert", { ...PUBLIC, preHandler: perAddress(rateLimits.emailChangeRevertPerAddress) }, async (request) => {
     const { token } = parseOrThrow(SignInRequest, request.body, "The revert link");
     const result = await revertEmailChange(sql, token, clock());

@@ -46,8 +46,7 @@ const parseOrOAuthError = <T>(schema: z.ZodType<T>, value: unknown, code: "inval
 
 const noStore = (reply: FastifyReply) => reply.header("cache-control", "no-store").header("pragma", "no-cache");
 
-// The authorization server MCP clients discover and talk to, outside /api because they send
-// none of our clients' headers (docs/features/mcp-connector.md).
+// Outside /api, as MCP clients send none of our headers: docs/features/mcp-connector.md, "The routes".
 export const oauthRoutes = (app: FastifyInstance, { sql, clock, urls }: OAuthRoutesOptions): void => {
   const perAddress = (rateLimit: RateLimit) => rateLimitHook(rateLimit, (request) => request.clientAddress, clock);
 

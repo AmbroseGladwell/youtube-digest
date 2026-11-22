@@ -13,9 +13,7 @@ export interface ReserveChatMessageOptions {
   dailyMessages: number;
 }
 
-// One message of the reader's allowance, taken before anything is asked, or the wait that says
-// why not: the month, the day, or everyone's day on us (docs/features/chats.md, "Asking"). Every
-// kind of chat counts the same, one message however many passes it takes.
+// One message of the allowance however many passes it takes: docs/features/chats.md, "Asking".
 export const reserveChatMessage = async (
   usage: ChatUsageRepository,
   { askedAt, accountId, plan, dailyMessages }: ReserveChatMessageOptions,

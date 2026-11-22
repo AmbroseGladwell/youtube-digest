@@ -69,7 +69,6 @@ export class OurKeyDailyCapSpentError extends Error {
   }
 }
 
-// An account, counted by the month on its plan. Nothing is made on us signed out (OV-327).
 export interface OurKeyCaller {
   accountId: AccountId;
   plan: Plan;
@@ -77,7 +76,6 @@ export interface OurKeyCaller {
 
 export type SmallPass = "profile" | "topics" | "topicSuggestions" | "kindCheck";
 
-// The caller's slot, and how to give it back when the overview fails.
 interface HeldSlot {
   used: number;
   limit: number;
@@ -93,8 +91,7 @@ interface MeteredUsage {
   costDollars: number | null;
 }
 
-// What a run of calls on our key used and cost, failed attempts included, since the provider
-// bills every response it answers.
+// Failed attempts included, since the provider bills every response it answers.
 const meteredUsageOf = (calls: MeteredCall[]): MeteredUsage => {
   const price = priceOf(ourKeyModel);
   return calls.reduce(
@@ -119,10 +116,7 @@ export class OurKeyGenerationError extends Error {
   }
 }
 
-// Makes an overview on our key through production's own generation. The global day's
-// slot and the account's month are both reserved first
-// and both given back on any failure, so an overview counts once, when it succeeds
-// (docs/architecture/tiers.md).
+// How overviews are counted: docs/architecture/tiers.md, "Counting".
 export class OurKeyGenerator {
   #options: OurKeyGeneratorOptions;
 
@@ -151,8 +145,7 @@ export class OurKeyGenerator {
     const metered = meteredFetch(ourKeyModel.provider, http);
     const startedAt = now.getTime();
     const payer: CostPayer = { accountId: caller.accountId };
-    // The kind check's calls are costed on their own line, apart from the note's
-    // (docs/architecture/unit-economics.md); an article has no check.
+    // Costed on its own line: docs/architecture/unit-economics.md, "What is recorded".
     let noteKind: NoteKind | null = null;
     let checkCalls = 0;
     let filedProjectIds: ProjectId[] = [];
@@ -219,9 +212,7 @@ export class OurKeyGenerator {
     }
   }
 
-  // Small passes for an account: no overview is made, so nothing counts against the plan or
-  // the day's overviews, and their routes share a limit of their own
-  // (docs/features/personalisation.md).
+  // Why nothing counts against the plan: docs/features/personalisation.md, "A profile that learns".
   profilePass(payer: CostPayer, input: ProfilePassInput, log: FastifyBaseLogger): Promise<ProfilePassItem[]> {
     return this.#smallPass("profile", payer, (client) => generateProfileItems(client, input), log);
   }
@@ -234,8 +225,6 @@ export class OurKeyGenerator {
     return this.#smallPass("topicSuggestions", payer, (client) => generateTopicSuggestions(client, input), log);
   }
 
-  // A video's kind before there's an account, so onboarding knows a recipe video from Your link on
-  // (docs/features/onboarding.md, "The recipe video check").
   kindCheck(payer: CostPayer, sample: KindSample, log: FastifyBaseLogger): Promise<NoteKind> {
     return this.#smallPass("kindCheck", payer, (client) => checkNoteKind(client, sample), log);
   }

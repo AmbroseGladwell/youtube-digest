@@ -1,8 +1,6 @@
 import type { PGlite, Transaction } from "@electric-sql/pglite";
 import type { SqlClient } from "./SqlClient.js";
 
-// The test database: real Postgres, in process, running the same migration files
-// (docs/conventions/backend-testing-guide.md).
 export const createPgliteSqlClient = (db: PGlite): SqlClient => {
   const over = (queryable: PGlite | Transaction, transaction: SqlClient["transaction"]): SqlClient => ({
     async query<Row>(text: string, params: unknown[] = []) {

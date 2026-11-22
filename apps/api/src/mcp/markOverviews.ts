@@ -49,9 +49,7 @@ const alreadyMarked = (entry: LibraryEntry, marks: Marks): boolean => {
 
 const titled = (entries: LibraryEntry[]) => entries.map((entry) => `- **${entry.overview.source.title}**`);
 
-// The reader's own marks on an overview, written as the state record every device syncs,
-// stamped by the server's clock: an assistant is never asked for the time
-// (docs/features/mcp-connector.md, "Marking overviews"; CLAUDE.md).
+// Stamped by the server's clock, never the assistant's: docs/features/mcp-connector.md, "Marking overviews".
 export const markOverviews = mcpTool({
   name: "mark_overviews",
   title: "Mark overviews read or favourite",

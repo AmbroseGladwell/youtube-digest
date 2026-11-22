@@ -26,9 +26,7 @@ const startingStatus = (hasWork: boolean, configured: boolean): "skipped" | "not
   return configured ? "pending" : "not_configured";
 };
 
-// One transaction: what the later steps need is captured first, the audit row is written,
-// then everything under the account goes. The foreign keys cascade for every table but
-// three, which are deleted by hand here (docs/features/account-deletion.md, "What goes").
+// What cascades and what is deleted by hand: docs/features/account-deletion.md, "What goes, and what stays".
 export const eraseAccount = async (
   sql: SqlClient,
   { accountId, email, now, narrationStore, personEraser }: EraseAccountOptions,
@@ -84,9 +82,7 @@ const withinTime = <T>(work: Promise<T>, ms: number, step: string): Promise<T> =
     );
   });
 
-// The steps outside the transaction, each recorded as it ends. A step that fails is left
-// `failed` with its error for `task api:finish-deletions` to retry; a step with nothing
-// configured to run it is left `not_configured`, which the same retry picks up once it is.
+// Each step is recorded as it ends, for task api:finish-deletions to retry a failed one.
 export const finishAccountDeletion = async (
   sql: SqlClient,
   deletion: AccountDeletion,

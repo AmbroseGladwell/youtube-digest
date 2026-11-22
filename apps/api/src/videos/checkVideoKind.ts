@@ -21,10 +21,7 @@ export interface CheckVideoKindOptions {
   log: FastifyBaseLogger;
 }
 
-// The writer's own kind check, run as the link is read so onboarding knows a recipe video before
-// Your link. One check per video for everyone, remembered; signed out, capped for the day across
-// every device. The transcript fetched for it goes back to the device, which keeps it for the
-// overview, so the video is fetched once (docs/features/onboarding.md, "The recipe video check").
+// Why it runs as the link is read: docs/features/onboarding.md, "Nothing paid before the account".
 export const checkVideoKind = async (
   videoId: VideoId,
   video: VideoSource,

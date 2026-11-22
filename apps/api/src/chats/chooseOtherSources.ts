@@ -21,9 +21,7 @@ import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
 
 export const FOUND_SOURCES = 3;
-// How close an overview must be to the question to be found for it (OV-362). On one reader's 51 real
-// questions, unrelated overviews scored 0.33 to 0.37 and the ones worth reading 0.40 and up, so
-// nothing is found rather than the nearest of the unrelated. Library search keeps MEANING_FLOOR.
+// Why 0.40: docs/features/chats.md, "Other overviews".
 export const FOUND_FLOOR = 0.4;
 export const PINNED_PROJECT_WHOLE = 8;
 export const PINNED_PROJECT_CLOSEST = 5;
@@ -56,11 +54,7 @@ interface Candidate {
   brief?: boolean;
 }
 
-// What this question adds to the conversation: the overviews the reader pinned with "@", each
-// pinned project (whole up to 8; past that its 5 closest to the question whole and the rest in
-// brief), then claim search's closest 3. Never the chat's own overview, nothing the conversation
-// already holds, and nothing the reader set aside unless they pin it again (OV-307's measured
-// shapes; docs/features/chats.md, "Other overviews").
+// What a question adds, and what it never adds: docs/features/chats.md, "Other overviews".
 export const chooseOtherSources = async (
   records: RecordsRepository,
   meaningSearch: MeaningSearch | null,
@@ -85,7 +79,8 @@ export const chooseOtherSources = async (
       ).map((overview) => overview.id),
     );
     const ids = members.map((member) => member.overviewId).filter((id) => live.has(id));
-    const whole = ids.length <= PINNED_PROJECT_WHOLE ? ids : await closestOf(meaningSearch, accountId, question.text, ids);
+    const whole =
+      ids.length <= PINNED_PROJECT_WHOLE ? ids : await closestPinnedProjectMembers(meaningSearch, accountId, question.text, ids);
     for (const overviewId of whole) {
       candidates.push({ overviewId, how: "pinned", projectId: project.id });
     }
@@ -137,9 +132,7 @@ export const chooseOtherSources = async (
   return { added, searched };
 };
 
-// A large pinned project's members closest to the question, by claim search within the project;
-// without search, or short of matches above the floor, the most recently added fill the rest.
-const closestOf = async (
+const closestPinnedProjectMembers = async (
   meaningSearch: MeaningSearch | null,
   accountId: AccountId,
   text: string,

@@ -5,8 +5,6 @@ export interface ProjectEntry extends ProjectOverview {
   entry: LibraryEntry;
 }
 
-// The overviews in a project now, each with who put it there. A membership record whose
-// overview this library no longer holds or cannot read is left out.
 export const projectOverviews = (library: Library, projectId: string): ProjectEntry[] => {
   const entries = new Map(library.entries.map((entry) => [entry.overview.id, entry]));
   return library.members

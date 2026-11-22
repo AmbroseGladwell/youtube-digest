@@ -6,8 +6,6 @@ export type MembersOf = { projectId: string } | { overviewId: string };
 
 const patternFor = (of: MembersOf): string => ("projectId" in of ? `${of.projectId}:%` : `%:${of.overviewId}`);
 
-// A membership record added before its project or overview went is caught, and none can be added
-// after (docs/features/projects.md).
 export const tombstoneProjectMembers = (records: RecordsRepository, accountId: AccountId, of: MembersOf): Promise<number> => {
   return tombstoneLiveRecords(records, accountId, "projectMember", patternFor(of));
 };

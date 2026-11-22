@@ -4,9 +4,7 @@ export type MilestoneChange = "crossed" | "dismissed" | "restored";
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
-// What a settings patch did to each milestone it names, judged against the stored marks:
-// a first mark is a crossing, a dismissedAt set is a dismissal, and one cleared is an undo
-// (docs/features/time-saved.md, "What is counted").
+// What counts as a crossing, dismissal or undo: docs/features/time-saved.md, "What is counted".
 export const milestoneChanges = (stored: unknown, patch: Record<string, MilestoneMark>): Record<string, MilestoneChange> => {
   const before = isObject(stored) ? stored : {};
   return Object.fromEntries(

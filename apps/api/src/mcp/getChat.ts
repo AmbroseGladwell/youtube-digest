@@ -5,9 +5,7 @@ import { pageOf } from "./pageOf.js";
 import { readChat } from "./readChats.js";
 import { readLibrary } from "./readLibrary.js";
 
-// Ten questions and their answers: a question holds up to 2,000 characters and an answer about
-// 4,000, so a page stays under the 25,000 tokens Claude Code refuses past
-// (docs/features/mcp-connector.md, "The context budget").
+// Why twenty: docs/features/mcp-connector.md, "The context budget".
 export const CHAT_PAGE_MESSAGES = 20;
 
 export const getChat = mcpTool({

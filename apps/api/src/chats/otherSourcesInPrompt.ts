@@ -4,7 +4,6 @@ import type { Passage } from "./transcriptPassages.js";
 export interface SourcesTurn {
   sources: readonly ChatSource[];
   setAside: readonly string[];
-  // Minutes of their transcripts that matched the question's words (OV-352).
   minutes?: ReadonlyArray<{ overviewId: string; passages: readonly Passage[] }>;
 }
 
@@ -16,14 +15,10 @@ export interface LabelledSource {
 export interface OtherSourcesInPrompt {
   blocks: Array<string | null>;
   labels: ReadonlyMap<string, LabelledSource>;
-  // S2.p14 → the minute of S2's source it names, for code to cite.
   minuteLabels: ReadonlyMap<string, OtherOverviewCitation>;
 }
 
-// One user message per question that added overviews or set some aside, rebuilt the same way for
-// every later question from what the conversation stored, so the prompt only ever grows at its end
-// (docs/architecture/in-app-chat.md, "What it does to a reader's month"). An overview deleted since
-// is left out and can no longer be cited.
+// Why every turn is rebuilt the same way: docs/features/chats.md, "Other overviews".
 export const otherSourcesInPrompt = (
   turns: readonly SourcesTurn[],
   overviews: ReadonlyMap<string, Overview>,
@@ -86,8 +81,6 @@ interface ShownMinutes {
   passages: readonly Passage[];
 }
 
-// OV-307's keyword shape: the minutes beside their overviews, each with an id the model cites in
-// passages, which code turns into a time of that overview's source.
 const minutesBlock = (shown: ReadonlyArray<ShownMinutes>): string => {
   return `# Minutes of their transcripts that match the question's words
 
@@ -111,7 +104,6 @@ const LATER_LEAD = `# More overviews from the reader's library
 
 Added for this question, labelled and cited as before.`;
 
-// OV-307's otherSourcesBlock and pinnedProjectBlock, as measured, with the pins named.
 const sourcesBlock = (present: readonly LabelledSource[], projects: ReadonlyMap<string, Project>, first: boolean): string => {
   const pinned = present
     .filter(({ source }) => source.how === "pinned" && source.projectId === undefined)

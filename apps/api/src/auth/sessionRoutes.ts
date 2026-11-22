@@ -37,18 +37,14 @@ export interface SessionRoutesOptions {
   appUrl: string;
   supportEmail: string;
   sessionCookieSecure: boolean;
-  // Where a deleted account's narration files and analytics records are erased from;
-  // null when narration or PostHog erasure is not configured (docs/features/account-deletion.md).
+  // Where a deleted account's narration and analytics are erased; null when not configured.
   narrationStore: AudioStore | null;
   personEraser: PersonEraser | null;
 }
 
 const CODE_REFUSED = "That code is wrong, has expired, or was already used";
 
-// The session's own routes: who it is, a code for the extension, signing out, and the
-// account's changes. A name needs only the session; a new email needs the session to have
-// proved its inbox first, then the new inbox to prove itself (docs/features/account-changes.md).
-// Deleting the account needs the same proof (docs/features/account-deletion.md).
+// The session's own routes: docs/architecture/api.md, "Auth".
 export const sessionRoutes = (
   app: FastifyInstance,
   { sql, clock, mailer, appUrl, supportEmail, sessionCookieSecure, narrationStore, personEraser }: SessionRoutesOptions,

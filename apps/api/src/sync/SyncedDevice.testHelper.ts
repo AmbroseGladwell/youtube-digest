@@ -22,8 +22,6 @@ const hrefOf = (input: string | URL | Request): string => {
   return input instanceof URL ? input.href : input.url;
 };
 
-// fetch over app.inject(): the client half runs exactly as it would in a browser, against
-// the whole API in process, with no port opened (docs/conventions/backend-testing-guide.md).
 export const injectingFetch = (app: FastifyInstance): typeof fetch => {
   return async (input, init) => {
     const url = new URL(hrefOf(input));
@@ -60,11 +58,9 @@ export interface DeviceOptions {
   clientVersion?: number;
   pageSize?: number;
   onFolded?: (fold: OverviewFold) => void;
-  // A database that already holds records before sync is switched on.
   before?: (stores: Pick<SyncedDevice, "overviews" | "settings" | "transcripts">) => Promise<void>;
 }
 
-// One device: its own IndexedDB, its own stores, its own engine, one account's token.
 export const makeDevice = async (
   testApp: TestApp,
   account: TestAccount,

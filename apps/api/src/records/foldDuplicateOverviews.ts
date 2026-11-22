@@ -31,11 +31,7 @@ interface ReadCopy {
   body: Record<string, unknown>;
 }
 
-// The one-off cleanup for accounts that came to hold two overviews of one video before the
-// server refused a second: per account and video the earliest-made copy is kept, the
-// others' filing and state are folded onto it, and the others are tombstoned so every
-// device drops them through the feed. Runs inside the migration that puts the unique index
-// on, so the index can go on (docs/features/one-overview-per-video.md).
+// Why: docs/features/one-overview-per-video.md, "Existing duplicates are folded once, before the index goes on".
 export const foldDuplicateOverviews = async (sql: SqlClient, now: () => Date = () => new Date()): Promise<DuplicateFold[]> => {
   const groups = await sql.query<{ account_id: string; video_id: string }>(
     `select account_id, video_id from records
@@ -124,9 +120,7 @@ const foldOne = async (
   return { accountId, videoId, kept: winner.record.id, folded: losers.map(({ record }) => record.id) };
 };
 
-// Every copy is read at the current version before anything is merged, as a field write
-// is (docs/features/sync-api.md, "A merge migrates first"). One this server cannot read
-// stops the fold loudly rather than guessing at it.
+// Why: docs/features/sync-api.md, "A merge migrates first, then merges, and never parses".
 const readCurrent = (record: StoredRecord, migrations: readonly RecordMigration[], accountId: string, videoId: string): ReadCopy => {
   const migrated = migrateStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), migrations);
   if (migrated.status === "unreadable") {
@@ -192,8 +186,6 @@ const statesOf = async (
   );
 };
 
-// The latest edit among the copies dates the merged record; the fold's own clock only
-// where none of them was dated (docs/features/sync-metadata.md).
 const latestOf = (updatedAts: Array<string | null>, now: () => Date): string => {
   const dated = updatedAts.filter((at): at is string => at !== null).sort();
   return dated.at(-1) ?? now().toISOString();

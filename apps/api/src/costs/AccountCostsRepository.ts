@@ -5,7 +5,6 @@ import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 
 export type CostArea = "generation" | "embeddings" | "transcripts" | "chat";
 
-// Who a cost lands on: an account, or no one yet, for a trial or a signed-out caller.
 export type CostPayer = { accountId: AccountId } | "signed-out";
 
 export interface CostEntry {
@@ -38,9 +37,7 @@ const fromRow = (row: DayCostRow): DayCost => ({
   dollars: Number(row.dollars),
 });
 
-// What each account costs to serve, by day, area and what the call was for, at list price
-// where the app can price it and as a quantity where only the bill can
-// (docs/architecture/unit-economics.md).
+// What is recorded: docs/architecture/unit-economics.md, "What is recorded".
 export class AccountCostsRepository {
   #sql: SqlClient;
 

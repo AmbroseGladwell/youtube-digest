@@ -2,9 +2,7 @@ import { randomUUID } from "node:crypto";
 import { fetchInnerTubeTranscript, TranscriptFetchError, type YouTubeFetch } from "@overview/transcripts";
 import { proxiedYouTubeFetch, undiciYouTubeFetch } from "../transcripts/undiciYouTubeFetch.js";
 
-// The one check no fixture can be: a real video through the real proxy, from this machine,
-// printing the bytes each fetch carried so the cost per transcript is measured rather than
-// assumed (docs/architecture/server-side-transcripts.md, "Checking it by hand").
+// docs/architecture/server-side-transcripts.md, "Checking it by hand".
 const url = process.argv[2];
 const proxyUrl = process.env.TRANSCRIPT_PROXY_URL;
 if (!url || !proxyUrl) {

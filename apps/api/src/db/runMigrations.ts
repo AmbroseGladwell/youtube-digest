@@ -11,13 +11,11 @@ export interface AppliedMigration {
   name: string;
 }
 
-// Code run inside a migration's own transaction, before its file, keyed by its version.
 export type MigrationSteps = Partial<Record<number, (tx: SqlClient) => Promise<void>>>;
 
 export interface RunMigrationsOptions {
   dir?: URL;
   before?: MigrationSteps;
-  // Stop after this version, for a test that seeds the shape a later migration starts from.
   upTo?: number;
 }
 
@@ -26,9 +24,7 @@ export interface MigrationFile {
   match: RegExpExecArray;
 }
 
-// Flyway's file naming without Flyway: each file runs once, in version order, in its own
-// transaction, under a lock so two starting servers cannot both apply the same one
-// (docs/architecture/api.md).
+// Flyway's naming without Flyway: docs/architecture/api.md, "Configuration and running".
 export const runMigrations = async (
   sql: SqlClient,
   { dir = MIGRATIONS_DIR, before = {}, upTo = Number.POSITIVE_INFINITY }: RunMigrationsOptions = {},

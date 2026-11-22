@@ -4,8 +4,6 @@ import { toolError, type McpToolOutcome } from "./McpTool.js";
 
 const named = (project: Project) => `"${project.name}" (id ${project.id}${project.archivedAt === null ? "" : ", archived"})`;
 
-// By id, or by name ignoring case and spaces at the ends. A name two projects share is
-// refused naming both, as an unknown one is refused pointing at list_projects.
 export const resolveProject = (library: Library, nameOrId: string): Project | McpToolOutcome => {
   const byId = library.projects.find((project) => project.id === nameOrId);
   if (byId !== undefined) {

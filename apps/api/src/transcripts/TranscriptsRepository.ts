@@ -8,10 +8,7 @@ const liveNoteOn = (key: string) => `select 1 from records
 
 export type Kept = "kept" | "not-noted";
 
-// Each account's own copy of the words behind its notes, read only by that account's devices.
-// Nothing is kept for every reader: a video's captions and an episode's transcript are their
-// makers' work, so each reader fetches and keeps their own (docs/features/transcript-storage.md;
-// OV-295, after the terms review of 13 Nov 2026).
+// Own copies: docs/features/transcript-storage.md, "Following the reader across devices".
 export class TranscriptsRepository {
   #sql: SqlClient;
   #clock: () => Date;
@@ -29,8 +26,7 @@ export class TranscriptsRepository {
     return rows[0]?.body ?? null;
   }
 
-  // Under the account's row lock, the one every note write takes to allocate its seq, so an
-  // upload and a delete of its note cannot interleave (docs/features/transcript-storage.md).
+  // Takes the account row lock every note write takes, so an upload can't interleave with its note's delete.
   async putIfNoted(accountId: AccountId, transcript: StoredTranscript): Promise<Kept> {
     const now = this.#clock().toISOString();
     return this.#sql.transaction(async (tx) => {

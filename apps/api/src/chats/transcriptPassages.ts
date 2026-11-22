@@ -7,8 +7,7 @@ export interface Passage {
   text: string;
 }
 
-// A minute of transcript each, the size OV-267 measured: a citation lands within a minute
-// (docs/architecture/in-app-chat.md, "Retrieval, measured first").
+// Why a minute: docs/architecture/in-app-chat.md, "Retrieval, measured first".
 export const PASSAGE_WINDOW_MS = 60_000;
 
 export const transcriptPassages = (segments: readonly TranscriptSegment[], windowMs = PASSAGE_WINDOW_MS): Passage[] => {

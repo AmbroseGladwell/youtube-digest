@@ -18,33 +18,7 @@ import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 
-// OV-309's check of the real chat endpoint against OV-267's question set, and a worst case:
-// 30-question conversations on a source over two hours with another conversation sent. The
-// API runs in process on an in-memory Postgres and asks OpenAI on our key, so every number
-// below is the endpoint's own: its prompt, its citations, its log line
-// (docs/features/chats.md, "Measured through the endpoint").
-//
-//   node --env-file=../../.env dist/scripts/chatHarnessCheck.js <OV-267 chat data dir> <out.json> [long-only <questions> | profile | product]
-//
-// long-only skips the question set and asks each long conversation only its first few questions:
-// enough to see whether a second conversation reads the transcript from the cache.
-//
-// Since OV-319 each source's overview.md goes in the prompt as its real overview, and
-// overview-questions.json, where present, adds questions answered from the overview's own items,
-// each scored on whether the answer cites one of the parts it lists.
-//
-// A source with no transcript.json is a web page (OV-320): an article or a recipe page, answered
-// from its overview alone. Every answer is also checked for numbers the overview doesn't hold,
-// since amounts are code's job; the long-source part needs two sources with transcripts.
-//
-// profile (OV-343) asks every source's questions twice, once with nothing known about the reader
-// and once with READER's profile, plus two questions about the reader, and stops there. Answers
-// are kept side by side for reading; code scores the source rules and the "what do you know" one.
-//
-// product (OV-342) asks every source PRODUCT's questions and stops there: questions a general
-// assistant would answer by offering a photo, a link or the web, one about the rest of the
-// library, which a source with similar overviews should answer as the reader's own, and one about
-// where onboarding's answers go. Code scores each in productRight.
+// What it measures and how to run it: docs/features/chats.md, "Measured through the endpoint".
 
 interface Question {
   id: string;
@@ -126,8 +100,7 @@ const OFFERS_WHAT_CHAT_CANNOT =
   /\b(send|share|upload|attach|snap|take)\b[^.?!]{0,30}\b(photo|picture|image|screenshot|file|link|url)s?\b|\b(I|I'll|I can|let me)\b[^.?!]{0,20}\b(search|browse|look (it|that|them) up|check (online|the web))\b/i;
 const OWNED = /\byour (own )?(library|saved|overviews)\b|\byou(['’]ve| have)? saved\b/i;
 
-// x1/x2: no offer of what chat can't take. x3: with similar overviews, names one as the reader's own;
-// with none, doesn't claim any. x4: points to Settings › Personalisation.
+// x1/x2: no offer chat can't take. x3: names a similar overview as theirs, or none. x4: Settings.
 const productRight = (question: Question, answer: string, similarTitles: readonly string[]): boolean => {
   if (question.id === "x1" || question.id === "x2") {
     return !OFFERS_WHAT_CHAT_CANNOT.test(answer);
@@ -238,9 +211,7 @@ const loadSource = async (directory: string): Promise<Source> => {
   };
 };
 
-// Two of the library's longest, end to end: the library has nothing over 89 minutes. Questions
-// on both, and code-placed fillers through the whole, to fill a 30-question conversation. The
-// first's overview goes in the prompt, so the second's questions about its overview are left out.
+// The library has nothing over 89 minutes, so two of its longest are joined end to end.
 const longSource = (first: Source, whole: Source): Source => {
   const second = { ...whole, questions: whole.questions.filter((question) => question.kind !== "overviewPart") };
   const offset = (first.segments.at(-1)?.endMs ?? 0) + 1_000;
@@ -418,7 +389,7 @@ const main = async () => {
                 (moment) => moment !== null && cited.some((c) => c.startMs - TOLERANCE_MS <= moment && moment <= c.endMs + TOLERANCE_MS),
               )
             : null,
-        // With a profile, "what do you know" names it and Settings; with none, it says nothing yet and names Settings.
+        // "What do you know" names Settings, and the profile when there is one.
         mentioned: mentionedOf({ question, personalised: logged.personalised === true, answerable, text: answer.text }),
         citedRightPart:
           question.parts === undefined
@@ -427,7 +398,7 @@ const main = async () => {
                 question.parts!.some(({ part, index }) => cited.part === part && (index === null || cited.index === index)),
               ),
         generalKnowledge,
-        // OV-329: a fair question the source doesn't answer gets general knowledge; one off its subject is declined.
+        // OV-329: a fair question the source misses gets general knowledge; one off its subject is declined.
         rightOnGeneral: rightOnGeneralOf(question.kind, generalKnowledge),
         rightOnProduct:
           question.kind === "product"

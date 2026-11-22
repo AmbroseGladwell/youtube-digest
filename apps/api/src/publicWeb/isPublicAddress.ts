@@ -32,9 +32,7 @@ for (const [network, prefix] of [
   closed.addSubnet(network, prefix, "ipv6");
 }
 
-// Whether a reader's link may send our server there. Not loopback, not the machine's
-// neighbours on Fly's private network, not a cloud metadata address
-// (docs/features/pasted-article-links.md, "What the server will fetch").
+// The ranges closed: docs/features/pasted-article-links.md, "What the server will fetch".
 export const isPublicAddress = (address: string): boolean => {
   const family = isIP(address);
   if (family === 0) {

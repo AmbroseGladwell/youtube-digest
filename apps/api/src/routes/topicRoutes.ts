@@ -6,8 +6,7 @@ import { sendWritten } from "../http/writeHeaders.js";
 import { decideReplace } from "../records/decideReplace.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 
-// Create-only: nothing edits a topic yet, so nothing replaces one
-// (docs/features/sync-metadata.md, "Topic is stamped for the rule").
+// Why create-only: docs/features/sync-metadata.md, "What each record gets, and the one that gets nothing".
 export const topicRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
   app.post("/topics", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The topic");

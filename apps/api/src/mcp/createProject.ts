@@ -28,8 +28,7 @@ const Input = z.object({
     .describe(`Overviews to put in it from the start, by id. At most ${OVERVIEWS_PER_MARK}`),
 });
 
-// Made by the assistant and marked as its own; only the reader renames, archives or deletes
-// a project (docs/features/projects.md).
+// Only the reader renames, archives or deletes a project: docs/features/mcp-connector.md, "Projects".
 export const createProject = mcpTool({
   name: "create_project",
   title: "Make a project",

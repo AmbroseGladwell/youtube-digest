@@ -22,8 +22,7 @@ interface LiveRecordRow {
   body: Record<string, unknown>;
 }
 
-// Read whole and filtered in memory, because a filter can only be trusted on a record that
-// has been migrated to the current shape (docs/features/mcp-connector.md, "Search").
+// Filtered in memory, only once migrated: docs/features/mcp-connector.md, "Search".
 export const readLibrary = async (sql: SqlClient, accountId: AccountId): Promise<Library> => {
   const rows = await sql.query<LiveRecordRow>(
     `select kind, schema_version, body from records

@@ -12,8 +12,7 @@ declare module "fastify" {
 
 const WHOLE_NUMBER = /^[1-9]\d*$/;
 
-// One number a client says about itself, from which the server derives everything else
-// it needs to know about that client's versions (docs/architecture/api.md).
+// Why one number: docs/architecture/api.md, "Versions on the wire".
 export const clientVersionPlugin = fp(async (app) => {
   app.decorateRequest("client", null);
   app.addHook("onRequest", async (request, reply) => {

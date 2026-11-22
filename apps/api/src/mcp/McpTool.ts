@@ -11,29 +11,25 @@ export interface McpToolContext {
   accountId: AccountId;
   transcripts: TranscriptsRepository;
   records: RecordsRepository;
-  // Absent where no embedder is configured; a query then matches by word only, and says so.
+  // Null without an embedder: docs/features/search-by-meaning.md, "Degrading visibly".
   meaning: MeaningSearch | null;
   clock: () => Date;
   log: FastifyBaseLogger;
-  // Who is calling, named as it registered, for marking what it adds (docs/features/projects.md).
+  // For marking what it adds: docs/features/mcp-connector.md, "Projects".
   connection: { id: string; name: string };
-  // Whether the connection's scope lets it write (docs/features/mcp-connector.md, "Scopes").
+  // From the connection's scope: docs/features/mcp-connector.md, "Scopes".
   writes: boolean;
 }
 
-// `overviews` is how many a call returned or marked, the one number about a call that is
-// logged besides its name: never the query or the content (docs/features/mcp-connector.md).
+// What a call logs, never the query or content: docs/features/mcp-connector.md, "Logging".
 export interface McpToolOutcome {
   text: string;
   isError?: boolean;
   overviews?: number;
-  // The one project a call read or made, and whether it has a purpose, so the logs can say
-  // whether a purpose makes a project read more (docs/features/projects.md, "Measures").
+  // Logged to measure whether a purpose makes a project read more: docs/features/projects.md, "Measures".
   project?: { id: string; hasPurpose: boolean };
 }
 
-// A tool that writes, or reads the profile, is offered only to a connection whose scope allows
-// it (docs/features/mcp-connector.md, "Scopes").
 export interface McpTool {
   name: string;
   title: string;
@@ -53,14 +49,12 @@ export interface McpToolDefinition<Input extends z.ZodObject> {
   description: string;
   input: Input;
   writes?: boolean;
-  // False for a tool whose second identical call does not leave things as the first did.
   idempotent?: boolean;
   readsProfile?: boolean;
   run(input: z.infer<Input>, context: McpToolContext): Promise<McpToolOutcome>;
 }
 
-// Arguments that do not fit are answered as a failed call rather than a protocol error, so
-// the assistant reads why and can try again (MCP 2025-11-25, "Error Handling").
+// Bad arguments fail the call, not the protocol: docs/features/mcp-connector.md, "The endpoint".
 export const mcpTool = <Input extends z.ZodObject>(tool: McpToolDefinition<Input>): McpTool => {
   return {
     name: tool.name,

@@ -5,10 +5,7 @@ export interface WrapToWidthInput {
   measure: (line: string) => number;
 }
 
-// Wrapped against measured widths rather than a character count, because a guessed width
-// overflows the card on exactly the long titles that most need wrapping
-// (docs/prototype/constraints.md). A word too long to fit on a line of its own is left to
-// overhang rather than broken mid-word.
+// Measured widths, not a character count: docs/features/sharing.md, "The card image".
 export const wrapToWidth = ({ text, maxWidth, maxLines, measure }: WrapToWidthInput): string[] => {
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];

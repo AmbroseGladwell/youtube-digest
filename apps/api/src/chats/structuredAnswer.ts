@@ -12,8 +12,6 @@ import { withoutCitationMarks } from "./withoutCitationMarks.js";
 
 type SourceRef = ChatReply["introSources"][number];
 
-// How a source relates: the side it takes, as the model put it in a few words, cut at a word
-// rather than mid-word, or "Based on" when it backs the section (OV-362).
 export const relationOf = (relation: string): string => {
   const said = relation.trim();
   if (said === "" || /^supports?\b/i.test(said)) {
@@ -27,13 +25,9 @@ export const relationOf = (relation: string): string => {
   return atWord === "" ? said.slice(0, MAX_SOURCE_RELATION_LENGTH) : atWord;
 };
 
-// Chat never writes an em dash (OV-362): the prompt says so, and this catches the ones it writes
-// anyway, as a comma, or a full stop's worth of comma where it opened a clause.
 export const withoutDashes = (text: string): string => text.replace(/\s*—\s*/g, ", ").replace(/,\s*,/g, ",");
 
-// The reply as it is stored and shown, the same for every chat (OV-354): text without any ids the
-// model wrote into it, and each source cited by code, an id it wasn't given dropped. A source citing
-// two places, such as an overview's item and its minute, gives one chip for each.
+// How a reply is stored and cited: docs/features/chats.md, "One shape for every answer".
 export const structuredAnswer = (
   reply: Pick<ChatReply, "intro" | "introSources" | "sections" | "takeaway">,
   cite: (ids: readonly string[]) => ChatCitation[],
@@ -86,7 +80,6 @@ export const structuredAnswer = (
   };
 };
 
-// The answer as one text: what copy, a hand-off and the next question's history read.
 export const flattenedAnswer = (sections: ChatAnswerSections): string => {
   return [
     sections.intro,

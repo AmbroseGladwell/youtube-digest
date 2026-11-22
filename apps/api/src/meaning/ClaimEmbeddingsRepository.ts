@@ -46,9 +46,7 @@ export interface RecordFailureOptions {
   now: Date;
 }
 
-// Embeddings are derived data kept apart from the record, never on the changes feed, and
-// keyed to the rev they were made from, so a regenerated overview is re-embedded rather
-// than kept stale (docs/features/search-by-meaning.md, "Storage").
+// Why kept apart and keyed to the rev: docs/features/search-by-meaning.md, "Storage".
 export class ClaimEmbeddingsRepository {
   #sql: SqlClient;
 
@@ -137,9 +135,7 @@ export class ClaimEmbeddingsRepository {
     return rows.length;
   }
 
-  // One reader's claims only, compared against the current rev of each overview: a search
-  // never reaches another account, and never an embedding the record has moved past.
-  // within narrows it to those overviews, such as a project's members.
+  // Current revs of one reader's overviews only; within narrows it, as to a project's members.
   async closest(
     accountId: AccountId,
     vector: number[],

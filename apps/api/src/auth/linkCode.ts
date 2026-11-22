@@ -1,7 +1,6 @@
 import { randomInt } from "node:crypto";
 
-// No 0, O, 1, I or L, so a code read off a screen and typed into a side panel has no
-// two characters that look alike (docs/features/sign-in.md).
+// No look-alike characters: docs/features/sign-in.md, "Decisions, and why".
 const ALPHABET = "ABCDEFGHJKMNPQRSTVWXYZ23456789";
 const LENGTH = 8;
 

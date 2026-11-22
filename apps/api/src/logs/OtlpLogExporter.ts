@@ -18,10 +18,7 @@ export interface OtlpLogExporterOptions {
 
 const SCOPE = { name: SERVICE_NAME };
 
-// pino's lines, batched and posted as OTLP/HTTP JSON to whatever the OTEL_* variables name.
-// No SDK and no worker thread: a slow or absent destination costs held lines, never a
-// request, and what is lost is said as a record of its own in the next batch that gets
-// through (docs/architecture/errors-and-logs.md, "Shipping the server's logs").
+// Why no SDK or worker: docs/architecture/errors-and-logs.md, "Shipping the server's logs".
 export class OtlpLogExporter {
   readonly #options: Required<Omit<OtlpLogExporterOptions, "onFailure">> & Pick<OtlpLogExporterOptions, "onFailure">;
   #held: OtlpLogRecord[] = [];

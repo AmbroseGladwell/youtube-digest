@@ -11,17 +11,13 @@ const TRANSCRIPT_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
 
 const Params = z.object({ videoId: VideoId });
 
-// Another kind's key holds a colon (docs/features/source-identity.md). An episode's words the
-// account hasn't uploaded are fetched afresh from where they were found (podcast-transcripts.md).
+// Another kind's key holds a colon: docs/features/source-identity.md, "Why YouTube's key is unprefixed".
 const isYouTubeKey = (key: string): boolean => !key.includes(":");
 
-// An episode's words by its key alone, fetched afresh from where they were found, for a reader's
-// device that holds the key but not the words (docs/features/podcast-transcripts.md).
+// docs/features/podcast-transcripts.md, "Each reader's own copy".
 export type EpisodeWords = (key: SourceKey, accountId: AccountId, log: FastifyBaseLogger) => Promise<StoredTranscript | null>;
 
-// A video's captions our server fetches for an account that has a note on it but no copy yet:
-// a copy saved from a shared link, or a device that never uploaded one. Null where our server
-// doesn't fetch, or couldn't (docs/features/transcript-storage.md, "Each account's own copy").
+// Fetched for the account: docs/features/transcript-storage.md, "Following the reader across devices".
 export type VideoWords = (videoId: VideoId, accountId: AccountId, log: FastifyBaseLogger) => Promise<StoredTranscript | null>;
 
 export interface TranscriptRoutesOptions {
@@ -31,7 +27,6 @@ export interface TranscriptRoutesOptions {
 }
 
 export const transcriptRoutes = (app: FastifyInstance, { transcripts, episodeWords, videoWords }: TranscriptRoutesOptions): void => {
-  // The words an account has a note on but no copy of, fetched for it and kept as its own.
   const fetchedFor = async (accountId: AccountId, videoId: VideoId, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {
     if (!(await transcripts.hasLiveNote(accountId, videoId))) {
       return null;
@@ -77,8 +72,7 @@ export const transcriptRoutes = (app: FastifyInstance, { transcripts, episodeWor
     return reply.status(204).send();
   });
 
-  // The shared cache is gone (OV-295). An older client still asks it before fetching for itself,
-  // and is told there is nothing, so it carries on down its own rungs.
+  // The shared cache is gone (OV-295); an older client still asks before fetching for itself.
   app.get("/shared-transcripts/:videoId", { config: { public: true } }, async () => {
     throw new ApiError("not_found", "No transcript is kept for every reader");
   });

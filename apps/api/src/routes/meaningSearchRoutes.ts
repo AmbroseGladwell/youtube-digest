@@ -6,8 +6,7 @@ import type { MeaningSearch } from "../meaning/MeaningSearch.js";
 
 const MeaningQuery = z.object({ query: z.string().trim().min(1).max(MEANING_QUERY_MAX_LENGTH) });
 
-// Absent an embedder, the route still answers, unavailable, so the app shows word matches
-// and says meaning is off rather than failing (docs/features/search-by-meaning.md).
+// Why it answers without an embedder: docs/features/search-by-meaning.md, "Degrading visibly".
 export const meaningSearchRoutes = (app: FastifyInstance, meaning: MeaningSearch | null): void => {
   app.get("/search/meaning", async (request): Promise<MeaningSearchResponse> => {
     const { query } = parseOrThrow(MeaningQuery, request.query, "The search");

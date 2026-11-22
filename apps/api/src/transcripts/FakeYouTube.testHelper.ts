@@ -14,7 +14,6 @@ export interface FakeYouTubeRequest {
 export interface FakeYouTube {
   fetches: ServiceFetches;
   requests: FakeYouTubeRequest[];
-  // What YouTube says to each route, which a test can change between calls.
   answers: { direct: YouTubeAnswer; proxy: YouTubeAnswer };
   sessionsClosed: number;
 }
@@ -42,8 +41,6 @@ const playerFor = (videoId: string, answer: YouTubeAnswer): PlayerResponse => {
   return { ...base, videoDetails };
 };
 
-// YouTube as our server sees it, from our own address and through the proxy, answering
-// each route as the test says (docs/conventions/backend-testing-guide.md).
 export const makeFakeYouTube = (answers: FakeYouTube["answers"] = { direct: "captions", proxy: "captions" }): FakeYouTube => {
   const fake: FakeYouTube = { fetches: undefined!, requests: [], answers, sessionsClosed: 0 };
   let sessions = 0;

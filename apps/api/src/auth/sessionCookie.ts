@@ -4,9 +4,7 @@ export interface SessionCookieOptions {
   secure: boolean;
 }
 
-// The web app's transport: the token in an HttpOnly cookie on the API's own origin.
-// SameSite=Lax keeps it off cross-site requests, and every write already needs a header
-// no cross-site form can set (docs/features/sign-in.md).
+// The cookie's attributes and why: docs/features/sign-in.md, "Decisions, and why".
 export const readSessionCookie = (cookieHeader: string | undefined): string | null => {
   if (cookieHeader === undefined) {
     return null;

@@ -11,10 +11,7 @@ export const changedOnLine = (changedAt: string): string => {
   return `Changed on ${at.getUTCDate()} ${MONTHS[at.getUTCMonth()]} ${at.getUTCFullYear()} at ${pad(at.getUTCHours())}:${pad(at.getUTCMinutes())} UTC.`;
 };
 
-// Design 14h. Every mail is the OV-88 shell with its own words; the code mails have no
-// button, and the old address's notice has one, its way back
-// (docs/features/account-changes.md, "The mails"). The step-up's mail says what the code
-// is about to allow (design 14h·2, docs/features/account-deletion.md).
+// Each mail's words: docs/features/account-changes.md, "The mails".
 export const accountEmail = (mail: AccountMail, siteUrl: string): EmailContent => {
   switch (mail.kind) {
     case "verificationCode":

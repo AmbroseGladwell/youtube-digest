@@ -1,9 +1,7 @@
 import type { SourceKey } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 
-// Where an episode's words can be had: the transcript its feed links, or the YouTube video it was
-// matched to. A fact about the episode, shared between readers so the search isn't repeated, and
-// never the words, which each reader fetches for themselves (docs/features/podcast-transcripts.md).
+// Why this, never the words, is shared: docs/features/podcast-transcripts.md, "Each reader's own copy".
 export type EpisodeWordSource = { via: "tag"; url: string; type: string } | { via: "youtube"; videoId: string };
 
 export interface KnownWordSource {

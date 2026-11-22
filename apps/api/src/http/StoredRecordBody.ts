@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { UpdatedAt } from "./writeHeaders.js";
 
-// A whole record as a client stores it: its own fields, plus the two stamps the local
-// write seam put on it (docs/features/sync-metadata.md).
+// The two stamps: docs/features/sync-metadata.md, "The write seam stamps; the migration seam does not".
 export const StoredRecordBody = z
   .object({ schemaVersion: z.int().min(1), updatedAt: UpdatedAt })
   .passthrough()

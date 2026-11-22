@@ -7,10 +7,7 @@ export interface WebAppPluginOptions {
   root: string;
 }
 
-// The other half of the one-origin decision: the built web app served by the process
-// that answers /api. Hashed assets are immutable for a year; index.html must revalidate,
-// or a tab would keep HTML that points at bundles a deploy has deleted
-// (docs/features/record-migrations.md, docs/architecture/deploy.md).
+// Why index.html revalidates: docs/architecture/deploy.md, "The API serves the web app".
 export const webAppPlugin = fp<WebAppPluginOptions>(async (app, { root }) => {
   await app.register(fastifyStatic, {
     root,

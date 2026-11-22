@@ -6,15 +6,12 @@ import type { AccountMail, MagicLinkMail, Mailer } from "./Mailer.js";
 export interface BrevoMailerOptions {
   apiKey: string;
   from: string;
-  // The site the account mails name in their footer, where the web app is served from.
   siteUrl: string;
   fetch?: typeof fetch | undefined;
 }
 
 export class MailDeliveryError extends Error {}
 
-// Brevo over its one HTTP call, with no SDK: a transactional message is one POST
-// (docs/features/sign-in.md).
 export const createBrevoMailer = ({ apiKey, from, siteUrl, fetch: fetchImpl = globalThis.fetch }: BrevoMailerOptions): Mailer => {
   const sender = parseMailSender(from);
   const send = async (to: string, { subject, text, html }: EmailContent): Promise<void> => {

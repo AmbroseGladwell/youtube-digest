@@ -50,9 +50,6 @@ const flatten = (prefix: string, value: unknown, into: OtlpKeyValue[]): void => 
   }
 };
 
-// One pino line as an OpenTelemetry log record: pino's level becomes a severity, its message
-// the body, and every other field an attribute, nested ones by dotted path, so `reqId` and
-// `failedRequestId` can be searched for directly (docs/architecture/errors-and-logs.md).
 export const otlpLogRecord = (line: Record<string, unknown>, observedAt: Date): OtlpLogRecord => {
   const level = typeof line.level === "number" ? line.level : 30;
   const [, severityNumber, severityText] = SEVERITIES.find(([minLevel]) => level >= minLevel)!;

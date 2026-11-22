@@ -2,18 +2,11 @@ import type { AccountMail, MagicLinkMail, Mailer } from "./Mailer.js";
 
 export interface RecordingMailer extends Mailer {
   sent: MagicLinkMail[];
-  // Every account mail: the step-up and new-address codes, the already-taken notice and the
-  // old address's notice with its revert link (docs/features/account-changes.md).
   accountMails: AccountMail[];
-  // The code the last account mail carried.
   lastAccountCode(): string;
-  // The token the last old-address notice's revert link carried.
   lastRevertToken(): string;
-  // The token the last link carried, as the reader would find it in the mail.
   lastToken(): string;
-  // The code the last mail carried, when it carried one.
   lastCode(): string;
-  // The next send fails the way the mail provider would.
   failNext(error: Error): void;
 }
 

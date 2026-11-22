@@ -23,8 +23,7 @@ const Input = z
 
 const titled = (titles: Map<string, string>, ids: string[]) => ids.map((id) => `- **${titles.get(id)}**`);
 
-// Idempotent: an overview already in, or already out, is left as it is and said so, so the
-// feed carries no empty change.
+// An overview already in, or already out, is left as it is, so the feed carries no empty change.
 export const changeProjectMembers = mcpTool({
   name: "change_project_members",
   title: "Add to or take from a project",

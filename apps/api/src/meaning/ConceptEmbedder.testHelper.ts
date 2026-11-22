@@ -17,8 +17,7 @@ const slot = (word: string): number => {
   return CONCEPT_DIMENSIONS + (hash % (EMBEDDING_DIMENSIONS - CONCEPT_DIMENSIONS));
 };
 
-// A stand-in for a real model: each group of words is one idea, so texts that share an idea
-// and no word land close together, and any other word only adds a little of its own.
+// Each word group is one idea, so texts sharing an idea and no word land close together.
 export const makeConceptEmbedder = (concepts: string[][]): ConceptEmbedder => {
   const embedder: ConceptEmbedder = {
     model: "concept-test",

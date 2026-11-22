@@ -28,8 +28,7 @@ const Params = z.object({ id: OverviewId });
 const TopicsPatch = z.object({ topicIds: z.array(TopicId), updatedAt: UpdatedAt });
 const TagsPatch = z.object({ tags: Filing.shape.tags, updatedAt: UpdatedAt });
 const CaptureReasonPatch = z.object({ captureReason: z.string().nullable(), updatedAt: UpdatedAt });
-// The asks are named again without their default: a default here would write an empty list over
-// every read or favourite patch.
+// No default on asked: one would write an empty list over every read or favourite patch.
 const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: true })
   .partial()
   .extend({ asked: AskedQuestions.optional(), updatedAt: UpdatedAt });
@@ -40,10 +39,7 @@ export const overviewRoutes = (
   transcripts: TranscriptsRepository,
   reservations: OverviewReservationsRepository,
 ): void => {
-  // A new overview is let in only with a reservation, a generation on our key, or a saved
-  // share behind it, so a skipped reservation buys an overview that never leaves the device.
-  // A replace is a regeneration, counted when it was reserved, and takes its slot here too
-  // so it can't be given back afterwards (docs/architecture/tiers.md, "Counting").
+  // Why a new overview needs a reservation behind it: docs/architecture/tiers.md, "Counting".
   app.post("/overviews", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The overview");
     const id = parseOrThrow(OverviewId, body.id, "The overview's id");
@@ -139,9 +135,7 @@ export const overviewRoutes = (
     return sendWritten(reply, written!);
   });
 
-  // The state row goes with the overview: ids are never reused, so a surviving state
-  // would be a permanent orphan on every device (docs/features/sync-api.md). Its membership
-  // records and chats go too.
+  // docs/features/sync-api.md, "Deletes are tombstones, and an overview takes its state with it".
   app.delete("/overviews/:id", async (request, reply) => {
     const { id } = parseOrThrow(Params, request.params, "The overview's id");
     const ifMatch = ifMatchOf(request);

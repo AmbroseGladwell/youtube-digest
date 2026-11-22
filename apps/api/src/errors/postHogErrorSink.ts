@@ -52,9 +52,7 @@ const serverExceptionList = ({ caughtBy, type, message, frames }: ServerError) =
   },
 ];
 
-// PostHog's error tracking, fed the same way as its events: an $exception per error.
-// A reader with no account gets an id of its own per error and no person in PostHog
-// (docs/architecture/errors-and-logs.md, "Who is reported").
+// Who gets a person: docs/architecture/errors-and-logs.md, "Who is reported".
 export const createPostHogErrorSink = ({ environment, newDistinctId = randomUUID, ...options }: PostHogErrorSinkOptions): ErrorSink => {
   return {
     capture: (errors, { accountId, context, geoAddress }: ErrorSource) =>

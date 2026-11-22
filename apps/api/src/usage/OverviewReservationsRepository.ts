@@ -4,10 +4,7 @@ import type { OverviewUsageRepository } from "./OverviewUsageRepository.js";
 
 export type OwnKeyReservation = { reserved: true } | { reserved: false; used: number; limit: number };
 
-// One row per overview an account may push as new: made on our key, saved from a share, or
-// reserved on the reader's own key before the device generates. `held_month` is set while
-// an own-key slot can still be given back, which is until the overview is pushed or made
-// on our key instead (docs/architecture/tiers.md, "Counting").
+// How reservations count: docs/architecture/tiers.md, "Counting".
 export class OverviewReservationsRepository {
   #sql: SqlClient;
   #usage: OverviewUsageRepository;
@@ -17,9 +14,7 @@ export class OverviewReservationsRepository {
     this.#usage = usage;
   }
 
-  // A second ask for the same overview while its slot is still held is the same reservation,
-  // so a retried request never counts twice. Once made, asking again is a regeneration and
-  // counts again.
+  // A retry while the slot is held is the same reservation; once made, asking again is a regeneration.
   async reserveOwn(now: Date, accountId: AccountId, overviewId: string, limit: number): Promise<OwnKeyReservation> {
     const [held] = await this.#sql.query(
       "select 1 from overview_reservations where account_id = $1 and overview_id = $2 and held_month is not null",
@@ -42,8 +37,6 @@ export class OverviewReservationsRepository {
     return { reserved: true };
   }
 
-  // Only a slot not yet pushed can be given back, so a reservation can't be released once
-  // its overview is in the account.
   async release(accountId: AccountId, overviewId: string): Promise<boolean> {
     const [row] = await this.#sql.query<{ held_month: string; made: boolean }>(
       `with held as (
@@ -77,8 +70,7 @@ export class OverviewReservationsRepository {
     await this.#grant(now, accountId, overviewId, "share");
   }
 
-  // Taken as the overview is pushed: true when the account may hold it as new. The slot is
-  // spent from here on.
+  // True when the account may hold the overview as new; the slot is spent from here.
   async claim(accountId: AccountId, overviewId: string): Promise<boolean> {
     const rows = await this.#sql.query(
       `update overview_reservations set made = true, held_month = null

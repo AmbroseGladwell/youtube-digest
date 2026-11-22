@@ -14,8 +14,7 @@ export interface PlaylistRoutesOptions {
   clock: () => Date;
 }
 
-// Anyone may look a playlist up, signed in or not: following one is for everyone
-// (docs/features/playlists.md). Without a YouTube key it says it is unavailable.
+// Why anyone may look one up: docs/features/playlists.md, "Looking a playlist up".
 export const playlistRoutes = (app: FastifyInstance, { reader, clock }: PlaylistRoutesOptions): void => {
   app.get(
     "/playlists/:id",

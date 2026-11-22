@@ -17,9 +17,7 @@ export interface StartAuthorizationOptions {
   now: Date;
 }
 
-// A bad client or redirect URI is shown to the reader and never redirected to, so this can't
-// be used to bounce someone to an address of the caller's choosing. Anything else wrong goes
-// back to the client as an error on its own redirect (RFC 6749 §4.1.2.1).
+// A bad client or redirect URI is never redirected to: docs/features/mcp-connector.md, "Authorizing".
 export const startAuthorization = async (
   sql: SqlClient,
   query: Query,

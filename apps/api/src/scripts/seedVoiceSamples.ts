@@ -10,8 +10,7 @@ import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { ConfigError, loadConfig } from "../loadConfig.js";
 
-// Fly's release_command, run before the new machines start: why it migrates, renders in the
-// deploy and never fails it is in docs/features/narration-voice.md, "The samples".
+// Why it migrates, renders in the deploy and never fails: docs/features/narration-voice.md, "The samples".
 const log = (line: object) => console.log(JSON.stringify(line));
 
 let config;

@@ -15,10 +15,7 @@ type FetchPublicWeb = ReturnType<typeof createPublicWebFetch>;
 export interface PodcastReaderOptions {
   fetchPublicWeb: FetchPublicWeb;
   mostFeedBytes?: number;
-  // Every Apple call shares one budget and its answers are kept (callBudget.ts); without it,
-  // as in tests, each call goes straight to Apple.
   appleBudget?: CallBudgetOptions;
-  // The open directory asked before Apple's on a Spotify link, or null to ask only Apple's.
   podcastIndex?: ShowDirectory | null;
 }
 
@@ -53,7 +50,6 @@ export interface FetchedPodcastPage {
   isFeed: boolean;
 }
 
-// docs/features/podcast-links.md
 export const createPodcastReader = ({
   fetchPublicWeb,
   mostFeedBytes = MOST_FEED_BYTES,
@@ -132,9 +128,7 @@ export const createPodcastReader = ({
     return episodeFrom(show.feedUrl, read, linkFrom, show.showName);
   };
 
-  // Apple's link names its own episode id, which only its directory maps to the feed's episode,
-  // and only for the show's newest 200. Apple's web pages aren't read, so an older episode from an
-  // Apple link says so and points to another link (OV-297, the terms review).
+  // Why only Apple's newest 200 match: docs/features/podcast-links.md, "From a link to an episode".
   const fromApple = async (showId: string, episodeId: string): Promise<PodcastRead> => {
     const listing = await directory.showWithEpisodes(showId);
     if (listing === null) {
@@ -150,9 +144,7 @@ export const createPodcastReader = ({
     return fromFeed(listing.show, listed, listed.guid, "apple");
   };
 
-  // The show by the name Spotify's page gives, in each directory in turn until one knows it: an
-  // exact name only, and at most three of them, each read from its own feed. A directory that
-  // fails or doesn't know the show hands on to the next (docs/features/podcast-links.md).
+  // How a Spotify link's show is found: docs/features/podcast-links.md, "From a link to an episode".
   const fromSpotify = async (episodeId: string): Promise<PodcastRead> => {
     const page = await fetchPage(`https://open.spotify.com/episode/${episodeId}`);
     if ("failure" in page) {
@@ -201,9 +193,7 @@ export const createPodcastReader = ({
     return failed("no-public-feed", facts.showName);
   };
 
-  // A page that names no feed: its title, searched in Apple's directory, accepted only where an
-  // episode has exactly that title and the page names the episode's show as well
-  // (docs/features/podcast-links.md, "A show's own episode page").
+  // Why both title and show must match: docs/features/podcast-links.md, "From a link to an episode".
   const fromDirectorySearch = async (pageTitles: readonly string[]): Promise<PodcastRead> => {
     const pageText = episodeTitleKey(pageTitles.join(" "));
     const episodeTitles = [...new Set(pageTitles.flatMap((title) => [title, title.split(/\s+[-|–—]\s+/)[0]!]))].filter(

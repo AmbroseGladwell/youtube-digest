@@ -21,9 +21,7 @@ export const undiciYouTubeFetch =
     return { status: response.status, body: await response.text() };
   };
 
-// The player call and the caption fetch it signs have to leave from one exit address, so
-// each resolve gets its own agent on its own sticky session
-// (docs/architecture/server-side-transcripts.md).
+// Sticky sessions: docs/architecture/server-side-transcripts.md, "The provider: Decodo, behind one URL".
 export const proxiedYouTubeFetch =
   (proxyUrl: string) =>
   (session: string): ProxiedYouTubeFetch => {

@@ -5,8 +5,7 @@ export interface MailSender {
 
 const NAMED = /^\s*(.*?)\s*<([^<>\s]+)>\s*$/;
 
-// MAIL_FROM is written the way a mail client shows it, "The Overview <signin@example.com>"
-// or a bare address, and Brevo wants the two apart (docs/features/sign-in.md).
+// MAIL_FROM may be "Name <address>" or a bare address, and Brevo wants the two apart.
 export const parseMailSender = (from: string): MailSender => {
   const named = NAMED.exec(from);
   if (named !== null) {

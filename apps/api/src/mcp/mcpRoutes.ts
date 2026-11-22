@@ -24,8 +24,7 @@ const onlyPost = (reply: FastifyReply) =>
     .header("allow", "POST")
     .send(jsonRpcError(null, JSON_RPC_ERRORS.invalidRequest, "This server sends nothing unasked: POST each message"));
 
-// Runs after connectionAccessPlugin, so every request here carries a connection
-// (docs/features/mcp-connector.md, "The endpoint").
+// Registered after connectionAccessPlugin, so every request here carries a connection.
 export const mcpRoutes = (app: FastifyInstance, { sql, transcripts, records, meaning, clock, appOrigin }: McpRoutesOptions): void => {
   app.post("/mcp", async (request, reply) => {
     reply.header("cache-control", "no-store");

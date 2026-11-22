@@ -110,7 +110,6 @@ const setUp = async (
   };
 };
 
-// The stored answer without its structured shape, which tests of the shape check on their own.
 const withoutSections = (message: ChatMessage | undefined) => {
   const { sections: _sections, ...rest } = message as Extract<ChatMessage, { from: "answer" }>;
   return rest;
@@ -848,7 +847,7 @@ const keptWithTranscript = async (setup: Setup, title: string, segments: Array<{
 
 const minuteOf = (index: number, text: string) => ({ text, startMs: index * 60_000, endMs: index * 60_000 + 50_000 });
 
-test("the best minutes of the overviews a question reads go with it, each with its neighbours, and an answer cites one as a time (OV-352, OV-362)", async (t) => {
+test("the best minutes of the overviews a question reads go with it, each with its neighbours, never from one it doesn't read, and an answer cites one as a time (OV-352, OV-362)", async (t) => {
   const { lines, logger } = recordingLogger();
   const setup = await setUp(t, [answer("Take 300 milligrams an hour before bed.", ["S1.p3", "S1.p99", "p2"], [], true)], { logger });
   const sleep = await keptWithTranscript(setup, "Sleep better", [
@@ -877,7 +876,6 @@ test("the best minutes of the overviews a question reads go with it, each with i
     /## S1: Sleep better\n\n\[S1\.p2 1:00\] Recovery needs sleep\.\n\[S1\.p3 2:00\] Take 300 milligrams of ashwagandha an hour before bed\.\n\[S1\.p4 3:00\] Then keep the room cool\./,
   );
   assert.doesNotMatch(block, /Creatine/);
-  // Words alone never add an overview: one the question doesn't read sends no minutes.
   assert.doesNotMatch(block, /Ashwagandha is popular for stress/);
   assert.ok(!JSON.stringify(eventsOf(response.body)).includes(unread.id));
   const done = answered(response.body);
@@ -992,15 +990,14 @@ test("every answer is stored in the shared shape: a simple one as its intro with
 });
 
 test("only an overview close to the question is found for it, never the merely nearest (OV-362)", async (t) => {
-  // Two directions: the question and anything about the close note lie along one; everything else
-  // sits at 0.38 to it, the band where the owner's unrelated overviews scored.
+  const unrelatedOverviewSimilarity = 0.38;
   const vectorOf = (text: string) => {
     const vector = new Array<number>(EMBEDDING_DIMENSIONS).fill(0);
     if (/close/i.test(text)) {
       vector[0] = 1;
     } else {
-      vector[0] = 0.38;
-      vector[1] = Math.sqrt(1 - 0.38 ** 2);
+      vector[0] = unrelatedOverviewSimilarity;
+      vector[1] = Math.sqrt(1 - unrelatedOverviewSimilarity ** 2);
     }
     return vector;
   };

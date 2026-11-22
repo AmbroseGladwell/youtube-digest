@@ -23,10 +23,7 @@ const ownerFieldOf = (owner: ChatOwner): Record<string, string> => {
   return owner.kind === "project" ? { projectId: owner.id } : {};
 };
 
-// The server writes a chat, since the answer is its own, and devices get it down the feed. Only
-// while its owner, an overview or a project, is there, so a chat can never outlive the sweep that
-// follows its owner's delete; a library chat has no owner to wait on. Never onto a conversation
-// the reader deleted (docs/features/chats.md).
+// When the server may write a chat: docs/features/chats.md, "The server writes it".
 export const appendChatMessages = async (
   records: RecordsRepository,
   accountId: AccountId,

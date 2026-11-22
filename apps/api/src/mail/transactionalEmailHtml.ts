@@ -4,12 +4,8 @@ export interface TransactionalEmailSlots {
   greeting: string | null;
   heading: string;
   body: string;
-  // Null for a mail whose whole content is a code to type.
   action: { label: string; link: string } | null;
-  // A code to type instead of following the link, said under the link with what it is for;
-  // with no lead, the code stands alone under the body.
   code: { lead: string | null; value: string } | null;
-  // The code above the link, with this line between them (327l-3): the code is what to use.
   codeFirst?: { actionLead: string } | undefined;
   notes: string[];
   reason: string;
@@ -40,8 +36,7 @@ const button = "#CF4718";
 const serif = "'Gloock', Georgia, 'Times New Roman', serif";
 const sans = "'Figtree', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
 
-// Inboxes fill the preview line from the body when the preview text runs out, which would
-// pull in "The Overview" from the header.
+// Inboxes pad a short preview from the body, which would pull in the header's "The Overview".
 const previewPadding = "&#847;&zwnj;&nbsp;".repeat(60);
 
 const styles = `
@@ -73,8 +68,6 @@ const styles = `
   [data-ogsc] .ov-link { color: ${dark.link} !important; }
 `;
 
-// Design OV-88: one shell every transactional mail fills, so a later mail (an email change,
-// a receipt) brings only its words (docs/features/sign-in.md, "The mail").
 export const transactionalEmailHtml = (slots: TransactionalEmailSlots): string => {
   const site = escapeHtml(slots.siteUrl);
   const siteLabel = escapeHtml(new URL(slots.siteUrl).host);

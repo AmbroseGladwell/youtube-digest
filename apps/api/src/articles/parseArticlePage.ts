@@ -13,8 +13,7 @@ const documentOf = (html: string): Document => {
   return document as unknown as Document;
 };
 
-// parse5 lays the page out as a browser would before linkedom builds it; neither runs script
-// or loads anything (docs/features/pasted-article-links.md, "Parsing").
+// Why parse5 then linkedom: docs/features/pasted-article-links.md, "Parsing".
 export const parseArticlePage = (html: string, url: string): ArticleRead => {
   return readArticle(documentOf(serialize(parse(html))), url);
 };

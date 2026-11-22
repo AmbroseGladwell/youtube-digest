@@ -38,8 +38,6 @@ const staleSession = async (testApp: TestApp, email: string): Promise<TestSessio
   return session;
 };
 
-// Every kind of row an account can own, written straight into the tables so the sweep
-// below has something to find in each of them.
 const seedEverything = async (testApp: TestApp, session: TestSession, email: string, narrationKey: string): Promise<void> => {
   const { sql, clock } = testApp;
   const now = clock.now.toISOString();
@@ -144,8 +142,7 @@ const seedEverything = async (testApp: TestApp, session: TestSession, email: str
   ]);
 };
 
-// Every column that names an account, read from the schema rather than from a list that
-// could go stale; the two rows that are meant to outlive the account are the exceptions.
+// Read from the schema rather than a list that could go stale.
 const rowsNamingAccount = async (testApp: TestApp, accountId: string): Promise<Record<string, number>> => {
   const columns = await testApp.sql.query<{ table_name: string; column_name: string }>(
     `select table_name, column_name from information_schema.columns

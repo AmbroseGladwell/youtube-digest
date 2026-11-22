@@ -5,18 +5,15 @@ import { transcriptFault } from "../transcripts/transcriptFault.js";
 import type { PodcastTranscriptionJob, PodcastTranscriptionsRepository } from "./PodcastTranscriptionsRepository.js";
 import type { TranscribedAudio, Transcriber } from "./Transcriber.js";
 
-// How long a reader waits for a card before the attempt fails and costs them nothing, and the
-// longest a started job may run (docs/features/speech-to-text.md, "The choice").
+// Why these limits: docs/features/speech-to-text.md, "The choice".
 export const START_WAIT_MS = 2 * 60 * 1000;
 export const RUN_LIMIT_MS = 15 * 60 * 1000;
 const POLL_MS = 2000;
 const LEASE_MS = 60 * 1000;
 const HOST_ERRORS_TOLERATED = 5;
-// The reader's device collects the words within a day or asks again.
 const KEEP_FINISHED_MS = 24 * 60 * 60 * 1000;
 
-// Modal's list prices per GPU hour, checked 15 Nov 2026; a card not listed is costed at the
-// dearest one the app asks for, so a cost is never under-recorded.
+// Modal's list prices, 15 Nov 2026; an unlisted card costs the dearest, so a cost is never under-recorded.
 export const GPU_DOLLARS_PER_HOUR: Record<string, number> = {
   "Tesla T4": 0.59,
   "NVIDIA L4": 0.8,
@@ -57,9 +54,6 @@ const payerOf = (caller: string): CostPayer => {
 
 const seconds = (from: Date, to: Date) => Math.round((to.getTime() - from.getTime()) / 100) / 10;
 
-// Up to `concurrency` jobs at once, each submitted to the GPU host and asked after until its words
-// come back; the work is the host's, so a worker here mostly waits (docs/features/speech-to-text.md,
-// "The server rung").
 export class TranscriptionQueue {
   #options: TranscriptionQueueOptions;
   #sleep: (ms: number) => Promise<void>;

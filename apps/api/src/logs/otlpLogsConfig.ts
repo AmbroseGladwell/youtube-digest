@@ -25,8 +25,7 @@ export class OtlpLogsConfigError extends Error {}
 
 const DEFAULT_SERVICE_NAME = "overview-api";
 
-// "key=value,key2=value2", values percent-encoded: the OpenTelemetry spec's one format for
-// both the headers and the resource attributes.
+// "key=value,key2=value2", percent-encoded: the OpenTelemetry spec's format for headers and attributes.
 const keyValueList = (raw: string | undefined, name: string): Record<string, string> => {
   const entries: Array<[string, string]> = [];
   for (const pair of (raw ?? "").split(",")) {
@@ -47,10 +46,7 @@ export interface OtlpLogsConfigOptions {
   environment: string;
 }
 
-// Where the server's logs are shipped, by the standard OTEL_* variables so another
-// destination needs no code change. With none set, PostHog's own log ingest, under the
-// project token analytics already uses; with OTEL_LOGS_EXPORTER=none, nowhere
-// (docs/architecture/errors-and-logs.md, "Shipping the server's logs").
+// Defaults and opting out: docs/architecture/errors-and-logs.md, "Shipping the server's logs".
 export const otlpLogsConfig = (env: OtlpLogsEnv, { postHog, environment }: OtlpLogsConfigOptions): OtlpLogsConfig | null => {
   if (env.OTEL_LOGS_EXPORTER?.trim() === "none") {
     return null;

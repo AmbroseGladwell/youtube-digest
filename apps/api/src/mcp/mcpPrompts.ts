@@ -12,8 +12,7 @@ export interface McpPrompt {
   text(args: Record<string, string>): string;
 }
 
-// So that reading many overviews at once is something a reader can find in a client that
-// lists prompts, rather than something they have to know to ask for.
+// So a client that lists prompts shows readers they can read many overviews at once.
 export const mcpPrompts: readonly McpPrompt[] = [
   {
     name: "compare_topic",

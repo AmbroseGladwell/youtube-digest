@@ -33,23 +33,15 @@ export interface TestApp {
   app: FastifyInstance;
   sql: SqlClient;
   clock: TestClock;
-  // Every magic link the app sent, as the reader would receive it.
   mailer: RecordingMailer;
-  // Every batch of checked events the app passed on, as PostHog would receive them.
   eventSink: RecordingEventSink;
-  // Every batch of checked client errors, as PostHog's error tracking would receive them.
   errorSink: RecordingErrorSink;
-  // Every distinct id a deleted account asked PostHog to erase.
   personEraser: RecordingPersonEraser;
-  // The TTS service and the audio store narration goes through, and the queue a test drains
-  // itself rather than race a background worker.
   narrator: ScriptedNarrator;
   audioStore: MemoryAudioStore;
   drainAudio(): Promise<void>;
   drainEmbeddings(): Promise<void>;
-  // Runs every queued transcription to its end; each wait between polls moves the clock on.
   drainTranscriptions(): Promise<void>;
-  // The deploy's release step, at the test's clock.
   seedVoiceSamples(): Promise<SeededVoiceSamples>;
   close(): Promise<void>;
 }
@@ -63,22 +55,16 @@ export interface TestAppOptions {
   slowQueryMs?: number;
   transcriptService?: TranscriptServiceSetup;
   ourKey?: OurKeySetup;
-  // Search by meaning on this embedder, with its queue drained by the test.
   embedder?: Embedder;
   playlistReader?: PlaylistReader;
   videoReader?: VideoReader;
-  // Speech-to-text through this GPU host, its queue drained by the test.
   transcriber?: Transcriber;
-  // The database left at an earlier migration, so a test can seed what a later one cleans up
-  // and then run it with runMigrations.
   migrationsUpTo?: number;
 }
 
 export const TEST_APP_URL = "https://overview.test";
 export const TEST_SUPPORT_EMAIL = "help@overview.test";
 
-// The whole API against a real Postgres in process, with a clock the test owns
-// (docs/conventions/backend-testing-guide.md).
 export const createTestApp = async (
   config: Partial<AppConfig> = {},
   {

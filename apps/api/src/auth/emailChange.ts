@@ -23,8 +23,7 @@ const isUniqueViolation = (error: unknown): boolean =>
 
 export interface IssuedEmailChange {
   newEmail: string;
-  // Null when the address already has an account: the row is kept for the cooldown, and the
-  // mail says so instead of carrying a code (docs/features/account-changes.md).
+  // Null when the address already has an account: docs/features/account-changes.md, "The email, in four steps".
   code: string | null;
   expiresAt: string;
 }
@@ -36,8 +35,7 @@ export interface IssueEmailChangeOptions {
   now: Date;
 }
 
-// Null inside the cooldown. Whether the address is taken is decided here and told only to
-// that inbox, so the route's answer is the same either way.
+// Null inside the cooldown. A taken address is told only to its inbox, so the route answers the same.
 export const issueEmailChange = async (
   sql: SqlClient,
   { accountId, oldEmail, newEmail: rawNewEmail, now }: IssueEmailChangeOptions,
@@ -66,9 +64,7 @@ export type ConfirmedEmailChange =
   | { outcome: "invalid" }
   | { outcome: "taken"; newEmail: string };
 
-// The code is spent first, then the account moves only if its email is still the one the
-// change started from, so a change confirmed on two devices moves it once. A unique
-// violation is an address that gained an account between the ask and the confirm.
+// Moves once though confirmed on two devices: docs/features/account-changes.md, "The email, in four steps".
 export const confirmEmailChange = async (sql: SqlClient, accountId: AccountId, code: string, now: Date): Promise<ConfirmedEmailChange> => {
   const consumed = await sql.query<{ id: string; old_email: string; new_email: string }>(
     `update email_changes set consumed_at = $3::timestamptz
@@ -108,12 +104,10 @@ export const confirmEmailChange = async (sql: SqlClient, accountId: AccountId, c
 export type RevertedEmailChange =
   | { outcome: "reverted"; accountId: AccountId; email: string }
   | { outcome: "refused"; reason: Exclude<EmailChangeRevertRefusal, "taken"> }
-  // The address the link was sent to, so the page can name it: no secret to whoever holds the link.
+  // Where the link was sent, so the page can name it: no secret to whoever holds the link.
   | { outcome: "refused"; reason: "taken"; email: string };
 
-// The link in the old address's mail. It moves the account back only while the account's
-// email is still the one that change made, and then ends every session, the one that made
-// the change included (docs/features/account-changes.md, "Moving it back").
+// Only while the email is the one that change made: docs/features/account-changes.md, "Moving it back".
 export const revertEmailChange = async (sql: SqlClient, token: string, now: Date): Promise<RevertedEmailChange> => {
   const tokenHash = hashToken(token);
   const rows = await sql.query<{ id: string; account_id: string; old_email: string; new_email: string }>(

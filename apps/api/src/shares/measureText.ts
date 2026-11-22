@@ -11,9 +11,7 @@ export interface MeasureTextInput {
 // Wide enough that nothing being measured is clipped before its box is read.
 const PROBE_WIDTH = 20_000;
 
-// Measured by the renderer that will draw it, so the width a line is wrapped to and the
-// width it paints at cannot disagree. A second font library could
-// (docs/prototype/constraints.md, "Never let a model count, measure or time anything").
+// Measured by the renderer that draws it: docs/features/sharing.md, "The card image".
 export const measureText = ({ text, fontFamily, fontSize }: MeasureTextInput): number => {
   if (text.trim() === "") {
     return 0;

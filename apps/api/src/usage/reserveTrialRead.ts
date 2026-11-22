@@ -9,9 +9,7 @@ export interface ReserveTrialReadOptions {
   clock: () => Date;
 }
 
-// Signed out, a link is read on the device's trial, which allows a few reads beside its one
-// overview, whether the link is an article or a podcast episode (docs/features/onboarding.md,
-// "Any kind of link"). An account reads without counting.
+// The device's trial reads for a signed-out link: docs/features/onboarding.md, "Any kind of link".
 export const reserveTrialRead = async (
   request: FastifyRequest,
   reply: FastifyReply,

@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import pg from "pg";
 
-// One reader's library for the chat harnesses, read only at the server: docs/architecture/in-app-chat.md, "Running it again".
+// For the chat harnesses, read only: docs/architecture/in-app-chat.md, "Running it again".
 
 const [email, outDir] = process.argv.slice(2);
 const databaseUrl = process.env["DATABASE_URL"];

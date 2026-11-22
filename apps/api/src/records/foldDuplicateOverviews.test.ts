@@ -52,7 +52,7 @@ const live = async (sql: SqlClient, accountId = ACCOUNT) =>
     storedRecordFromRow,
   );
 
-test("per account and video the earliest-made overview is kept, the others' filing and state fold onto it, and the others are tombstoned", async () => {
+test("per account and video the earliest-made overview is kept even when it arrived last, the others' filing and state fold onto it, and every write moves on in the feed", async () => {
   const sql = await databaseBeforeTheIndex();
   const video = { ...makeOverview().source, id: VideoId.parse("twice") };
   const earlier = makeOverview({
@@ -69,7 +69,6 @@ test("per account and video the earliest-made overview is kept, the others' fili
     tags: ["one", "two"],
     captureReason: "Why",
   });
-  // Seeded in the opposite order, so arrival order and creation order disagree.
   await seed(sql, ACCOUNT, "overview", later.id, withVideo(later), "2026-09-02T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
   await seed(sql, ACCOUNT, "overview", earlier.id, withVideo(earlier), "2026-09-01T00:00:00.000Z", LAST_SCHEMA_VERSION_WITH_VIDEO);
   await seed(
@@ -116,7 +115,6 @@ test("per account and video the earliest-made overview is kept, the others' fili
       { kind: "overviewState", deleted: true, rev: 2, body: null },
     ],
   );
-  // Every write moved on in the feed, so a device that pulled before sees all of it.
   assert.ok(Math.min(...[kept, keptState, ...gone].map((record) => record.seq)) > 4);
   await sql.close();
 });

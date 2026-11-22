@@ -21,8 +21,6 @@ const absolute = (href: string | undefined, base: string): string | null => {
   }
 };
 
-// The tags in a page's head that say what it is: a platform's link-preview tags, and the feed a
-// show's own episode page points to.
 export const pageMeta = (html: string, pageUrl: string): PageMeta => {
   const meta = new Map<string, string>();
   let feedUrl: string | null = null;

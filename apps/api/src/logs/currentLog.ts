@@ -3,8 +3,7 @@ import type { FastifyBaseLogger, FastifyInstance, FastifyRequest } from "fastify
 
 const requests = new AsyncLocalStorage<FastifyRequest>();
 
-// Code that has no request in hand, such as the database client, still logs under the
-// request it is working for, with its reqId and whatever bindLogContext has added since.
+// Lets code without the request in hand, such as the database client, log under that request.
 export const trackCurrentRequest = (app: FastifyInstance): void => {
   app.addHook("onRequest", (request, _reply, done) => {
     requests.run(request, done);

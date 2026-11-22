@@ -17,8 +17,7 @@ export interface CreateSessionOptions {
   sessionTtlDays: number;
 }
 
-// The only place a raw token exists: it is handed back once and only its hash is kept
-// (docs/architecture/api.md).
+// Handed back once, and only its hash kept: docs/architecture/api.md, "Auth".
 export const createSessionForAccount = async (
   sql: SqlClient,
   accountId: AccountId,

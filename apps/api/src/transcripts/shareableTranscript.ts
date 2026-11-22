@@ -1,7 +1,6 @@
 import type { StoredTranscript } from "@overview/domain";
 
-// The url a reader pasted can carry a share tracker or a playlist, which says something about
-// them rather than the video, so the shared copy keeps only the video's own address.
+// A pasted url's share tracker or playlist says something about the reader, so only the video's own is kept.
 export const shareableTranscript = (transcript: StoredTranscript): StoredTranscript =>
   transcript.video === undefined
     ? transcript

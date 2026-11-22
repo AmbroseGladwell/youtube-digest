@@ -1,7 +1,6 @@
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
-// https anywhere, plain http only back to the caller's own machine, and never a fragment
-// (docs/features/mcp-connector.md, "Registering a client").
+// Why these: docs/features/mcp-connector.md, "Registering a client".
 export const isAllowedRedirectUri = (value: string): boolean => {
   let url: URL;
   try {

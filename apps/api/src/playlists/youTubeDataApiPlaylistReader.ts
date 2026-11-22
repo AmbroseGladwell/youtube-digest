@@ -12,7 +12,7 @@ import { youTubeDataApiGet } from "../youTubeDataApi/youTubeDataApiGet.js";
 import { PlaylistUnavailableError, type PlaylistReader } from "./PlaylistReader.js";
 
 const PAGE_SIZE = 50;
-// YouTube caps a playlist at 5,000 videos, so a hundred pages is every one of them.
+// YouTube caps a playlist at 5,000 videos.
 const MAX_PAGES = 100;
 
 const Thumbnail = z.object({ url: z.url() });
@@ -45,8 +45,7 @@ const PlaylistItemsResponse = z.object({
 
 const query = (params: Record<string, string>) => new URLSearchParams(params).toString();
 
-// YouTube keeps a private or deleted video in the playlist with its title replaced, and
-// says which only through these two markers (docs/features/playlists.md).
+// YouTube says a video is private or deleted only through these two markers.
 const availabilityOf = (title: string, privacyStatus: string | undefined): PlaylistEntryAvailability => {
   if (privacyStatus === "private") {
     return "private";
@@ -57,8 +56,7 @@ const availabilityOf = (title: string, privacyStatus: string | undefined): Playl
   return "available";
 };
 
-// The Data API answers a private playlist and a missing one alike, as nothing. oEmbed does
-// not: it refuses a private one as unauthorised (docs/features/playlists.md).
+// Why oEmbed is asked: docs/features/playlists.md, "Looking a playlist up".
 const whyUnavailable = async (youTubeFetch: YouTubeFetch, playlistId: string): Promise<"private" | "gone"> => {
   const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
   const response = await youTubeFetch({

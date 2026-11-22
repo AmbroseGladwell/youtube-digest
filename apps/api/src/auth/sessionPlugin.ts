@@ -20,10 +20,7 @@ declare module "fastify" {
   }
 }
 
-// Deny by default: a route is public, or takes a session only if there is one, by saying so. Missing, unknown and expired
-// tokens get one answer, because the client has one response to all three and a prober
-// learns nothing. A bearer is looked at first and the cookie only in its absence: two
-// transports onto the same row, one of them chosen per request (docs/architecture/api.md).
+// Deny by default, one answer to missing, unknown and expired: docs/architecture/api.md, "Auth".
 export const sessionPlugin = fp<SessionPluginOptions>(async (app, { sql, clock, sessionTtlDays, sessionCookieSecure }) => {
   app.decorateRequest("session", null);
   app.addHook("onRequest", async (request, reply) => {

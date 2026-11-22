@@ -24,8 +24,6 @@ export interface ServerErrorRequest {
   accountId: AccountId | null;
 }
 
-// The server's own failure: an answer it couldn't give, or the process going down with nothing
-// to catch it (docs/architecture/errors-and-logs.md, "The server's own errors").
 export interface ServerError {
   caughtBy: "request" | "uncaughtException" | "unhandledRejection";
   type: string;
@@ -35,8 +33,6 @@ export interface ServerError {
   at: string;
 }
 
-// Where checked client errors, and the server's own, go once they have been logged
-// (docs/architecture/errors-and-logs.md).
 export interface ErrorSink {
   capture(errors: ClientError[], source: ErrorSource): Promise<void>;
   captureServerError(error: ServerError): Promise<void>;

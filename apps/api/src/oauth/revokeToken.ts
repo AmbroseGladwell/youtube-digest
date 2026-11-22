@@ -6,8 +6,7 @@ export interface RevokeTokenOptions {
   clientId: string;
 }
 
-// Either of a connection's tokens revokes the whole connection: an assistant disconnecting
-// means it is done with the account (RFC 7009 §2.1).
+// Either token revokes the whole connection (RFC 7009 §2.1).
 export const revokeToken = async (sql: SqlClient, { token, clientId }: RevokeTokenOptions): Promise<string | null> => {
   const [row] = await sql.query<{ id: string }>(
     `delete from connections c using connection_tokens t

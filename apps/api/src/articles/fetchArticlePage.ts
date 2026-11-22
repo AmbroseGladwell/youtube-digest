@@ -19,7 +19,6 @@ export interface ArticlePageFetcherOptions extends PublicWebFetchOptions {
   mostBytes?: number;
 }
 
-// docs/features/pasted-article-links.md
 export const createArticlePageFetcher = ({ mostBytes = MOST_BYTES, ...options }: ArticlePageFetcherOptions = {}) => {
   const fetchPublicWeb = createPublicWebFetch(options);
 

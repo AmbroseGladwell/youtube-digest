@@ -33,8 +33,7 @@ const NOVELTY: Record<string, Novelty> = {
 const WATCH: Record<string, WatchAnswer> = { Yes: "yes", No: "no" };
 const ITEM_START = /^\s*(?:\d+\.|-)\s+/;
 
-// The prototype wrote actions as a numbered list in some notes and a dashed one in others,
-// with items wrapped over several lines and prose after them (CLAUDE.md, "samples/").
+// Prototype notes number actions in some notes and dash them in others, wrapped, with prose after.
 const actionItems = (text: string): string[] => {
   const items: string[] = [];
   let open: string | null = null;
@@ -71,8 +70,6 @@ export interface SampleLibrary {
   notes: SampleNote[];
 }
 
-// The five real notes in samples/records, as the records this build stores: real content
-// rather than invented fixtures, with the prototype's variance intact (CLAUDE.md).
 export const sampleLibrary = (): SampleLibrary => {
   const files = readdirSync(SAMPLES)
     .filter((file) => file.endsWith(".json"))

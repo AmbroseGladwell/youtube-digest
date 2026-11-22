@@ -44,8 +44,6 @@ export const postForm = (testApp: TestApp, url: string, fields: Record<string, s
     payload: form(fields),
   });
 
-// An MCP client as Claude would be one: it registers itself, sends the reader to authorize,
-// and trades what comes back for tokens (docs/features/mcp-connector.md).
 export const makeConnectingAssistant = async (
   testApp: TestApp,
   registration: Record<string, unknown> = { token_endpoint_auth_method: "none" },

@@ -20,8 +20,6 @@ interface FakeChannel {
   videos: FakeVideo[];
 }
 
-// search, channels, playlistItems and videos, answered in the Data API's own shapes, and refused
-// without the key in its header. The video search finds `searchFinds`, by default every video.
 const dataApiOver = (channels: FakeChannel[], searchFinds?: readonly string[]) => {
   const asked: string[] = [];
   const youTubeFetch: YouTubeFetch = async (request) => {

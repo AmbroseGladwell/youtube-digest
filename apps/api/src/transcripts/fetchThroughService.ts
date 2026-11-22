@@ -9,9 +9,7 @@ import type { ProxiedYouTubeFetch } from "./undiciYouTubeFetch.js";
 
 const PROXY_SESSIONS = 2;
 
-// What a datacenter address being turned away looks like: a bot check reads as a login
-// wall, an empty caption track as blocked. A video with no captions or that doesn't exist
-// will be the same through any address, so those never cost a proxied fetch.
+// Why only these: docs/architecture/server-side-transcripts.md, "Why there has to be a proxy".
 const WORTH_THE_PROXY: ReadonlySet<TranscriptFetchFailure> = new Set([
   TranscriptFetchFailure.ACCESS_RESTRICTED,
   TranscriptFetchFailure.SOURCE_BLOCKED,
@@ -52,8 +50,6 @@ export interface ThroughService<T> {
   proxySessions: number;
 }
 
-// From our own address first, which costs nothing, and through the residential proxy only
-// when YouTube turned that away (docs/architecture/server-side-transcripts.md).
 export const throughService = async <T>(
   fetches: ServiceFetches,
   budget: ProxyBudget,

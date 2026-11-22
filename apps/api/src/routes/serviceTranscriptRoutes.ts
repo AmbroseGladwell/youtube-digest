@@ -37,9 +37,7 @@ export const serviceTranscriptRoutes = (app: FastifyInstance, { service, usage, 
       if (service === null) {
         throw new ApiError("unavailable", "This server does not fetch transcripts itself");
       }
-      // Only for an account: signed out, onboarding's video read fetches the one transcript it
-      // needs (OV-327). A transcript from our server is part of an overview, so an account with
-      // none left this month, on either key, has no use for one (docs/architecture/tiers.md, "Counting").
+      // Why none left on either key refuses: docs/architecture/tiers.md, "Counting".
       const { accountId } = request.session!;
       const caller: ServiceCaller = { accountId, plan: await accountPlan(sql, accountId) };
       const now = clock();

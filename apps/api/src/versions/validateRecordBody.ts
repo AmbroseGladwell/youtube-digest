@@ -3,10 +3,7 @@ import { ApiError } from "../http/ApiError.js";
 import type { RecordKind } from "../records/RecordKind.js";
 import { RECORD_KINDS } from "../records/recordKinds.js";
 
-// Migrating to the current shape and parsing is how the server asks "is this a valid
-// record?" of a version it knows. A version it does not know yet is stored as given,
-// because the shape it would check against does not exist here
-// (docs/features/sync-api.md).
+// Why an unknown version is stored as given: docs/features/sync-api.md, "Validation by migrating to current".
 export const validateRecordBody = (kind: RecordKind, body: Record<string, unknown>, schemaVersion: number): void => {
   if (schemaVersion > CURRENT_SCHEMA_VERSIONS[kind]) {
     return;

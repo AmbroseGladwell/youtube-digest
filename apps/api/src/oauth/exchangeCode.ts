@@ -35,8 +35,7 @@ export interface ExchangeCodeOptions {
   now: Date;
 }
 
-// A code is spent once. A second exchange of the same code means it leaked, so the
-// connection the first one made is revoked (OAuth 2.1 §4.1.3; docs/features/mcp-connector.md).
+// A code exchanged twice revokes its connection: docs/features/mcp-connector.md, "Tokens".
 export const exchangeCode = async (sql: SqlClient, { client, exchange, urls, now }: ExchangeCodeOptions): Promise<TokenGrant> => {
   return sql.transaction(async (tx) => {
     const [row] = await tx.query<CodeRow>(

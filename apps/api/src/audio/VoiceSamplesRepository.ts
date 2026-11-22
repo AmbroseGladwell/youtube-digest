@@ -11,8 +11,6 @@ export interface ReadySample {
   durationSeconds: number;
 }
 
-// Which renders are voice samples, and since when a sample has not been the current one
-// (docs/features/narration-voice.md, "The samples").
 export class VoiceSamplesRepository {
   #sql: SqlClient;
 

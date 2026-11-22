@@ -1,9 +1,7 @@
 import { createHash } from "node:crypto";
 import type { StoredTranscript } from "@overview/domain";
 
-// What two accounts have to agree on for a copy to be served: the words and whether a
-// person wrote them, never how they were cut into segments or when they were fetched
-// (docs/features/shared-transcript-cache.md, "Two accounts have to agree").
+// Why only these are hashed: docs/features/shared-transcript-cache.md, "Two accounts have to agree".
 export const wordsHash = (transcript: StoredTranscript): string => {
   const words = transcript.segments
     .map((segment) => segment.text)

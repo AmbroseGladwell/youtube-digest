@@ -25,8 +25,6 @@ export interface RecordKindConfig {
   migrations: readonly RecordMigration[];
 }
 
-// The same chain the clients run, imported rather than reimplemented
-// (docs/features/record-migrations.md, "The server stores what it is given").
 export const RECORD_KINDS: Record<RecordKind, RecordKindConfig> = {
   overview: { schema: Overview, migrations: OVERVIEW_MIGRATIONS },
   overviewState: { schema: OverviewState, migrations: OVERVIEW_STATE_MIGRATIONS },

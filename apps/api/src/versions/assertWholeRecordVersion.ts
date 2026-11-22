@@ -3,9 +3,7 @@ import { ApiError } from "../http/ApiError.js";
 import type { RecordKind } from "../records/RecordKind.js";
 import type { ClientContext } from "./ClientContext.js";
 
-// A client never writes at a version other than its own maximum. A client above every
-// row of the version table is only known to be at least the last row, so anything at or
-// above the server's current version is accepted from it (docs/architecture/api.md).
+// Why at or above current is accepted: docs/architecture/api.md, "Versions on the wire".
 export const assertWholeRecordVersion = (kind: RecordKind, bodySchemaVersion: number, client: ClientContext): void => {
   const expected = client.schemaVersions[kind];
   const aboveTheTable = expected === CURRENT_SCHEMA_VERSIONS[kind] && bodySchemaVersion > expected;

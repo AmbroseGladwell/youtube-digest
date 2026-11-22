@@ -75,9 +75,6 @@ export interface TranscriptionUsage {
   episodes: number;
 }
 
-// A caller's transcriptions and the month's seconds they hold: one job per caller and episode,
-// so asking again for words already made or on their way costs nothing, and a failed one starts
-// again from nothing (docs/features/speech-to-text.md, "The server rung").
 export class PodcastTranscriptionsRepository {
   #sql: SqlClient;
 
@@ -94,7 +91,6 @@ export class PodcastTranscriptionsRepository {
     return (await this.usage(now, caller)).usedSeconds;
   }
 
-  // The month's seconds held or spent, and the episodes they went on.
   async usage(now: Date, caller: string): Promise<TranscriptionUsage> {
     const rows = await this.#sql.query<{ seconds: number; episodes: number }>(
       "select seconds, episodes from transcription_usage where month = $1::date and caller = $2",
@@ -103,7 +99,6 @@ export class PodcastTranscriptionsRepository {
     return { usedSeconds: rows[0]?.seconds ?? 0, episodes: rows[0]?.episodes ?? 0 };
   }
 
-  // Where a caller's transcription of an episode stands, while it is kept.
   async find(caller: string, sourceKey: string): Promise<TranscriptionStatus | null> {
     const rows = await this.#sql.query<{ status: TranscriptionStatus }>(
       "select status from podcast_transcriptions where caller = $1 and source_key = $2",
@@ -152,10 +147,7 @@ export class PodcastTranscriptionsRepository {
     });
   }
 
-  // The oldest unfinished job no worker holds. A queued job is held from its claim, before it
-  // reaches the host, so workers asking at once can't each send it. One whose worker went quiet
-  // past its lease is picked up where it was, its call to the host included. Finished jobs past
-  // keepUntil go, and their words with them.
+  // Why a job is leased from its claim: docs/features/speech-to-text.md, "The server rung".
   async claimNext(now: Date, leaseUntil: Date, finishedBefore: Date): Promise<PodcastTranscriptionJob | null> {
     await this.#sql.query("delete from podcast_transcriptions where status in ('ready', 'failed') and finished_at < $1::timestamptz", [
       finishedBefore.toISOString(),
@@ -197,7 +189,6 @@ export class PodcastTranscriptionsRepository {
     ]);
   }
 
-  // The words, the month's held seconds settled to what the audio measured, and one more episode.
   // Only the first to finish a job settles it, so a job run twice is still counted once.
   async markReady(job: PodcastTranscriptionJob, transcript: StoredTranscript, audioSeconds: number, now: Date): Promise<boolean> {
     const measured = Math.ceil(audioSeconds);
@@ -221,7 +212,6 @@ export class PodcastTranscriptionsRepository {
     });
   }
 
-  // A transcription that made no words costs the caller nothing.
   async markFailed(job: PodcastTranscriptionJob, failure: TranscriptionFailure, now: Date): Promise<boolean> {
     return this.#sql.transaction(async (tx) => {
       const settled = await tx.query(

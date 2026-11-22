@@ -52,13 +52,10 @@ reportProcessErrors({
   exit: () => void Promise.resolve(logExporter?.close()).finally(() => process.exit(1)),
 });
 const pool = new pg.Pool({ connectionString: config.databaseUrl });
-// An idle connection the database drops is emitted here, and an unheard "error" would
-// crash the process. The pool replaces the connection on the next query.
+// An unheard pool "error" crashes the process; the pool replaces the dropped connection on the next query.
 pool.on("error", (error) => logger.error(apiLogLines.db.connectionLost({ err: error })));
 const sql = createPgSqlClient(pool);
-// Fly's periodic check is /api/live, which never touches the database so Neon can suspend
-// while the machine idles; this is the one database check a machine passes before it opens
-// its port (docs/architecture/deploy.md, "The machine").
+// Why this is the one database check: docs/architecture/deploy.md, "The machine".
 try {
   await sql.query("select 1");
   logger.info(apiLogLines.startup.databaseReachable());
