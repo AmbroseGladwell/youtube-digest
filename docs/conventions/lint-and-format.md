@@ -89,7 +89,9 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 
 ### Type-aware rules
 
-`npm run lint` passes `--type-aware`, so Oxlint asks `oxlint-tsgolint` (TypeScript's own checker, in Go) for types. That runs the type-aware rules in `correctness`, and the two below. A run over the whole repo takes about 9 seconds and peaks under 1 GB. It reads `@overview/*` types from each package's `dist`, so CI's `lint` job builds the packages first, and locally a stale `dist` gives stale answers, just as it does for `task typecheck`.
+`npm run lint` and the pre-commit hook pass `--type-aware`, so Oxlint asks `oxlint-tsgolint` (TypeScript's own checker, in Go) for types. That runs the type-aware rules in `correctness`, and the two below. A run over the whole repo takes about 9 seconds and peaks under 1 GB. On a commit's few files it takes under a second. It reads `@overview/*` types from each package's `dist`, so CI's `lint` job builds the packages first, and locally a stale `dist` gives stale answers, just as it does for `task typecheck`.
+
+`oxlint-tsgolint` is TypeScript 7, where `types` defaults to `[]`, so a package that uses Node's globals (`URL`, `Request`) and has no DOM lib names `"types": ["node"]` in its tsconfig. Without it, those types are unknown to the linter, though `tsc` 5.9 would still find them.
 
 | Rule | What it holds |
 |---|---|
