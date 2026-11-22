@@ -31,7 +31,7 @@ test.describe("the privacy policy and the terms", () => {
     await launcher.openPage(Routes.terms());
 
     const terms = await launcher.legalPage.verifyIsShown("Terms of service");
-    await terms.verifyLastUpdated("18 November 2026");
+    await terms.verifyLastUpdated("22 November 2026");
     await terms.verifyContentsListEverySection();
     const policy = await terms.openOtherPage("Privacy policy");
     await policy.openOtherPage("Terms of service");
