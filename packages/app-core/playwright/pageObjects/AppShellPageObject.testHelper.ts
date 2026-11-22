@@ -60,6 +60,39 @@ export class AppShellPageObject extends PageObject {
     return new ErrorStatePageObject(this.testContext, this.get(appShellTestIds.pane));
   }
 
+  verifyBarFitsTheScreen = () =>
+    this.step("verifyBarFitsTheScreen", async () => {
+      const width = this.page.viewportSize()!.width;
+      const controls = this.get(appShellTestIds.masthead).locator(
+        `[data-testid="${appShellTestIds.askButton}"], [data-testid="${appShellTestIds.newOverviewButton}"], [data-testid="${accountMenuTestIds.trigger}"]`,
+      );
+      await expect(controls.first()).toBeVisible();
+      for (const box of await controls.evaluateAll((all) => all.map((control) => control.getBoundingClientRect().toJSON() as DOMRect))) {
+        expect(box.left).toBeGreaterThanOrEqual(0);
+        expect(box.right).toBeLessThanOrEqual(width);
+        expect(box.width).toBeGreaterThanOrEqual(44);
+      }
+      await this.verifyPageDoesNotScrollSideways();
+    });
+
+  verifyNameShownWhole = () =>
+    this.step("verifyNameShownWhole", async () => {
+      const name = this.get(appShellTestIds.brand).locator("h1");
+      await expect(name).toHaveText("The Overview");
+      expect(await name.evaluate((title) => title.scrollWidth - title.clientWidth)).toBeLessThanOrEqual(0);
+    });
+
+  verifyBackLabelShownWhole = (label: string) =>
+    this.step(`verifyBackLabelShownWhole ${label}`, async () => {
+      const back = this.get(appShellTestIds.backLink);
+      await expect(back).toHaveText(label);
+      const spill = await back.evaluate((link) => {
+        const words = link.lastElementChild!.getBoundingClientRect();
+        return words.right - link.getBoundingClientRect().right;
+      });
+      expect(spill).toBeLessThanOrEqual(0.5);
+    });
+
   // paneTransitions.scss keys every rule off this attribute, so it is what can be asserted.
   verifyNavigationDirection = (direction: NavigationDirection) =>
     this.step(`verifyNavigationDirection ${direction}`, () =>
