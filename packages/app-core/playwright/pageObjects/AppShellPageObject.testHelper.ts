@@ -322,6 +322,29 @@ export class AppShellPageObject extends PageObject {
       await expect(button.locator("xpath=following-sibling::span[1]")).toHaveText(tip);
     });
 
+  verifyIconButtonTipShown = (which: "ask" | "new", shown: boolean) =>
+    this.step(`verifyIconButtonTipShown ${which} ${shown}`, async () => {
+      const tip = this.iconButton(which).locator("xpath=following-sibling::span[1]");
+      await (shown ? expect(tip).toBeVisible() : expect(tip).toBeHidden());
+    });
+
+  holdIconButton = (which: "ask" | "new") =>
+    this.step(`holdIconButton ${which}`, async () => {
+      const button = this.iconButton(which);
+      await button.dispatchEvent("touchstart");
+      await this.verifyIconButtonTipShown(which, true);
+      await button.dispatchEvent("touchend");
+      await button.dispatchEvent("click");
+    });
+
+  verifyAskIsCurrent = (current: boolean) =>
+    this.step(`verifyAskIsCurrent ${current}`, async () => {
+      const ask = this.iconButton("ask");
+      await (current ? expect(ask).toHaveAttribute("aria-current", "page") : expect(ask).not.toHaveAttribute("aria-current"));
+    });
+
+  private iconButton = (which: "ask" | "new") => this.get(which === "ask" ? appShellTestIds.askButton : appShellTestIds.newOverviewButton);
+
   verifyOffersAsk = (offers: boolean) =>
     this.step(`verifyOffersAsk ${offers}`, () => this.expectToHaveCount(appShellTestIds.askButton, offers ? 1 : 0));
 

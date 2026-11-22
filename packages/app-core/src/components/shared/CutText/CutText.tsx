@@ -1,8 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { useLongPressTip } from "../../../util/useLongPressTip.js";
 import styles from "./CutText.module.scss";
 import { cutTextTestIds } from "./CutTextTestIds.js";
-
-const LONG_PRESS_MS = 500;
 
 export interface CutTextProps {
   text: string;
@@ -13,10 +12,8 @@ export interface CutTextProps {
 // The tip is hidden from screen readers because the whole text is already in the page.
 export const CutText = ({ text, className, testId }: CutTextProps) => {
   const element = useRef<HTMLSpanElement | null>(null);
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [cut, setCut] = useState(false);
-  const [held, setHeld] = useState(false);
-  const heldNow = useRef(false);
+  const press = useLongPressTip(cut);
 
   useLayoutEffect(() => {
     const shown = element.current;
@@ -30,56 +27,8 @@ export const CutText = ({ text, className, testId }: CutTextProps) => {
     return () => observer.disconnect();
   }, [text]);
 
-  useEffect(() => () => clearPress(), []);
-
-  const clearPress = () => {
-    if (pressTimer.current !== null) {
-      clearTimeout(pressTimer.current);
-    }
-    pressTimer.current = null;
-  };
-
-  const startPress = () => {
-    heldNow.current = false;
-    if (!cut) {
-      return;
-    }
-    clearPress();
-    pressTimer.current = setTimeout(() => {
-      heldNow.current = true;
-      setHeld(true);
-    }, LONG_PRESS_MS);
-  };
-
-  const endPress = () => {
-    clearPress();
-    setHeld(false);
-  };
-
-  // The tap that ends a long press would otherwise open what holds the text.
-  const swallowHeldClick = (event: MouseEvent) => {
-    if (!heldNow.current) {
-      return;
-    }
-    heldNow.current = false;
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
   return (
-    <span
-      className={`${styles.wrap} ${held ? styles.held : ""}`}
-      onTouchStart={startPress}
-      onTouchEnd={endPress}
-      onTouchMove={endPress}
-      onTouchCancel={endPress}
-      onClickCapture={swallowHeldClick}
-      onContextMenu={(event) => {
-        if (cut) {
-          event.preventDefault();
-        }
-      }}
-    >
+    <span className={styles.wrap} {...press}>
       <span ref={element} className={className} data-testid={testId}>
         {text}
       </span>

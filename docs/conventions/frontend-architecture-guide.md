@@ -555,6 +555,23 @@ When a context must survive reload (a running timer, a draft):
 - Split contexts by update frequency. A timer ticking at 250ms goes in its own context
   from the controls, or every consumer re-renders four times a second.
 
+### 4.4 Tips: a mouse hovers, a keyboard focuses, a finger holds
+
+A tip (a small label naming an icon or showing cut-off text) shows on three things only:
+hover with a mouse, keyboard focus, and a long press on touch. Never on `:focus-within`
+or a bare `:hover`: on a touch screen a tap leaves both on, so the tip stays up over
+whatever the tap opened (the Ask button's did, 22 Nov 2026).
+
+- Style it with `theme/tip.scss`'s `shows` mixin on the element holding the tip. It gates
+  hover behind `(hover: hover)`, uses `:focus-visible` rather than `:focus-within`, and
+  turns off iOS's link preview.
+- Spread `useLongPressTip()` (`util/useLongPressTip.ts`) on that same element. Half a
+  second's hold sets `data-held`, which shows the tip until the finger lifts; the click
+  that ends the hold is swallowed, so holding a link names it without following it.
+- Pass `false` where the tip isn't in use (text that isn't cut, a label shown at that
+  width), so a long press there behaves as the browser's own.
+- A readout that follows a drag, like the player scrubber's time, is not a tip.
+
 ### 4.3 Every field names itself
 
 Browsers and password managers decide what a field is from its `name`, its `id`, its
@@ -614,6 +631,7 @@ a password manager from offering to save an API key as the site's password. The
 - [ ] Shape-matched skeletons, not spinners.
 - [ ] Two or fewer app-wide contexts; persisted state is schema-validated and user-scoped.
 - [ ] Every field has a `name`, an `id` with a label, and an `autocomplete`, and its screen is in `fieldAutofill.iwft.ts`.
+- [ ] Every tip uses `tip.shows` and `useLongPressTip` (§4.4): never `:focus-within` or a bare `:hover`.
 
 ---
 

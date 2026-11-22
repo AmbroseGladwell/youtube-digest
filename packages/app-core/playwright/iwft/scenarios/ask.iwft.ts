@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { overviewPartHash, type Chat, type ChatAnswerSections, type ChatCitation, type Overview, type ProjectId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
@@ -10,6 +11,12 @@ const SIGNED_IN = {
 };
 
 const PHONE = { width: 390, height: 800 };
+
+// Chromium's touch emulation is what turns (hover: hover) off.
+const useATouchScreen = async (page: Page) => {
+  const devtools = await page.context().newCDPSession(page);
+  await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+};
 
 const titled = (title: string, savedAt: string): Overview => {
   const overview = makeOverview({ savedAt });
@@ -455,6 +462,27 @@ test.describe("Ask", () => {
     await launcher.appShell.verifyIconButtonWithTip("ask", "Ask your library");
     await launcher.appShell.verifyIconButtonWithTip("new", "New overview");
     await launcher.appShell.verifyPageDoesNotScrollSideways();
+  });
+
+  test("on a phone's touch screen a tap on Ask opens the page with no tooltip left showing, and a long press names it without opening it", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(PHONE);
+    await useATouchScreen(page);
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+
+    await launcher.appShell.holdIconButton("ask");
+
+    await launcher.appShell.verifyAskIsCurrent(false);
+    await launcher.appShell.verifyIconButtonTipShown("ask", false);
+
+    await launcher.appShell.openAsk();
+
+    await launcher.appShell.verifyAskIsCurrent(true);
+    await launcher.appShell.verifyIconButtonTipShown("ask", false);
   });
 
   test("an Ask answer's inline code, links and code blocks render as in an overview's chat, and a block copies (OV-364)", async ({

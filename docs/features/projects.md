@@ -276,7 +276,7 @@ From the Claude Design round, "OV-168 1–6" in the design project, decided with
   opens, each with Restore. The only place archived projects are listed.
 - **On an overview.** "In A, B and C · Change" under the byline, most recently changed first,
   archived ones left off; four or more name two and "and N more". Long names cut at about 32
-  characters in CSS, with the full name in a tooltip on hover and focus. Add to project… in ⋯
+  characters in CSS, with the full name in a tooltip on hover, keyboard focus, or a long press on touch. Add to project… in ⋯
   ("In 3" beside it) and Change open the picker: a dialog, a sheet on a phone, a checkbox per
   active project that saves as it is ticked, "Find a project" past eight, and New project…
   last, which makes one with this overview in it.
