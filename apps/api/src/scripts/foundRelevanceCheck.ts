@@ -90,10 +90,7 @@ const questions = async (email: string, out: string) => {
         continue;
       }
       const home = read.record.overviewId;
-      for (const message of read.record.messages) {
-        if (message.from !== "reader") {
-          continue;
-        }
+      for (const message of read.record.messages.filter((each) => each.from === "reader")) {
         asked.push({
           accountId: account.id,
           chatId: row.id,

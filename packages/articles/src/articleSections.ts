@@ -38,12 +38,15 @@ export const articleSections = (body: HTMLElement, title: string, pageUrl: strin
         sections.push({ heading: null, anchor: null, blocks: [], links: [] });
       }
       const section = sections.at(-1)!;
-      for (const link of articleLinks(element, pageUrl)) {
-        if (!linked.has(link.href)) {
-          linked.add(link.href);
-          section.links.push({ ...link, paragraph: section.blocks.length });
+      const firstSight = (href: string) => {
+        if (linked.has(href)) {
+          return false;
         }
-      }
+        linked.add(href);
+        return true;
+      };
+      const fresh = articleLinks(element, pageUrl).filter((link) => firstSight(link.href));
+      section.links.push(...fresh.map((link) => ({ ...link, paragraph: section.blocks.length })));
       section.blocks.push(text);
     }
   }

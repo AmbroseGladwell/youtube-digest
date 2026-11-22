@@ -77,6 +77,12 @@ export const verifyTtsDeploy = ({ deployedCommits, head, poolSize }) => {
   return `all ${deployedCommits.length} machines report ${short(head)}`;
 };
 
+const writeOutput = (deploy) => {
+  if (process.env.GITHUB_OUTPUT) {
+    appendFileSync(process.env.GITHUB_OUTPUT, `deploy=${deploy}\n`);
+  }
+};
+
 const short = (commit) => {
   return commit.slice(0, 7);
 };
@@ -95,9 +101,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     } else {
       const { deploy, reason } = ttsDeployDecision({ deployedCommits, head });
       console.log(`tts deploy: ${deploy ? "deploying" : "skipping"}, because ${reason}`);
-      if (process.env.GITHUB_OUTPUT) {
-        appendFileSync(process.env.GITHUB_OUTPUT, `deploy=${deploy}\n`);
-      }
+      writeOutput(deploy);
     }
   } catch (error) {
     console.error(`tts deploy: ${error.message}`);

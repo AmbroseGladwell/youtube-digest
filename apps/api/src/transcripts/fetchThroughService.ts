@@ -76,7 +76,8 @@ export const throughService = async <T>(
   let requests = 0;
   let bytes = 0;
   try {
-    for (let session = 1; session <= PROXY_SESSIONS; session += 1) {
+    let worthAnotherSession = true;
+    for (let session = 1; session <= PROXY_SESSIONS && worthAnotherSession; session += 1) {
       const proxied = fetches.proxied(fetches.newSession());
       const counted: YouTubeFetch = async (request) => {
         requests += 1;
@@ -88,9 +89,7 @@ export const throughService = async <T>(
         return { value: await operation(counted), via: "proxy", proxySessions: session };
       } catch (error) {
         lastError = error;
-        if (!isWorthTheProxy(error)) {
-          break;
-        }
+        worthAnotherSession = isWorthTheProxy(error);
       } finally {
         await proxied.close().catch(() => undefined);
       }

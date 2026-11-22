@@ -58,7 +58,7 @@ import {
 } from "./libraryChatPrompt.js";
 import { recordChatCost } from "./recordChatCost.js";
 import { reserveChatMessage } from "./reserveChatMessage.js";
-import { sectionsSoFar } from "./sectionsSoFar.js";
+import { arrivedSections } from "./arrivedSections.js";
 import { streamChatCompletion, type ChatCompletionStream, type PromptMessage, type ReplyShape } from "./streamChatCompletion.js";
 import type { Passage } from "./transcriptPassages.js";
 import { withoutCitationMarks } from "./withoutCitationMarks.js";
@@ -362,12 +362,10 @@ export class LibraryChatAnswerer {
             yield { type: "text", text: intro.slice(sent.length) };
             sent = intro;
           }
-          const whole = sectionsSoFar(raw);
-          for (; sectionsSent < whole.length; sectionsSent += 1) {
-            const section = ChatReply.shape.sections.element.safeParse(whole[sectionsSent]);
-            if (section.success) {
-              yield { type: "section", section: sectionOf(section.data) };
-            }
+          const arrived = arrivedSections(raw, sectionsSent);
+          sectionsSent = arrived.seen;
+          for (const section of arrived.sections) {
+            yield { type: "section", section: sectionOf(section) };
           }
         }
         assertWhole(stream);

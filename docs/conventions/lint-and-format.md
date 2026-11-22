@@ -82,6 +82,8 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `import/no-duplicates`, `import/no-cycle` | One import per module, and no cycles. |
 | `react/jsx-no-useless-fragment`, allowing expressions | No fragment around a single element. `<>{node}</>` stays allowed, since it's how a component returns a `ReactNode` as an element. |
 | `overview/no-side-effect-ternary` | A ternary sets or returns a value; a side effect is an `if`/`else`. Besides a ternary whose value is thrown away, it catches an assignment in a branch, and an arrow whose whole body is a ternary where nothing uses the result: an `on…` handler in JSX, a `forEach` or `useEffect` callback, a `: void` arrow, or one that calls a `set…` state setter. Without types it can't see every case, so it errs towards letting a returned value through. |
+| `max-depth: 3` | No block nested more than three deep inside a function. Past that, a guard returns early, a filter replaces a `continue`, or the inner part becomes a function with a name. |
+| `max-nested-callbacks: 3` (4 in tests) | No more than three callbacks inside each other. A test's `describe`, `it` and one callback already make three, so tests get a fourth. |
 | `overview/no-inline-object-type` | An object type with two or more members is an `interface` with a name, never written inline in a parameter or return type. A component's props are `<Component>Props`. Off in tests. |
 
 ### Custom rules: `scripts/oxlint/`
@@ -134,6 +136,7 @@ These rules are off in some folders, each with a reason:
 
 | Rule | Where | Why |
 |---|---|---|
+| `max-depth`, `max-nested-callbacks` | `apps/api/src/scripts/chatAcrossSourcesCheck.ts` | A 2,200-line research harness from OV-307, nested well past the limits. Restructuring its main loop could only be proved safe with a paid run, so it stays as it is. New harness code follows the rules. |
 | `import/no-cycle` | `**/playwright/**` | Page objects follow the app's navigation: the library opens the reader, and the reader goes back to the library, so each imports the other. The imports are only used inside methods, so the cycle is harmless at load time, and breaking it would mean redesigning how page objects hand over to each other. |
 
 These rules are off, and each one has a reason:
