@@ -217,6 +217,7 @@
 
 .itemChips {
   display: inline-flex;
+  max-width: calc(100% - 6px);
   margin-left: 6px;
   vertical-align: middle;
 }

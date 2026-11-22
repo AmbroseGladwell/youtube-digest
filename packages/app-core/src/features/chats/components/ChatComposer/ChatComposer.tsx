@@ -5,6 +5,7 @@ import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviews
 import { useProjectMembersQuery } from "../../../projects/queries/projectMembersQuery.js";
 import { useProjectsQuery } from "../../../projects/queries/projectsQuery.js";
 import type { PinnedItem } from "../../useChatPanel.js";
+import { useChipFit } from "../../useChipFit.js";
 import { atQueryOf, markedPieces, sourcePickerOptions, type PickerOption } from "../../util/sourcePickerOptions.js";
 import { ChatField, type ChatFieldProps } from "../ChatField/ChatField.js";
 import { ChatSourceChip } from "../ChatSourceChip/ChatSourceChip.js";
@@ -21,7 +22,7 @@ export interface ChatComposerProps extends Omit<ChatFieldProps, "onAt" | "onPick
   onClear: () => void;
 }
 
-const VISIBLE_CHIPS = 2;
+const MOST_SHOWN = 2;
 
 const plural = (count: number, noun: string) => (count === 0 ? null : `${count} ${noun}${count === 1 ? "" : "s"}`);
 
@@ -149,6 +150,12 @@ export const ChatComposer = ({
     }),
   ];
 
+  const { rowRef, moreRef, measuring, shown } = useChipFit(
+    rows.map((item) => `${item.id}:${item.deleted}`),
+    MOST_SHOWN,
+  );
+  const hidden = measuring ? rows.length : rows.length - shown;
+
   const changed = (next: string) => {
     onChange(next);
     const caret = input.current?.selectionStart ?? next.length;
@@ -275,22 +282,23 @@ export const ChatComposer = ({
         </div>
       )}
       {rows.length > 0 && (
-        <div className={styles.row} data-testid={chatComposerTestIds.sources}>
-          {rows.slice(0, VISIBLE_CHIPS).map((item) => (
-            <ChatSourceChip
-              key={item.id}
-              quiet
-              title={item.title}
-              label={item.title}
-              imageUrl={item.imageUrl}
-              wide={item.wide}
-              icon={item.project ? "folder" : "fileText"}
-              deleted={item.deleted}
-              onRemove={item.remove}
-            />
+        <div ref={rowRef} className={`${styles.row} ${measuring ? styles.measuring : ""}`} data-testid={chatComposerTestIds.sources}>
+          {rows.slice(0, shown).map((item) => (
+            <span key={item.id} className={styles.slot} data-chip-slot>
+              <ChatSourceChip
+                quiet
+                title={item.title}
+                label={item.title}
+                imageUrl={item.imageUrl}
+                wide={item.wide}
+                icon={item.project ? "folder" : "fileText"}
+                deleted={item.deleted}
+                onRemove={item.remove}
+              />
+            </span>
           ))}
-          {rows.length > VISIBLE_CHIPS && (
-            <span className={styles.moreHost}>
+          {hidden > 0 && (
+            <span className={styles.moreHost} ref={moreRef}>
               <button
                 type="button"
                 className={`${styles.moreButton} ${moreOpen ? styles.on : ""}`}
@@ -299,9 +307,9 @@ export const ChatComposer = ({
                 onClick={() => setMoreOpen((current) => !current)}
                 data-testid={chatComposerTestIds.more}
               >
-                +{rows.length - VISIBLE_CHIPS}
+                +{hidden}
               </button>
-              {moreOpen && (
+              {moreOpen && !measuring && (
                 <div className={styles.moreMenu} role="menu" data-testid={chatComposerTestIds.moreMenu}>
                   {rows.map((item) => (
                     <div key={item.id} className={styles.moreRow} role="none">

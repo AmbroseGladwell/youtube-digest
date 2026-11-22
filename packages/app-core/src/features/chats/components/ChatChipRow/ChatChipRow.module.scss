@@ -7,6 +7,20 @@
   max-width: 100%;
 }
 
+.measuring {
+  overflow: hidden;
+
+  .slot {
+    flex: none;
+  }
+}
+
+.slot {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
 .end {
   justify-content: flex-end;
 }

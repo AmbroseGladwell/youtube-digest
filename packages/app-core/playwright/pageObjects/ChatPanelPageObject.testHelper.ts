@@ -495,6 +495,17 @@ export class ChatPanelPageObject extends PageObject {
       await expect(row.locator(":scope > *")).toHaveText(texts);
     });
 
+  verifyNextSourcesWithinPanel = () =>
+    this.step("verifyNextSourcesWithinPanel", async () => {
+      const panel = (await this.panel().boundingBox())!;
+      const row = (await this.panel().getByTestId(chatComposerTestIds.sources).boundingBox())!;
+      const chips = await this.panel()
+        .getByTestId(chatComposerTestIds.sources)
+        .evaluate((root) => Math.max(...[...root.children].map((child) => child.getBoundingClientRect().right)));
+      expect(row.x + row.width).toBeLessThanOrEqual(panel.x + panel.width + 0.5);
+      expect(chips).toBeLessThanOrEqual(panel.x + panel.width + 0.5);
+    });
+
   removeNextSource = (index: number) =>
     this.step(`removeNextSource ${index}`, () =>
       this.click(this.panel().getByTestId(chatComposerTestIds.sources).getByTestId(chatSourceChipTestIds.remove).nth(index)),

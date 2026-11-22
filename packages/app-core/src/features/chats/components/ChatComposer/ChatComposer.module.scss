@@ -13,6 +13,20 @@ $focus-ring-room: 4px;
   padding: $focus-ring-room 4px 8px;
 }
 
+.measuring {
+  overflow: hidden;
+
+  .slot {
+    flex: none;
+  }
+}
+
+.slot {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
 .moreHost {
   position: relative;
   flex: none;
