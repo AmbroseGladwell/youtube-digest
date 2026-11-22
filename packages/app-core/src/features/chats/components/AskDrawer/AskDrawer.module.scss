@@ -1,11 +1,47 @@
+@use "../../../../theme/stickyFade.scss";
+
 // 354t-4: a raised column down the left of the page, 280px, on the tile surface.
 .root {
+  --drawer-surface: var(--card);
+  --drawer-inset: 14px;
   display: flex;
   flex-direction: column;
-  padding: 12px 14px;
-  background: var(--card);
+  padding: 0 var(--drawer-inset) 12px;
+  background: var(--drawer-surface);
+  overflow-x: hidden;
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+// OV-371: the close button and New chat stay at the top as the list scrolls under them, with the
+// fade under the bar in the drawer's own surface (docs/features/fade-under-the-bar.md).
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  margin: 0 calc(-1 * var(--drawer-inset));
+  padding: 12px var(--drawer-inset) 0;
+  background: var(--drawer-surface);
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: var(--sticky-fade-height);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--motion-state) var(--motion-ease);
+    @include stickyFade.fade-gradient(var(--drawer-surface));
+  }
+}
+
+.root[data-scrolled] .top::after {
+  opacity: 1;
 }
 
 .panel {
@@ -18,6 +54,39 @@
   margin: 4px 0 20px 16px;
   border-radius: 22px;
   box-shadow: var(--shadow-float);
+
+  // While its width opens and closes, what's inside keeps the open width rather than squeezing.
+  > * {
+    min-width: calc(280px - 2 * var(--drawer-inset));
+  }
+
+  > .top {
+    min-width: 280px;
+  }
+
+  &.arriving {
+    animation: panel-in var(--motion-travel) var(--motion-ease) both;
+  }
+
+  &.leaving {
+    animation: panel-out var(--motion-travel) var(--motion-ease) both;
+  }
+}
+
+@keyframes panel-in {
+  from {
+    width: 0;
+    margin-left: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes panel-out {
+  to {
+    width: 0;
+    margin-left: 0;
+    opacity: 0;
+  }
 }
 
 // 354t-5: on a phone, a bottom sheet with a grab handle over a scrim.
@@ -27,11 +96,36 @@
   right: 0;
   bottom: 0;
   z-index: 20;
+  --drawer-surface: var(--dialog);
+  --drawer-inset: 16px;
   max-height: 78vh;
-  padding: 8px 16px calc(24px + env(safe-area-inset-bottom));
-  background: var(--dialog);
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
   border-radius: 22px 22px 0 0;
   box-shadow: var(--shadow-dialog);
+
+  > .top {
+    padding-top: 8px;
+  }
+
+  &.arriving {
+    animation: sheet-in var(--motion-travel) var(--motion-ease) both;
+  }
+
+  &.leaving {
+    animation: sheet-out var(--motion-travel) var(--motion-ease) both;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
 }
 
 .scrim {
@@ -39,6 +133,26 @@
   inset: 0;
   z-index: 19;
   background: var(--scrim);
+
+  &.arriving {
+    animation: scrim-in var(--motion-travel) var(--motion-ease) both;
+  }
+
+  &.leaving {
+    animation: scrim-out var(--motion-travel) var(--motion-ease) both;
+  }
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes scrim-out {
+  to {
+    opacity: 0;
+  }
 }
 
 .handle {

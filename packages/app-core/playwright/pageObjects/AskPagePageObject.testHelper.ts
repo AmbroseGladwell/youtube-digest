@@ -10,6 +10,7 @@ import { chatComposerTestIds } from "../../src/features/chats/components/ChatCom
 import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewOn/ChatDrewOnTestIds.js";
 import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChipRow/ChatChipRowTestIds.js";
 import { chatFieldTestIds } from "../../src/features/chats/components/ChatField/ChatFieldTestIds.js";
+import { cutTextTestIds } from "../../src/components/shared/CutText/CutTextTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 
@@ -221,6 +222,7 @@ export class AskPagePageObject extends PageObject {
     this.step("openDrawer", async () => {
       await this.click(this.root().getByTestId(askPageTestIds.drawerButton));
       await expect(this.drawer()).toBeVisible();
+      await this.drawer().evaluate((drawer) => Promise.all(drawer.getAnimations().map((animation) => animation.finished)));
     });
 
   verifyDrawerIsOpen = (open: boolean) => this.step(`verifyDrawerIsOpen ${open}`, () => expect(this.drawer()).toHaveCount(open ? 1 : 0));
@@ -243,20 +245,65 @@ export class AskPagePageObject extends PageObject {
           this.drawer()
             .getByTestId(askDrawerTestIds.group)
             .evaluateAll(
-              (sections, open) =>
+              (sections, ids) =>
                 sections.map((section) => {
                   const label = section.querySelector("h2")?.textContent ?? "";
-                  const items = [...section.querySelectorAll(`[data-testid="${open}"]`)].map((button) => {
-                    const spans = button.querySelectorAll("span");
-                    return `${spans[0]?.textContent ?? ""} · ${spans[1]?.textContent ?? ""}`;
+                  const items = [...section.querySelectorAll(`[data-testid="${ids.open}"]`)].map((button) => {
+                    const question = button.querySelector(`[data-testid="${ids.question}"]`)?.textContent ?? "";
+                    const scope = button.querySelector(`[data-testid="${ids.scope}"]`)?.textContent ?? "";
+                    return `${question} · ${scope}`;
                   });
                   return `${label}: ${items.join(", ")}`;
                 }),
-              askDrawerTestIds.open,
+              { open: askDrawerTestIds.open, question: askDrawerTestIds.question, scope: askDrawerTestIds.scope },
             ),
         )
         .toEqual(groups),
     );
+
+  hoverDrawerConversation = (index: number) =>
+    this.step(`hoverDrawerConversation ${index}`, () => this.drawer().getByTestId(askDrawerTestIds.question).nth(index).hover());
+
+  // The tip with a cut-off name in full, or none when the name fits (OV-371).
+  verifyDrawerTipReads = (index: number, text: string | null) =>
+    this.step(`verifyDrawerTipReads ${index} ${text}`, async () => {
+      const tip = this.drawer().getByTestId(askDrawerTestIds.item).nth(index).getByTestId(cutTextTestIds.tip);
+      if (text === null) await expect(tip).toHaveCount(0);
+      else {
+        await expect(tip).toBeVisible();
+        await expect(tip).toHaveText(text);
+      }
+    });
+
+  // A press held past the long-press time, then let go: the tip shows while held (OV-371).
+  holdDrawerConversation = (index: number) =>
+    this.step(`holdDrawerConversation ${index}`, async () => {
+      const question = this.drawer().getByTestId(askDrawerTestIds.question).nth(index);
+      await question.dispatchEvent("touchstart");
+      await expect(this.drawer().getByTestId(askDrawerTestIds.item).nth(index).getByTestId(cutTextTestIds.tip)).toBeVisible();
+      await question.dispatchEvent("touchend");
+      await question.dispatchEvent("click");
+    });
+
+  scrollDrawerToEnd = () =>
+    this.step("scrollDrawerToEnd", () => this.drawer().evaluate((drawer) => drawer.scrollTo({ top: drawer.scrollHeight })));
+
+  // New chat stays at the top of the drawer, with the fade under it once the list has scrolled.
+  verifyDrawerTopIsPinned = (scrolled: boolean) =>
+    this.step(`verifyDrawerTopIsPinned ${scrolled}`, async () => {
+      const drawerBox = (await this.drawer().boundingBox())!;
+      const newChat = this.drawer().getByTestId(askDrawerTestIds.newChat);
+      await expect(newChat).toBeInViewport({ ratio: 1 });
+      const box = (await newChat.boundingBox())!;
+      expect(box.y - drawerBox.y).toBeLessThan(80);
+      await expect
+        .poll(() =>
+          this.drawer()
+            .getByTestId(askDrawerTestIds.top)
+            .evaluate((top) => getComputedStyle(top, "::after").opacity),
+        )
+        .toBe(scrolled ? "1" : "0");
+    });
 
   verifyDrawerEmpty = () => this.step("verifyDrawerEmpty", () => expect(this.drawer().getByTestId(askDrawerTestIds.empty)).toBeVisible());
 
