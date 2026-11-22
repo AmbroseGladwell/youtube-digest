@@ -15,6 +15,7 @@
     "no-param-reassign": "error",
     "no-sequences": "error",
     "no-unused-expressions": ["error", { "allowTernary": false, "allowShortCircuit": false }],
+    "func-style": ["error", "expression"],
     "prefer-arrow-callback": "error",
     "import/no-duplicates": "error",
     "import/no-cycle": "error",

@@ -3,3 +3,6 @@
 
 # OV-369: curly braces on every if, else, for and while body (docs/conventions/lint-and-format.md)
 18b6b2b56df7e95cf23dea022093b5bfae7d16c2
+
+# OV-369: function declarations become arrow functions (docs/conventions/lint-and-format.md)
+8ecb7b24b94b5bb1525ab89a0e6efcd65820eca6

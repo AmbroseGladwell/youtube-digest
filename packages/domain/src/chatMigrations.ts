@@ -1,25 +1,9 @@
 import type { RecordMigration } from "./RecordMigration.js";
 import { currentSchemaVersion } from "./currentSchemaVersion.js";
 
-// 2: a citation of the overview's own items (OV-319), which a client before it can't read.
-// 3: a citation of another of the reader's overviews (OV-355), likewise.
-// 4: a chat owned by a project or by no one, the library, and sectioned answers (OV-353).
-// 5: a citation of a minute of another overview's source (OV-352).
-// 6: sectioned answers as paragraphs and lists with sources by how they relate, and Search my
-//    library off (OV-354); an answer of points becomes bullets, each point's sources "Supports".
-// 7: a list item with its own sources (OV-362); an item before it cites nothing of its own.
-export const CHAT_MIGRATIONS: readonly RecordMigration[] = [
-  { newSchemaVersion: 2 },
-  { newSchemaVersion: 3 },
-  { newSchemaVersion: 4 },
-  { newSchemaVersion: 5 },
-  { newSchemaVersion: 6, alterRecord: sectionsAsLists },
-  { newSchemaVersion: 7, alterRecord: listItemsWithSources },
-];
-
 const itemOf = (item: unknown) => (typeof item === "string" ? { text: item, sources: [] } : item);
 
-function listItemsWithSources(record: unknown): unknown {
+const listItemsWithSources = (record: unknown): unknown => {
   const chat = record as { messages?: Array<Record<string, unknown>> };
   if (!Array.isArray(chat.messages)) {
     return record;
@@ -44,14 +28,14 @@ function listItemsWithSources(record: unknown): unknown {
       };
     }),
   };
-}
+};
 
 interface PointsSection {
   heading?: unknown;
   points?: Array<{ text?: unknown; citations?: unknown[] }>;
 }
 
-function sectionsAsLists(record: unknown): unknown {
+const sectionsAsLists = (record: unknown): unknown => {
   const chat = record as { messages?: Array<Record<string, unknown>> };
   if (!Array.isArray(chat.messages)) {
     return record;
@@ -88,6 +72,22 @@ function sectionsAsLists(record: unknown): unknown {
       };
     }),
   };
-}
+};
+
+// 2: a citation of the overview's own items (OV-319), which a client before it can't read.
+// 3: a citation of another of the reader's overviews (OV-355), likewise.
+// 4: a chat owned by a project or by no one, the library, and sectioned answers (OV-353).
+// 5: a citation of a minute of another overview's source (OV-352).
+// 6: sectioned answers as paragraphs and lists with sources by how they relate, and Search my
+//    library off (OV-354); an answer of points becomes bullets, each point's sources "Supports".
+// 7: a list item with its own sources (OV-362); an item before it cites nothing of its own.
+export const CHAT_MIGRATIONS: readonly RecordMigration[] = [
+  { newSchemaVersion: 2 },
+  { newSchemaVersion: 3 },
+  { newSchemaVersion: 4 },
+  { newSchemaVersion: 5 },
+  { newSchemaVersion: 6, alterRecord: sectionsAsLists },
+  { newSchemaVersion: 7, alterRecord: listItemsWithSources },
+];
 
 export const CURRENT_CHAT_SCHEMA_VERSION = currentSchemaVersion(CHAT_MIGRATIONS);
