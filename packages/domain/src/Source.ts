@@ -115,12 +115,23 @@ export const podcastSource = (episode: PodcastEpisode, id: SourceKey, sharedFrom
   sharedFrom: keptSharedLink(sharedFrom),
 });
 
-// An empty caption is common, so the creator stands in as the title.
+const TRAILING_HASHTAGS = /(?:\s*#[\p{L}\p{N}_]+)+\s*$/u;
+
+// Design 130g: the caption without the hashtags after its words; only hashtags, as written; none, the creator.
+export const tiktokTitle = (caption: string, handle: string): string => {
+  const written = caption.trim();
+  if (written === "") {
+    return `A TikTok by @${handle}`;
+  }
+  const words = written.replace(TRAILING_HASHTAGS, "").trim();
+  return words === "" ? written : words;
+};
+
 export const tiktokSource = (video: TikTokVideo): TikTokSource => ({
   kind: "tiktok",
   id: video.id as SourceKey,
   url: video.url,
-  title: video.description.trim() === "" ? `@${video.handle}` : video.description.trim(),
+  title: tiktokTitle(video.description, video.handle),
   handle: video.handle,
   authorName: video.authorName,
   durationMs: video.durationSeconds === null ? null : video.durationSeconds * 1000,

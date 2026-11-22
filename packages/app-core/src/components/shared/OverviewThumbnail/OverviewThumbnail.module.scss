@@ -53,6 +53,14 @@
   background: var(--stone-tint);
 }
 
+// Design 130j: the 9:16 cover at the slot's full height, never cropped.
+.portrait {
+  display: block;
+  height: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+}
+
 .art {
   display: block;
   height: 84%;
