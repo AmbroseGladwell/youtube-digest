@@ -75,3 +75,15 @@
     text-align: center;
   }
 }
+
+// OV-380: on the narrowest phones the tabs give up padding before the page scrolls sideways.
+@media (max-width: 23.375rem) {
+  .tab {
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-inline: 0.5rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

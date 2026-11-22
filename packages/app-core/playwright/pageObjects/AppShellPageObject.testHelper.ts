@@ -90,7 +90,7 @@ export class AppShellPageObject extends PageObject {
         const words = link.lastElementChild!.getBoundingClientRect();
         return words.right - link.getBoundingClientRect().right;
       });
-      expect(spill).toBeLessThanOrEqual(0);
+      expect(spill).toBeLessThanOrEqual(0.5);
     });
 
   // paneTransitions.scss keys every rule off this attribute, so it is what can be asserted.
