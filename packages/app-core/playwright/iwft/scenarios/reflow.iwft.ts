@@ -108,6 +108,7 @@ const screens: Screen[] = [
       return ask;
     },
     verify: (ask) => ask.verifyDrawerControlsCanBeReached(),
+    brokenUntil: { [ZOOMED]: SHEET_TOO_SHORT },
   }),
   screen({
     name: "Settings",

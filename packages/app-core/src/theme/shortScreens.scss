@@ -1,6 +1,7 @@
 // Why bars let go on short screens: docs/conventions/frontend-architecture-guide.md §4.5.
 $short-screen: 34rem;
 $very-short-screen: 20rem;
+$masthead-lets-go: "[data-masthead-lets-go]";
 
 @mixin short-screen {
   @media (max-height: $short-screen) {

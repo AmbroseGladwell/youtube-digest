@@ -321,12 +321,15 @@ the time. It is one hook rather than two because the reader needed the second me
 and it takes callback refs rather than `useRef`, because the reader renders a skeleton
 first and its elements arrive after the first render, which a mount-only effect would miss.
 
-**On a short screen the bars let go (OV-384).** Below 34rem of height (a phone on its side,
-400% zoom, or 200% text), the masthead and the tab strip scroll with the page, and both
+**On a short screen the overview's bars let go (OV-384).** Below 34rem of height (a phone on
+its side, 400% zoom, or 200% text), the masthead and the tab strip scroll with the page, and both
 offsets read 0, so nothing below them leaves a gap. Below 20rem the player bar scrolls with
 the page too. `theme/shortScreens.scss` holds both heights. A size, which is what the
 filter sheet's height or the Ask page's minimum height subtracts, stays `--masthead-size`,
-because the masthead still takes that room at the top of the page.
+because the masthead still takes that room at the top of the page. Only the overview lets
+the masthead go, through `data-masthead-lets-go` on its root: elsewhere the masthead alone
+covers well under half even at 400% zoom, and it holds the way back once a page is scrolled
+(`back-within-reach.md`).
 
 Below 992px none of this applies: the library's rail is a slide-over sheet and the reader's
 falls under the note, so the sticky rules live in `min-width` blocks and the phone layouts

@@ -735,7 +735,12 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
         className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""}`}
         style={chatSheet && chat.open ? ({ "--chat-sheet-clearance": `${LOWERED_SHOWS_PX}px` } as CSSProperties) : undefined}
       >
-        <article className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
+        <article
+          className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`}
+          ref={tabsHeight.host}
+          data-masthead-lets-go
+          data-testid={readerPageTestIds.root}
+        >
           <ReaderMasthead
             overview={overview}
             metaParts={overviewMetaParts(overview)}

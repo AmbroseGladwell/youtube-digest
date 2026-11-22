@@ -7,8 +7,11 @@
   flex-direction: column;
   min-height: 100dvh;
   background: var(--ground);
+  --masthead-height: var(--masthead-size);
 
-  @include shortScreens.sticky-offset(--masthead-height, --masthead-size);
+  &:has(#{shortScreens.$masthead-lets-go}) {
+    @include shortScreens.sticky-offset(--masthead-height, --masthead-size);
+  }
 }
 
 // The view-transition names: docs/features/page-transitions.md, "The name budget".
@@ -18,7 +21,9 @@
   z-index: 3;
   background: var(--ground);
   view-transition-name: masthead;
+}
 
+.root:has(#{shortScreens.$masthead-lets-go}) .masthead {
   @include shortScreens.short-screen {
     position: relative;
   }
