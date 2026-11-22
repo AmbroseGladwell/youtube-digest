@@ -2,7 +2,8 @@ import { expect, test } from "../../support/fixtures.testHelper.js";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
 import type { Chat } from "@overview/domain";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
-import type { PageObject } from "../../pageObjects/PageObject.testHelper.js";
+import type { AxeAllowance, PageObject } from "../../pageObjects/PageObject.testHelper.js";
+import { libraryPageTestIds } from "../../../src/features/library/LibraryPage/LibraryPageTestIds.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
@@ -46,7 +47,7 @@ interface Screen<Shown extends PageObject = PageObject> {
 
 const screen = <Shown extends PageObject>(described: Screen<Shown>): Screen => described as unknown as Screen;
 
-const TIME_SAVED_NAME = "OV-389: the time-saved button's name leaves out its visible text";
+const SPOKEN_TIME_SAVED: AxeAllowance = { rule: "label-content-name-mismatch", testId: libraryPageTestIds.timeSavedButton };
 
 const openLibrary = (launcher: Launcher, backendSimulator: BackendSimulator) => {
   backendSimulator.overviews.seedSynced(NOTE);
@@ -58,7 +59,6 @@ const screens: Screen[] = [
     name: "the library",
     open: openLibrary,
     verify: (library) => library.verifyReflows(),
-    brokenUntil: { axe: TIME_SAVED_NAME },
   }),
   screen({
     name: "the library's filters",
@@ -68,7 +68,6 @@ const screens: Screen[] = [
       return library;
     },
     verify: (library) => library.verifyFilterControlsCanBeReached(),
-    brokenUntil: { axe: TIME_SAVED_NAME },
   }),
   screen({
     name: "the account menu",
@@ -77,7 +76,6 @@ const screens: Screen[] = [
       return launcher.appShell.accountMenu.open();
     },
     verify: (menu) => menu.verifyItemsCanBeReached(),
-    brokenUntil: { axe: TIME_SAVED_NAME },
   }),
   screen({
     name: "the sort menu",
@@ -87,7 +85,6 @@ const screens: Screen[] = [
       return library.sortPill;
     },
     verify: (sort) => sort.verifyOptionsCanBeReached(),
-    brokenUntil: { axe: TIME_SAVED_NAME },
   }),
   screen({
     name: "an overview with its player",
@@ -182,7 +179,7 @@ test.describe("axe", () => {
     test(`finds nothing on ${screen.name}`, async ({ launcher, backendSimulator }) => {
       markBroken(screen, "axe");
       const shown = await screen.open(launcher, backendSimulator);
-      await shown.verifyIsAccessible();
+      await shown.verifyIsAccessible([SPOKEN_TIME_SAVED]);
     });
   }
 });

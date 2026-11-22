@@ -16,6 +16,14 @@ import {
 const REACHABLE_CONTROLS = ["button", "a[href]", "input", "select", "textarea", "[role=menuitem]", "[role=option]", "[role=tab]"]
   .map((control) => `${control}:not([disabled]):not([aria-disabled=true])`)
   .join(", ");
+export interface AxeAllowance {
+  rule: string;
+  testId: string;
+}
+
+const isAllowed = (allowed: AxeAllowance[], rule: string, html: string) =>
+  allowed.some((allowance) => allowance.rule === rule && html.includes(`data-testid="${allowance.testId}"`));
+
 const REACH_MARK = "data-reach-check";
 const LONGEST_WAIT_FOR_ANIMATIONS_MS = 2_000;
 const WCAG_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
@@ -205,7 +213,7 @@ export abstract class PageObject {
       expect([...new Set(stuck)].slice(0, 10), "this text ignores the browser's text size: set font-size in rem, never px").toEqual([]);
     });
 
-  verifyIsAccessible = (disabledRules: string[] = []) =>
+  verifyIsAccessible = (allowed: AxeAllowance[] = []) =>
     this.step("verifyIsAccessible", async () => {
       await this.page.evaluate((longestWait) => {
         const finite = document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity);
@@ -213,13 +221,11 @@ export abstract class PageObject {
         return Promise.race([settled, new Promise((resolve) => setTimeout(resolve, longestWait))]);
       }, LONGEST_WAIT_FOR_ANIMATIONS_MS);
       await expect(async () => {
-        const results = await new AxeBuilder({ page: this.page })
-          .withTags(WCAG_AA)
-          .disableRules(["scrollable-region-focusable", ...disabledRules])
-          .analyze();
-        expect(
-          results.violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`),
-        ).toEqual([]);
+        const results = await new AxeBuilder({ page: this.page }).withTags(WCAG_AA).disableRules(["scrollable-region-focusable"]).analyze();
+        const found = results.violations
+          .map((violation) => ({ ...violation, nodes: violation.nodes.filter((node) => !isAllowed(allowed, violation.id, node.html)) }))
+          .filter((violation) => violation.nodes.length > 0);
+        expect(found.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`)).toEqual([]);
       }).toPass({ timeout: 5_000 });
     });
 

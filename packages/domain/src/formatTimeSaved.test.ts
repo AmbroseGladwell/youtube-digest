@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { formatTimeSaved, spokenTimeSaved } from "./formatTimeSaved.js";
+import { formatTimeSaved, spokenTimeSaved, timeSavedName } from "./formatTimeSaved.js";
 
 test("under an hour the figure is minutes alone", () => {
   assert.equal(formatTimeSaved(0), "0m");
@@ -18,4 +18,9 @@ test("the spoken figure names its units in full and in the singular where it sho
   assert.equal(spokenTimeSaved(60), "1 hour");
   assert.equal(spokenTimeSaved(61), "1 hour 1 minute");
   assert.equal(spokenTimeSaved(587), "9 hours 47 minutes");
+});
+
+test("the name says the figure in full", () => {
+  assert.equal(timeSavedName(0), "0 minutes saved");
+  assert.equal(timeSavedName(587), "9 hours 47 minutes saved");
 });

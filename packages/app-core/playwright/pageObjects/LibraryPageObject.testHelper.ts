@@ -40,7 +40,7 @@ export class LibraryPageObject extends PageObject {
   // The figure is drawn as rolling digits, so it is read from its accessible name.
   verifyTimeSavedSays = (spoken: string) =>
     this.step(`verifyTimeSavedSays ${spoken}`, () =>
-      expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveAttribute("aria-label", `Time saved: ${spoken}`),
+      expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveAttribute("aria-label", `${spoken} saved`),
     );
 
   verifyTimeSavedShows = (figure: string) =>
