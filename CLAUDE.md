@@ -57,9 +57,16 @@ Three habits earned their keep and are worth continuing:
 2. **Never let a model count, measure or time anything.** See `docs/prototype/constraints.md`. This produced the single worst bug of the project.
 3. **Degrade visibly.** Every feature that depends on something optional hides itself when that thing is missing, rather than presenting a control that cannot work.
 
-A fourth, since the policy pages exist:
+A fourth, for every screen:
 
-4. **Check the privacy policy and the terms on every card.** `/privacy` and `/terms` describe what the software actually does, so a change to what is collected, sent, stored, shared or kept makes them wrong. Before opening a PR, run the trigger list in `docs/features/legal-pages.md` ("Does this change the texts?"). If anything matches, change the page, move its `*_UPDATED_ON`, and add a line to that doc's revision log in the same PR. If nothing matches, the PR says so in one line.
+4. **Zoom, text size and phones count as much as keyboard and screen reader access.**
+   Every screen works at 400% zoom, 200% browser text and on a phone either way round;
+   `reflow.iwft.ts` checks it and `docs/conventions/frontend-architecture-guide.md` §4.5
+   says what holds. Font sizes are in `rem`.
+
+A fifth, since the policy pages exist:
+
+5. **Check the privacy policy and the terms on every card.** `/privacy` and `/terms` describe what the software actually does, so a change to what is collected, sent, stored, shared or kept makes them wrong. Before opening a PR, run the trigger list in `docs/features/legal-pages.md` ("Does this change the texts?"). If anything matches, change the page, move its `*_UPDATED_ON`, and add a line to that doc's revision log in the same PR. If nothing matches, the PR says so in one line.
 
 ## Code conventions
 

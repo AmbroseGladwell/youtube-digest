@@ -92,6 +92,8 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 
 Oxlint doesn't read SCSS or CSS, so `scripts/checkStyleComments.mjs` holds the same line there as `no-long-comment` does in TypeScript: no comment of more than one line, and no TODO or FIXME (OV-378). `npm run lint` runs it on every style file, and the pre-commit hook on the staged ones. `prototype/` is left alone, as evidence.
 
+`scripts/checkStyleFontSizes.mjs` refuses a `font-size` or `font` shorthand in `px` with nothing beside it that follows the browser's text size (OV-388): use `rem`, or `max(16px, 1rem)` for a floor. It runs in the same two places. The reason is in `frontend-architecture-guide.md` §4.5.
+
 ### Type-aware rules
 
 `npm run lint` and the pre-commit hook pass `--type-aware`, so Oxlint asks `oxlint-tsgolint` (TypeScript's own checker, in Go) for types. That runs the type-aware rules in `correctness`, and the two below. A run over the whole repo takes about 9 seconds and peaks under 1 GB. On a commit's few files it takes under a second. It reads `@overview/*` types from each package's `dist`, so CI's `lint` job builds the packages first, and locally a stale `dist` gives stale answers, just as it does for `task typecheck`.
