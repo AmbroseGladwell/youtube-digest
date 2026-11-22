@@ -278,9 +278,11 @@ const sections: readonly LegalSection[] = [
         <p>
           You can also ask a question over your whole library, or on a project's page. Our server sends OpenAI the question with every
           overview in it: whole while they are few, otherwise a short entry for each (its title, big picture and core claim, and a recipe's
-          ingredients), and then the few overviews chosen from those, whole. A project's question also sends its name and what you keep it
-          for. Any overview or project you add with "@" goes too. The conversation keeps which overviews were read whole for each question,
-          and the titles each part of an answer cites.
+          ingredients), and then the few overviews chosen from those, whole. Each overview goes with a line of facts (its kind, its length,
+          the day you saved it, how new its ideas are and its topics), and the question goes with which overviews you have marked read or
+          favourite, so it can narrow to, say, the ones you haven't read. A project's question also sends its name and what you keep it for.
+          Any overview or project you add with "@" goes too. The conversation keeps which overviews were read whole for each question, and
+          the titles each part of an answer cites.
         </p>
         <p>
           The question and the answer are kept as a conversation in your library, under your account, and synced to your devices; your
@@ -294,7 +296,8 @@ const sections: readonly LegalSection[] = [
           it took, whether it was about a video, an episode, an article or a recipe page, whether the video or episode covered it, whether
           the answer added general knowledge beyond it, whether what we know about you went with it, how many of your other overviews went
           with it, and how many places the answer cited; for a question over your library or a project, also how many overviews it read
-          whole and how many sections the answer had; never the question, the answer or what we know about you.
+          whole, how many it looked across and how many of those the answer cited, and how many sections the answer had; never the question,
+          the answer or what we know about you.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping

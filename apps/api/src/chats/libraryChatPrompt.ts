@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { formatClock, MAX_CHAT_PICKS, overviewMarkdown, type Overview, type Project } from "@overview/domain";
+import { chatSourceKind, formatClock, MAX_CHAT_PICKS, overviewMarkdown, type Overview, type Project } from "@overview/domain";
 import type { Passage } from "./transcriptPassages.js";
 import { ANSWER_SHAPE_RULES, CHAT_REPLY_SCHEMA } from "./ChatReply.js";
+import { NO_MARKS, type OverviewMarks } from "./planScope.js";
 import type { PromptMessage, ReplyShape } from "./streamChatCompletion.js";
 
 // About 20,000 tokens, counted in characters by code: below it the overviews go whole and one pass
@@ -11,7 +12,11 @@ const RECIPE_INGREDIENTS_SHOWN = 12;
 // Luna's reasoning counts against the cap, and broad questions reason longest: 300 cut off 4 in 17,
 // and a 1,000-token overview answer was cut off by reasoning alone. The caps bound the worst case.
 const PICK_TOKENS = 2_000;
+const PLAN_TOKENS = 3_000;
 const SECTIONED_TOKENS = 4_000;
+// OV-373: an answer that places every overview in scope ran to 7,800 tokens for 89 of them.
+const BROAD_TOKENS = 16_000;
+const WORDS_A_MINUTE = 238;
 
 export const PICK_SHAPE: ReplyShape = {
   name: "pick",
@@ -29,7 +34,43 @@ export const SECTIONED_SHAPE: ReplyShape = { name: "chat_reply", maxTokens: SECT
 
 export const PickReply = z.object({ overviews: z.array(z.string()) });
 
+// An answer that has to cover many overviews, or every overview of a small library sent whole.
+export const BROAD_SHAPE: ReplyShape = { ...SECTIONED_SHAPE, maxTokens: BROAD_TOKENS };
+
+export const PLAN_SHAPE: ReplyShape = {
+  name: "plan",
+  maxTokens: PLAN_TOKENS,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["filters", "mode", "picks"],
+    properties: {
+      filters: {
+        type: "object",
+        additionalProperties: false,
+        required: ["read", "favourite", "kinds", "topics", "savedFrom", "savedTo", "novelty"],
+        properties: {
+          read: { type: "string", enum: ["unread", "read", "any"] },
+          favourite: { type: "string", enum: ["only", "any"] },
+          kinds: { type: "array", items: { type: "string", enum: ["video", "article", "recipe", "episode"] } },
+          topics: { type: "array", items: { type: "string" } },
+          savedFrom: { type: "string" },
+          savedTo: { type: "string" },
+          novelty: { type: "array", items: { type: "string", enum: ["common_knowledge", "fresh_angle", "original"] } },
+        },
+      },
+      mode: { type: "string", enum: ["deep", "broad"] },
+      picks: { type: "array", items: { type: "string" } },
+    },
+  },
+};
+
 export type LibraryChatScope = { kind: "library" } | { kind: "project"; project: Project };
+
+export interface LibraryChatContext {
+  marks?: ReadonlyMap<string, OverviewMarks>;
+  topics?: readonly string[];
+}
 
 export interface LibraryChatMaterial {
   mode: "whole" | "map";
@@ -40,10 +81,34 @@ export interface LibraryChatMaterial {
 
 const labelled = (label: string, overview: Overview) => overviewMarkdown(overview, { partIds: true, partIdPrefix: `${label}.` });
 
-const briefEntry = (label: string, overview: Overview): string => {
+const minutesOf = ({ source }: Overview): number | null =>
+  source.kind === "web"
+    ? Math.max(1, Math.round(source.wordCount / WORDS_A_MINUTE))
+    : source.durationMs === null
+      ? null
+      : Math.max(1, Math.round(source.durationMs / 60_000));
+
+// OV-373: what a reader filters and ranks by, set by code, on one line under each title.
+export const factsLine = (overview: Overview, marks: OverviewMarks): string => {
+  const kind = chatSourceKind(overview);
+  const minutes = minutesOf(overview);
+  return [
+    kind,
+    minutes === null ? null : kind === "article" || kind === "recipe" ? `${minutes} min read` : `${minutes} min`,
+    `saved ${overview.savedAt.slice(0, 10)}`,
+    overview.verdict === null ? null : overview.verdict.novelty.replace("_", " "),
+    overview.verdict?.dubious === true ? "dubious" : null,
+    overview.watchAnyway === null ? null : `watch it anyway: ${overview.watchAnyway.answer}`,
+    marks.topics.length === 0 ? null : `topics: ${marks.topics.join(", ")}`,
+  ]
+    .filter((part) => part !== null)
+    .join(" · ");
+};
+
+const briefEntry = (label: string, overview: Overview, marks: OverviewMarks): string => {
   const ingredients =
     overview.recipe === null ? "" : `Ingredients: ${overview.recipe.ingredients.slice(0, RECIPE_INGREDIENTS_SHOWN).join("; ")}`;
-  return [`## [${label}] ${overview.source.title}`, overview.bigPicture ?? "", overview.coreClaim, ingredients]
+  return [`## [${label}] ${overview.source.title}`, factsLine(overview, marks), overview.bigPicture ?? "", overview.coreClaim, ingredients]
     .filter((line) => line !== "")
     .join("\n");
 };
@@ -61,7 +126,10 @@ Rules:
 - Never give a count of overviews or sources, or a share of them, in words or figures ("two sources", "three of your recipes"): say "a couple", "several" or "most" instead.
 - Use only what the overviews say. Where you connect them, say it is your connection, not theirs.
 - When nothing here covers the question, say so in the intro and leave sections empty.
-- There is no single source here: always set inSource to false, and set generalKnowledge to false unless you add something from beyond these overviews, which you mark as such.`;
+- There is no single source here: always set inSource to false, and set generalKnowledge to false unless you add something from beyond these overviews, which you mark as such.
+- When the answer covers many overviews (every unread one, every one on a topic, a ranking), every overview it covers appears in the sources of a list item, so none is left out silently. Group them: one item may carry many sources when they share a reason.`;
+
+const FACTS = `Each overview also has a line of facts: its kind, its length, the day it was saved, how new its ideas are, whether its claims are dubious, whether it is worth watching anyway, and its topics. The reader's read and favourite marks come in a message of their own.`;
 
 // OV-307's two-pass system message, which found 20 of 22 core overviews with no point drifting from
 // its sources. The map serves both passes, so the second reads it from the cache. Below the
@@ -70,30 +138,69 @@ export function libraryChatMaterial(
   scope: LibraryChatScope,
   overviews: readonly Overview[],
   wholeCharacters = WHOLE_CHARACTERS,
+  { marks = new Map(), topics = [] }: LibraryChatContext = {},
 ): LibraryChatMaterial {
   const labels = new Map(overviews.map((overview, index) => [`O${index + 1}`, overview]));
-  const whole = [...labels].map(([label, overview]) => `## [${label}]\n\n${labelled(label, overview)}`);
+  const marksOf = (overview: Overview) => marks.get(overview.id) ?? NO_MARKS;
+  const whole = [...labels].map(
+    ([label, overview]) => `## [${label}]\n\n${factsLine(overview, marksOf(overview))}\n\n${labelled(label, overview)}`,
+  );
   const mode = whole.join("\n\n").length <= wholeCharacters ? "whole" : "map";
   const system =
     mode === "whole"
-      ? `You answer a reader's questions about ${where(scope)}, listed below in full. Each overview has an id (O1, O2 and so on), and its items carry their own ids (such as O12.kp3).
+      ? `You answer a reader's questions about ${where(scope)}, listed below in full. Each overview has an id (O1, O2 and so on), and its items carry their own ids (such as O12.kp3). ${FACTS}
 
 ${SHAPE_AND_RULES}
 
 # The overviews
 
 ${whole.join("\n\n")}`
-      : `You answer a reader's questions about ${where(scope)}, listed below in brief. Each overview has an id (O1, O2 and so on) and shows its title, its big picture and its core claim; a recipe shows its ingredients.
+      : `You answer a reader's questions about ${where(scope)}, listed below in brief. Each overview has an id (O1, O2 and so on) and shows its title, its big picture and its core claim; a recipe shows its ingredients. ${FACTS}
 
-Sometimes you are first asked to choose the overviews whose full notes you need. Choose up to ${MAX_CHAT_PICKS}, the ones the answer will rest on, and return their ids. You may then be given those overviews in full, with their items' ids (such as O12.kp3).
+Before answering you are asked for a plan:
+- filters: narrow the overviews to the ones the question is about, using only these: read ("unread", "read" or "any"), favourite ("only" or "any"), kinds (video, article, recipe, episode), topics (exact names from the list below), savedFrom and savedTo (YYYY-MM-DD, or empty), novelty (common_knowledge, fresh_angle, original). Leave a filter at "any" or empty unless the question asks for it. Code applies them exactly.
+- mode: "broad" when the answer has to cover, sort or rank many overviews; "deep" when it rests on a few.
+- picks: up to ${MAX_CHAT_PICKS} overviews whose full notes the answer will rest on, from inside the filters.
+You are then given the ids code kept after your filters, and the overviews you picked in full, with their items' ids (such as O12.kp3).
 
 ${SHAPE_AND_RULES}
 
+# Topics
+
+${topics.length === 0 ? "None yet." : topics.join("; ")}
+
 # The overviews
 
-${[...labels].map(([label, overview]) => briefEntry(label, overview)).join("\n\n")}`;
+${[...labels].map(([label, overview]) => briefEntry(label, overview, marksOf(overview))).join("\n\n")}`;
   return { mode, system, labels };
 }
+
+// The reader's marks, after the map rather than on it, so marking an overview read doesn't change
+// the cached map.
+export function marksBlock(labels: ReadonlyMap<string, Overview>, marks: ReadonlyMap<string, OverviewMarks>): PromptMessage {
+  const which = (keep: (mark: OverviewMarks) => boolean) =>
+    [...labels]
+      .filter(([, overview]) => keep(marks.get(overview.id) ?? NO_MARKS))
+      .map(([label]) => label)
+      .join(", ") || "none";
+  return {
+    role: "user",
+    content: `The reader's marks. Unread: ${which((mark) => !mark.read)}.\nFavourites: ${which((mark) => mark.favourite)}.`,
+  };
+}
+
+export const planPrompt = (question: string): PromptMessage => ({
+  role: "user",
+  content: `Plan the answer to this question: ${question}`,
+});
+
+export const scopeBlock = (kept: readonly string[]): PromptMessage => ({
+  role: "user",
+  content:
+    kept.length === 0
+      ? "Your filters kept none of the overviews. Say so, and answer from nothing else."
+      : `The overviews code kept after your filters: ${kept.join(", ")}. Answer from these alone.`,
+});
 
 export const pickPrompt = (question: string): PromptMessage => ({
   role: "user",

@@ -122,7 +122,10 @@ export function AskPage() {
     if (state.status === "answering") {
       const wasPicking = was.status === "answering" ? was.picking : null;
       if (state.picking === "choosing" && wasPicking !== "choosing") setAnnouncement("Choosing which overviews to read");
-      else if (state.picking === "reading" && wasPicking !== "reading") setAnnouncement(`Reading ${overviews(state.picked.length)}`);
+      else if (state.picking === "reading" && wasPicking !== "reading")
+        setAnnouncement(
+          state.looked === undefined ? `Reading ${overviews(state.picked.length)}` : `Looking across ${overviews(state.looked)}`,
+        );
       else if (was.status !== "answering" && state.picking === null) setAnnouncement("Writing an answer");
     }
     if (state.status === "stopped") setAnnouncement("Stopped");
@@ -360,6 +363,7 @@ export function AskPage() {
                                   : "read"
                             }
                             picked={pending.picked}
+                            {...(pending.looked === undefined ? {} : { looked: pending.looked })}
                             imageOf={imageOf}
                             holds={holds}
                             onOpened={() => analytics.ask.chat.readOpened({ scope })}

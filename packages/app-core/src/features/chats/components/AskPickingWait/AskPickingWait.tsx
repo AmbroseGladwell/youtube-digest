@@ -12,6 +12,8 @@ export interface AskPickingWaitProps {
   // Choosing what to read, reading what was chosen, or read, once the answer has begun.
   phase: "choosing" | "reading" | "read";
   picked: readonly PickedOverview[];
+  // How many overviews the plan kept to look across (OV-373).
+  looked?: number;
   imageOf: (overviewId: string) => { url: string | null; wide: boolean };
   holds: (overviewId: string) => boolean;
   onOpened: () => void;
@@ -47,7 +49,7 @@ function Mark({ state }: { state: MarkState }) {
 // OV-354, page 3 (354v, the mp4): a short list in small muted type while a library or project
 // question chooses what to read, then reads it, the titles named by code from the ids; once the
 // answer begins it folds into one "Read 5 overviews" line that opens to show them as chips.
-export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFollow }: AskPickingWaitProps) {
+export function AskPickingWait({ phase, picked, looked, imageOf, holds, onOpened, onFollow }: AskPickingWaitProps) {
   const [slow, setSlow] = useState(false);
   const [open, setOpen] = useState(false);
   const chipsId = useId();
@@ -123,7 +125,13 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
       <p className={`${styles.step} ${reading ? styles.stepOn : styles.stepTodo}`} data-testid={askPickingWaitTestIds.step}>
         <Mark state={reading ? "on" : "todo"} />
         <span>
-          {reading ? `Reading ${overviews(picked.length)}` : "Reading the overviews"}
+          {!reading
+            ? "Reading the overviews"
+            : looked === undefined
+              ? `Reading ${overviews(picked.length)}`
+              : picked.length === 0
+                ? `Looking across ${overviews(looked)}`
+                : `Looking across ${overviews(looked)}, reading ${picked.length} in full`}
           {reading && <small> · Then the answer</small>}
         </span>
       </p>

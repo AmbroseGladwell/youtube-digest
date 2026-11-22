@@ -74,7 +74,7 @@ test.describe("Ask", () => {
         { overviewId: stew.id, title: STEW },
       ],
       sections: sectioned(plants, stew),
-      stats: { overviews: 3, read: 2 },
+      stats: { overviews: 3, read: 2, looked: 3 },
     });
     await launcher.launchExpectingLibrary(SIGNED_IN);
 
@@ -96,7 +96,7 @@ test.describe("Ask", () => {
     await ask.verifyReadLineReads(0, "Read 2 overviews");
     await ask.verifySectionsRead(0, ["Beans every day", "Takeaway"]);
     await ask.verifySectionSourcesRead(0, 0, [`Based on${PLANTS}${STEW}`]);
-    await ask.verifyStatsReads(0, "From 2 of your 3 overviews");
+    await ask.verifyStatsReads(0, "Looked across your 3 overviews · read 2 in full");
     await ask.verifyAnnouncement("Answer ready");
     await expect(page).toHaveURL(/\/ask\?chat=/);
 

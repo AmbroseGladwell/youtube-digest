@@ -5,7 +5,7 @@ export type FakeChatAnswer = { reply: unknown; usage?: unknown; finishReason?: s
 export interface FakeChatOpenAi {
   http: typeof fetch;
   answers: FakeChatAnswer[];
-  requests: Array<{ model: unknown; messages: PromptMessage[]; cacheKey: unknown; stream: unknown }>;
+  requests: Array<{ model: unknown; messages: PromptMessage[]; cacheKey: unknown; stream: unknown; maxTokens: unknown }>;
 }
 
 export const CHAT_USAGE = { prompt_tokens: 10_000, completion_tokens: 80, prompt_tokens_details: { cached_tokens: 8_000 } };
@@ -23,8 +23,15 @@ export function makeFakeChatOpenAi(...answers: FakeChatAnswer[]): FakeChatOpenAi
         messages: PromptMessage[];
         prompt_cache_key: unknown;
         stream: unknown;
+        max_completion_tokens: unknown;
       };
-      fake.requests.push({ model: body.model, messages: body.messages, cacheKey: body.prompt_cache_key, stream: body.stream });
+      fake.requests.push({
+        model: body.model,
+        messages: body.messages,
+        cacheKey: body.prompt_cache_key,
+        stream: body.stream,
+        maxTokens: body.max_completion_tokens,
+      });
       const answer = fake.answers.length > 1 ? fake.answers.shift()! : fake.answers[0]!;
       if ("status" in answer) {
         return new Response(JSON.stringify({ error: { message: "refused" } }), {

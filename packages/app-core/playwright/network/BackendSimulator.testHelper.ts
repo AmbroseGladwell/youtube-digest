@@ -1581,7 +1581,12 @@ export class BackendSimulator {
     return {
       status: 200,
       stream: [
-        ...(picked.length > 0 ? [{ type: "picking" }, { type: "picked", overviews: picked }] : []),
+        ...(picked.length > 0
+          ? [
+              { type: "picking" },
+              { type: "picked", overviews: picked, ...(reply.stats?.looked === undefined ? {} : { looked: reply.stats.looked }) },
+            ]
+          : []),
         ...(pinned.length > 0 ? [{ type: "sources", pinned, found: [] }] : []),
         ...pieces.map((text) => ({ type: "text", text })),
         ...(reply.sections?.sections ?? []).map((section) => ({ type: "section", section })),

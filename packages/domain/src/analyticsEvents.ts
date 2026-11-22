@@ -1421,9 +1421,10 @@ export const analyticsEvents = {
           setAside: z.number().int().nonnegative(),
         },
       ),
-      picked: event("An Ask question chose what to read, with how many overviews, counted by code", {
+      picked: event("An Ask question chose what to read, with how many overviews and how many it looked across, counted by code", {
         scope: AskScope,
         overviews: z.number().int().nonnegative(),
+        lookedAcross: z.number().int().nonnegative().optional(),
       }),
       answered: event("An Ask answer settled, with how many sections and how many overviews it cited, counted by code", {
         scope: AskScope,
