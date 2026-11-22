@@ -65,3 +65,12 @@ test("the check answers one kind from a closed list: unsure of a recipe means de
   assert.ok(systemPrompt.includes("When you are unsure whether it is a recipe, answer default."));
   assert.ok(systemPrompt.includes("When you are unsure whether it tells its audience to do something, answer process."));
 });
+
+test("only a spoken source is offered nothing to summarise", () => {
+  const spoken = composeKindCheckPrompt(kindSampleOfVideo(input([])));
+  const written = composeKindCheckPrompt({ ...kindSampleOfVideo(input([])), spoken: false });
+  assert.ok(spoken.systemPrompt.includes("- nothing: its words are song lyrics"));
+  assert.ok(!written.systemPrompt.includes("- nothing:"));
+  assert.equal(spoken.schema.safeParse({ noteKind: "nothing" }).success, true);
+  assert.equal(written.schema.safeParse({ noteKind: "nothing" }).success, false);
+});

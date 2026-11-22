@@ -55,3 +55,15 @@ export const makeAnthropicMessageResponse = (generatedOutput: Record<string, unk
     usage: { input_tokens: 100, output_tokens: 100 },
   };
 };
+
+// A short clip's prompt allows no chapters and no part worth watching, and the simulated model obeys it as a real one must.
+export const fittedToTheAsk = (output: Record<string, unknown>, ask: string): Record<string, unknown> => {
+  const fitted = { ...output };
+  if (ask.includes("too short to split into chapters")) {
+    fitted.chapters = [];
+  }
+  if (ask.includes("never answer partial") && typeof fitted.watchAnyway === "object" && fitted.watchAnyway !== null) {
+    fitted.watchAnyway = { ...fitted.watchAnyway, answer: "no", startSegmentIndex: -1, endSegmentIndex: -1 };
+  }
+  return fitted;
+};

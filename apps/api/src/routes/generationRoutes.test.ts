@@ -163,6 +163,23 @@ test("a failed generation gives back both its month's slot and its day's slot", 
   await testApp.close();
 });
 
+test("a video with no speech is refused as no speech before our key is asked, and nothing counts", async () => {
+  const openAi = makeFakeOpenAi();
+  const testApp = await ourKeyApp(openAi);
+  const account = await makeAccount(testApp);
+  const request = generationRequest(randomUUID());
+  const silent = { ...request, input: { ...request.input, transcript: [{ text: "La la la, oh baby.", startMs: 0, endMs: 7000 }] } };
+
+  const response = await account.inject({ method: "POST", url: "/api/generations", body: silent });
+
+  assert.equal(response.statusCode, 422);
+  assert.equal(response.json().error.code, "no_speech");
+  assert.equal(response.json().error.details.reason, "too-few-words");
+  assert.equal(openAi.requests.length, 0);
+  assert.equal((await usageOf(account)).ours.used, 0);
+  await testApp.close();
+});
+
 test("each failure says whether it may move to the next key", async () => {
   const cases = [
     [{ status: 503, body: { error: { message: "overloaded" } } }, "provider-down"],

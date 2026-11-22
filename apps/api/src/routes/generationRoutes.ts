@@ -1,3 +1,4 @@
+import { NoSpeechError } from "@overview/generation";
 import type { FastifyInstance } from "fastify";
 import {
   type TrialToken,
@@ -33,6 +34,11 @@ import type { TrialsRepository } from "../usage/TrialsRepository.js";
 
 // A two-hour transcript with a reader's whole library of topics, claims and tags.
 const GENERATION_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
+
+const generationFailure = (error: OurKeyGenerationError): ApiError =>
+  error.cause instanceof NoSpeechError
+    ? new ApiError("no_speech", error.cause.message, { reason: error.cause.reason })
+    : new ApiError("generation_failed", error.message, { fallback: error.fallback });
 
 export interface GenerationRoutesOptions {
   generator: OurKeyGenerator | null;
@@ -72,7 +78,7 @@ export const generationRoutes = (app: FastifyInstance, { generator, trials, sql,
       return await run(generator);
     } catch (error) {
       if (error instanceof OurKeyGenerationError) {
-        throw new ApiError("generation_failed", error.message, { fallback: error.fallback });
+        throw generationFailure(error);
       }
       throw error;
     }
@@ -155,7 +161,7 @@ export const generationRoutes = (app: FastifyInstance, { generator, trials, sql,
         throw new ApiError("unavailable", "Overviews on us aren't available right now");
       }
       if (error instanceof OurKeyGenerationError) {
-        throw new ApiError("generation_failed", error.message, { fallback: error.fallback });
+        throw generationFailure(error);
       }
       throw error;
     }

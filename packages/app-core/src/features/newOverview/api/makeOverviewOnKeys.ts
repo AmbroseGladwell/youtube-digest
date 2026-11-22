@@ -9,7 +9,7 @@ import {
   type ProjectId,
   type Provider,
 } from "@overview/domain";
-import { fallbackReasonOf, generateOverviewOf, type GenerationClient, type OverviewInput } from "@overview/generation";
+import { fallbackReasonOf, generateOverviewOf, NoSpeechError, type GenerationClient, type OverviewInput } from "@overview/generation";
 import { isSyncRequestError, type GenerationApi } from "@overview/sync";
 import { ChosenModelFailedError, failedOnTheModel } from "./ChosenModelFailedError.js";
 
@@ -88,9 +88,16 @@ const onOurKey = async (api: Pick<GenerationApi, "generate"> | null, input: Over
   if (api === null) {
     throw new Error("An overview is made on us only with an account.");
   }
-  const { filedProjectIds, ...overview } = await api.generate({ overviewId: meta.id, input });
-  meta.onProjectsFiled?.(filedProjectIds);
-  return overview;
+  try {
+    const { filedProjectIds, ...overview } = await api.generate({ overviewId: meta.id, input });
+    meta.onProjectsFiled?.(filedProjectIds);
+    return overview;
+  } catch (error) {
+    if (isSyncRequestError(error) && error.code === "no_speech") {
+      throw new NoSpeechError(error.details?.reason === "nothing-to-summarise" ? "nothing-to-summarise" : "too-few-words");
+    }
+    throw error;
+  }
 };
 
 const onOwnKey = async (

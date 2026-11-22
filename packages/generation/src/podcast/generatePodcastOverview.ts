@@ -7,6 +7,7 @@ import { checkNoteKind } from "../noteKind/checkNoteKind.js";
 import { kindSampleOfVideo } from "../noteKind/kindSampleOfVideo.js";
 import { composePodcastPrompt } from "./composePodcastPrompt.js";
 import { filedProjectIds } from "../sections/projectInstructions.js";
+import { refuseWithoutSpeech } from "../sections/transcriptBudget.js";
 import type { PodcastGenerationInput } from "./PodcastGenerationInput.js";
 import type { OverviewMeta } from "../OverviewMeta.js";
 
@@ -17,6 +18,7 @@ export const generatePodcastOverview = async (
   meta: OverviewMeta,
   observer: GenerationObserver = {},
 ): Promise<PodcastOverview> => {
+  refuseWithoutSpeech(input);
   const kind = await checkNoteKind(client, kindSampleOfVideo(input));
   observer.kindChecked?.(kind);
   const output = await requestGeneratedOutput<GeneratedOutput>(

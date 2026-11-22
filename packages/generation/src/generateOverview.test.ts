@@ -4,9 +4,11 @@ import { randomUUID } from "node:crypto";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId, ProjectId, VideoId } from "@overview/domain";
 import { generateOverview } from "./generateOverview.js";
 import { type GenerationClient } from "./requestGeneratedOutput.js";
-import { GenerationError, SchemaFailureError } from "./GenerationError.js";
+import { GenerationError, NoSpeechError, SchemaFailureError } from "./GenerationError.js";
 import type { GenerationInput } from "./GenerationInput.js";
 import { answeringKindCheck } from "./noteKind/answeringKindCheck.testHelper.js";
+
+const A_FEW_THOUSAND_WORDS = Array.from({ length: 1100 }, () => "word").join(" ");
 
 const input: GenerationInput = {
   video: {
@@ -19,7 +21,7 @@ const input: GenerationInput = {
     publishedAt: null,
     thumbnailUrl: null,
   },
-  transcript: [{ text: "Hello.", startMs: 0, endMs: 1000 }],
+  transcript: [{ text: `Hello. ${A_FEW_THOUSAND_WORDS}`, startMs: 0, endMs: 1000 }],
   captureReason: null,
   readerContext: null,
   sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: false, watchAnyway: false },
@@ -303,7 +305,7 @@ test("a short video's key points may all come from its opening, as before", asyn
 const recipeVideo: GenerationInput = {
   ...input,
   video: { ...input.video, title: "Party jollof", description: "Ingredients\n3 cups rice" },
-  transcript: [{ text: "Wash three cups of rice.", startMs: 0, endMs: 5000 }],
+  transcript: [{ text: `Wash three cups of rice. ${A_FEW_THOUSAND_WORDS}`, startMs: 0, endMs: 5000 }],
 };
 
 const recipeAnswer = {
@@ -386,4 +388,25 @@ test("a provider failure during the kind check fails the overview", async () => 
     throw new GenerationError("provider down");
   };
   await assert.rejects(() => generateOverview(client, input, meta), GenerationError);
+});
+
+test("a transcript under the speech floor stops before any model is asked, as no speech", async () => {
+  const { client, messages } = answering();
+  const lyrics = { ...input, transcript: [{ text: "La la la, oh baby, la la la.", startMs: 0, endMs: 7000 }] };
+
+  await assert.rejects(
+    generateOverview(client, lyrics, meta),
+    (error) => error instanceof NoSpeechError && error.reason === "too-few-words",
+  );
+  assert.equal(messages.length, 0);
+});
+
+test("a video the kind check finds nothing to summarise in is no speech, and the note is never asked for", async () => {
+  const { client, messages } = answering();
+
+  await assert.rejects(
+    generateOverview(answeringKindCheck(client, "nothing"), input, meta),
+    (error) => error instanceof NoSpeechError && error.reason === "nothing-to-summarise",
+  );
+  assert.equal(messages.length, 0);
 });

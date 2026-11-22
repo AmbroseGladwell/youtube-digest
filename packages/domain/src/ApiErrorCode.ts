@@ -10,6 +10,7 @@ export const API_ERROR_CODES = {
   record_newer_than_client: 409,
   revision_mismatch: 412,
   transcript_unavailable: 422,
+  no_speech: 422,
   playlist_private: 422,
   playlist_not_found: 404,
   not_reserved: 428,

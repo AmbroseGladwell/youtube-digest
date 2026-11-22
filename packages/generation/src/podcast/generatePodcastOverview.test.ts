@@ -107,7 +107,7 @@ const answer = {
 
 test("a podcast note is assembled like a video's, with the episode as its source and its times from the transcript", async () => {
   const client: GenerationClient = async () => answer;
-  const overview = await generatePodcastOverview(answeringKindCheck(client), inputOf(10, { sectionsEnabled: WITHOUT_VERDICT }), meta);
+  const overview = await generatePodcastOverview(answeringKindCheck(client), inputOf(100, { sectionsEnabled: WITHOUT_VERDICT }), meta);
   assert.deepEqual(overview.source, podcast);
   assert.equal(overview.watchAnyway?.answer, "no");
   assert.deepEqual(overview.keyPoints[1]?.range, { startMs: 12_000, endMs: 24_000 });
@@ -122,7 +122,7 @@ test("an episode the kind check calls a recipe gets the default note", async () 
   };
   const overview = await generatePodcastOverview(
     answeringKindCheck(client, "recipe"),
-    inputOf(10, { sectionsEnabled: WITHOUT_VERDICT }),
+    inputOf(100, { sectionsEnabled: WITHOUT_VERDICT }),
     meta,
   );
   assert.equal(overview.recipe ?? null, null);
@@ -135,7 +135,7 @@ test("an episode given to the one entry point every key uses is written as an ep
     asked.push(systemPrompt.slice(0, 120));
     return answer;
   };
-  const overview = await generateOverviewOf(answeringKindCheck(client), inputOf(10, { sectionsEnabled: WITHOUT_VERDICT }), meta);
+  const overview = await generateOverviewOf(answeringKindCheck(client), inputOf(100, { sectionsEnabled: WITHOUT_VERDICT }), meta);
   assert.deepEqual(overview.source, podcast);
   assert.ok(asked.every((prompt) => prompt.startsWith("You produce a blunt judgment record of a saved podcast episode")));
 });

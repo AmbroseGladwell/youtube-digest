@@ -16,5 +16,5 @@ export const kindSampleOfVideo = (input: Pick<GenerationInput, "video" | "transc
     opening.push(text);
     words += wordCount(text);
   }
-  return { title: input.video.title, by: input.video.channel, description: descriptionOf(input), opening: opening.join(" ") };
+  return { title: input.video.title, by: input.video.channel, description: descriptionOf(input), opening: opening.join(" "), spoken: true };
 };

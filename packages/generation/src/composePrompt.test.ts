@@ -39,6 +39,14 @@ const baseInput: GenerationInput = {
 const KEY_POINT_TARGET_WORDS = transcriptBudget(baseInput).wordsPerKeyPoint;
 const KEY_POINT_MAX_WORDS = mostWordsPerKeyPoint(transcriptBudget(baseInput));
 
+const midInput: GenerationInput = {
+  ...baseInput,
+  transcript: [
+    { text: Array.from({ length: 600 }, () => "word").join(" "), startMs: 0, endMs: 240_000 },
+    { text: Array.from({ length: 600 }, () => "word").join(" "), startMs: 240_000, endMs: 480_000 },
+  ],
+};
+
 const longInput: GenerationInput = {
   ...baseInput,
   transcript: Array.from({ length: 90 }, (_, index) => ({
@@ -48,8 +56,8 @@ const longInput: GenerationInput = {
   })),
 };
 
-test("a short video keeps seven key points of 40 words and its usual chapter hint", () => {
-  const { systemPrompt, schema } = composePrompt(baseInput);
+test("a video of a few thousand words keeps seven key points of 40 words and its usual chapter hint", () => {
+  const { systemPrompt, schema } = composePrompt(midInput);
   assert.ok(systemPrompt.includes("3 to 7 points."));
   assert.ok(systemPrompt.includes("Seven is the ceiling for a video this\nlength"));
   assert.ok(systemPrompt.includes("Most videos\nhave 3 to 8"));
@@ -221,7 +229,7 @@ test("with no projects, neither the prompt nor the schema mentions them", () => 
 
 test("watch-it-anyway's range is a segment-index pair, never a raw timestamp the model would have to invent", () => {
   const { schema } = composePrompt({
-    ...baseInput,
+    ...midInput,
     sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, watchAnyway: true },
   });
   const picked = z.object({ watchAnyway: schema.shape.watchAnyway! });
@@ -259,22 +267,59 @@ const chapterAt = (startSegmentIndex: number) => ({
 });
 
 test("a chapter names where it starts as a segment index, never a time the model would have to invent", () => {
-  const picked = z.object({ chapters: composePrompt(baseInput).schema.shape.chapters! });
+  const picked = z.object({ chapters: composePrompt(midInput).schema.shape.chapters! });
   assert.doesNotThrow(() => picked.parse({ chapters: [chapterAt(0), chapterAt(1)] }));
   assert.throws(() => picked.parse({ chapters: [{ title: "A chapter", summary: "What it covers.", startMs: 0 }] }));
 });
 
 test("the first chapter starts at segment 0 and each one starts after the one before it", () => {
-  const picked = z.object({ chapters: composePrompt(baseInput).schema.shape.chapters! });
+  const picked = z.object({ chapters: composePrompt(midInput).schema.shape.chapters! });
   assert.throws(() => picked.parse({ chapters: [chapterAt(1)] }));
   assert.throws(() => picked.parse({ chapters: [chapterAt(0), chapterAt(0)] }));
   assert.throws(() => picked.parse({ chapters: [chapterAt(1), chapterAt(0)] }));
 });
 
 test("a chapter cannot start past the last segment, and there is always at least one", () => {
-  const picked = z.object({ chapters: composePrompt(baseInput).schema.shape.chapters! });
+  const picked = z.object({ chapters: composePrompt(midInput).schema.shape.chapters! });
   assert.throws(() => picked.parse({ chapters: [chapterAt(0), chapterAt(2)] }));
   assert.throws(() => picked.parse({ chapters: [] }));
+});
+
+test("a short clip gets three short key points and no chapters", () => {
+  const { systemPrompt, schema } = composePrompt(baseInput);
+  assert.ok(systemPrompt.includes("\n3 points. Choose them"));
+  assert.ok(systemPrompt.includes("A video this short has room for three, so keep the ones that matter most."));
+  assert.ok(systemPrompt.includes("This is too short to split into chapters: give an empty list."));
+  assert.ok(!systemPrompt.includes("Seven is the ceiling"));
+  const point = { text: "A point.", startSegmentIndex: -1, endSegmentIndex: -1 };
+  assert.equal(z.safeParse(schema.shape.keyPoints!, Array(3).fill(point)).success, true);
+  assert.equal(z.safeParse(schema.shape.keyPoints!, Array(4).fill(point)).success, false);
+  const chapters = z.object({ chapters: schema.shape.chapters! });
+  assert.doesNotThrow(() => chapters.parse({ chapters: [] }));
+  assert.throws(() => chapters.parse({ chapters: [chapterAt(0)] }));
+});
+
+test("a clip of a few minutes gets up to four points and three chapters", () => {
+  const fewMinutes = {
+    ...baseInput,
+    transcript: [{ text: Array.from({ length: 600 }, () => "word").join(" "), startMs: 0, endMs: 240_000 }],
+  };
+  const { systemPrompt, schema } = composePrompt(fewMinutes);
+  assert.ok(systemPrompt.includes("3 to 4 points."));
+  assert.ok(systemPrompt.includes("has room for four at most, so keep the ones that matter most and let the chapters carry"));
+  const point = { text: "A point.", startSegmentIndex: -1, endSegmentIndex: -1 };
+  assert.equal(z.safeParse(schema.shape.keyPoints!, Array(4).fill(point)).success, true);
+  assert.equal(z.safeParse(schema.shape.keyPoints!, Array(5).fill(point)).success, false);
+});
+
+test("a short clip is watched whole or not at all, never in part", () => {
+  const { systemPrompt, schema } = composePrompt({ ...baseInput, sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, watchAnyway: true } });
+  assert.ok(systemPrompt.includes("Yes or no, plus a reason. This is too short to have a part worth taking on its own"));
+  assert.ok(!systemPrompt.includes("Say partial when"));
+  const picked = z.object({ watchAnyway: schema.shape.watchAnyway! });
+  assert.doesNotThrow(() => picked.parse({ watchAnyway: { answer: "no", reason: "x", startSegmentIndex: -1, endSegmentIndex: -1 } }));
+  assert.throws(() => picked.parse({ watchAnyway: { answer: "partial", reason: "x", startSegmentIndex: 0, endSegmentIndex: 1 } }));
+  assert.throws(() => picked.parse({ watchAnyway: { answer: "yes", reason: "x", startSegmentIndex: 0, endSegmentIndex: 1 } }));
 });
 
 test("with an empty transcript, the chapter list can only be empty", () => {
