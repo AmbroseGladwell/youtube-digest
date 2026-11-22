@@ -8,6 +8,7 @@ import {
   composeReaderContext,
   chatQuestionCount,
   chatRecordId,
+  chatUnitsOf,
   MAX_CHAT_QUESTIONS,
   Overview,
   OVERVIEW_MIGRATIONS,
@@ -295,10 +296,13 @@ export class ChatAnswerer {
         );
         settled = true;
         const cost = await this.#recordCost(accountId, stream.usage(), "message", log);
+        const usageUnits = chatUnitsOf(cost.costDollars ?? 0);
+        await usage.settle(reservation.day, accountId, usageUnits);
         log.info(
           apiLogLines.chat.answered({
             ...logged,
             ...cost,
+            usageUnits,
             inSource: cited.inSource,
             generalKnowledge: reply.generalKnowledge,
             sourceCitations: cited.sourceCitations,

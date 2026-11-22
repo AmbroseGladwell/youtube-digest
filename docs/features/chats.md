@@ -307,6 +307,11 @@ can refuse before the answer starts, so a refusal is an ordinary JSON error:
 | No key on this server                                      | 503 `unavailable`            |                                                                                                    |
 | The provider failed before answering                       | 502 `generation_failed`      |                                                                                                    |
 
+**Usage (OV-376, slice 1):** once an answer is stored, its real cost, both passes of a library
+answer together, settles as usage on the day its question was reserved (`ChatUsageRepository.settle`),
+and `chat.answered` logs `usageUnits`. A failed or stopped answer settles nothing. The limits
+still count questions until slice 2 (`tiers.md`, "Chat usage").
+
 **The answer streams** as server-sent events (`ChatStreamEvent`): a `sources` event first when the
 question added other overviews, then `text` events carry the
 answer as it arrives, then one `answered` event carries both messages as stored and the

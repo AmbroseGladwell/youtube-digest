@@ -5,6 +5,8 @@ import { randomUUID } from "node:crypto";
 import {
   answeredFromOverview,
   chatRecordId,
+  chatUnitsOf,
+  chatUsageAllowances,
   CURRENT_SCHEMA_VERSIONS,
   overviewPartHash,
   MAX_CHAT_QUESTIONS,
@@ -130,6 +132,11 @@ const answered = (body: string) => {
 const usedThisMonth = async (setup: Setup) =>
   ((await setup.account.inject({ method: "GET", url: "/api/chat-usage" })).json() as { used: number }).used;
 
+const unitsThisMonth = async (setup: Setup) => {
+  const [row] = await setup.testApp.sql.query<{ units: string | null }>("select sum(units) as units from chat_usage");
+  return Number(row?.units ?? 0);
+};
+
 test("a question is answered as a stream on Luna, cited by time from code, stored with the question, and counted", async (t) => {
   const setup = await setUp(t, [answer("Three to five grams a day.")]);
   const conversation = randomUUID();
@@ -164,6 +171,7 @@ test("a question is answered as a stream on Luna, cited by time from code, store
     resetsOn: "2026-10-01",
     used: 1,
     limit: 100,
+    share: chatUnitsOf(0.00032) / chatUsageAllowances.free,
   });
   const [cost] = await setup.testApp.sql.query<{ area: string; detail: string; calls: number }>(
     "select area, detail, calls from account_costs where account_id = $1 and area = 'chat'",
@@ -382,6 +390,7 @@ test("a provider that keeps failing, or a reply that can't be read, stores nothi
   assert.equal(eventsOf(broken.body).at(-1)?.type, "failed");
 
   assert.equal(await usedThisMonth(setup), 0);
+  assert.equal(await unitsThisMonth(setup), 0);
   const kinds = (await setup.account.changes()).changes.map((change) => change.kind);
   assert.ok(!kinds.includes("chat"));
   const costs = await setup.testApp.sql.query<{ detail: string }>("select detail from account_costs where area = 'chat'");
@@ -389,6 +398,34 @@ test("a provider that keeps failing, or a reply that can't be read, stores nothi
     costs.map(({ detail }) => detail),
     ["message-failed"],
   );
+});
+
+test("an answer spends its real cost as usage, beside the count, and the month's share says how much is gone (OV-376)", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [answer("Fine.")], { logger });
+
+  answered((await setup.ask(randomUUID(), "How much?")).body);
+  answered((await setup.ask(randomUUID(), "And after?")).body);
+
+  const spent = lines.filter((line) => line.logCode === "api.chat.answered").map((line) => line.usageUnits as number);
+  assert.deepEqual(
+    spent,
+    lines.filter((line) => line.logCode === "api.chat.answered").map((line) => chatUnitsOf(line.costDollars as number)),
+  );
+  assert.ok(spent.every((units) => units > 0));
+  assert.equal(await unitsThisMonth(setup), spent[0]! + spent[1]!);
+  const usage = (await setup.account.inject({ method: "GET", url: "/api/chat-usage" })).json() as { used: number; share: number };
+  assert.equal(usage.used, 2);
+  assert.equal(usage.share, (spent[0]! + spent[1]!) / chatUsageAllowances.free);
+  const [global] = await setup.testApp.sql.query<{ chat_units: string }>("select chat_units from our_key_usage");
+  assert.equal(Number(global?.chat_units), spent[0]! + spent[1]!);
+});
+
+test("usage is cost in millionths of a dollar, and one question about long-form content is the allowance's unit (OV-376)", () => {
+  assert.equal(chatUnitsOf(0.0014), 1_400);
+  assert.equal(chatUnitsOf(0.00000049), 0);
+  assert.equal(chatUnitsOf(-1), 0);
+  assert.equal(chatUsageAllowances.plus / chatUsageAllowances.free, 10);
 });
 
 const webPage = (title: string): WebSource => {
