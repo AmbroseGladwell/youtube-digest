@@ -661,7 +661,7 @@ that's missing on one device:
 ### Transcripts
 
 `docs/features/shared-transcript-cache.md`, "Logs", lists them: `transcript stored`,
-`transcript not kept`, `transcript refused`, `transcript served`, `shared transcript read`
+`transcript not kept`, `transcript refused`, `transcript served`, `shared transcript read`, `transcripts searched` (OV-346, never the query)
 and `transcripts forgotten`. A transcript line never carries the video id or a word of the
 transcript. A signed-in one carries the account and session, so a reader's missing
 transcript is found by their `sessionId`, as a missing note is.

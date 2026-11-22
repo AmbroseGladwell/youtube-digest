@@ -1,4 +1,4 @@
-import { StoredTranscript } from "@overview/domain";
+import { StoredTranscript, type TranscriptQuery } from "@overview/domain";
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { transcriptPassages, type Passage } from "../chats/transcriptPassages.js";
@@ -26,6 +26,13 @@ export interface KeywordHit {
   // OV-352 measured it: 54 of 68 answers cited the right moment with the minute either side, 45 without.
   around: Passage[];
   score: number;
+}
+
+export interface PassageMatch {
+  videoId: string;
+  startMs: number;
+  endMs: number;
+  mentions: number;
 }
 
 export interface SearchOptions {
@@ -122,6 +129,45 @@ export class TranscriptPassagesRepository {
       }
       return [{ videoId: row.video_id, passage: all[at]!, around: all.slice(Math.max(0, at - 1), at + 2), score: Number(row.score) }];
     });
+  }
+
+  // Every word, or the whole phrase, within one minute: docs/features/transcript-search.md, "What matches".
+  async matching(
+    accountId: AccountId,
+    { phrases, words }: TranscriptQuery,
+    momentsPerSource: number,
+    within: readonly string[] | null = null,
+  ): Promise<PassageMatch[]> {
+    const parts = [
+      ...(words.length === 0 ? [] : [{ build: "plainto_tsquery", text: words.join(" ") }]),
+      ...phrases.map((phrase) => ({ build: "phraseto_tsquery", text: phrase })),
+    ];
+    if (parts.length === 0) {
+      return [];
+    }
+    const query = parts.map((part, index) => `${part.build}('english', $${index + 4})`).join(" && ");
+    const rows = await this.#sql.query<{ video_id: string; start_ms: number; end_ms: number; mentions: string | number }>(
+      `with q as (select ${query} as query),
+       hits as (
+         select p.video_id, p.start_ms, p.end_ms, ts_rank(p.terms, q.query) as rank
+           from transcript_passages p, q
+          where p.account_id = $1
+            and ($3::text[] is null or p.video_id = any($3::text[]))
+            and numnode(q.query) > 0 and p.terms @@ q.query
+       ),
+       ranked as (
+         select hits.*,
+                row_number() over (partition by video_id order by rank desc, start_ms) as place,
+                count(*) over (partition by video_id) as mentions,
+                max(rank) over (partition by video_id) as best
+           from hits
+       )
+       select video_id, start_ms, end_ms, mentions from ranked
+        where place <= $2
+        order by mentions desc, best desc, video_id, place`,
+      [accountId, momentsPerSource, within === null ? null : [...within], ...parts.map((part) => part.text)],
+    );
+    return rows.map((row) => ({ videoId: row.video_id, startMs: row.start_ms, endMs: row.end_ms, mentions: Number(row.mentions) }));
   }
 
   async #passagesOf(accountId: AccountId, videoIds: readonly string[]): Promise<Map<string, Passage[]>> {
