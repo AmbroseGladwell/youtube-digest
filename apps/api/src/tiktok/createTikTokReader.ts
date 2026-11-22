@@ -35,10 +35,8 @@ const vendorLinkOf = (link: string): string | null => {
   if (parsed.kind === "short") {
     return parsed.url;
   }
-  const url = new URL(link.trim());
-  return url.hostname.toLowerCase().replace(/^(www\.|m\.)/, "") === "tiktok.com" && url.pathname.startsWith("/@")
-    ? `https://www.tiktok.com${url.pathname}`
-    : `https://www.tiktok.com/@/video/${parsed.videoId}`;
+  const { pathname } = new URL(link.trim());
+  return pathname.startsWith("/@") ? `https://www.tiktok.com${pathname}` : `https://www.tiktok.com/@/video/${parsed.videoId}`;
 };
 
 // Through the vendor only, never TikTok's pages (docs/features/tiktok-links.md).
