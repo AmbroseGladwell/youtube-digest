@@ -1,3 +1,5 @@
+@use "../../../../theme/tip.scss";
+
 // The playlist's From line (PlaylistFromLine.module.scss), names cut with a tooltip (168r-3).
 .root {
   margin: 0;
@@ -43,6 +45,11 @@ span.name {
   display: inline-block;
   vertical-align: bottom;
   max-width: min(32ch, calc(100% - 3.5em));
+
+  @include tip.shows(".tip") {
+    opacity: 1;
+    visibility: visible;
+  }
 }
 
 .cut {
@@ -75,11 +82,6 @@ span.name {
   transition: opacity var(--motion-state) var(--motion-ease);
 }
 
-.cutWrap:hover .tip,
-.cutWrap:focus-within .tip {
-  opacity: 1;
-  visibility: visible;
-}
 
 .more,
 .change {

@@ -855,7 +855,9 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
     while the Ask page is open (owner, 22 Nov 2026). It's a link, so it holds off the global link
     hover colour, and its text stays on the action colour as + New's does.
   - On a phone (47.9375rem and below), Ask and + New are 44px round icons, each named by a tooltip
-    on hover and focus ("Ask your library", "New overview") (OV-362).
+    on hover and keyboard focus ("Ask your library", "New overview") (OV-362). On touch the tip
+    shows only while the icon is pressed and held, and that press doesn't follow it; a tap opens
+    the page with no tip left showing (frontend-architecture-guide.md §4.4).
   - A project's page has an Ask link beside Copy as Markdown, which opens the page over that
     project.
   - Both show only signed in. Neither is in the extension's panel, which keeps chat within an
@@ -905,7 +907,7 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   - It's grouped Today, Yesterday, Previous 7 days and Earlier (`askHistoryGroups`). Each item
     shows its first question and its scope: "Your library", the project's name or the overview's
     title, on one line. A question cut off shows in full in a tip on hover or keyboard focus,
-    and on touch only while pressed and held, a press that doesn't then open it (`CutText`, OV-371), as do the overview's Conversations list and the chat panel's title. There's no thumbnail (owner, 22 Nov 2026: no Design round).
+    and on touch only while pressed and held, a press that doesn't then open it (`CutText`, OV-371; §4.4 of the frontend architecture guide), as do the overview's Conversations list and the chat panel's title. There's no thumbnail (owner, 22 Nov 2026: no Design round).
   - A library or project conversation opens on the Ask page. An overview's opens on that overview,
     with chat open on that conversation (owner, 22 Nov 2026): the link carries the conversation id
     in its state (`conversationFromLocation`), the overview page opens it once chat is offered and

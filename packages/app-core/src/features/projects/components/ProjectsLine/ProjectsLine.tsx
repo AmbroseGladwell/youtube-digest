@@ -3,6 +3,7 @@ import type { Project } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useLongPressTip } from "../../../../util/useLongPressTip.js";
 import styles from "./ProjectsLine.module.scss";
 import { projectsLineTestIds } from "./ProjectsLineTestIds.js";
 
@@ -117,6 +118,7 @@ interface ProjectNameProps {
 const ProjectName = ({ project, webApp, onOpen }: ProjectNameProps) => {
   const tipId = useId();
   const cut = project.name.length > CUT_AT;
+  const press = useLongPressTip(cut);
   const common: ProjectLinkCommon = {
     className: `${styles.name} ${cut ? styles.cut : ""}`,
     "aria-describedby": cut ? tipId : undefined,
@@ -128,7 +130,7 @@ const ProjectName = ({ project, webApp, onOpen }: ProjectNameProps) => {
     return link;
   }
   return (
-    <span className={styles.cutWrap}>
+    <span className={styles.cutWrap} {...press}>
       {link}
       <span className={styles.tip} role="tooltip" id={tipId}>
         {project.name}

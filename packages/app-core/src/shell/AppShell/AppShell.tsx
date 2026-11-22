@@ -28,6 +28,7 @@ import { useSync } from "../../features/sync/SyncContext.js";
 import { useWatchedTranscriptQuery } from "../../features/transcripts/queries/watchedTranscriptQuery.js";
 import { useMeasuredHeight } from "../../util/useMeasuredHeight.js";
 import { useIsPhone } from "../../util/useIsPhone.js";
+import { useLongPressTip } from "../../util/useLongPressTip.js";
 import { useMediaQuery } from "../../util/useMediaQuery.js";
 import { useBackInBar } from "./useBackInBar.js";
 import { PageScrolledSentinel } from "../../components/shared/PageScrolledSentinel/PageScrolledSentinel.js";
@@ -92,6 +93,8 @@ export const AppShell = () => {
   const newOverview = useNewOverviewRun();
   const analytics = useAnalytics();
   const isPhone = useIsPhone();
+  const askTip = useLongPressTip(isPhone);
+  const newTip = useLongPressTip(isPhone);
   const readerRun = newOverview.run;
   const captureQueue = useCaptureQueue({
     readerRunActive: readerRun !== null && readerRun.overview === null && readerRun.error === null,
@@ -277,7 +280,7 @@ export const AppShell = () => {
 
                       <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
                         {!accountNeeded && signedIn && (
-                          <span className={styles.tipHost}>
+                          <span className={styles.tipHost} {...askTip}>
                             <PageLink
                               className={styles.askButton}
                               to={Routes.ask()}
@@ -294,7 +297,7 @@ export const AppShell = () => {
                           </span>
                         )}
                         {!accountNeeded && (
-                          <span className={styles.tipHost}>
+                          <span className={styles.tipHost} {...newTip}>
                             <button
                               type="button"
                               className={`${styles.newOverviewButton} ${styles.iconOnPhone}`}
