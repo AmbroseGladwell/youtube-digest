@@ -75,12 +75,15 @@ export class ChatUsageRepository {
   }
 
   // An answer's real cost, in usage units, on the day its question was reserved; a failed answer settles nothing.
-  async settle(day: string, accountId: AccountId, units: number): Promise<void> {
+  async settle(day: string, accountId: AccountId, units: number, scope: ChatScopeKind): Promise<void> {
     if (units <= 0) {
       return;
     }
     await this.#sql.transaction(async (tx) => {
-      await tx.query("update chat_usage set units = units + $3 where account_id = $1 and day = $2::date", [accountId, day, units]);
+      await tx.query(
+        "update chat_usage set units = units + $3, library_units = library_units + $4 where account_id = $1 and day = $2::date",
+        [accountId, day, units, scope === "library" ? units : 0],
+      );
       await tx.query("update our_key_usage set chat_units = chat_units + $2 where day = $1::date", [day, units]);
     });
   }
