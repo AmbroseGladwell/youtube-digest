@@ -1,7 +1,6 @@
 import type { ApiErrorCode } from "@overview/domain";
 
-// The server answered, and said no, in the one envelope every /api failure wears
-// (docs/architecture/api.md).
+// The server said no, in the envelope every /api failure wears.
 export class SyncRequestError extends Error {
   readonly code: ApiErrorCode;
   readonly status: number;
@@ -26,8 +25,7 @@ export interface SyncTransportErrorOptions {
   requestId?: string;
 }
 
-// The server did not answer, or answered with something that is not the API: no network,
-// a proxy's error page, a body that fails the schema.
+// No answer, or not the API's: no network, a proxy's error page, a body that fails the schema.
 export class SyncTransportError extends Error {
   // The id the request was sent with, when it got as far as being sent.
   readonly requestId: string | undefined;

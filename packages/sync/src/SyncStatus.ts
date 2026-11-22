@@ -1,9 +1,6 @@
 import type { Handshake } from "@overview/domain";
 
-// idle and syncing are the working states. The other four are why the last cycle stopped,
-// each with a different way out: offline and failed resolve on their own with a retry,
-// signedOut needs a token, unsupported needs an update and is the wall
-// (docs/features/record-migrations.md, docs/features/sync-client.md).
+// Each stopped phase has its own way out (docs/features/sync-client.md, "What stops a cycle and what parks a write").
 export type SyncPhase = "idle" | "syncing" | "offline" | "failed" | "signedOut" | "unsupported";
 
 export interface SyncStatus {

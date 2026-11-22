@@ -12,9 +12,6 @@ export interface PodcastEpisodeAsk {
   guid: string;
 }
 
-// A podcast link read on our server, an episode's transcript from its rungs there, and an episode
-// transcribed from its audio when the reader chooses (docs/features/podcast-links.md,
-// docs/features/podcast-transcripts.md, docs/features/speech-to-text.md).
 export interface PodcastApi {
   read: (url: string) => Promise<PodcastRead>;
   transcript: (ask: PodcastTranscriptAsk) => Promise<StoredTranscript>;

@@ -32,8 +32,7 @@ const locatedFrames = function* (stack: string) {
 
 let cached: { chunkIds: ChunkIds; count: number; byFile: Map<string, string> } | null = null;
 
-// The CLI's snippet keys each chunk's id by a stack taken inside that chunk, so the stack's
-// first frame names the file (docs/architecture/errors-and-logs.md, "Source maps").
+// The CLI keys each chunk's id by a stack taken inside it, so the stack's first frame names the file.
 const chunkIdsByFile = (chunkIds: ChunkIds | undefined): Map<string, string> => {
   if (chunkIds === undefined) {
     return new Map();
@@ -53,9 +52,6 @@ const chunkIdsByFile = (chunkIds: ChunkIds | undefined): Map<string, string> => 
   return byFile;
 };
 
-// A stack cut to function names and paths inside the bundle: a frame's address loses its
-// origin, query and hash, and a frame with no address at all is dropped
-// (docs/architecture/errors-and-logs.md, "What an error may carry").
 export const parseStackFrames = (
   stack: string | undefined,
   chunkIds: ChunkIds | undefined = (globalThis as { _posthogChunkIds?: ChunkIds })._posthogChunkIds,

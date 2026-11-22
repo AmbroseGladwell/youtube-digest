@@ -21,8 +21,6 @@ export interface SyncEngineOptions {
   pageSize?: number | undefined;
   // Called after a page of the feed has landed locally, so a screen can re-read.
   onApplied?: ((changes: RecordChange[]) => void) | undefined;
-  // Called when an overview made on this device was folded into the account's copy of the
-  // same video, so the reader can be told and anything open on it re-pointed.
   onFolded?: ((fold: OverviewFold) => void) | undefined;
 }
 
@@ -43,10 +41,7 @@ export interface SyncStop {
   detail: string;
 }
 
-// One cycle is handshake, enrol if never enrolled, push the outbox in order, then pull
-// the feed to its end. Push goes before pull so that what comes back already carries this
-// device's writes. A cycle asked for while one is running runs once after it, not once
-// per ask (docs/features/sync-client.md).
+// The cycle, and why push goes before pull: docs/features/sync-client.md, "One cycle".
 export class SyncEngine {
   #api: SyncApi;
   #storage: SyncStorage;
@@ -59,8 +54,7 @@ export class SyncEngine {
   #listeners = new Set<(status: SyncStatus) => void>();
   #running: Promise<SyncStatus> | null = null;
   #askedAgain = false;
-  // A new overview the account has no room for yet, by when the month that refused it resets.
-  // Asking again before then is refused again, so it waits (docs/features/sync-client.md).
+  // Overviews refused for a full month, until it resets: asking again sooner is refused again.
   #waitingUntil = new Map<string, number>();
 
   constructor({
@@ -97,8 +91,7 @@ export class SyncEngine {
     }
   }
 
-  // A transcript this device does not hold, asked for when the reader opens it rather than
-  // pulled with the feed (docs/features/transcript-storage.md).
+  // Asked for when the reader opens it, not pulled with the feed (docs/features/transcript-storage.md).
   async fetchTranscript(videoId: string): Promise<StoredTranscript | null> {
     const transcript = await this.#api.getTranscript(videoId);
     if (transcript !== null) {
@@ -107,8 +100,6 @@ export class SyncEngine {
     return transcript;
   }
 
-  // Something that could make room happened, such as a new plan: every waiting overview is
-  // asked about again at once.
   retryWaiting(): void {
     if (this.#waitingUntil.size === 0) {
       return;
@@ -144,8 +135,7 @@ export class SyncEngine {
       }, journalDebounceMs);
     };
     const onWake = () => void this.sync();
-    // A hidden tab does not poll, so a tab left open lets the server and database sleep.
-    // Its writes still go out through the journal, and it catches up when shown.
+    // A hidden tab doesn't poll, so the server and database can sleep; it catches up when shown.
     const hidden = () => globalThis.document?.visibilityState === "hidden";
     let interval: ReturnType<typeof setInterval> | null = null;
     const poll = () => {
@@ -218,8 +208,7 @@ export class SyncEngine {
     return belowFloor ? this.#stop("unsupported", "This version of the app can no longer write. Update it.") : this.#finish();
   }
 
-  // A fold rewrites the outbox, dropping this copy's writes and journaling the winner's,
-  // so the pass starts again from what is pending now.
+  // A fold rewrites the outbox, so the pass starts again from what is pending now.
   async #push(): Promise<SyncStop | null> {
     for (;;) {
       const pass = await this.#pushPass();
@@ -297,10 +286,7 @@ export class SyncEngine {
     return false;
   }
 
-  // The account's copy wins. It is pulled first, so the union of the two filings can be
-  // computed here, then this copy's filing and state are folded onto it as journaled
-  // writes and this copy goes. A winner this device cannot read yet leaves the write
-  // parked, counted, with the reason (docs/features/one-overview-per-video.md).
+  // The account's copy wins (docs/features/one-overview-per-video.md).
   async #fold(entry: OutboxEntry, winnerId: string): Promise<SyncStop | "folded" | null> {
     const stopped = await this.#pull();
     if (stopped !== null) {
@@ -315,8 +301,7 @@ export class SyncEngine {
     return "folded";
   }
 
-  // A note's transcript is kept by the server only once the note is there, so it waits
-  // behind a note whose own write is parked (docs/features/transcript-storage.md).
+  // The server keeps a transcript only once its note is there.
   #waitsBehindParkedNote({ change }: OutboxEntry, blocked: Set<string>): boolean {
     return change.op === "transcript" && blocked.has(pendingKey("overview", change.overviewId));
   }

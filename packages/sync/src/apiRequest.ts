@@ -23,12 +23,9 @@ export interface ApiRequestOptions {
 
 export interface ApiRequesterOptions {
   baseUrl: string;
-  // The bearer, for a shell whose session is a token it holds. Absent, the browser's own
-  // cookie for the API's origin is the session, which is the web app's transport
-  // (docs/features/sign-in.md).
+  // Absent, the browser's cookie for the API's origin is the session (docs/features/sign-in.md).
   token?: string | null | undefined;
-  // Signed out, the token the server issued for this device's trial, which it counts the
-  // overviews made on our key against (docs/architecture/tiers.md, "Counting").
+  // The signed-out trial's token, which our-key overviews count against (docs/architecture/tiers.md).
   trialToken?: string | null | undefined;
   clientVersion?: number | undefined;
   // Which shell is asking, sent so the server's logs can tell the two apart.
@@ -46,8 +43,6 @@ export interface ApiCall {
   fetch: typeof fetch;
 }
 
-// What every call to /api carries (docs/architecture/api.md), for a requester that parses
-// the answer whole and for one that reads it as it streams.
 export const createApiCaller = ({
   baseUrl,
   token = null,
@@ -91,8 +86,6 @@ export const sendApiCall = async ({ url, init, requestId, fetch: fetchImpl }: Ap
   }
 };
 
-// A failed answer, as the error every caller catches: the API's own refusal when it wears
-// the envelope, a transport error when it doesn't.
 export const refusalOf = async (response: Response, requestId: string): Promise<Error> => {
   let json: unknown;
   try {
@@ -114,8 +107,6 @@ export const refusalOf = async (response: Response, requestId: string): Promise<
   );
 };
 
-// One request against /api: the headers every call carries, the envelope every failure
-// wears, and the schema every answer is parsed with (docs/architecture/api.md).
 export const createApiRequester = (options: ApiRequesterOptions): ApiRequester => {
   const call = createApiCaller(options);
   return async <T>(method: ApiMethod, path: string, schema: z.ZodType<T>, requestOptions: ApiRequestOptions = {}): Promise<T | null> => {

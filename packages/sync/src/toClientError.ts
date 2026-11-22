@@ -41,8 +41,7 @@ export interface ToClientErrorOptions {
   at: Date;
 }
 
-// Anything thrown, as the report the app may send: redacted on the device, with the failing
-// call's id when it was a call to the API (docs/architecture/errors-and-logs.md).
+// Redacted on the device (docs/architecture/errors-and-logs.md, "What an error may carry").
 export const toClientError = (thrown: unknown, { source, handled, trail, at }: ToClientErrorOptions): SentClientError => {
   const error = thrown instanceof Error ? thrown : null;
   const message = messageOf(error, thrown);

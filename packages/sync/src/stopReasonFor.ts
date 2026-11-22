@@ -3,9 +3,7 @@ import { isSyncRequestError, isSyncTransportError } from "./SyncRequestError.js"
 
 export type StopReason = Extract<SyncPhase, "offline" | "failed" | "signedOut" | "unsupported">;
 
-// A failure that ends the cycle rather than the one write: nothing later in the outbox
-// would fare any better, and a retry later might. Anything else is the write's own fault
-// and is parked (docs/features/sync-client.md).
+// A failure that ends the cycle, not the write: nothing later in the outbox would fare better.
 export const stopReasonFor = (error: unknown): StopReason | null => {
   if (isSyncTransportError(error)) {
     return "offline";

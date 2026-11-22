@@ -1,13 +1,10 @@
 import type { Handshake, RecordChangesPage, StoredTranscript, WrittenRecord } from "@overview/domain";
 
-// The server's write surface, one method per route, so the outbox maps onto it without a
-// translation layer (docs/features/sync-api.md, docs/features/sync-client.md).
+// One method per route, so the outbox maps onto it with no translation layer.
 export interface SyncApi {
   handshake(): Promise<Handshake>;
   changes(since: number, limit?: number): Promise<RecordChangesPage>;
   createOverview(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
-  // A slot on the account's own-key month for a new overview the server won't take
-  // unreserved (docs/architecture/tiers.md, "Reserving on the reader's own key").
   reserveOverview(overviewId: string): Promise<void>;
   setOverviewTopics(id: string, topicIds: string[], updatedAt: string): Promise<WrittenRecord>;
   setOverviewCaptureReason(id: string, captureReason: string | null, updatedAt: string): Promise<WrittenRecord>;

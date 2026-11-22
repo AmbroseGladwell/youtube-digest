@@ -2,16 +2,13 @@ import type { NarrationRender, NarrationVoice, VoiceSample } from "@overview/dom
 
 export type NarrationPriority = "interactive" | "background";
 
-// Narration in a voice: the chosen one, or the one an older note was narrated in before the
-// reader chose another (docs/features/narration-voice.md, "Old audio").
+// The chosen voice, or the one an older note was narrated in (docs/features/narration-voice.md).
 export interface VoicedNarration {
   voice: NarrationVoice;
   render: NarrationRender;
 }
 
-// The narration surface (docs/features/tts-pre-rendered-speech.md, "The API side"). `peek`
-// asks by key and queues nothing, which is how a note can say whether its audio exists
-// before anybody presses play.
+// `peek` queues nothing, so a note can tell whether its audio exists before anybody presses play.
 export interface NarrationApi {
   peek(lines: readonly string[], voice: NarrationVoice): Promise<VoicedNarration | null>;
   request(lines: readonly string[], voice: NarrationVoice, priority: NarrationPriority): Promise<NarrationRender>;
