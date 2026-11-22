@@ -367,6 +367,61 @@ export class LibraryPageObject extends PageObject {
       throw new Error("No library card is wholly on screen");
     });
 
+  verifyRowsInThePageAtMost = (most: number) =>
+    this.step(`verifyRowsInThePageAtMost ${most}`, async () => {
+      const rows = await this.list().getByRole("listitem").count();
+      expect(rows).toBeGreaterThan(0);
+      expect(rows).toBeLessThanOrEqual(most);
+    });
+
+  verifyListSays = (length: number) =>
+    this.step(`verifyListSays ${length}`, async () => {
+      const first = this.list().getByRole("listitem").first();
+      await expect(first).toHaveAttribute("aria-setsize", String(length));
+      await expect(first).toHaveAttribute("aria-posinset", "1");
+    });
+
+  readARowOnScreen = (): Promise<{ title: string; top: number }> =>
+    this.step("readARowOnScreen", async () => {
+      const viewport = this.page.viewportSize()!;
+      const titles = this.list().getByTestId(libraryOverviewCardTestIds.titleLink);
+      for (let index = 0; index < (await titles.count()); index += 1) {
+        const box = await titles.nth(index).boundingBox();
+        if (box !== null && box.y > 120 && box.y + box.height < viewport.height - 40) {
+          return { title: (await titles.nth(index).textContent()) ?? "", top: Math.round(box.y) };
+        }
+      }
+      throw new Error("No library row's title is wholly on screen");
+    });
+
+  openTheRow = (title: string): Promise<ReaderPageObject> =>
+    this.step(`openTheRow ${title}`, () =>
+      new LibraryOverviewCardPageObject(
+        this.testContext,
+        this.get(libraryOverviewCardTestIds.root).filter({ hasText: title }),
+      ).openReader(),
+    );
+
+  verifyRowIsAt = (row: { title: string; top: number }) =>
+    this.step(`verifyRowIsAt ${row.title} ${row.top}`, async () => {
+      const title = this.list().getByTestId(libraryOverviewCardTestIds.titleLink).filter({ hasText: row.title });
+      await expect.poll(async () => Math.round((await title.boundingBox())?.y ?? Number.NaN), { timeout: 2_000 }).toBe(row.top);
+    });
+
+  tabPastTheLastRowInThePage = (): Promise<{ from: number; to: number }> =>
+    this.step("tabPastTheLastRowInThePage", async () => {
+      const last = this.list().getByRole("listitem").last();
+      const from = Number(await last.getAttribute("aria-posinset"));
+      await last.getByRole("button").last().focus();
+      await this.page.keyboard.press("Tab");
+      const to = await this.page.evaluate(() =>
+        Number(document.activeElement?.closest("[role='listitem']")?.getAttribute("aria-posinset") ?? 0),
+      );
+      return { from, to };
+    });
+
+  private list = () => this.get(libraryPageTestIds.list);
+
   readScrollPosition = (): Promise<number> => this.step("readScrollPosition", () => this.page.evaluate(() => window.scrollY));
 
   verifyScrollPosition = (expected: number) =>

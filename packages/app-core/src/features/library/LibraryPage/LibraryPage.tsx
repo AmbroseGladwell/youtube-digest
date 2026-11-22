@@ -18,6 +18,7 @@ import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageTagsDialog.js";
 import { SortPill } from "../components/SortPill/SortPill.js";
+import { LibraryList } from "../components/LibraryList/LibraryList.js";
 import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
@@ -490,11 +491,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         )
       );
     }
-    return (
-      <div className={styles.list} data-testid={libraryPageTestIds.list}>
-        {visible.map((entry, index) => row(entry, index))}
-      </div>
-    );
+    return <LibraryList entries={visible} keyOf={libraryEntryId} row={row} testId={libraryPageTestIds.list} />;
   };
 
   return (
