@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type Ref } from "react";
 import { ChosenAssistant, FOLLOW_UP_ASSISTANTS } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -9,6 +9,7 @@ import styles from "./ConnectorSetup.module.scss";
 import { connectorSetupTestIds } from "./ConnectorSetupTestIds.js";
 
 export interface ConnectorSetupProps {
+  ref?: Ref<HTMLParagraphElement> | undefined;
   label: string;
   address: string;
   iconUrl: string;
@@ -22,10 +23,7 @@ const nameOf = (assistant: ChosenAssistant): string => (assistant === "other" ? 
 // Design 301a–301e: which assistant the reader uses first, then that one's steps alone, so no
 // one reads steps for an assistant they don't use. The pick is the setting questions to ask
 // next open in (OV-266). Copy is offered only where the browser lets a page write to the clipboard.
-export const ConnectorSetup = forwardRef<HTMLParagraphElement, ConnectorSetupProps>(function ConnectorSetup(
-  { label, address, iconUrl },
-  labelRef,
-) {
+export const ConnectorSetup = ({ label, address, iconUrl, ref: labelRef }: ConnectorSetupProps) => {
   const analytics = useAnalytics();
   const chosen = useSettingsQuery().data?.followUpAssistant ?? null;
   const updateSettings = useUpdateSettingsMutation();
@@ -206,4 +204,4 @@ export const ConnectorSetup = forwardRef<HTMLParagraphElement, ConnectorSetupPro
       </p>
     </div>
   );
-});
+};

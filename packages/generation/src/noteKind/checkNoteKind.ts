@@ -1,7 +1,7 @@
 import { NoteKind } from "@overview/domain";
 import { z } from "zod";
 import type { ComposedPrompt } from "../composePrompt.js";
-import { requestGeneratedOutput, type GenerationClient } from "../generateOverview.js";
+import { requestGeneratedOutput, type GenerationClient } from "../requestGeneratedOutput.js";
 import { SchemaFailureError } from "../GenerationError.js";
 import type { KindSample } from "./KindSample.js";
 

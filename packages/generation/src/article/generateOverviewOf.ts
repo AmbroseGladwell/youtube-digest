@@ -1,5 +1,6 @@
 import type { Overview, OverviewId } from "@overview/domain";
-import { generateOverview, type GenerationClient, type GenerationObserver } from "../generateOverview.js";
+import { generateOverview, type GenerationObserver } from "../generateOverview.js";
+import { type GenerationClient } from "../requestGeneratedOutput.js";
 import type { GenerationInput } from "../GenerationInput.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import { generateArticleOverview } from "./generateArticleOverview.js";

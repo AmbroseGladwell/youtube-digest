@@ -1,9 +1,9 @@
 import type { FastifyBaseLogger } from "fastify";
 import {
+  type StoredTranscript,
   apiLogLines,
   podcastSourceId,
   sourceKey,
-  StoredTranscript,
   VideoId,
   type PodcastTranscriptLink,
   type SourceKey,

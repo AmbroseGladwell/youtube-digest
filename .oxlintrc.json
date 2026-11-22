@@ -6,6 +6,18 @@
   "ignorePatterns": ["prototype/**", "samples/**", "**/dist/**"],
   "rules": {
     "no-unused-vars": ["error", { "args": "none", "caughtErrors": "none", "ignoreRestSiblings": true, "varsIgnorePattern": "^_" }],
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-definitions": ["error", "interface"],
+    "typescript/consistent-type-imports": "error",
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "no-var": "error",
+    "no-param-reassign": "error",
+    "no-sequences": "error",
+    "no-unused-expressions": ["error", { "allowTernary": false, "allowShortCircuit": false }],
+    "prefer-arrow-callback": "error",
+    "import/no-duplicates": "error",
+    "import/no-cycle": "error",
+    "react/jsx-no-useless-fragment": ["error", { "allowExpressions": true }],
     "unicorn/no-thenable": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/no-new-array": "off",
@@ -17,5 +29,11 @@
     "react/purity": "off",
     "react/immutability": "off",
     "react/preserve-manual-memoization": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/playwright/**"],
+      "rules": { "import/no-cycle": "off" }
+    }
+  ]
 }

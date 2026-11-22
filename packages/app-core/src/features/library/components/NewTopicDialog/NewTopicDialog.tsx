@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { OverviewId, type Overview, sourceName } from "@overview/domain";
+import { type OverviewId, type Overview, sourceName } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./NewTopicDialog.module.scss";
 import { newTopicDialogTestIds } from "./NewTopicDialogTestIds.js";

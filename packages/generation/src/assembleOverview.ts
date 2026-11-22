@@ -25,7 +25,10 @@ import { resolvedBigPicture } from "./sections/bigPicturePrompt.js";
 import { resolvedFollowUpQuestions } from "./sections/followUpQuestionsSection.js";
 import { transcriptBudget } from "./sections/transcriptBudget.js";
 
-type Meta = { id: OverviewId; savedAt: string };
+interface Meta {
+  id: OverviewId;
+  savedAt: string;
+}
 
 function commonFields(input: GenerationInput, output: GeneratedRecipeVideoOutput | GeneratedOutput, meta: Meta) {
   const topicIds = input.existingTopics.filter((topic) => output.matchedTopicNames.includes(topic.name)).map((topic) => topic.id);

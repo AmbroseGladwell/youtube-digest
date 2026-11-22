@@ -6,7 +6,7 @@ import {
   type TopicSuggestionInput,
   type TopicSuggestionResult,
 } from "@overview/domain";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { GenerationError } from "./GenerationError.js";
 
 const SUGGESTED_AT_MOST = 3;

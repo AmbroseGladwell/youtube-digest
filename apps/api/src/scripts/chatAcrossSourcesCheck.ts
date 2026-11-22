@@ -601,11 +601,11 @@ const scoredReply = (reply: ChatReply): ScoredReply => ({
 
 // --- answering ---
 
-type Arm = {
+interface Arm {
   name: string;
   pick: (row: RetrievalRow) => string[];
   transcripts: boolean | "closest" | "keyword" | "keywordNeighbours" | "shipped";
-};
+}
 
 function arms(): Map<string, Arm> {
   const pinned = (count: number) => (row: RetrievalRow) => {

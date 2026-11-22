@@ -14,7 +14,10 @@ import { withAnswer } from "./util/withAnswer.js";
 
 export type AskOverFrom = "typed" | "starter";
 
-export type PickedOverview = { overviewId: OverviewId; title: string };
+export interface PickedOverview {
+  overviewId: OverviewId;
+  title: string;
+}
 
 export type AskOverState =
   | { status: "idle" }

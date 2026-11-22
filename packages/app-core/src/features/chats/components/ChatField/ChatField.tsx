@@ -1,10 +1,11 @@
-import { forwardRef, useId, type KeyboardEvent } from "react";
+import { useId, type KeyboardEvent, type Ref } from "react";
 import { MAX_CHAT_QUESTION_LENGTH } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./ChatField.module.scss";
 import { chatFieldTestIds } from "./ChatFieldTestIds.js";
 
 export interface ChatFieldProps {
+  ref?: Ref<HTMLTextAreaElement> | undefined;
   value: string;
   placeholder: string;
   answering: boolean;
@@ -21,10 +22,19 @@ export interface ChatFieldProps {
 
 // Design 310i–310j: Enter sends and Shift+Enter starts a new line; while an answer is being
 // written, Stop (ink, never orange) takes Send's place.
-export const ChatField = forwardRef<HTMLTextAreaElement, ChatFieldProps>(function ChatField(
-  { value, placeholder, answering, onChange, onSend, onStop, onAt, onPickerKey, combobox, large = false },
+export const ChatField = ({
+  value,
+  placeholder,
+  answering,
+  onChange,
+  onSend,
+  onStop,
+  onAt,
+  onPickerKey,
+  combobox,
+  large = false,
   ref,
-) {
+}: ChatFieldProps) => {
   const id = useId();
   const ready = value.trim() !== "" && !answering;
 
@@ -95,4 +105,4 @@ export const ChatField = forwardRef<HTMLTextAreaElement, ChatFieldProps>(functio
       )}
     </div>
   );
-});
+};

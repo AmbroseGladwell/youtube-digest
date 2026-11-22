@@ -1,5 +1,4 @@
-import { useCallback } from "react";
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import type { Provider } from "@overview/domain";
 import type { ApiKeys } from "./ApiKeys.js";
 import { readApiKeys, writeApiKeys } from "./apiKeyStorage.js";

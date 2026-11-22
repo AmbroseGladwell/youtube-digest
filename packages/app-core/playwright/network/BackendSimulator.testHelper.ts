@@ -135,7 +135,11 @@ const silentWav = (seconds: number): Buffer => {
   return wav;
 };
 
-type SimulatedResponse = { status: number; body?: unknown; stream?: unknown[] };
+interface SimulatedResponse {
+  status: number;
+  body?: unknown;
+  stream?: unknown[];
+}
 
 // A streamed answer is server-sent events, one per piece; everything else is JSON.
 const fulfil = (route: Route, { status, body, stream }: SimulatedResponse): Promise<void> =>

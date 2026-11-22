@@ -19,8 +19,22 @@ const error: ClientError = {
   at: AT,
 };
 
+interface SentFrame {
+  function: string;
+}
+
+interface SentEvent {
+  distinct_id: string;
+  properties: Record<string, unknown> & { $exception_list: Array<{ stacktrace: { frames: SentFrame[] } }> };
+}
+
+interface SentBatch {
+  url: string;
+  body: { api_key: string; batch: SentEvent[] };
+}
+
 const answering = (status: number) => {
-  const sent: Array<{ url: string; body: { api_key: string; batch: Array<Record<string, any>> } }> = [];
+  const sent: SentBatch[] = [];
   const fetch = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
     sent.push({ url: String(input), body: JSON.parse(init!.body as string) });
     return new Response(null, { status });
@@ -106,9 +120,9 @@ test("frames go to PostHog oldest call first, with the one that threw last", asy
 
   await sink.capture([{ ...error, frames: [thrownIn, calledFrom] }], { accountId: ACCOUNT_ID, context, geoAddress: null });
 
-  const frames = sent[0]!.body.batch[0]!.properties.$exception_list[0].stacktrace.frames;
+  const frames = sent[0]!.body.batch[0]!.properties.$exception_list[0]!.stacktrace.frames;
   assert.deepEqual(
-    frames.map(({ function: name }: { function: string }) => name),
+    frames.map(({ function: name }) => name),
     ["ReaderPage", "readTitle"],
   );
 });
@@ -120,7 +134,7 @@ test("a frame from an injected build goes as web JavaScript with its chunk id, w
 
   await sink.capture([{ ...error, frames: [{ ...error.frames[0]!, chunkId }] }], { accountId: ACCOUNT_ID, context, geoAddress: null });
 
-  assert.deepEqual(sent[0]!.body.batch[0]!.properties.$exception_list[0].stacktrace.frames, [
+  assert.deepEqual(sent[0]!.body.batch[0]!.properties.$exception_list[0]!.stacktrace.frames, [
     {
       platform: "web:javascript",
       chunk_id: chunkId,
@@ -207,7 +221,7 @@ test("a crash outside any request goes under no person, and isn't placed where t
 
   await sink.captureServerError({ caughtBy: "uncaughtException", type: "Error", message: "boom", frames: [], at: AT });
 
-  const [{ distinct_id, properties }] = sent[0]!.body.batch as [Record<string, any>];
+  const [{ distinct_id, properties }] = sent[0]!.body.batch as [SentEvent];
   assert.equal(distinct_id, "anonymous-1");
   assert.equal(properties.$process_person_profile, false);
   assert.equal(properties.$geoip_disable, true);

@@ -1,5 +1,5 @@
 import type { Provider } from "@overview/domain";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { adapterFor } from "./adapterFor.js";
 
 export interface GenerationClientOptions {

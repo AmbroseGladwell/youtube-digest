@@ -9,7 +9,11 @@ export interface ProxySpend {
   proxyBytes: number;
 }
 
-export type FetchReservation = { reserved: boolean; used: number; limit: number };
+export interface FetchReservation {
+  reserved: boolean;
+  used: number;
+  limit: number;
+}
 
 export const usageDay = (now: Date): string => now.toISOString().slice(0, 10);
 

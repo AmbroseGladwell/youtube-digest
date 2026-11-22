@@ -35,13 +35,25 @@ export class InMemorySyncStorage implements SyncStorage {
   revisions = new Map<string, number>();
   #listeners = new Set<() => void>();
 
+  private readonly overviewStore: InMemoryOverviewStore;
+  private readonly settingsStore: InMemorySettingsStore;
+  private readonly transcriptStore: InMemoryTranscriptStore;
+  private readonly followedPlaylistStore: InMemoryFollowedPlaylistStore;
+  private readonly chatStore: InMemoryChatStore;
+
   constructor(
-    private readonly overviewStore: InMemoryOverviewStore,
-    private readonly settingsStore: InMemorySettingsStore,
-    private readonly transcriptStore: InMemoryTranscriptStore,
-    private readonly followedPlaylistStore: InMemoryFollowedPlaylistStore,
-    private readonly chatStore: InMemoryChatStore,
-  ) {}
+    overviewStore: InMemoryOverviewStore,
+    settingsStore: InMemorySettingsStore,
+    transcriptStore: InMemoryTranscriptStore,
+    followedPlaylistStore: InMemoryFollowedPlaylistStore,
+    chatStore: InMemoryChatStore,
+  ) {
+    this.overviewStore = overviewStore;
+    this.settingsStore = settingsStore;
+    this.transcriptStore = transcriptStore;
+    this.followedPlaylistStore = followedPlaylistStore;
+    this.chatStore = chatStore;
+  }
 
   async isEnrolled() {
     return this.enrolled;

@@ -1,5 +1,5 @@
 import type { FastifyBaseLogger } from "fastify";
-import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overview/domain";
+import { type StoredTranscript, apiLogLines, type Plan, type VideoId } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { AccountCostsRepository, CostPayer } from "../costs/AccountCostsRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
@@ -45,7 +45,10 @@ export class QuotaSpentError extends Error {
   }
 }
 
-export type ServiceAnswer = { transcript: StoredTranscript; via: ServiceFetchResult["via"] };
+export interface ServiceAnswer {
+  transcript: StoredTranscript;
+  via: ServiceFetchResult["via"];
+}
 
 export const callerKey = (caller: ServiceCaller): string =>
   "accountId" in caller ? `account:${caller.accountId}` : `address:${hashedAddress(caller.address)}`;

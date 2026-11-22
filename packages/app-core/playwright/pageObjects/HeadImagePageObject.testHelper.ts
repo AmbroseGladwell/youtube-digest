@@ -8,12 +8,11 @@ import { PageObject } from "./PageObject.testHelper.js";
 // swaps it between the tile and the column's width (OV-151), measured against the head it
 // leads and the title under it.
 export class HeadImagePageObject extends PageObject {
-  constructor(
-    testContext: TestContext,
-    head: Locator,
-    private readonly title: Locator,
-  ) {
+  private readonly title: Locator;
+
+  constructor(testContext: TestContext, head: Locator, title: Locator) {
     super(testContext, head);
+    this.title = title;
   }
 
   private button = () => this.get(headImageTestIds.button);

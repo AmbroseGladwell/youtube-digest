@@ -1,7 +1,10 @@
 import type { Chat } from "@overview/domain";
 import { lastActive } from "./conversationLine.js";
 
-export type AskHistoryGroup = { label: string; chats: Chat[] };
+export interface AskHistoryGroup {
+  label: string;
+  chats: Chat[];
+}
 
 const DAY_MS = 86_400_000;
 

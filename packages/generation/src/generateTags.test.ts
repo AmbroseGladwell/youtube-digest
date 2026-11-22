@@ -5,7 +5,7 @@ import { DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/domain"
 import { assembleOverview } from "./assembleOverview.js";
 import { generateTags } from "./generateTags.js";
 import { GenerationError } from "./GenerationError.js";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 
 const overview = assembleOverview(
   {

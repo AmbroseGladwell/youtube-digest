@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type Ref } from "react";
 import type { Topic, TopicId } from "@overview/domain";
 import { creatableTopicName, topicMatches } from "../../../overviews/util/topicMatches.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -8,6 +8,7 @@ import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.
 import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 
 export interface TopicPickerProps {
+  ref?: Ref<HTMLDivElement> | undefined;
   topics: Topic[];
   selected: Topic[];
   countByTopic: Record<string, number>;
@@ -19,10 +20,7 @@ export interface TopicPickerProps {
 
 const HEADING_ID = "TopicPicker-heading";
 
-export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function TopicPicker(
-  { topics, selected, countByTopic, busy, onToggle, onCreate, onClose },
-  ref,
-) {
+export const TopicPicker = ({ topics, selected, countByTopic, busy, onToggle, onCreate, onClose, ref }: TopicPickerProps) => {
   const [query, setQuery] = useState("");
   const search = useRef<HTMLInputElement | null>(null);
 
@@ -168,4 +166,4 @@ export const TopicPicker = forwardRef<HTMLDivElement, TopicPickerProps>(function
       <p className={styles.note}>Saves as you pick — an overview can sit in several topics. Esc closes.</p>
     </div>
   );
-});
+};

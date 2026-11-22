@@ -10,7 +10,7 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
-import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
+import type { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
 import { LibraryUnreadableCardPageObject } from "./LibraryUnreadableCardPageObject.testHelper.js";
 import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";

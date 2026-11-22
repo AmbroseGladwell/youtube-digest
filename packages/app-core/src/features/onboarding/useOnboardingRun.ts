@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { TranscribeChoice } from "@overview/domain";
-import type { Overview, PodcastEpisode, PodcastRead } from "@overview/domain";
+import type { TranscribeChoice, Overview, PodcastEpisode, PodcastRead } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";

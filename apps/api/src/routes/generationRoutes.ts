@@ -1,12 +1,12 @@
 import type { FastifyInstance } from "fastify";
 import {
+  type TrialToken,
   apiLogLines,
   OurKeyGenerationRequest,
   ProfilePassInput,
   TRIAL_TOKEN_HEADER,
   TopicMatchInput,
   TopicSuggestionInput,
-  TrialToken,
   type TopicMatchResult,
   type TopicSuggestionResult,
   type OurKeyGenerationStatus,

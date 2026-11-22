@@ -13,6 +13,17 @@ A PR that is unformatted or has a lint error fails CI. Editors that speak LSP ca
 on save: `oxlint --lsp` and `oxfmt --lsp`, or the Oxc extension, which reads the same two
 config files.
 
+## Before every commit
+
+`.githooks/pre-commit` (pointed at by `task install`) runs gitleaks, then Oxlint and
+`oxfmt --check` on the staged JS and TS files only, so it takes seconds. A lint error or an
+unformatted file refuses the commit; `task format` fixes the second. It lints the files as
+they are on disk, so a file staged in part is checked whole. Typecheck and the test suites
+stay in CI: they are too slow and too heavy on memory for every commit.
+
+The checks are deterministic on purpose: a correction that keeps coming back becomes a rule
+here, not another line of prose in a convention doc (OV-369).
+
 ## Why these two, and not Vite+
 
 Vite+ (VoidZero's `vp` CLI, 1.0 on 28 Sep 2026) was looked at first, on OV-253. Its
@@ -51,6 +62,33 @@ and Node plugins, all as errors. Type-aware linting is off for now.
 
 `no-unused-vars` ignores parameters (handlers often keep a signature they don't read), caught
 errors, rest siblings (`const { a, ...rest }` to drop `a`), and names that start with `_`.
+
+On top of `correctness`, these rules are on, each for a pattern the code had already settled on
+(OV-369):
+
+| Rule | What it holds |
+|---|---|
+| `typescript/no-explicit-any` | `unknown` and a check, or a real type, never `any`. |
+| `typescript/consistent-type-definitions: interface` | An object shape is an `interface`; a `type` is for unions, nullable shapes and types derived from others. About 99% of the code already did this. |
+| `typescript/consistent-type-imports` | A type-only import says `import type`, so it's erased. |
+| `eqeqeq`, with `null` ignored | `===` everywhere, except `== null`, which reads as "null or undefined". |
+| `no-var` | `let` and `const`, including in the two `public/appearance.js` scripts. |
+| `no-param-reassign` | A parameter is never reassigned; destructure into a `let` instead. |
+| `no-unused-expressions` (no ternaries, no short circuits), `no-sequences` | A ternary or `&&` produces a value; a side effect is an `if`. |
+| `prefer-arrow-callback` | Callbacks are arrow functions. Components take `ref` as a prop (React 19), not through `forwardRef(function …)`. |
+| `import/no-duplicates`, `import/no-cycle` | One import per module, and no cycles. |
+| `react/jsx-no-useless-fragment`, allowing expressions | No fragment around a single element. `<>{node}</>` stays allowed, since it's how a component returns a `ReactNode` as an element. |
+
+`tsconfig.base.json` sets `erasableSyntaxOnly`, so `tsc` refuses `enum`, `namespace` and
+constructor parameter properties: TypeScript that would produce code rather than just be
+erased. Mutually exclusive states are a string union or Zod enum, and a set of named values is
+an `as const` object with a type derived from it.
+
+These rules are off in some folders, each with a reason:
+
+| Rule | Where | Why |
+|---|---|---|
+| `import/no-cycle` | `**/playwright/**` | Page objects follow the app's navigation: the library opens the reader, and the reader goes back to the library, so each imports the other. The imports are only used inside methods, so the cycle is harmless at load time, and breaking it would mean redesigning how page objects hand over to each other. |
 
 These rules are off, and each one has a reason:
 

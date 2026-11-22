@@ -22,7 +22,12 @@ export interface FeedShow {
 
 // The notes of the episodes beside the wanted one, newest first, which say what the show repeats
 // in every episode (docs/features/podcast-on-youtube.md, "An episode's own words").
-export type FeedEpisode = { show: FeedShow; item: FeedItem | null; itemsRead: number; neighbourNotes: string[] };
+export interface FeedEpisode {
+  show: FeedShow;
+  item: FeedItem | null;
+  itemsRead: number;
+  neighbourNotes: string[];
+}
 
 const NEIGHBOURS = 10;
 

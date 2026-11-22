@@ -1,10 +1,11 @@
-import { forwardRef, useRef, useState } from "react";
+import { useRef, useState, type Ref } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import styles from "./ProjectActionsMenu.module.scss";
 import { projectActionsMenuTestIds } from "./ProjectActionsMenuTestIds.js";
 
 export interface ProjectActionsMenuProps {
+  ref?: Ref<HTMLButtonElement> | undefined;
   archived: boolean;
   onRename: () => void;
   onEditPurpose: () => void;
@@ -13,10 +14,7 @@ export interface ProjectActionsMenuProps {
 }
 
 // The reader-only actions; only Delete asks first ("OV-168 2 The Project Page" 168k).
-export const ProjectActionsMenu = forwardRef<HTMLButtonElement, ProjectActionsMenuProps>(function ProjectActionsMenu(
-  { archived, onRename, onEditPurpose, onArchive, onDelete },
-  trigger,
-) {
+export const ProjectActionsMenu = ({ archived, onRename, onEditPurpose, onArchive, onDelete, ref: trigger }: ProjectActionsMenuProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   useDismissOnOutside(open, () => setOpen(false), root);
@@ -89,4 +87,4 @@ export const ProjectActionsMenu = forwardRef<HTMLButtonElement, ProjectActionsMe
       )}
     </div>
   );
-});
+};
