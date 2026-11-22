@@ -19,7 +19,7 @@ import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageTagsDialog.js";
 import { SortPill } from "../components/SortPill/SortPill.js";
 import { LibraryList } from "../components/LibraryList/LibraryList.js";
-import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
+import { LibraryOverviewCard, type SaidMoment } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
@@ -35,6 +35,8 @@ import { LibrarySearch, type LibrarySearchText } from "../components/LibrarySear
 import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
 import { meaningEntries } from "../util/meaningEntries.js";
 import { useMeaningMatchesQuery } from "../queries/meaningMatchesQuery.js";
+import { useTranscriptMatchesQuery } from "../queries/transcriptMatchesQuery.js";
+import { transcriptEntries } from "../util/transcriptEntries.js";
 import { useSettledText } from "../../../util/useSettledText.js";
 import { orderLibraryEntries } from "../util/orderLibraryEntries.js";
 import { NO_LIBRARY_FILTERS, NO_LIBRARY_FILTERS as EVERY_OVERVIEW } from "../types/LibraryFilters.js";
@@ -199,6 +201,14 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       meaningSettled.current();
     }
   }, [meaningQuery.data, settledQuery]);
+  const transcriptQuery = useTranscriptMatchesQuery(settledQuery);
+  const transcriptSettled = useRef(() => {});
+  const saidHeadingId = useId();
+  useEffect(() => {
+    if ((transcriptQuery.data !== undefined || transcriptQuery.isError) && settledQuery !== "") {
+      transcriptSettled.current();
+    }
+  }, [transcriptQuery.data, transcriptQuery.isError, settledQuery]);
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
   const isPhone = useMediaQuery(PHONE_QUERY);
   const coarsePointer = useMediaQuery("(pointer: coarse)");
@@ -277,13 +287,26 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     sort,
   );
   searchSettled.current = () => analytics.library.search.searched({ results: visible.length });
-  const meaningIsCurrent = settledQuery !== "" && settledQuery === filters.query.trim();
-  const closeInMeaning = meaningIsCurrent ? meaningEntries(entries, filters, meaningQuery.data, new Set(visible.map(libraryEntryId))) : [];
-  const meaningUnavailable = meaningIsCurrent && meaningQuery.data?.available === false;
+  const settledIsCurrent = settledQuery !== "" && settledQuery === filters.query.trim();
+  const saidInSource = settledIsCurrent
+    ? transcriptEntries(entries, filters, transcriptQuery.data, new Set(visible.map(libraryEntryId)))
+    : [];
+  const transcriptsUnavailable = settledIsCurrent && transcriptQuery.isError;
+  transcriptSettled.current = () =>
+    analytics.library.search.transcriptMatched({ transcriptOnly: saidInSource.length, failed: transcriptQuery.isError });
+  const closeInMeaning = settledIsCurrent
+    ? meaningEntries(
+        entries,
+        filters,
+        meaningQuery.data,
+        new Set([...visible.map(libraryEntryId), ...saidInSource.map(({ overview }) => overview.id)]),
+      )
+    : [];
+  const meaningUnavailable = settledIsCurrent && meaningQuery.data?.available === false;
   meaningSettled.current = () =>
     analytics.library.search.meaningMatched({ meaningOnly: closeInMeaning.length, available: meaningQuery.data?.available ?? false });
   const unreadShown = visible.filter((entry) => !entry.state.read).length;
-  const selected: OverviewWithState[] = [...visible, ...closeInMeaning].filter(
+  const selected: OverviewWithState[] = [...visible, ...saidInSource, ...closeInMeaning].filter(
     (entry): entry is LibraryEntry & OverviewWithState => entry.kind === "overview" && selection.picked.has(entry.overview.id),
   );
   const selectable = readableEntries(entries).length > 0;
@@ -373,7 +396,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         <span className={styles.visuallyHidden}> tagged #{filters.tag}</span> · {unreadShown} unread
       </>
     );
-  const row = (entry: LibraryEntry, order: number) => (
+  const row = (entry: LibraryEntry, order: number, said: SaidMoment | null = null) => (
     <div
       key={libraryEntryId(entry)}
       data-glide-name={libraryRowGlideName(libraryEntryId(entry))}
@@ -418,6 +441,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           playing={isPlaying(entry.overview.id)}
           onListen={() => listen(entry.overview)}
           addedBy={projects.addedByFor(entry.overview.id)}
+          said={said}
           selection={
             selection.selecting
               ? { selected: selection.picked.has(entry.overview.id), onToggle: () => selection.toggle(entry.overview.id), order }
@@ -484,7 +508,8 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     }
     if (visible.length === 0) {
       return (
-        closeInMeaning.length === 0 && (
+        closeInMeaning.length === 0 &&
+        saidInSource.length === 0 && (
           <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
             No overviews match these filters.
           </p>
@@ -691,14 +716,37 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
               {railIsSheet && projects.current === null && milestoneStack}
 
               {projects.empty ?? listBody()}
+              {saidInSource.length > 0 && (
+                <section className={styles.meaning} aria-labelledby={saidHeadingId} data-testid={libraryPageTestIds.saidGroup}>
+                  <h2 className={styles.meaningHeading} id={saidHeadingId}>
+                    Said in the transcripts
+                  </h2>
+                  <p className={styles.meaningSub}>Your words aren't in these overviews, but they were said.</p>
+                  <div className={styles.list}>
+                    {saidInSource.map((entry, index) =>
+                      row(entry, visible.length + index, {
+                        moment: entry.moment,
+                        sourceWord: entry.overview.source.kind === "podcast" ? "episode" : "video",
+                      }),
+                    )}
+                  </div>
+                </section>
+              )}
               {closeInMeaning.length > 0 && (
                 <section className={styles.meaning} aria-labelledby={meaningHeadingId} data-testid={libraryPageTestIds.meaningGroup}>
                   <h2 className={styles.meaningHeading} id={meaningHeadingId}>
                     Close in meaning
                   </h2>
                   <p className={styles.meaningSub}>These don't use your words, but they're about something close.</p>
-                  <div className={styles.list}>{closeInMeaning.map((entry, index) => row(entry, visible.length + index))}</div>
+                  <div className={styles.list}>
+                    {closeInMeaning.map((entry, index) => row(entry, visible.length + saidInSource.length + index))}
+                  </div>
                 </section>
+              )}
+              {transcriptsUnavailable && (
+                <p className={styles.meaningSub} data-testid={libraryPageTestIds.transcriptsUnavailable}>
+                  Couldn't search what was said in your videos and episodes just now.
+                </p>
               )}
               {meaningUnavailable && (
                 <p className={styles.meaningSub} data-testid={libraryPageTestIds.meaningUnavailable}>

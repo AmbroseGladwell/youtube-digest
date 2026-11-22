@@ -8,6 +8,8 @@ export const libraryPageTestIds = {
   empty: "LibraryPage.empty",
   meaningGroup: "LibraryPage.meaningGroup",
   meaningUnavailable: "LibraryPage.meaningUnavailable",
+  saidGroup: "LibraryPage.saidGroup",
+  transcriptsUnavailable: "LibraryPage.transcriptsUnavailable",
   rail: "LibraryPage.rail",
   scrim: "LibraryPage.scrim",
   railBody: "LibraryPage.railBody",

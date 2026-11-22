@@ -23,6 +23,8 @@ export * from "./ChatApi.js";
 export * from "./fetchChatApi.js";
 export * from "./MeaningSearchApi.js";
 export * from "./fetchMeaningSearchApi.js";
+export * from "./TranscriptSearchApi.js";
+export * from "./fetchTranscriptSearchApi.js";
 export * from "./PlaylistApi.js";
 export * from "./fetchPlaylistApi.js";
 export * from "./ConnectionsApi.js";

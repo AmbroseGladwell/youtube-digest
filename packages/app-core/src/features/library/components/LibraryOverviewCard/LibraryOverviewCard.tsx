@@ -3,7 +3,16 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
-import { NOVELTY_LABEL, overviewMetaParts, overviewTimeSaved, sourceName, type Source } from "@overview/domain";
+import {
+  formatTimestamp,
+  NOVELTY_LABEL,
+  overviewMetaParts,
+  overviewTimeSaved,
+  sourceName,
+  type Source,
+  type TextMark,
+  type TranscriptMoment,
+} from "@overview/domain";
 import { KindChip } from "../../../../components/shared/KindChip/KindChip.js";
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { useSavedMoment } from "../../../timeSaved/components/SavedChip/useSavedMoment.js";
@@ -12,12 +21,18 @@ import type { LibraryViewState } from "../../util/libraryViewState.js";
 import styles from "./LibraryOverviewCard.module.scss";
 import { libraryOverviewCardTestIds } from "./LibraryOverviewCardTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
+import { TRANSCRIPT_MOMENT_STATE } from "../../../reader/util/transcriptMomentFromLocation.js";
+
+export interface SaidMoment {
+  moment: TranscriptMoment;
+  sourceWord: "video" | "episode";
+}
 
 export interface LibraryOverviewCardProps {
   overviewWithState: OverviewWithState;
   entering?: boolean;
   topicNames: string[];
-  onOpen: (from: "title" | "thumbnail") => void;
+  onOpen: (from: "title" | "thumbnail" | "said") => void;
   onToggleFavourite: () => void;
   onToggleRead: () => void;
   playing: boolean;
@@ -25,6 +40,7 @@ export interface LibraryOverviewCardProps {
   readerState: LibraryViewState;
   addedBy?: { label: string; on: string; projectName: string; onRemove: () => void } | null;
   selection?: { selected: boolean; onToggle: () => void; order: number } | null;
+  said?: SaidMoment | null;
 }
 
 const SAVED_CHIP_SHOWN_MS = 3_200;
@@ -33,6 +49,17 @@ const SELLING_LABEL: Record<string, string> = {
   own_paid_product: "Sells own paid product",
   own_free_promotion: "Promotes something of theirs",
   sponsor_or_affiliate: "Sponsored or affiliate",
+};
+
+const markedText = (text: string, marks: readonly TextMark[]) => {
+  const parts = [];
+  let from = 0;
+  for (const { start, end } of marks) {
+    parts.push(text.slice(from, start), <mark key={start}>{text.slice(start, end)}</mark>);
+    from = end;
+  }
+  parts.push(text.slice(from));
+  return parts;
 };
 
 const bylineOf = (source: Source): string =>
@@ -50,6 +77,7 @@ export const LibraryOverviewCard = ({
   readerState,
   addedBy = null,
   selection = null,
+  said = null,
 }: LibraryOverviewCardProps) => {
   const { overview, state } = overviewWithState;
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
@@ -145,6 +173,22 @@ export const LibraryOverviewCard = ({
               <span className={styles.channel}>{bylineOf(overview.source)}</span> · {overview.inOneLine}
             </span>
           </PageLink>
+
+          {said !== null && (
+            <PageLink
+              className={styles.said}
+              to={readerPath}
+              state={{ ...readerState, [TRANSCRIPT_MOMENT_STATE]: said.moment.startMs }}
+              onClick={() => onOpen("said")}
+              data-testid={libraryOverviewCardTestIds.saidLink}
+            >
+              <span className={styles.saidLabel}>
+                <StrokeIcon name="scrollText" size={13} />
+                Said in the {said.sourceWord} at {formatTimestamp(said.moment.startMs)}
+              </span>
+              <span className={styles.saidText}>{markedText(said.moment.text, said.moment.marks)}</span>
+            </PageLink>
+          )}
 
           {addedBy !== null && (
             <p className={styles.added} data-testid={libraryOverviewCardTestIds.addedBy}>
