@@ -36,7 +36,7 @@ test("reports the deletion test's pass rate over the big pictures written, and c
   const byVideo = new Map([
     ["a", longVideo("a")],
     ["b", longVideo("b")],
-    ["short", makeFetchedTranscript(30, { id: "short" as never })],
+    ["short", makeFetchedTranscript(5, { id: "short" as never })],
   ]);
   const withGround = { ...makeOverview(), bigPicture: "Some ground worth having." };
   const runs = [

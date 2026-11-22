@@ -3,6 +3,7 @@ import { API_ERROR_CODES, DEFAULT_SECTIONS_ENABLED, OverviewId, ProjectId, Video
 import {
   generateOverviewOf,
   ModelRefusedError,
+  NoSpeechError,
   ProviderKeyRefusedError,
   ProviderOutOfCreditError,
   SchemaFailureError,
@@ -12,6 +13,8 @@ import {
 import { SyncRequestError, type GenerationApi } from "@overview/sync";
 import { ChosenModelFailedError } from "./ChosenModelFailedError.js";
 import { makeOverviewOnKeys, type GenerationAttempt } from "./makeOverviewOnKeys.js";
+
+const A_FEW_THOUSAND_WORDS = Array.from({ length: 1100 }, () => "word").join(" ");
 
 const input: GenerationInput = {
   video: {
@@ -24,7 +27,7 @@ const input: GenerationInput = {
     publishedAt: null,
     thumbnailUrl: null,
   },
-  transcript: [{ text: "Hello.", startMs: 0, endMs: 1000 }],
+  transcript: [{ text: `Hello. ${A_FEW_THOUSAND_WORDS}`, startMs: 0, endMs: 1000 }],
   captureReason: null,
   readerContext: null,
   sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: false, watchAnyway: false },
@@ -229,6 +232,16 @@ describe("makeOverviewOnKeys", () => {
     expect((await makeOverviewOnKeys({ order: ["ours", "own"], own, api: broken.api }, input, meta)).madeOn?.fallback?.cause).toBe(
       "schema-failure",
     );
+  });
+
+  it("a video with no speech on our key is no speech on any key, and never moves to the next", async () => {
+    const { api } = fakeServer({ generate: refusal("no_speech", { reason: "nothing-to-summarise" }) });
+    const own = { provider: "anthropic" as const, model: "a-model", client: ownClient("made") };
+
+    const made = makeOverviewOnKeys({ order: ["ours", "own"], own, api }, input, meta);
+
+    await expect(made).rejects.toBeInstanceOf(NoSpeechError);
+    await expect(made).rejects.toMatchObject({ reason: "nothing-to-summarise" });
   });
 
   it("fails with the last key's own reason when no key is left to move to", async () => {

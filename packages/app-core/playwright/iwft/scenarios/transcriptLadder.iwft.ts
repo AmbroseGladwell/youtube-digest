@@ -1,7 +1,7 @@
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { IWFT_VIDEO_ID, THE_LONG_EXPLANATION } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
@@ -53,7 +53,7 @@ test("captions already held are read back, whichever rung could have fetched the
   backendSimulator.transcripts.seed(
     makeStoredTranscript({
       videoId: VideoId.parse(IWFT_VIDEO_ID),
-      segments: makeCaptionRun(["Captions already held.", "Bought once, read twice."], {
+      segments: makeCaptionRun(["Captions already held.", "Bought once, read twice.", THE_LONG_EXPLANATION], {
         startMs: 0,
         cueMs: 2000,
       }),
@@ -84,7 +84,7 @@ test("a video goes straight to the reader's own rungs: there is no shared cache 
 const serviceTranscript = () =>
   makeStoredTranscript({
     videoId: VideoId.parse(IWFT_VIDEO_ID),
-    segments: makeCaptionRun(["Fetched by our own server.", "Nobody else had it yet."], { startMs: 0, cueMs: 2000 }),
+    segments: makeCaptionRun(["Fetched by our own server.", "Nobody else had it yet.", THE_LONG_EXPLANATION], { startMs: 0, cueMs: 2000 }),
   });
 
 test("a web reader with no extension gets an uncached video's transcript from our server", async ({ launcher, backendSimulator }) => {

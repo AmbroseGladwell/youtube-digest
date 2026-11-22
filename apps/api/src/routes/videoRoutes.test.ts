@@ -23,6 +23,17 @@ const VIDEO: VideoSource = {
 };
 const reading: VideoReader = async () => VIDEO;
 
+// Over the speech floor, so the kind is checked (docs/features/overview-generation-decisions.md, "One note budget").
+const A_REAL_TALK = JSON.stringify({
+  events: [
+    {
+      tStartMs: 0,
+      dDurationMs: 60_000,
+      segs: [{ utf8: Array.from({ length: 8 }, () => "The chef shows the claw grip and why it keeps fingers safe.").join(" ") }],
+    },
+  ],
+});
+
 const appReading = async ({
   reader = reading,
   captions = "captions",
@@ -35,6 +46,7 @@ const appReading = async ({
   openAi?: FakeOpenAi;
 } = {}) => {
   const youTube: FakeYouTube = makeFakeYouTube({ direct: captions, proxy: captions });
+  youTube.captionsJson3 = A_REAL_TALK;
   const testApp = await createTestApp(
     {},
     {

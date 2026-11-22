@@ -4,4 +4,5 @@ export interface KindSample {
   by: string;
   description: string;
   opening: string;
+  spoken?: boolean;
 }

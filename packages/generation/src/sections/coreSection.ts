@@ -8,8 +8,21 @@ import { transcriptBudget } from "./transcriptBudget.js";
 
 const { inOneLine, ...afterInOneLine } = CoreFields.shape;
 
-const howManyKeyPoints = ({ keyPoints, long }: NoteBudget): string =>
-  long
+const SEVEN = 7;
+
+const CEILING_IN_WORDS: Record<number, string> = { 3: "three", 4: "four" };
+
+const forAShortClip = ({ keyPoints, mostChapters }: NoteBudget): string =>
+  `A video this short has room for ${CEILING_IN_WORDS[keyPoints] ?? String(keyPoints)}${keyPoints === LEAST_KEY_POINTS ? "" : " at most"}, so keep the ones that matter most${
+    mostChapters === 0 ? "." : " and let the chapters carry the rest of the structure."
+  }`;
+
+const howManyKeyPoints = (budget: NoteBudget): string => {
+  const { keyPoints, long } = budget;
+  if (!long && keyPoints < SEVEN) {
+    return forAShortClip(budget);
+  }
+  return long
     ? `Most videos need five or fewer, but one this long covers more ground:
 use up to ${keyPoints}, and spend them across the whole of it. ${keyPoints} is the ceiling, so
 keep the ones that matter most. Together the points have to represent the
@@ -20,6 +33,7 @@ is lost to anyone listening.`
     : `Most videos need five or fewer. Seven is the ceiling for a video this
 length, so keep the ones that matter most and let the chapters carry the
 rest of the structure.`;
+};
 
 const GOOD_BIG_PICTURE =
   "Parents get conflicting advice about screens, and the question underneath is whether the harm comes from the screen itself or from what it pushes out, such as sleep and play. It also covers how to talk to a teenager about their phone.";
@@ -56,7 +70,7 @@ described, if it's showing or explaining something instead. If it asserts
 nothing and is pure vibes, say so plainly and set thin to true.
 
 ## Key points
-${LEAST_KEY_POINTS} to ${budget.keyPoints} points. Choose them by what I need to understand, never by where
+${budget.keyPoints === LEAST_KEY_POINTS ? String(LEAST_KEY_POINTS) : `${LEAST_KEY_POINTS} to ${budget.keyPoints}`} points. Choose them by what I need to understand, never by where
 they come in the video: the ideas the rest of it depends on, and what is
 genuinely new, surprising or contested. Leave out anything I could work
 out from the premise alone, and strip the hook, the story, the

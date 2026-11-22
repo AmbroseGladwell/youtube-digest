@@ -1,13 +1,22 @@
-import { WatchAnyway } from "@overview/domain";
+import { anywayAnswerShape, WHOLE_OR_NOTHING } from "./anywayAnswerShape.js";
+import { transcriptBudget } from "./transcriptBudget.js";
 import type { PromptSection } from "../PromptSection.js";
-import { segmentRangeFields } from "./segmentRangeFields.js";
+
+const PARTIAL = `
+
+Say partial when this is true of only part of the video. When you do,
+name the range as startSegmentIndex/endSegmentIndex, taken from the
+numbered transcript segments below — pick the segment numbers that bound
+the part worth watching, don't estimate a time. Otherwise set both to -1.`;
 
 export const watchAnywaySection: PromptSection = {
   title: "Watch it anyway",
   key: "watchAnyway",
-  prompt: () => `
+  prompt: (input) => {
+    const rangeAllowed = transcriptBudget(input).rangeAllowed;
+    return `
 ## Watch it anyway?
-Yes, no, or partial, plus a reason. Default to no. Say yes only if the
+${rangeAllowed ? "Yes, no, or partial, plus a reason." : WHOLE_OR_NOTHING} Default to no. Say yes only if the
 visual or the sound IS the claim: a physical technique I'd perform wrong
 from a written description, a demonstration whose outcome is the
 evidence, or a visual or a sound that carries information the words do
@@ -21,15 +30,7 @@ probably skip the video, the overview covers it." followed by the reason,
 so never restate yes, no, or skip in it. Give the reason itself in one or
 two sentences. Never count anything in it, such as how many steps or
 points there are, and never say how much of the video something takes
-up: say what the parts are, not how many or how long.
-
-Say partial when this is true of only part of the video. When you do,
-name the range as startSegmentIndex/endSegmentIndex, taken from the
-numbered transcript segments below — pick the segment numbers that bound
-the part worth watching, don't estimate a time. Otherwise set both to -1.`,
-  schemaShape: (input) => ({
-    answer: WatchAnyway.shape.answer,
-    reason: WatchAnyway.shape.reason,
-    ...segmentRangeFields(input),
-  }),
+up: say what the parts are, not how many or how long.${rangeAllowed ? PARTIAL : ""}`;
+  },
+  schemaShape: anywayAnswerShape,
 };

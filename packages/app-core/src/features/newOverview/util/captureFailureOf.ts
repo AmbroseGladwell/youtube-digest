@@ -1,5 +1,5 @@
 import type { CaptureFailure } from "@overview/domain";
-import { GenerationError } from "@overview/generation";
+import { GenerationError, NoSpeechError } from "@overview/generation";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { NoTranscriptSourceError } from "../../transcripts/api/NoTranscriptSourceError.js";
 import { ArticleReadError } from "../api/ArticleReadError.js";
@@ -30,6 +30,9 @@ export const captureFailureOf = (error: unknown, { transcriptResolved }: { trans
   }
   if (error instanceof ChosenModelFailedError) {
     return "model-refused";
+  }
+  if (error instanceof NoSpeechError) {
+    return "no-speech";
   }
   if (error instanceof GenerationError || transcriptResolved) {
     return "generation";

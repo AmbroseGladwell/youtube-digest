@@ -644,6 +644,12 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(transcriptPanelTestIds.rowText)).toHaveText(blocks),
     );
 
+  verifyFirstTranscriptBlockReads = (text: string, time: string) =>
+    this.step(`verifyFirstTranscriptBlockReads ${time} ${text}`, async () => {
+      await expect(this.get(transcriptPanelTestIds.rowText).first()).toHaveText(text);
+      await expect(this.get(transcriptPanelTestIds.rowTime).first()).toHaveText(time);
+    });
+
   verifyTranscriptBlockTimesRead = (times: string[]) =>
     this.step(`verifyTranscriptBlockTimesRead ${times.join(", ")}`, () =>
       expect(this.get(transcriptPanelTestIds.rowTime)).toHaveText(times),

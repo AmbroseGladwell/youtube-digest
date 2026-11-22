@@ -67,7 +67,12 @@ import {
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
 import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
-import { makeAnthropicMessageResponse, makeGeneratedOutputFixture, makeModelListResponse } from "./fixtures/anthropicFixtures.js";
+import {
+  fittedToTheAsk,
+  makeAnthropicMessageResponse,
+  makeGeneratedOutputFixture,
+  makeModelListResponse,
+} from "./fixtures/anthropicFixtures.js";
 import {
   IWFT_VIDEO_ID,
   makeJson3Fixture,
@@ -417,7 +422,7 @@ export class BackendSimulator {
             body: makeAnthropicMessageResponse(
               route.request().postData()?.includes('"noteKind"')
                 ? { noteKind: this.#generatedOutputOverrides.recipe ? "recipe" : "default" }
-                : makeGeneratedOutputFixture(this.#generatedOutputOverrides),
+                : fittedToTheAsk(makeGeneratedOutputFixture(this.#generatedOutputOverrides), route.request().postData() ?? ""),
             ),
           };
         },

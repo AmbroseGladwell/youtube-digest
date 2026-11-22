@@ -170,6 +170,7 @@ export const CaptureFailure = z.enum([
   "article-no-answer",
   "article-unfinished",
   "model-refused",
+  "no-speech",
   "generation",
   "unknown",
 ]);

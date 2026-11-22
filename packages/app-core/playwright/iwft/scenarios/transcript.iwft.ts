@@ -2,7 +2,7 @@ import type { StoredTranscript, TranscriptSegment } from "@overview/domain";
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { IWFT_VIDEO_ID, THE_LONG_EXPLANATION } from "../../network/fixtures/innerTubeFixtures.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
@@ -166,14 +166,14 @@ test("generating a note keeps the captions it fetched, and the tab reads them ba
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.clickTab("Transcript");
 
-  await reader.verifyTranscriptBlocksRead([
-    "Hello and welcome to the simulated video. Here is the one claim this video makes. And here is how you could apply it.",
-  ]);
-  await reader.verifyTranscriptBlockTimesRead(["0:00"]);
+  await reader.verifyFirstTranscriptBlockReads(
+    "Hello and welcome to the simulated video. Here is the one claim this video makes. And here is how you could apply it. Then the creator explains the claim again in more detail.",
+    "0:00",
+  );
 
   // The merging is display-only: the store keeps what the model was given.
   const stored = await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID));
-  expect(stored?.segments).toHaveLength(3);
+  expect(stored?.segments).toHaveLength(4);
   expect(stored?.generated).toBe(false);
 });
 
@@ -188,7 +188,7 @@ test("a generation that fails still leaves the transcript stored, so a retry doe
   await form.verifyGenerationErrorIsVisible();
 
   const stored = await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID));
-  expect(stored?.segments).toHaveLength(3);
+  expect(stored?.segments).toHaveLength(4);
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
   expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
 
@@ -207,7 +207,7 @@ test("a second note on a video already in the library reads the stored captions 
   backendSimulator.transcripts.seed(
     makeStoredTranscript({
       videoId: VideoId.parse(IWFT_VIDEO_ID),
-      segments: makeCaptionRun(["Captions already held.", "Bought once, read twice."], {
+      segments: makeCaptionRun(["Captions already held.", "Bought once, read twice.", THE_LONG_EXPLANATION], {
         startMs: 0,
         cueMs: 2000,
       }),
