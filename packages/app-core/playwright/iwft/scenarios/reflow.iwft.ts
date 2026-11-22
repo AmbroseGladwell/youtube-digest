@@ -47,7 +47,6 @@ interface Screen<Shown extends PageObject = PageObject> {
 const screen = <Shown extends PageObject>(described: Screen<Shown>): Screen => described as unknown as Screen;
 
 const ZOOMED = reflowConditions[0]!.name;
-const SHEET_TOO_SHORT = "OV-385: bottom sheets leave their lists too little room";
 const TIME_SAVED_NAME = "OV-389: the time-saved button's name leaves out its visible text";
 
 const openLibrary = (launcher: Launcher, backendSimulator: BackendSimulator) => {
@@ -70,7 +69,7 @@ const screens: Screen[] = [
       return library;
     },
     verify: (library) => library.verifyFilterControlsCanBeReached(),
-    brokenUntil: { [ZOOMED]: SHEET_TOO_SHORT, axe: TIME_SAVED_NAME },
+    brokenUntil: { axe: TIME_SAVED_NAME },
   }),
   screen({
     name: "the account menu",
@@ -91,6 +90,17 @@ const screens: Screen[] = [
     verify: (reader) => reader.verifyReflows(),
   }),
   screen({
+    name: "an overview's chat",
+    open: async (launcher, backendSimulator) => {
+      const library = await openLibrary(launcher, backendSimulator);
+      const reader = await library.nthCard(0).openReader();
+      await reader.chat.openFromMenu();
+      await reader.chat.verifyIsOpen(true);
+      return reader.chat;
+    },
+    verify: (chat) => chat.verifyChatControlsCanBeReached(),
+  }),
+  screen({
     name: "the Ask page",
     open: async (launcher, backendSimulator) => {
       await openLibrary(launcher, backendSimulator);
@@ -108,7 +118,6 @@ const screens: Screen[] = [
       return ask;
     },
     verify: (ask) => ask.verifyDrawerControlsCanBeReached(),
-    brokenUntil: { [ZOOMED]: SHEET_TOO_SHORT },
   }),
   screen({
     name: "Settings",
