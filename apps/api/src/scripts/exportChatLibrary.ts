@@ -2,11 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import pg from "pg";
 
-// OV-307: one reader's library as search by meaning sees it, for chatAcrossSourcesCheck. Every
-// live overview record, the claim embeddings made at its current rev, the account's own
-// transcripts, its projects with their memberships, and (OV-373) its read and favourite state and topics. The connection is read only at the server, so nothing here can write.
-//
-//   node dist/scripts/exportChatLibrary.js <email> <out dir>   (DATABASE_URL in the environment)
+// One reader's library for the chat harnesses, read only at the server: docs/architecture/in-app-chat.md, "Running it again".
 
 const [email, outDir] = process.argv.slice(2);
 const databaseUrl = process.env["DATABASE_URL"];

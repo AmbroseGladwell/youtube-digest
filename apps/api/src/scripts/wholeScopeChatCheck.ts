@@ -29,17 +29,7 @@ import {
 } from "../chats/libraryChatPrompt.js";
 import type { PromptMessage } from "../chats/streamChatCompletion.js";
 
-// OV-373: does library chat answer from the whole scope when the map carries facts set by code,
-// the reader's read and favourite state goes in beside it, and a first pass returns a plan (filters
-// code applies, a mode, picks) rather than five picks? Over one reader's library (exportChatLibrary,
-// which since OV-373 carries overview states and topics), against the shipped two passes.
-//
-//   node dist/scripts/wholeScopeChatCheck.js facts <data dir>
-//   node dist/scripts/wholeScopeChatCheck.js run <data dir> <out.json> --arms shipped,plan5,plan-budget,plan-whole --runs 1 --budget 1 [--dry-run] [--only re]
-//   node dist/scripts/wholeScopeChatCheck.js report <out.json>
-//
-// The data dir holds library/ from the export and questions.json. Each question's expected set is a
-// filter applied by code, so what an answer should cover is never a model's judgement.
+// OV-373 whole-scope harness: docs/architecture/in-app-chat.md, "Answering from the whole scope" and "Running it again".
 
 const ARMS = ["shipped", "plan5", "plan-budget", "plan-whole"] as const;
 type ArmName = (typeof ARMS)[number];
