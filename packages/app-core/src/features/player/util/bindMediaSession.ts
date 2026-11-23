@@ -15,8 +15,8 @@ export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
   let lastReport = 0;
 
   const reportPosition = () => {
-    const { timings, rate, source } = engine.getSnapshot();
-    if (source !== "audio" || timings.durationSeconds <= 0 || typeof session.setPositionState !== "function") {
+    const { timings, rate, source, stream } = engine.getSnapshot();
+    if (source !== "audio" || stream !== null || timings.durationSeconds <= 0 || typeof session.setPositionState !== "function") {
       return;
     }
     lastReport = Date.now();
@@ -52,7 +52,24 @@ export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
       lastTrack = track;
     }
     session.playbackState = status === "playing" || status === "buffering" ? "playing" : "paused";
+    offerSeekTo();
     reportPosition();
+  };
+
+  const seekTo: MediaSessionActionHandler = (details) => {
+    if (details.seekTime !== undefined) {
+      engine.seek(details.seekTime);
+    }
+    reportPosition();
+  };
+  let seekToOffered = true;
+  // Design 42g: no scrubber on the lock screen until the length is known.
+  const offerSeekTo = () => {
+    const offered = engine.getSnapshot().stream === null;
+    if (offered !== seekToOffered) {
+      seekToOffered = offered;
+      setHandler("seekto", offered ? seekTo : null);
+    }
   };
 
   const handlers: Array<[MediaSessionAction, MediaSessionActionHandler | null]> = [
@@ -61,15 +78,7 @@ export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
     ["stop", () => engine.stop()],
     ["seekbackward", (details) => engine.skip(-(details.seekOffset ?? SKIP_SECONDS))],
     ["seekforward", (details) => engine.skip(details.seekOffset ?? SKIP_SECONDS)],
-    [
-      "seekto",
-      (details) => {
-        if (details.seekTime !== undefined) {
-          engine.seek(details.seekTime);
-        }
-        reportPosition();
-      },
-    ],
+    ["seekto", seekTo],
     ["previoustrack", null],
     ["nexttrack", null],
   ];

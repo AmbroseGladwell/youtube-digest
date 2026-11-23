@@ -2,17 +2,29 @@ import { narrationVoiceName, type NoteLine, formatClock } from "@overview/domain
 import type { PlayerSnapshot } from "../types/PlayerSnapshot.js";
 import { sectionStartFractions } from "./estimatedLineStarts.js";
 import { lineAtTime } from "./lineAtTime.js";
+import { HELD_LEAD_SECONDS } from "../PlayerEngine.js";
 
 export type PlayerBarAction = "tryAgain" | "readAlongInstead" | "readAlong" | "readAlongMeanwhile" | "markRead" | "signIn";
 
-export type PlayerMainButton = "play" | "pause" | "cancel" | "buffering" | "replay";
+export type PlayerMainButton = "play" | "pause" | "cancel" | "starting" | "buffering" | "replay";
 
 export interface PlayerBarView {
-  label: { lead: string; rest: string | null; tone: "ink" | "warning"; pacerTag: boolean; voiceLink?: boolean };
+  // quietRest: a countdown on screen that the live region must not read out each time it changes.
+  label: { lead: string; rest: string | null; tone: "ink" | "warning"; pacerTag: boolean; voiceLink?: boolean; quietRest?: boolean };
   clock: { inline: string; start: string; end: string };
   main: { kind: PlayerMainButton; label: string; disabled: boolean };
   skipEnabled: boolean;
-  track: { fill: "progress" | "sweep" | "none"; percent: number; tone: "brand" | "stone"; thumb: boolean };
+  track: {
+    fill: "progress" | "sweep" | "none";
+    percent: number;
+    tone: "brand" | "stone";
+    thumb: boolean;
+    made?: number;
+    gap?: [from: number, to: number];
+    ring?: boolean;
+  };
+  lengthKnown: boolean;
+  back: string | null;
   notches: number[];
   seekable: boolean;
   actions: PlayerBarAction[];
@@ -80,6 +92,8 @@ export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: 
     showRate: true,
     rateLabel: rateLabelFor(rate),
     reRecord: null,
+    lengthKnown: true,
+    back: null,
   };
   const reRecord = narratedVoice !== null && narratedVoice !== voice ? `Re-record in ${narrationVoiceName(voice)}` : null;
 
@@ -152,6 +166,9 @@ export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: 
           };
 
     case "preparing": {
+      if (snapshot.source === "audio") {
+        return startingView(base, duration);
+      }
       const long = preparing?.long ?? false;
       return {
         ...base,
@@ -208,6 +225,9 @@ export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: 
       };
 
     default: {
+      if (snapshot.stream !== null) {
+        return streamingView(base, snapshot, time, section);
+      }
       const lead = liveLeadOf(status, section);
       return {
         ...base,
@@ -222,6 +242,70 @@ export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: 
       };
     }
   }
+};
+
+// 42a: lighter than 1c, it replaces 1c and 1d on a first play.
+const startingView = (base: PlayerBarView, duration: number): PlayerBarView => ({
+  ...base,
+  label: { lead: "Starting", rest: null, tone: "ink", pacerTag: false },
+  clock: { inline: aboutMinutes(duration), start: "", end: aboutMinutes(duration) },
+  main: { kind: "starting", label: "Pause, starting", disabled: false },
+  skipEnabled: false,
+  track: { ...base.track, fill: "none", thumb: false },
+  notches: [],
+  seekable: false,
+  lengthKnown: false,
+});
+
+const secondsUntilHeld = ({ stream, timings }: PlayerSnapshot): number | null => {
+  if (stream === null || stream.holdingLine === null || stream.renderPace === null) {
+    return null;
+  }
+  const needed = (timings.lineStarts[stream.holdingLine] ?? 0) + HELD_LEAD_SECONDS - stream.renderedSeconds;
+  return Math.max(1, Math.ceil(needed / stream.renderPace));
+};
+
+// 42b to 42d: playback ahead of the render, the same bar with a made-so-far fill and an estimated length.
+const streamingView = (base: PlayerBarView, snapshot: PlayerSnapshot, time: number, section: string): PlayerBarView => {
+  const { status, timings, track } = snapshot;
+  const stream = snapshot.stream!;
+  const duration = timings.durationSeconds;
+  const at = (seconds: number) => (duration > 0 ? Math.min(100, (seconds / duration) * 100) : 0);
+  const made = at(stream.renderedSeconds);
+  const clock = {
+    inline: `${formatClock(time)} · ${aboutMinutes(duration)}`,
+    start: formatClock(time),
+    end: aboutMinutes(duration),
+  };
+  const notches = base.notches.filter((fraction) => fraction * duration <= stream.renderedSeconds);
+  if (stream.holdingLine !== null) {
+    const wait = secondsUntilHeld(snapshot);
+    return {
+      ...base,
+      label: {
+        lead: `Preparing from ${sectionHeadingAt(track?.lines ?? [], stream.holdingLine)}`,
+        rest: wait === null ? null : `~${wait} s`,
+        tone: "ink",
+        pacerTag: false,
+        quietRest: true,
+      },
+      clock,
+      main: { kind: "buffering", label: "Pause, preparing", disabled: false },
+      track: { ...base.track, made, gap: [made, base.track.percent], ring: true },
+      notches,
+      lengthKnown: false,
+      back: stream.holdingFrom === null ? null : `Back to ${formatClock(stream.holdingFrom)}`,
+    };
+  }
+  return {
+    ...base,
+    label: { lead: liveLeadOf(status, section), rest: status === "playing" ? null : section, tone: "ink", pacerTag: false },
+    clock,
+    main: mainFor(status),
+    track: { ...base.track, made },
+    notches,
+    lengthKnown: false,
+  };
 };
 
 const mainFor = (status: PlayerSnapshot["status"]): PlayerBarView["main"] => {

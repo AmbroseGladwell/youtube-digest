@@ -14,7 +14,7 @@ import {
   isStreaming,
 } from "@overview/domain";
 import { isSyncRequestError, isSyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
-import type { PacerReason, PlayerSnapshot, PlayerSource, PlayerStatus } from "./types/PlayerSnapshot.js";
+import type { PacerReason, PlayerSnapshot, PlayerSource, PlayerStatus, StreamProgress } from "./types/PlayerSnapshot.js";
 import type { PlayerTrack } from "./types/PlayerTrack.js";
 import { estimatedLineStarts, type LineTimings } from "./util/estimatedLineStarts.js";
 import { lineAtTime } from "./util/lineAtTime.js";
@@ -105,6 +105,12 @@ interface Press {
 interface Hold {
   line: number;
   at: number;
+  from: number;
+}
+
+interface RenderSample {
+  at: number;
+  renderedSeconds: number;
 }
 
 type Stretch = [start: number, end: number];
@@ -193,6 +199,7 @@ export class PlayerEngine {
   #loadStream: LoadStream;
   #hold: Hold | null = null;
   #streamStartPending = false;
+  #firstRenderSample: RenderSample | null = null;
   #onWaitedAhead: (report: WaitedAheadReport) => void;
   #replacing: string | null = null;
   #generation = 0;
@@ -455,6 +462,14 @@ export class PlayerEngine {
     }
     this.#armStop();
     this.#emitTime();
+  }
+
+  // 42d's "Back to": where the reader was before jumping past the render.
+  backFromHold(): void {
+    const from = this.#hold?.from;
+    if (from !== undefined) {
+      this.seek(from);
+    }
   }
 
   seekLine(index: number): void {
@@ -738,6 +753,7 @@ export class PlayerEngine {
       this.#press.streamed = true;
     }
     this.#stream = render;
+    this.#firstRenderSample = { at: this.#clock(), renderedSeconds: render.renderedSeconds };
     this.#streamUrl = this.#api!.fileUrl({ fileUrl: render.playlistUrl });
     const timings = streamingTimings(render, this.#snapshot.track!);
     this.#retime(timings);
@@ -747,7 +763,7 @@ export class PlayerEngine {
       pacerReason: null,
       preparing: null,
       narratedVoice: voice,
-      stream: { renderedSeconds: render.renderedSeconds, holdingLine: null },
+      stream: this.#progress(),
     });
     this.#emitTime();
     if (this.#isAheadOfRender(this.#time)) {
@@ -797,8 +813,7 @@ export class PlayerEngine {
     this.#stream = render;
     const timings = streamingTimings(render, this.#snapshot.track!);
     this.#retime(timings);
-    const holdingLine = this.#hold?.line ?? null;
-    this.#set({ stream: { renderedSeconds: render.renderedSeconds, holdingLine } });
+    this.#set({ stream: this.#progress() });
     this.#resumeHoldIfRendered();
   }
 
@@ -820,6 +835,28 @@ export class PlayerEngine {
     this.#emitTime();
   }
 
+  // Seconds of audio made per second of waiting, measured between polls: never assumed.
+  #renderPace(): number | null {
+    const first = this.#firstRenderSample;
+    const stream = this.#stream;
+    if (first === null || stream === null) {
+      return null;
+    }
+    const waited = (this.#clock() - first.at) / 1000;
+    const made = stream.renderedSeconds - first.renderedSeconds;
+    return waited > 0 && made > 0 ? made / waited : null;
+  }
+
+  #progress(): StreamProgress {
+    const hold = this.#hold;
+    return {
+      renderedSeconds: this.#stream?.renderedSeconds ?? 0,
+      holdingLine: hold?.line ?? null,
+      holdingFrom: hold?.from ?? null,
+      renderPace: this.#renderPace(),
+    };
+  }
+
   #isAheadOfRender(seconds: number): boolean {
     const stream = this.#stream;
     return this.#streamUrl !== null && stream !== null && seconds > stream.renderedSeconds - HELD_LEAD_SECONDS;
@@ -828,10 +865,11 @@ export class PlayerEngine {
   #holdAt(seconds: number): void {
     const { timings } = this.#snapshot;
     const line = lineAtTime(timings.lineStarts, seconds);
-    this.#hold = { line, at: this.#hold?.at ?? this.#clock() };
+    const from = this.#hold?.from ?? this.#now();
+    this.#hold = { line, at: this.#hold?.at ?? this.#clock(), from };
     this.#time = timings.lineStarts[line] ?? seconds;
     this.#media?.pause();
-    this.#set({ status: "buffering", stream: { renderedSeconds: this.#stream?.renderedSeconds ?? 0, holdingLine: line } });
+    this.#set({ status: "buffering", stream: this.#progress() });
     this.#armStop();
     this.#emitTime();
   }
@@ -864,7 +902,7 @@ export class PlayerEngine {
     }
     this.#hold = null;
     if (stream !== null) {
-      this.#set({ stream: { ...stream, holdingLine: null } });
+      this.#set({ stream: this.#progress() });
     }
     if (track !== null) {
       const waitMs = Math.min(Math.max(Math.round(this.#clock() - hold.at), 0), MAX_FIRST_SOUND_WAIT_MS);
@@ -878,6 +916,7 @@ export class PlayerEngine {
     this.#releaseStream = () => undefined;
     this.#stream = null;
     this.#streamUrl = null;
+    this.#firstRenderSample = null;
     if (this.#snapshot.stream !== null) {
       this.#set({ stream: null });
     }

@@ -927,6 +927,30 @@ describe("PlayerEngine", () => {
       expect(waited).toHaveBeenCalledExactlyOnceWith({ overviewId: TRACK.overviewId, waitMs: 0, outcome: "abandoned" });
     });
 
+    it("back from a hold returns to where the reader was, and plays from there", async () => {
+      const engine = await pressedWith([FIRST_LINES]);
+      media.reachTime(0.4);
+      media.reachTime(1.5);
+
+      engine.seekLine(3);
+      const held = engine.getSnapshot().stream;
+      engine.backFromHold();
+
+      expect(held).toMatchObject({ holdingLine: 3, holdingFrom: 1.5 });
+      expect(media.seeks.at(-1)).toBe(1.5);
+      expect(engine.getSnapshot()).toMatchObject({ status: "playing", stream: { holdingLine: null, holdingFrom: null } });
+    });
+
+    it("the render's pace is measured from the polls, and unknown before a second one", async () => {
+      const engine = await pressedWith([FIRST_LINES, ALL_LINES]);
+      const before = engine.getSnapshot().stream!.renderPace;
+
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+      expect(before).toBeNull();
+      expect(engine.getSnapshot().stream!.renderPace).toBeCloseTo((9.4 - 5.5) / (POLL_INTERVAL_MS / 1000));
+    });
+
     it("the held line's position from the element is ignored while it waits", async () => {
       const engine = await pressedWith([FIRST_LINES]);
 

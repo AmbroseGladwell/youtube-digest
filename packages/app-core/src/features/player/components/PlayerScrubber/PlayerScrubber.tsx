@@ -43,6 +43,9 @@ const unseekableAccessibility = (fill: PlayerBarView["track"]["fill"], percent: 
   };
 };
 
+const lengthText = (view: PlayerBarView, durationSeconds: number): string =>
+  view.lengthKnown ? formatClock(durationSeconds) : `about ${Math.max(1, Math.round(durationSeconds / 60))} minutes`;
+
 const keyTarget = (key: string, time: number, durationSeconds: number): number | null => {
   switch (key) {
     case "ArrowRight":
@@ -115,10 +118,9 @@ export const PlayerScrubber = ({ view, time, lines, lineStarts, durationSeconds,
         "aria-valuemin": 0,
         "aria-valuemax": Math.round(durationSeconds),
         "aria-valuenow": Math.round(time),
-        "aria-valuetext": `${formatClock(time)} of ${formatClock(durationSeconds)}, ${sectionHeadingAt(
-          lines,
-          lineAtTime(lineStarts, time),
-        )}`,
+        "aria-valuetext": `${formatClock(time)} of ${lengthText(view, durationSeconds)}, ${
+          view.track.ring ? "preparing" : sectionHeadingAt(lines, lineAtTime(lineStarts, time))
+        }`,
         onKeyDown,
       }
     : unseekableAccessibility(fill, percent);
@@ -134,6 +136,16 @@ export const PlayerScrubber = ({ view, time, lines, lineStarts, durationSeconds,
       {...accessible}
     >
       <div className={styles.track} ref={track}>
+        {view.track.made !== undefined && (
+          <span className={styles.made} style={{ width: `${view.track.made}%` }} data-testid={playerScrubberTestIds.made} />
+        )}
+        {view.track.gap !== undefined && view.track.gap[1] > view.track.gap[0] && (
+          <span
+            className={styles.gap}
+            style={{ left: `${view.track.gap[0]}%`, width: `${view.track.gap[1] - view.track.gap[0]}%` }}
+            data-testid={playerScrubberTestIds.gap}
+          />
+        )}
         {fill === "progress" && (
           <span
             className={`${styles.fill} ${tone === "stone" ? styles.fillStone : ""}`}
@@ -152,7 +164,12 @@ export const PlayerScrubber = ({ view, time, lines, lineStarts, durationSeconds,
         {view.notches.map((at) => (
           <span key={at} className={styles.notch} style={{ left: `${at * 100}%` }} />
         ))}
-        {thumb && <span className={`${styles.thumb} ${landing !== null ? styles.thumbDragging : ""}`} style={{ left: `${percent}%` }} />}
+        {thumb && (
+          <span
+            className={`${styles.thumb} ${landing !== null ? styles.thumbDragging : ""} ${view.track.ring ? styles.thumbWaiting : ""}`}
+            style={{ left: `${percent}%` }}
+          />
+        )}
         {landing !== null && (
           <span className={styles.tooltip} style={{ left: `${percent}%` }} data-testid={playerScrubberTestIds.tooltip}>
             {landingLabel(lines, landing.index, landing.seconds)}

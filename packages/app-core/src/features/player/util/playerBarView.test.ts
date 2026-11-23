@@ -62,15 +62,50 @@ describe("playerBarView", () => {
     expect(view({ availability: "preparing", preparing: { step: "queued", long: false } }).label.rest).toBe("Queued");
   });
 
-  it("1c and 1d: preparing names the server's step, and after a long wait offers the pacer", () => {
-    const quick = view({ status: "preparing", preparing: { step: "rendering", long: false } });
-    expect(quick.label).toMatchObject({ lead: "Preparing audio", rest: "Rendering" });
-    expect(quick.main).toMatchObject({ kind: "cancel", label: "Cancel preparing audio" });
-    expect(quick.track.fill).toBe("sweep");
+  it("42a: a first play says Starting, with a spinner that cancels, no sweep, the estimated length and skips off", () => {
+    const starting = view({ status: "preparing", preparing: { step: "rendering", long: false } });
+    expect(starting.label).toMatchObject({ lead: "Starting", rest: null });
+    expect(starting.main).toEqual({ kind: "starting", label: "Pause, starting", disabled: false });
+    expect(starting.track.fill).toBe("none");
+    expect(starting.clock.end).toBe("~6 min");
+    expect(starting).toMatchObject({ skipEnabled: false, seekable: false, actions: [], note: null });
 
-    const long = view({ status: "preparing", preparing: { step: "rendering", long: true } });
-    expect(long.label).toMatchObject({ lead: "Still preparing", rest: "taking longer than usual" });
-    expect(long.actions).toEqual(["readAlongMeanwhile"]);
+    expect(view({ status: "preparing", preparing: { step: "queued", long: true } }).label.lead).toBe("Starting");
+  });
+
+  const STREAM = { renderedSeconds: 100, holdingLine: null, holdingFrom: null, renderPace: 3 };
+
+  it("42b: playing ahead of the render shows how much is made, an estimated length, and only the notches made", () => {
+    const bar = view({ status: "playing", stream: STREAM }, 22);
+    expect(bar.track).toMatchObject({ fill: "progress", made: (100 / 364) * 100 });
+    expect(bar.clock).toEqual({ inline: "0:22 · ~6 min", start: "0:22", end: "~6 min" });
+    expect(bar.notches.every((fraction) => fraction * 364 <= 100)).toBe(true);
+    expect(bar.notches.length).toBeLessThan(view({ status: "playing" }, 22).notches.length);
+    expect(bar).toMatchObject({ seekable: true, skipEnabled: true, lengthKnown: false, back: null });
+  });
+
+  it("42c: caught up with the render is Buffering, as 1g", () => {
+    const bar = view({ status: "buffering", stream: STREAM }, 31);
+    expect(bar.label).toMatchObject({ lead: "Buffering", rest: "Premise" });
+    expect(bar.main).toMatchObject({ kind: "buffering", label: "Pause, buffering" });
+  });
+
+  it("42d: a seek past the render prepares from its section, counts down quietly, hatches the gap and offers the way back", () => {
+    const held = { ...STREAM, holdingLine: 2, holdingFrom: 22 };
+    const bar = view({ status: "buffering", stream: held }, 144);
+    expect(bar.label).toMatchObject({ lead: "Preparing from Key points", rest: "~8 s", quietRest: true });
+    expect(bar.main).toMatchObject({ kind: "buffering", label: "Pause, preparing" });
+    expect(bar.track).toMatchObject({ ring: true, gap: [(100 / 364) * 100, (144 / 364) * 100] });
+    expect(bar.back).toBe("Back to 0:22");
+
+    expect(view({ status: "buffering", stream: { ...held, renderPace: null } }, 144).label.rest).toBeNull();
+  });
+
+  it("42e: once the render is finished the bar is 1e again, with the real length", () => {
+    const bar = view({ status: "playing", stream: null }, 144);
+    expect(bar.clock.inline).toBe("2:24 · −3:40");
+    expect(bar.track.made).toBeUndefined();
+    expect(bar.lengthKnown).toBe(true);
   });
 
   it("1e and 1f: playing names the section; paused keeps it named; both show elapsed and time left", () => {

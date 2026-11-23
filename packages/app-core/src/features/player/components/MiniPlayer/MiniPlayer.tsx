@@ -8,7 +8,7 @@ import { usePlayer, usePlayerSnapshot, usePlayerTime } from "../../PlayerContext
 import { SKIP_SECONDS } from "../../PlayerEngine.js";
 import type { PlayerSnapshot } from "../../types/PlayerSnapshot.js";
 import { lineAtTime } from "../../util/lineAtTime.js";
-import { sectionHeadingAt } from "../../util/playerBarView.js";
+import { playerBarView, sectionHeadingAt, type PlayerBarView } from "../../util/playerBarView.js";
 import styles from "./MiniPlayer.module.scss";
 import { miniPlayerTestIds } from "./MiniPlayerTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -31,18 +31,25 @@ export const MiniPlayer = () => {
   return <DockedMiniPlayer snapshot={snapshot} onStop={() => engine.stop()} />;
 };
 
-const metaText = (preparing: boolean, pausedForTimer: boolean, clock: string): string => {
-  if (preparing) {
-    return "Preparing audio";
+// Design 42f: the bar's own words while it starts or waits past the render.
+const metaText = (
+  view: PlayerBarView,
+  status: PlayerSnapshot["status"],
+  waiting: boolean,
+  pausedForTimer: boolean,
+  clock: string,
+): string => {
+  if (status === "preparing" || waiting) {
+    return view.label.rest === null ? view.label.lead : `${view.label.lead} · ${view.label.rest}`;
   }
   return pausedForTimer ? "Paused for the timer" : clock;
 };
 
-const playLabel = (preparing: boolean, playing: boolean): string => {
-  if (preparing) {
-    return "Cancel preparing audio";
+const mainLabel = (view: PlayerBarView, status: PlayerSnapshot["status"]): string => {
+  if (status === "preparing" || status === "buffering") {
+    return view.main.label;
   }
-  return playing ? "Pause" : "Play";
+  return status === "playing" ? "Pause" : "Play";
 };
 
 interface DockedMiniPlayerProps {
@@ -60,9 +67,14 @@ const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
   const { timings, status, source } = snapshot;
   const estimated = source === "pacer" ? "~" : "";
   const section = sectionHeadingAt(track.lines, lineAtTime(timings.lineStarts, time));
-  const percent = timings.durationSeconds > 0 ? (time / timings.durationSeconds) * 100 : 0;
+  const view = playerBarView(snapshot, time, { read: false });
+  const made = view.track.made;
+  const waiting = snapshot.stream?.holdingLine != null;
+  const played = timings.durationSeconds > 0 ? (time / timings.durationSeconds) * 100 : 0;
+  const percent = waiting && made !== undefined ? Math.min(played, made) : played;
   const playing = status === "playing" || status === "buffering";
   const preparing = status === "preparing";
+  const length = snapshot.stream === null ? `${estimated}${formatClock(timings.durationSeconds)}` : view.clock.end;
 
   return (
     <div className={styles.root} role="region" aria-label="Now playing" data-testid={miniPlayerTestIds.root}>
@@ -81,9 +93,11 @@ const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
           <span className={styles.titleText}>{track.title}</span>
           <span className={styles.meta} data-testid={miniPlayerTestIds.meta}>
             {metaText(
-              preparing,
+              view,
+              status,
+              waiting,
               narrationHeld && status === "paused",
-              `${section} · ${estimated}${formatClock(time)} / ${estimated}${formatClock(timings.durationSeconds)}`,
+              `${section} · ${estimated}${formatClock(time)} / ${length}`,
             )}
           </span>
         </PageLink>
@@ -106,10 +120,10 @@ const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
             analytics.player.miniPlayer.playToggled({ overviewId: track.overviewId, playing: !playing && !preparing });
             engine.toggle("miniPlayer");
           }}
-          aria-label={playLabel(preparing, playing)}
+          aria-label={mainLabel(view, status)}
           data-testid={miniPlayerTestIds.playButton}
         >
-          {preparing ? (
+          {preparing || waiting ? (
             <span className={styles.spinner}>
               <StrokeIcon name="loader" size={16} />
             </span>
@@ -143,6 +157,7 @@ const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
         </button>
       </div>
       <span className={styles.progress} aria-hidden="true">
+        {made !== undefined && <span className={styles.progressMade} style={{ width: `${made}%` }} />}
         <span className={`${styles.progressFill} ${source === "pacer" ? styles.progressStone : ""}`} style={{ width: `${percent}%` }} />
       </span>
     </div>
