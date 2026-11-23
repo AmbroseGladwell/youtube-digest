@@ -424,8 +424,10 @@ export class AskPagePageObject extends PageObject {
       await expect(this.root().getByTestId(askQuestionCardsTestIds.different)).toHaveCount(0);
     });
 
-  verifyFeedbackRowCount = (count: number) =>
-    this.step(`verifyFeedbackRowCount ${count}`, () => expect(this.root().getByTestId(askQuestionCardTestIds.feedback)).toHaveCount(count));
+  verifyReferencesCount = (count: number) =>
+    this.step(`verifyReferencesCount ${count}`, () =>
+      expect(this.root().getByTestId(askQuestionReferencesTestIds.button)).toHaveCount(count),
+    );
 
   verifyQuestionCardsWait = (waiting: boolean) =>
     this.step(`verifyQuestionCardsWait ${waiting}`, async () => {
@@ -437,88 +439,64 @@ export class AskPagePageObject extends PageObject {
   chooseQuestionCard = (index: number) =>
     this.step(`chooseQuestionCard ${index}`, () => this.click(this.card(index).getByTestId(askQuestionCardTestIds.question)));
 
-  focusQuestionCard = (index: number) =>
-    this.step(`focusQuestionCard ${index}`, async () => {
-      await this.field().focus();
-      for (let card = 0; card <= index; card += 1) {
-        const target = this.card(card).getByTestId(askQuestionCardTestIds.question);
-        while (!(await target.evaluate((element) => element === document.activeElement))) {
-          await this.page.keyboard.press("Tab");
-        }
-      }
+  verifyBubbleTintsWithTailOnHover = (index: number) =>
+    this.step(`verifyBubbleTintsWithTailOnHover ${index}`, async () => {
+      const card = this.card(index);
+      const colours = () =>
+        card.evaluate((element) => ({
+          bubble: getComputedStyle(element).backgroundColor,
+          tail: getComputedStyle(element, "::after").backgroundColor,
+        }));
+      const resting = await colours();
+      expect(resting.tail).toBe(resting.bubble);
+      await card.getByTestId(askQuestionCardTestIds.question).hover();
+      await expect
+        .poll(async () => {
+          const { bubble, tail } = await colours();
+          return { tinted: bubble !== resting.bubble, tailMatches: tail === bubble };
+        })
+        .toEqual({ tinted: true, tailMatches: true });
     });
 
-  hoverQuestionCard = (index: number) => this.step(`hoverQuestionCard ${index}`, () => this.card(index).hover());
-
-  verifyFeedbackShown = (index: number, shown: boolean) =>
-    this.step(`verifyFeedbackShown ${index} ${shown}`, () =>
-      expect(this.card(index).getByTestId(askQuestionCardTestIds.feedback)).toHaveCSS("opacity", shown ? "1" : "0"),
+  verifyQuestionCardHasNoIcon = (index: number) =>
+    this.step(`verifyQuestionCardHasNoIcon ${index}`, () =>
+      expect(this.card(index).getByTestId(askQuestionCardTestIds.question).locator("svg")).toHaveCount(0),
     );
 
-  verifyFeedbackButtonSize = (index: number, size: number) =>
-    this.step(`verifyFeedbackButtonSize ${index} ${size}`, async () => {
-      for (const button of await this.card(index).getByTestId(askQuestionCardTestIds.feedback).getByRole("button").all()) {
-        const box = (await button.boundingBox())!;
-        expect(box.width).toBe(size);
-        expect(box.height).toBe(size);
-      }
+  verifyReferencesBesideFirstLine = (index: number, size: number) =>
+    this.step(`verifyReferencesBesideFirstLine ${index} ${size}`, async () => {
+      const question = this.card(index).getByTestId(askQuestionCardTestIds.question);
+      const button = this.card(index).getByTestId(askQuestionReferencesTestIds.button);
+      const asked = (await question.boundingBox())!;
+      const references = (await button.boundingBox())!;
+      const firstLineMiddle = await question.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return element.getBoundingClientRect().top + parseFloat(style.paddingTop) + parseFloat(style.lineHeight) / 2;
+      });
+      expect(references.height).toBeGreaterThanOrEqual(size);
+      expect(references.width).toBeGreaterThanOrEqual(size);
+      expect(references.x).toBeGreaterThanOrEqual(asked.x + asked.width);
+      expect(Math.abs(references.y + references.height / 2 - firstLineMiddle)).toBeLessThan(1.5);
+      await expect(button).not.toContainText(/\d/);
     });
 
-  verifyFeedbackNamed = (index: number, question: string) =>
-    this.step(`verifyFeedbackNamed ${index}`, async () => {
-      const group = this.card(index).getByRole("group", { name: "Feedback on this question" });
-      const names = [`Good question: ${question}`, `Not useful: ${question}`, `Hide: ${question}`];
-      await expect(group.getByRole("button")).toHaveCount(names.length);
-      for (const [index, name] of names.entries()) {
-        await expect(group.getByRole("button").nth(index)).toHaveAccessibleName(name);
-      }
-    });
-
-  pressGoodQuestion = (index: number) =>
-    this.step(`pressGoodQuestion ${index}`, async () => {
-      await this.card(index).hover();
-      await this.click(this.card(index).getByTestId(askQuestionCardTestIds.good));
-    });
-
-  verifyGoodQuestionPressed = (index: number, pressed: boolean) =>
-    this.step(`verifyGoodQuestionPressed ${index} ${pressed}`, () =>
-      expect(this.card(index).getByTestId(askQuestionCardTestIds.good)).toHaveAttribute("aria-pressed", String(pressed)),
-    );
-
-  pressNotUseful = (index: number) =>
-    this.step(`pressNotUseful ${index}`, async () => {
-      await this.card(index).hover();
-      await this.click(this.card(index).getByTestId(askQuestionCardTestIds.notUseful));
-    });
-
-  pressHide = (index: number) =>
-    this.step(`pressHide ${index}`, async () => {
-      await this.card(index).hover();
-      await this.click(this.card(index).getByTestId(askQuestionCardTestIds.hide));
-    });
-
-  verifyQuestionCardFocused = (index: number) =>
-    this.step(`verifyQuestionCardFocused ${index}`, () =>
-      expect(this.card(index).getByTestId(askQuestionCardTestIds.question)).toBeFocused(),
-    );
-
-  verifyFeedbackTipReads = (index: number, button: "good" | "notUseful" | "hide", text: string) =>
-    this.step(`verifyFeedbackTipReads ${index} ${button} ${text}`, async () => {
-      const target = this.card(index).getByTestId(askQuestionCardTestIds[button]);
-      await target.hover();
-      const tip = target.getByTestId(askQuestionCardTestIds.tip);
+  verifyReferencesTipReads = (index: number, text: string) =>
+    this.step(`verifyReferencesTipReads ${index} ${text}`, async () => {
+      const button = this.card(index).getByTestId(askQuestionReferencesTestIds.button);
+      await button.hover();
+      const tip = button.getByTestId(askQuestionReferencesTestIds.tip);
       await expect(tip).toBeVisible();
       await expect(tip).toHaveText(text);
     });
 
-  holdFeedbackButton = (index: number, button: "good" | "notUseful" | "hide", text: string) =>
-    this.step(`holdFeedbackButton ${index} ${button}`, async () => {
-      const target = this.card(index).getByTestId(askQuestionCardTestIds[button]);
-      await target.dispatchEvent("touchstart");
-      await expect(target).toHaveAttribute("data-held", "");
-      await expect(target.getByTestId(askQuestionCardTestIds.tip)).toHaveText(text);
-      await expect(target.getByTestId(askQuestionCardTestIds.tip)).toBeVisible();
-      await target.dispatchEvent("touchend");
+  holdReferences = (index: number, text: string) =>
+    this.step(`holdReferences ${index}`, async () => {
+      const button = this.card(index).getByTestId(askQuestionReferencesTestIds.button);
+      await button.dispatchEvent("touchstart");
+      await expect(button).toHaveAttribute("data-held", "");
+      await expect(button.getByTestId(askQuestionReferencesTestIds.tip)).toHaveText(text);
+      await expect(button.getByTestId(askQuestionReferencesTestIds.tip)).toBeVisible();
+      await button.dispatchEvent("touchend");
     });
 
   verifyDifferentQuestions = (count: string | null) =>
@@ -553,16 +531,72 @@ export class AskPagePageObject extends PageObject {
   openReferences = (index: number) =>
     this.step(`openReferences ${index}`, () => this.click(this.card(index).getByTestId(askQuestionReferencesTestIds.button)));
 
+  private aboutMenu = (index: number) => this.card(index).getByRole("menu", { name: "About this question" });
+
   verifyReferencesMenuReads = (index: number, rows: Array<{ title: string; kind: string }>) =>
     this.step(`verifyReferencesMenuReads ${index}`, async () => {
-      const menu = this.card(index).getByRole("menu", { name: "This question draws on" });
+      const menu = this.aboutMenu(index);
       await expect(menu).toBeVisible();
+      const drawsOn = menu.getByRole("group", { name: "This question draws on" }).getByRole("menuitem");
       for (const [row, { title }] of rows.entries()) {
-        await expect(menu.getByRole("menuitem").nth(row)).toHaveAccessibleName(title);
+        await expect(drawsOn.nth(row)).toHaveAccessibleName(title);
       }
-      await expect(menu.getByRole("menuitem")).toHaveText(rows.map((row) => `${row.title}${row.kind}`));
-      await expect(menu.getByRole("menuitem").first()).toBeFocused();
+      await expect(drawsOn).toHaveText(rows.map((row) => `${row.title}${row.kind}`));
+      await expect(drawsOn.first()).toBeFocused();
+      await expect(menu.getByRole("separator")).toHaveCount(1);
+      const feedback = menu.getByRole("group", { name: "Feedback on this question" });
+      await expect(feedback.getByRole("menuitemcheckbox", { name: "Good question" })).toBeVisible();
+      await expect(feedback.getByRole("menuitem")).toHaveText(["Not useful", "Hide"]);
     });
+
+  verifyArrowKeysReachEveryItem = (index: number, names: string[]) =>
+    this.step(`verifyArrowKeysReachEveryItem ${index}`, async () => {
+      const menu = this.aboutMenu(index);
+      const focusedName = () =>
+        menu.evaluate((element) => (element.contains(document.activeElement) ? document.activeElement?.textContent : null));
+      for (const name of [...names.slice(1), names[0]!]) {
+        await this.page.keyboard.press("ArrowDown");
+        await expect.poll(focusedName).toContain(name);
+      }
+      await this.page.keyboard.press("ArrowUp");
+      await expect.poll(focusedName).toContain(names.at(-1)!);
+    });
+
+  private openAboutMenu = async (index: number) => {
+    if ((await this.card(index).getByTestId(askQuestionReferencesTestIds.menu).count()) === 0) {
+      await this.click(this.card(index).getByTestId(askQuestionReferencesTestIds.button));
+    }
+  };
+
+  pressGoodQuestion = (index: number) =>
+    this.step(`pressGoodQuestion ${index}`, async () => {
+      await this.openAboutMenu(index);
+      await this.click(this.card(index).getByTestId(askQuestionReferencesTestIds.good));
+    });
+
+  verifyGoodQuestionChecked = (index: number, checked: boolean) =>
+    this.step(`verifyGoodQuestionChecked ${index} ${checked}`, async () => {
+      const good = this.aboutMenu(index).getByRole("menuitemcheckbox", { name: "Good question" });
+      await expect(good).toBeVisible();
+      await expect(good).toHaveAttribute("aria-checked", String(checked));
+    });
+
+  pressNotUseful = (index: number) =>
+    this.step(`pressNotUseful ${index}`, async () => {
+      await this.openAboutMenu(index);
+      await this.click(this.card(index).getByTestId(askQuestionReferencesTestIds.notUseful));
+    });
+
+  pressHide = (index: number) =>
+    this.step(`pressHide ${index}`, async () => {
+      await this.openAboutMenu(index);
+      await this.click(this.card(index).getByTestId(askQuestionReferencesTestIds.hide));
+    });
+
+  verifyQuestionCardFocused = (index: number) =>
+    this.step(`verifyQuestionCardFocused ${index}`, () =>
+      expect(this.card(index).getByTestId(askQuestionCardTestIds.question)).toBeFocused(),
+    );
 
   closeReferencesWithEscape = (index: number) =>
     this.step(`closeReferencesWithEscape ${index}`, async () => {

@@ -86,7 +86,6 @@ export type StrokeIconName =
   | "panelOpen"
   | "panelClose"
   | "messageSquare"
-  | "cornerDownRight"
   | "archive"
   | "squareCheck"
   | "tag"
@@ -598,12 +597,6 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     </>
   ),
   messageSquare: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
-  cornerDownRight: (
-    <>
-      <path d="m15 10 5 5-5 5" />
-      <path d="M4 4v7a4 4 0 0 0 4 4h12" />
-    </>
-  ),
   archive: (
     <>
       <rect width="20" height="5" x="2" y="3" rx="1" />
