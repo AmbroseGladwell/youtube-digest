@@ -1,0 +1,71 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Designs 130i, 130i-2, from the canvas's ov130.js.
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+
+  > div:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.light {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem;
+  border-radius: 1.125rem;
+  background: var(--surface);
+}
+
+.lightCover {
+  flex: none;
+  width: 3.375rem;
+  height: 6rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(160deg, #3b4d5c, #1d2530);
+}
+
+.lightWords {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.kicker {
+  color: var(--label);
+  font-size: 0.78125rem;
+  font-weight: 600;
+}
+
+.lightTitle {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.needs {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.make {
+  @include controls.action-pill;
+  @include controls.pill-md;
+  width: 100%;
+}

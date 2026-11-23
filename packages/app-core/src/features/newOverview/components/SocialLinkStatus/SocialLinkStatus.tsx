@@ -115,12 +115,18 @@ export const SocialLinkStatus = ({ social, onClear, onOpened }: SocialLinkStatus
   }
 };
 
-export const SocialCard = ({ post }: { post: SocialPost }) => {
+export interface SocialCardProps {
+  post: SocialPost;
+  // Inside the panel's offer it sits on the surface tint, not as a card of its own (130i).
+  tinted?: boolean;
+}
+
+export const SocialCard = ({ post, tinted = false }: SocialCardProps) => {
   const [failed, setFailed] = useState(false);
   const length = lengthOf(post);
   const by = post.handle === null ? post.authorName : `@${post.handle}`;
   return (
-    <div className={styles.card} data-testid={socialLinkStatusTestIds.found}>
+    <div className={`${styles.card} ${tinted ? styles.tinted : ""}`} data-testid={socialLinkStatusTestIds.found}>
       <span className={styles.cover}>
         {post.coverUrl !== null && !failed && (
           <img className={styles.coverImage} src={post.coverUrl} alt="" onError={() => setFailed(true)} />

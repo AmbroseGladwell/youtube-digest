@@ -188,21 +188,22 @@ const sections: readonly LegalSection[] = [
           counted against the device's trial reads, as an article's is.
         </p>
         <p>
-          <strong>Instagram and Facebook posts.</strong> When you paste an Instagram or Facebook link, our server sends the link to
-          ScrapeCreators, which reads the post from Instagram or Facebook and sends it back: who posted it, its description, whether it is a
-          video, a photo or text, a video's length and the link to its cover, and for a Facebook video any captions Facebook has. It is sent
-          the link and nothing about you, and may keep the links it is sent and what it sends back, under its own privacy policy. Our server
-          never reads Instagram's or Facebook's pages itself, and neither does the extension: a post's page is never read in your browser.
-          The post's description is kept whole and sent, with any words, to the model that writes the overview, because on these sites the
-          description often carries the post. <strong>Comments are never read or kept.</strong> ScrapeCreators' answer about an Instagram
-          post includes some of its comments; our server reads only the fields above and drops the rest at once, so comments are never
-          stored, logged, sent to a model or shown. If a video has no words, you can ask us to transcribe it, and nothing is transcribed
-          unless you ask: our server asks ScrapeCreators again for the post and the address of its video file, and sends Modal that address
-          and nothing about you. Modal downloads the file and transcribes it as it does an episode (below), against the same allowance. A
-          photo or text post is written from its description alone. Showing a post's cover loads the picture from Instagram's or Facebook's
-          servers in your browser, which see your network address and your browser's details. We record what each read cost in the cost
-          tally, and our logs say only what kind of link it was and how the read went, never the link, the account, the description or the
-          words. Before you have an account, a read is counted against the device's trial reads, as an article's is.
+          <strong>Instagram and Facebook posts.</strong> When you paste an Instagram or Facebook link, or press Make an overview of this
+          post in the extension's side panel on one, our server sends the link to ScrapeCreators, which reads the post from Instagram or
+          Facebook and sends it back: who posted it, its description, whether it is a video, a photo or text, a video's length and the link
+          to its cover, and for a Facebook video any captions Facebook has. It is sent the link and nothing about you, and may keep the
+          links it is sent and what it sends back, under its own privacy policy. Our server never reads Instagram's or Facebook's pages
+          itself, and neither does the extension: a post's page is never read in your browser. The post's description is kept whole and
+          sent, with any words, to the model that writes the overview, because on these sites the description often carries the post.{" "}
+          <strong>Comments are never read or kept.</strong> ScrapeCreators' answer about an Instagram post includes some of its comments;
+          our server reads only the fields above and drops the rest at once, so comments are never stored, logged, sent to a model or shown.
+          If a video has no words, you can ask us to transcribe it, and nothing is transcribed unless you ask: our server asks
+          ScrapeCreators again for the post and the address of its video file, and sends Modal that address and nothing about you. Modal
+          downloads the file and transcribes it as it does an episode (below), against the same allowance. A photo or text post is written
+          from its description alone. Showing a post's cover loads the picture from Instagram's or Facebook's servers in your browser, which
+          see your network address and your browser's details. We record what each read cost in the cost tally, and our logs say only what
+          kind of link it was and how the read went, never the link, the account, the description or the words. Before you have an account,
+          a read is counted against the device's trial reads, as an article's is. In the side panel, nothing is read until you press.
         </p>
         <p>
           <strong>Transcribing an episode.</strong> When an episode has no transcript and isn't on YouTube, you can ask us to transcribe it;

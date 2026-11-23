@@ -159,6 +159,16 @@ podcast readers skip it, the extension panel doesn't offer such a tab as a page,
 right-clicking one opens the paste dialog with its link instead of reading the tab (where
 comments sit beside the post). TikTok links get the same right-click treatment.
 
+## In the extension panel
+
+With an Instagram or Facebook post open, the panel offers it "On this tab" (OV-396,
+`useSocialTab`, `SocialOffer`), as it offers a TikTok, but nothing is read until **Make an
+overview of this post** is pressed: a read costs a credit, and the page itself is never read
+in the browser. Before the press the card shows the tab's title; a post already in the
+library (by the address's id) offers to read it instead. The press reads it through
+`/api/social/read`, then stops with the paste field's words, offers Transcribe and create for
+a video with no words, or makes it. A profile's or story's tab offers nothing.
+
 ## Timestamps
 
 No player can seek an Instagram or Facebook video, so a note's times show as plain text:
@@ -179,6 +189,5 @@ Facebook.
 
 ## Not yet
 
-- The extension panel offers nothing for an open Instagram or Facebook tab; paste the link.
 - Videos inside a carousel: a carousel is read for its description only.
 - Comments, by decision (above).
