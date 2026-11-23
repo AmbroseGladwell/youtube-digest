@@ -33,7 +33,9 @@ $thumb-target: 2.75rem; // Design 9m
   width: 15.5rem;
   background: var(--dialog);
   border-radius: 18px;
-  box-shadow: var(--shadow-menu), inset 0 0 0 1px var(--divider);
+  box-shadow:
+    var(--shadow-menu),
+    inset 0 0 0 1px var(--divider);
   padding: 0.375rem;
   display: flex;
   flex-direction: column;

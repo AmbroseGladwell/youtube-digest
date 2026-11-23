@@ -90,7 +90,7 @@ Step 5 of the card, 22 Nov 2026. `onboardingSources.tiktok` is a full entry: it 
 through `readTikTokLink` (the extension's own read, then the vendor, a trial's read signed out),
 shows the card from the read, and writes the note with the words it came with once there is an
 account (`runTikTokOverviewGeneration`), as a video's does. A link it can't read stops with
-`TikTokReadError`, and a video with no captions with `TikTokNoCaptionsError`, each before
+`TikTokReadError`, and a video with no captions that can't be transcribed with `TikTokNoCaptionsError`, each before
 anything is spent on writing. Their words in `onboardingFailureCopy` follow the other kinds' until
 the Design round's failure frames.
 
@@ -227,6 +227,14 @@ sound", with Try again, which `transcribeAgain` reruns for an episode or a TikTo
 transcription loop is `transcribeAudio`, shared with episodes (`transcribeTikTok`,
 `transcribeEpisode`). Analytics are the episodes' `capture.episodeTranscription` events, with
 `source: "tiktok"`.
+
+**In the panel** the press reads it as before; if neither read found captions and our server can
+transcribe it, the offer turns into the episode's question in place: "No captions · Needs
+transcribing · about 1 min", the hours it uses, and "Transcribe and create" (or the stop when there
+aren't enough hours). Nothing is transcribed until that second press. **In onboarding**, as with an
+episode, Your link says so before Looks right ("There are no captions, so we'll make a transcript
+from its sound: 58 s of your 5 free hours this month."), and it is transcribed once the account
+exists. Its wait keeps the video's stages ("Fetching transcript", then writing).
 
 **Failures**, each ending "Nothing was used." and never naming the vendor: private or removed;
 TikTok refused (Try again); a photo post or a profile, known from the address without a read; and

@@ -76,7 +76,7 @@ export const onboardingFailureCopy = (failure: OnboardingFailure, link: string, 
       return failed(ask.heading, ask.body, { transcribe: "Transcribe and create" });
     }
     case "transcriptionFailed": {
-      const copy = transcriptionCopy.failed(failure.reason);
+      const copy = transcriptionCopy.failed(failure.reason, failure.source);
       return failed(copy.heading, copy.body.replace(/ Nothing was counted: no transcribing time and no overview\.$/, ""), {
         transcribe: copy.retry ? "Try again" : null,
       });

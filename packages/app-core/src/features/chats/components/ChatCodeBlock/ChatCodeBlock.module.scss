@@ -40,7 +40,12 @@
   margin: 0;
   padding: 6px 14px 12px;
   overflow-x: auto;
-  font: 400 0.78125rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font:
+    400 0.78125rem/1.55 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
   color: var(--ink);
   white-space: pre;
 

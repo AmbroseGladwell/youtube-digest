@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { heldOverviewOf, OverviewId, parseTikTokLink, sourceKey, type TikTokVideo } from "@overview/domain";
+import {
+  heldOverviewOf,
+  OverviewId,
+  parseTikTokLink,
+  sourceKey,
+  type TikTokVideo,
+  type TranscribeChoice,
+  type TranscriptionOffer,
+} from "@overview/domain";
 import { createFetchTikTokApi } from "@overview/sync";
 import { useActivePage } from "../../app/ArticlePagesContext.js";
 import { useTikTokPages } from "../../app/TikTokPagesContext.js";
@@ -11,6 +19,7 @@ import { readTikTokLink, type TikTokLinkRead } from "../tiktok/api/readTikTokLin
 import type { TikTokWords } from "../newOverview/api/generationPipeline.js";
 import type { ArticleFailureCopy } from "../newOverview/util/articleFailureCopy.js";
 import { tiktokLinkFailureCopy, tiktokStopCopy } from "../newOverview/util/tiktokLinkFailureCopy.js";
+import { isTranscribable } from "../newOverview/useTikTokLink.js";
 import { countWords } from "../../util/countWords.js";
 import { NO_SPEECH_WORDS } from "@overview/generation";
 
@@ -19,7 +28,11 @@ export type TikTokTabState =
   | { status: "offered"; video: TikTokVideo | null }
   | { status: "reading"; video: TikTokVideo | null }
   | { status: "held"; overviewId: OverviewId }
-  | { status: "stopped"; video: TikTokVideo | null; copy: ArticleFailureCopy };
+  | { status: "stopped"; video: TikTokVideo | null; copy: ArticleFailureCopy }
+  // No captions, so it's offered to transcribe, asked as an episode is (305c).
+  | { status: "transcribable"; video: TikTokVideo; transcription: TranscriptionOffer };
+
+export type StartTikTok = (video: TikTokVideo, words: TikTokWords | null, transcribe?: TranscribeChoice) => void;
 
 export interface TikTokTab {
   url: string;
@@ -27,7 +40,7 @@ export interface TikTokTab {
   title: string;
   state: TikTokTabState;
   // Called inside the click: Chrome asks for TikTok there, and the vendor is asked only if the browser can't read it.
-  make: (start: (video: TikTokVideo, words: TikTokWords) => void) => void;
+  make: (start: StartTikTok) => void;
 }
 
 const TAB_TITLE_SUFFIX = /\s*\|\s*TikTok\s*$/;
@@ -47,7 +60,7 @@ const stoppedCopy = (read: TikTokLinkRead): ArticleFailureCopy | null => {
       : BOTH_FAILED;
   }
   if (read.words === null) {
-    return { ...tiktokStopCopy("no-captions"), way: null, wayLabel: null };
+    return isTranscribable(read.transcription) ? null : { ...tiktokStopCopy("no-captions"), way: null, wayLabel: null };
   }
   const said = read.words.transcript.segments.reduce((total, segment) => total + countWords(segment.text), 0);
   return said < NO_SPEECH_WORDS ? { ...tiktokStopCopy("no-speech"), way: null, wayLabel: null } : null;
@@ -93,7 +106,7 @@ export const useTikTokTab = (): TikTokTab | null => {
 
   const known = state?.url === url ? state.state : null;
   const make = useCallback(
-    (start: (video: TikTokVideo, words: TikTokWords) => void) => {
+    (start: StartTikTok) => {
       if (url === null || apiUrl === null) {
         return;
       }
@@ -108,8 +121,12 @@ export const useTikTokTab = (): TikTokTab | null => {
             setState({ url, state: { status: "stopped", video: read.status === "read" ? read.video : video, copy: copy ?? BOTH_FAILED } });
             return;
           }
+          if (read.words === null) {
+            setState({ url, state: { status: "transcribable", video: read.video, transcription: read.transcription! } });
+            return;
+          }
           setState({ url, state: { status: "offered", video: read.video } });
-          start(read.video, read.words!);
+          start(read.video, read.words);
         })
         .catch(() => setState({ url, state: { status: "stopped", video, copy: BOTH_FAILED } }));
     },

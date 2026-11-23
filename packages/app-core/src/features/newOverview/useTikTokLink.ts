@@ -45,9 +45,12 @@ const notAVideo = (link: string): TikTokLinkFailure => (/\/photo\//.test(link) ?
 // With no captions, transcribing is offered whenever our server can say how it would go.
 const TRANSCRIBABLE = new Set<TranscriptionOffer["status"]>(["needed", "free", "not-enough", "too-long"]);
 
+export const isTranscribable = (transcription: TranscriptionOffer | null): transcription is TranscriptionOffer =>
+  transcription !== null && TRANSCRIBABLE.has(transcription.status);
+
 const stopOf = (words: TikTokWords | null, transcription: TranscriptionOffer | null): TikTokStop | null => {
   if (words === null) {
-    return transcription !== null && TRANSCRIBABLE.has(transcription.status) ? null : "no-captions";
+    return isTranscribable(transcription) ? null : "no-captions";
   }
   const said = words.transcript.segments.reduce((total, segment) => total + countWords(segment.text), 0);
   return said < NO_SPEECH_WORDS ? "no-speech" : null;
