@@ -175,11 +175,12 @@ const sections: readonly LegalSection[] = [
           press Make an overview of this TikTok in the extension's side panel, the extension first reads the video in your own browser, if
           you have allowed it to: your browser fetches the video's public page and its captions from TikTok, without your TikTok cookies,
           and our server never sees them. Otherwise, or when that doesn't work, our server sends the link to ScrapeCreators, which reads the
-          video and its captions from TikTok and sends them back; it is sent the link and nothing about you. Our server never reads TikTok's
-          pages itself. The words are fetched for you and kept as your own copy, as above, never shown to anyone else. We record what each
-          read cost in the cost tally, and our logs say only what kind of link it was and how the read went, never the link, the creator or
-          the video. In the side panel, nothing is read until you press, except that a TikTok you have already allowed is read in your own
-          browser to show it. Before you have an account, a read is counted against the device's trial reads, as an article's is.
+          video and its captions from TikTok and sends them back; it is sent the link and nothing about you. ScrapeCreators may keep the
+          links it is sent and what it sends back, under its own privacy policy. Our server never reads TikTok's pages itself. The words are
+          fetched for you and kept as your own copy, as above, never shown to anyone else. We record what each read cost in the cost tally,
+          and our logs say only what kind of link it was and how the read went, never the link, the creator or the video. In the side panel,
+          nothing is read until you press, except that a TikTok you have already allowed is read in your own browser to show it. Before you
+          have an account, a read is counted against the device's trial reads, as an article's is.
         </p>
         <p>
           <strong>Transcribing an episode.</strong> When an episode has no transcript and isn't on YouTube, you can ask us to transcribe it;
@@ -532,7 +533,7 @@ const sections: readonly LegalSection[] = [
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
             [
               "ScrapeCreators",
-              "reads a TikTok video and its captions for our server when your browser can't; sent only the TikTok's link",
+              "reads a TikTok video and its captions for our server when your browser can't; sent only the TikTok's link, which it may keep with what it returns",
               UNITED_STATES,
             ],
             [
