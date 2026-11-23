@@ -1,10 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CLIENT_VERSION, CURRENT_SCHEMA_VERSIONS, suggestedQuestionId, type SuggestedQuestionScope } from "@overview/domain";
+import {
+  CLIENT_VERSION,
+  CLIENT_VERSION_HEADER,
+  CURRENT_SCHEMA_VERSIONS,
+  suggestedQuestionId,
+  type SuggestedQuestionScope,
+} from "@overview/domain";
 import { makeProject } from "@overview/store-conformance";
 import { connectMcpClient } from "../mcp/McpClient.testHelper.js";
 import { writeSuggestedQuestions, type NewSuggestedQuestion } from "../questions/writeSuggestedQuestions.js";
+import { saveSmallLibrary, setUpRefresh } from "../questions/SuggestedQuestionRefresher.testHelper.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
@@ -262,4 +269,42 @@ test("a client built before suggested questions is never sent one", async (t) =>
   const kinds = (response.json() as { changes: Array<{ kind: string }> }).changes.map((change) => change.kind);
   assert.ok(kinds.includes("overview"));
   assert.ok(!kinds.includes("suggestedQuestion"));
+});
+
+test("asking for a refresh answers 202 at once with what happened: free, started, not due, or capped", async (t) => {
+  const setting = await setUpRefresh(t, { plan: "free" });
+  await saveSmallLibrary(setting);
+
+  assert.deepEqual(await setting.refresh(LIBRARY), { status: "free" });
+  await setting.setPlan("byo-plus");
+  assert.deepEqual(await setting.refresh(LIBRARY), { status: "started" });
+  await setting.testApp.drainQuestions();
+  assert.deepEqual(await setting.refresh(LIBRARY), { status: "not-due" });
+  await setting.testApp.sql.query(
+    "insert into account_costs (day, account_id, area, detail, calls, quantity, dollars) values ('2026-09-01', $1, 'questions', 'write', 1, 100, 1)",
+    [setting.account.accountId],
+  );
+  assert.deepEqual(await setting.refresh(LIBRARY), { status: "capped" });
+});
+
+test("a server without our key or meaning search answers that refreshing is unavailable, and a bad scope is refused", async (t) => {
+  const { account } = await setUp(t);
+  const refresh = (body: unknown) => account.inject({ method: "POST", url: "/api/suggested-questions/refresh", body: body as object });
+
+  const unavailable = await refresh({ scope: LIBRARY });
+  assert.equal(unavailable.statusCode, 202);
+  assert.deepEqual(unavailable.json(), { status: "unavailable" });
+  assert.equal((await refresh({ scope: { kind: "project", projectId: "not-a-uuid" } })).statusCode, 400);
+  assert.equal((await refresh({})).statusCode, 400);
+});
+
+test("refreshing needs a signed-in reader", async (t) => {
+  const { testApp } = await setUp(t);
+  const response = await testApp.app.inject({
+    method: "POST",
+    url: "/api/suggested-questions/refresh",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+    payload: { scope: LIBRARY },
+  });
+  assert.equal(response.statusCode, 401);
 });

@@ -40,6 +40,7 @@ import { registerOAuthErrorHandler } from "./oauth/registerOAuthErrorHandler.js"
 import { clientAddressPlugin } from "./rateLimit/clientAddressPlugin.js";
 import { rateLimitHook } from "./rateLimit/rateLimitHook.js";
 import { rateLimits } from "./rateLimit/rateLimits.js";
+import { SuggestedQuestionRefresher } from "./questions/SuggestedQuestionRefresher.js";
 import { RecordsRepository } from "./records/RecordsRepository.js";
 import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
@@ -126,6 +127,7 @@ export interface TranscriptServiceSetup {
 
 export interface OurKeySetup {
   apiKey: string;
+  anthropicApiKey?: string | null;
   dailyGenerations: number;
   dailyChatMessages: number;
   http: typeof fetch;
@@ -179,6 +181,7 @@ declare module "fastify" {
     audioQueue: AudioRenderQueue | null;
     embeddingQueue: EmbeddingQueue | null;
     transcriptionQueue: TranscriptionQueue | null;
+    questionRefresher: SuggestedQuestionRefresher | null;
   }
 }
 
@@ -244,6 +247,22 @@ export const buildApp = async ({
   app.decorate("transcriptionQueue", transcriptionQueue);
   const meaningSearch = meaning === null ? null : new MeaningSearch(claimEmbeddings, meaning.embedder, { costs, clock, log: app.log });
   const overviewsWritten = () => embeddingQueue?.kick();
+  const questionRefresher =
+    ourKey === null || meaning === null || ourKey.anthropicApiKey == null
+      ? null
+      : new SuggestedQuestionRefresher({
+          apiKey: ourKey.apiKey,
+          anthropicApiKey: ourKey.anthropicApiKey,
+          http: ourKey.http,
+          sql,
+          records: new RecordsRepository(sql, clock),
+          costs,
+          embeddingModel: meaning.embedder.model,
+          planOf: (accountId) => accountPlan(sql, accountId),
+          clock,
+          ...(ourKey.sleep === undefined ? {} : { sleep: ourKey.sleep }),
+        });
+  app.decorate("questionRefresher", questionRefresher);
 
   await app.register(
     async (api) => {
@@ -306,7 +325,7 @@ export const buildApp = async ({
       transcriptSearchRoutes(api, { passages: new TranscriptPassagesRepository(sql), records, transcripts });
       followedPlaylistRoutes(api, records);
       projectRoutes(api, records);
-      suggestedQuestionRoutes(api, records);
+      suggestedQuestionRoutes(api, records, questionRefresher);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
