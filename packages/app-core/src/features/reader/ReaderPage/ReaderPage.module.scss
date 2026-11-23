@@ -136,7 +136,7 @@ $chat-width-narrow: 22.5rem;
 
 // Design 9b: no travel, as the tab indicator already moved; the element's key re-runs it.
 .panel {
-  animation: panelInk 180ms ease-out 60ms both;
+  animation: panelInk 180ms ease-out 60ms backwards;
 }
 
 @keyframes panelInk {

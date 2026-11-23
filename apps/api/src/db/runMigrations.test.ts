@@ -71,6 +71,8 @@ test("the tables the migrations create are there to be used", async () => {
       "overview_usage",
       "podcast_transcript_sources",
       "podcast_transcriptions",
+      "question_refreshes",
+      "question_scopes_opened",
       "records",
       "schema_migrations",
       "service_transcript_usage",

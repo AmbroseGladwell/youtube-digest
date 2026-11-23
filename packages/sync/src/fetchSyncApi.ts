@@ -36,6 +36,12 @@ export const createFetchSyncApi = (options: FetchSyncApiOptions): SyncApi => {
     changeProjectMember: (projectId, overviewId, change, updatedAt) =>
       written(request("PUT", `/projects/${projectId}/members/${overviewId}`, WrittenRecord, { body: { ...change, updatedAt } })),
     deleteChat: (id) => request("DELETE", `/chat-records/${encodeURIComponent(id)}`, WrittenRecord),
+    changeSuggestedQuestion: (id, change, updatedAt) =>
+      written(
+        request("PUT", `/suggested-questions/${id.split(":").map(encodeURIComponent).join("/")}`, WrittenRecord, {
+          body: { ...change, updatedAt },
+        }),
+      ),
     saveTranscript: async (transcript) => {
       await request("PUT", `/transcripts/${encodeURIComponent(transcript.videoId)}`, z.unknown(), { body: transcript });
     },

@@ -209,3 +209,30 @@ overview, and is not counted against any quota (`tiers.md`): it is too small to 
 reader's thought. The embedding worker logs the tokens each overview cost (`api.meaning.embedded`),
 so the real figure can be read back from the logs. The spike behind the choice of model is in
 `docs/features/search-by-meaning.md`, "Why OpenAI".
+
+## Connections and library questions (OV-218, OV-350)
+
+Measured on 23 Nov 2026 on the owner's library, at the list prices in `modelPrices.ts`; the
+rounds and the owner's review are in `docs/features/connections.md`.
+
+| | Cost |
+|---|---|
+| Luna labelling one candidate pair | $0.00036 |
+| Sonnet writing an insight for one pair | $0.0068 |
+| A connection written on every save (about 6–7 pairs) | ~$0.034 an overview, not built |
+| A question refresh (about 16 pairs labelled, one Sonnet call for up to 6 questions) | **$0.016** |
+| Questions per paid reader a month, at 3 refreshes a week | **~$0.21**, capped at $0.40 |
+| Switching questions on for an existing library, any size | $0 |
+
+Questions are written only when shown, on our key, for paid plans only, and aren't counted
+against the chat allowance (OV-350). Finding candidate pairs is vector maths on the embeddings
+OV-229 already stores, so it costs nothing and doesn't grow with the size of a library.
+
+### Suggested questions (OV-350)
+
+The refresh that writes them records every call in the cost tally under its own area,
+`questions` (details `label` and `write`, `unit-economics.md`), so what they really cost each
+paid reader can be read beside the measured figure above, which comes from the harness runs in
+`connections.md` ("Cost"). The $0.40 a month is `QUESTIONS_MONTHLY_CAP_DOLLARS`, a limit the
+refresh checks against that tally before it starts (`suggested-questions.md`, "Policy"); it adds
+no spend figure of its own.

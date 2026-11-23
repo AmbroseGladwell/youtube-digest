@@ -68,6 +68,10 @@ A fifth, since the policy pages exist:
 
 5. **Check the privacy policy and the terms on every card.** `/privacy` and `/terms` describe what the software actually does, so a change to what is collected, sent, stored, shared or kept makes them wrong. Before opening a PR, run the trigger list in `docs/features/legal-pages.md` ("Does this change the texts?"). If anything matches, change the page, move its `*_UPDATED_ON`, and add a line to that doc's revision log in the same PR. If nothing matches, the PR says so in one line.
 
+A sixth, from the owner on 23 Nov 2026:
+
+6. **Every feature gets a validation dashboard in PostHog.** It shows how much the feature is used, where it works and where it doesn't (a quality signal, not only counts), how use differs between plans, and what it costs, from `cost_reports` when it calls a model or a paid service. Each event carries `plan`. A card that adds or changes a cost also updates the Unit economics and Spend dashboards, and any other that tracks it, in the same card, so none of them silently miss an area. Build it over the PostHog MCP once the events exist, and check it against live data before calling the card done. Amounts stay in PostHog, never in the repo, PRs or logs (`docs/architecture/spend.md`).
+
 ## Code conventions
 
 - `docs/conventions/commenting.md` — near-zero comments. Code, tests, and specific

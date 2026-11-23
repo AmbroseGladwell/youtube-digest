@@ -133,6 +133,10 @@ export class ScriptedSyncApi implements SyncApi {
     return this.#answer("deleteChat", [id], () => null);
   }
 
+  async changeSuggestedQuestion(id: string, change: Record<string, unknown>, updatedAt: string) {
+    return this.#answer("changeSuggestedQuestion", [id, change, updatedAt], () => this.#written(id));
+  }
+
   async saveTranscript(transcript: StoredTranscript) {
     return this.#answer("saveTranscript", [transcript], () => {
       this.transcripts.set(transcript.videoId, transcript);

@@ -473,6 +473,18 @@ export const apiLogLines = coded("api", {
     read: line("info", "playlist read", "A followed playlist was read, and what it cost in YouTube quota units."),
     unavailable: line("info", "playlist unavailable", "A playlist could not be read; `reason` says why."),
   },
+  questions: {
+    refreshed: line(
+      "info",
+      "suggested questions refreshed",
+      "The Ask page asked for suggested questions: the plan, `status` (`started`, or what stopped it: `free`, `busy`, `not-due`, `capped`), and once a started refresh ends its `outcome` (`written`, `full`, `no-pairs`), whether it filled the library (`library`), how many projects (`projects`), how many pairs it labelled and how many questions it wrote. Never a question, a title or an id.",
+    ),
+    refreshFailed: line(
+      "warn",
+      "suggested question refresh failed",
+      "A started refresh threw after the Ask page had its answer; `reason` names the error class, with the pairs labelled before it. Nothing it had not written is kept.",
+    ),
+  },
   seed: {
     narrationUnavailable: line("info", "no voice samples to seed", "The release command found no TTS service, so it rendered no samples."),
     voiceSamplesSeeded: line("info", "voice samples seeded", "The release command queued a sample render for each voice that lacked one."),

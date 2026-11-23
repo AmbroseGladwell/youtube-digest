@@ -41,4 +41,7 @@ STT_TOKEN="${STT_TOKEN}"
 # Overviews made on our key, through our server, with GPT-6.1 Sol; unset, the server makes none
 # (docs/architecture/tiers.md). OUR_KEY_DAILY_GENERATIONS is the global daily cap behind every plan.
 OPENAI_API_KEY="${OPENAI_API_KEY}"
+# Suggested questions are written with our Anthropic key; unset, the server writes none
+# (docs/features/suggested-questions.md).
+ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
 OUR_KEY_DAILY_GENERATIONS=300

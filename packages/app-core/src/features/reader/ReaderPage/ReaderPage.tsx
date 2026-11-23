@@ -942,6 +942,13 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
                     />
                   </>
                 )}
+                <NoteEndActions
+                  read={state.read}
+                  favourite={state.favourite}
+                  savedChip={readAtNoteEnd ? savedChip : null}
+                  onToggleRead={() => toggleRead("noteEnd")}
+                  onToggleFavourite={() => toggleFavourite("noteEnd")}
+                />
                 {followUpQuestionsOn && (overview.followUpQuestions?.length ?? 0) > 0 && (
                   <FollowUpQuestions
                     key={`follow-ups-${overviewId}`}
@@ -967,13 +974,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
                 {onetimeHost !== null && (
                   <ReaderNotice>Read with one-time access. The Create button on {onetimeHost} will ask Chrome once.</ReaderNotice>
                 )}
-                <NoteEndActions
-                  read={state.read}
-                  favourite={state.favourite}
-                  savedChip={readAtNoteEnd ? savedChip : null}
-                  onToggleRead={() => toggleRead("noteEnd")}
-                  onToggleFavourite={() => toggleFavourite("noteEnd")}
-                />
                 <OnboardingNextSteps overviewId={overview.id} />
                 <RelatedByTag
                   tags={overviewTags(overviewQuery.data)}

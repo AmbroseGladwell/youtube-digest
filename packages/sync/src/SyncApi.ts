@@ -20,6 +20,7 @@ export interface SyncApi {
   deleteProject(id: string): Promise<WrittenRecord | null>;
   changeProjectMember(projectId: string, overviewId: string, change: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   deleteChat(id: string): Promise<WrittenRecord | null>;
+  changeSuggestedQuestion(id: string, change: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   saveTranscript(transcript: StoredTranscript): Promise<void>;
   getTranscript(videoId: string): Promise<StoredTranscript | null>;
 }

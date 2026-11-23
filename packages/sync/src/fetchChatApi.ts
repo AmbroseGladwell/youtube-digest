@@ -1,4 +1,4 @@
-import { ChatStreamEvent, ChatUsage } from "@overview/domain";
+import { ChatStreamEvent, ChatUsage, SUGGESTED_QUESTIONS_REFRESH_PATH, SuggestedQuestionRefreshResponse } from "@overview/domain";
 import { answered, createApiCaller, createApiRequester, refusalOf, sendApiCall, type ApiRequesterOptions } from "./apiRequest.js";
 import type { ChatApi, ChatOutcome, ChatProgress } from "./ChatApi.js";
 import { SyncTransportError } from "./SyncRequestError.js";
@@ -66,6 +66,8 @@ export const createFetchChatApi = (options: ApiRequesterOptions): ChatApi => {
   };
   return {
     usage: () => answered(request("GET", "/chat-usage", ChatUsage)),
+    refreshSuggestedQuestions: async (scope) =>
+      (await answered(request("POST", SUGGESTED_QUESTIONS_REFRESH_PATH, SuggestedQuestionRefreshResponse, { body: { scope } }))).status,
     ask: (overviewId, question, onText, signal, onProgress) =>
       streamed(`/chats/${encodeURIComponent(overviewId)}/messages`, question, onText, signal, onProgress),
     askOver: (owner, question, onText, signal, onProgress) =>

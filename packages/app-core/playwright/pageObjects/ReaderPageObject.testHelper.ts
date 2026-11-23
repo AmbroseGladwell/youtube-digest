@@ -3,6 +3,8 @@ import type { Locator } from "@playwright/test";
 import { readerPageTestIds } from "../../src/features/reader/ReaderPage/ReaderPageTestIds.js";
 import { captureReasonLineTestIds } from "../../src/features/reader/components/CaptureReasonLine/CaptureReasonLineTestIds.js";
 import { noteEndActionsTestIds } from "../../src/features/reader/components/NoteEndActions/NoteEndActionsTestIds.js";
+import { followUpQuestionsTestIds } from "../../src/features/reader/components/FollowUpQuestions/FollowUpQuestionsTestIds.js";
+import { noteAskFieldTestIds } from "../../src/features/chats/components/NoteAskField/NoteAskFieldTestIds.js";
 import { readAlongNoteTestIds } from "../../src/features/reader/components/ReadAlongNote/ReadAlongNoteTestIds.js";
 import { readerMastheadTestIds } from "../../src/features/reader/components/ReaderMasthead/ReaderMastheadTestIds.js";
 import { readerPlayerBarTestIds } from "../../src/features/reader/components/ReaderPlayerBar/ReaderPlayerBarTestIds.js";
@@ -470,6 +472,15 @@ export class ReaderPageObject extends PageObject {
     this.step(`verifyNoteEndActionsAreShown ${shown}`, () =>
       shown ? this.expectToBeVisible(noteEndActionsTestIds.root) : this.expectNotToBeVisible(noteEndActionsTestIds.root),
     );
+
+  verifyNoteEndActionsComeBeforeTheQuestionsAndAskField = () =>
+    this.step("verifyNoteEndActionsComeBeforeTheQuestionsAndAskField", async () => {
+      const actions = await this.get(noteEndActionsTestIds.root).boundingBox();
+      const questions = await this.get(followUpQuestionsTestIds.root).boundingBox();
+      const askField = await this.get(noteAskFieldTestIds.root).boundingBox();
+      expect(actions!.y + actions!.height).toBeLessThanOrEqual(questions!.y);
+      expect(questions!.y).toBeLessThan(askField!.y);
+    });
 
   verifySavedChipSays = (text: string) =>
     this.step(`verifySavedChipSays ${text}`, () => expect(this.get(savedChipTestIds.root)).toContainText(text));

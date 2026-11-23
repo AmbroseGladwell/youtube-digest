@@ -137,6 +137,10 @@ Five folders, five different questions.
   on-demand script, what counts as an article, and the failures it names.
 - `article-panel.md` — making an overview of an article from the panel: Create, Chrome's box,
   right-click, the failures, duplicates, regenerating, and links that move the page.
+- `connections.md` — connections between ideas, measured (OV-218, with OV-217 and OV-350): what
+  candidates by embedding and `similarTo` are worth, why a true but obvious link isn't worth
+  showing and no model could tell them apart, and the library and project questions that
+  replaced a list of connections, with their cost.
 - `search-by-meaning.md` — finding overviews by what they are about: the claim as the unit,
   why OpenAI's small embedding model won the spike against two self-hosted ones, embeddings kept
   beside the library and keyed to the record's rev, a worker that is woken rather than polled,
@@ -197,6 +201,10 @@ Five folders, five different questions.
 - `chats.md` — chat about one overview, as records (OV-308): one synced `chat` record per
   conversation, written by the server, with citations worked out by code; a reader deletes a
   conversation; an overview's chats go with it and survive its regeneration.
+- `suggested-questions.md` — questions on the Ask page that rest on two overviews whose
+  ideas connect (OV-350): one synced `suggestedQuestion` record each, written by the server;
+  what became of it (shown, asked, dismissed, glad or obvious) through a merge that
+  commutes; swept with either overview, its project, or an overview leaving the project.
 - `capture-queue.md` — the videos waiting on this device to become overviews: made one at a
   time, oldest first, while the app is open; the library's queue group, the queue page and
   the strip's seven states; what needs attention and why; waiting without a key; and

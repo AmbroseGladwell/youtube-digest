@@ -27,7 +27,7 @@ here departs from one there, it says so.
 records (account_id, kind, id, schema_version, rev, seq, updated_at, stored_at, deleted, body)
   primary key (account_id, kind, id)
   unique (account_id, seq)
-  kind in ('overview', 'overviewState', 'topic', 'settings', 'followedPlaylist', 'project', 'projectMember', 'chat')
+  kind in ('overview', 'overviewState', 'topic', 'settings', 'followedPlaylist', 'project', 'projectMember', 'chat', 'suggestedQuestion')
   updated_at matches the fixed-width Z form, and is null only on a tombstone
   deleted = (body is null)
 ```
@@ -195,6 +195,12 @@ merge that commutes, and deleting a project or an overview tombstones its member
 `chat`, added at client version 22, is written only by the server. A device deletes a
 conversation with `DELETE /api/chats/:overviewId/:conversationId`, and deleting an overview
 tombstones its chats (`chats.md`).
+
+`suggestedQuestion`, added at client version 30, is written only by the server. A device
+records what became of one, shown, asked, dismissed or its feedback, with
+`PUT /api/suggested-questions/<the id's parts as a path>`, through a merge that commutes.
+Deleting an overview or a project, or taking an overview out of a project, tombstones the
+questions resting on it (`suggested-questions.md`).
 
 ## Rejected alternatives
 

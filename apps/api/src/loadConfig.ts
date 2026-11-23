@@ -68,6 +68,7 @@ const ConfigEnv = z
       )
       .pipe(z.array(ShareToken)),
     OPENAI_API_KEY: z.string().min(1).optional(),
+    ANTHROPIC_API_KEY: z.string().min(1).optional(),
     OUR_KEY_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(300),
     OUR_KEY_DAILY_CHAT_MESSAGES: z.coerce.number().int().min(0).default(20_000),
     POSTHOG_API_KEY: z.string().min(1).optional(),
@@ -134,6 +135,7 @@ export type TranscriptServiceConfig = { proxyUrl: string | null; proxyDailyFetch
 
 export type OurKeyConfig = {
   apiKey: string;
+  anthropicApiKey: string | null;
   dailyGenerations: number;
   dailyChatMessages: number;
 } | null;
@@ -238,6 +240,7 @@ export const loadConfig = (env: Record<string, string | undefined> = process.env
         ? null
         : {
             apiKey: data.OPENAI_API_KEY,
+            anthropicApiKey: data.ANTHROPIC_API_KEY ?? null,
             dailyGenerations: data.OUR_KEY_DAILY_GENERATIONS,
             dailyChatMessages: data.OUR_KEY_DAILY_CHAT_MESSAGES,
           },

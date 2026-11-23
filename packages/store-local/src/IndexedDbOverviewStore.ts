@@ -28,6 +28,7 @@ import {
   sourceKey,
 } from "@overview/domain";
 import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
+import { forgetSuggestedQuestions } from "./forgetSuggestedQuestions.js";
 import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
 import {
   CHATS_BY_OVERVIEW_INDEX,
@@ -36,6 +37,8 @@ import {
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   PROJECT_MEMBERS_STORE,
+  QUESTIONS_BY_OVERVIEW_INDEX,
+  SUGGESTED_QUESTIONS_STORE,
   TOPICS_STORE,
 } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
@@ -184,7 +187,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
   // docs/features/sync-api.md, "Deletes are tombstones, and an overview takes its state with it".
   async deleteOverview(id: OverviewId) {
     const transaction = this.#db.transaction(
-      [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, PROJECT_MEMBERS_STORE, CHATS_STORE, ...JOURNALLED_STORES],
+      [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, PROJECT_MEMBERS_STORE, CHATS_STORE, SUGGESTED_QUESTIONS_STORE, ...JOURNALLED_STORES],
       "readwrite",
     );
     transaction.objectStore(OVERVIEWS_STORE).delete(id);
@@ -197,6 +200,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
     for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_OVERVIEW_INDEX).getAllKeys(id))) {
       chats.delete(key);
     }
+    await forgetSuggestedQuestions(transaction, QUESTIONS_BY_OVERVIEW_INDEX, id);
     const journaled = await appendPendingWrite(transaction, {
       kind: "overview",
       id,

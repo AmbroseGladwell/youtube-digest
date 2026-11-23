@@ -1,4 +1,11 @@
-import type { ChatQuestionInput, ChatStreamEvent, ChatUsage, ProjectId } from "@overview/domain";
+import type {
+  ChatQuestionInput,
+  ChatStreamEvent,
+  ChatUsage,
+  ProjectId,
+  SuggestedQuestionRefreshStatus,
+  SuggestedQuestionScope,
+} from "@overview/domain";
 
 export type ChatOutcome = Extract<ChatStreamEvent, { type: "answered" | "failed" }>;
 export type AskOwner = { kind: "library" } | { kind: "project"; id: ProjectId };
@@ -23,4 +30,5 @@ export interface ChatApi {
     onProgress?: (event: ChatProgress) => void,
   ): Promise<ChatOutcome>;
   usage(): Promise<ChatUsage>;
+  refreshSuggestedQuestions(scope: SuggestedQuestionScope): Promise<SuggestedQuestionRefreshStatus>;
 }

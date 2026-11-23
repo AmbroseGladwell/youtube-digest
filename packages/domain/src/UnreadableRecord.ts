@@ -11,7 +11,8 @@ export type UnreadableRecordKind =
   | "followedPlaylist"
   | "project"
   | "projectMember"
-  | "chat";
+  | "chat"
+  | "suggestedQuestion";
 
 export interface UnreadableRecord {
   kind: UnreadableRecordKind;

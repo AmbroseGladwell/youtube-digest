@@ -1257,6 +1257,13 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/suggested-questions/refresh", (route) =>
+      this.#respond(route, EndpointKey.SUGGESTED_QUESTIONS_REFRESH, {
+        onDefault: () => ({ status: 202, body: { status: "not-due" } }),
+        onError: unauthenticated,
+      }),
+    );
+
     await this.#page.route("**/api/overview-usage", (route) =>
       this.#respond(route, EndpointKey.OVERVIEW_USAGE, {
         onDefault: () => ({ status: 200, body: usage() }),

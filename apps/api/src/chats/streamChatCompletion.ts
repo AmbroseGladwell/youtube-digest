@@ -41,6 +41,7 @@ export interface ReplyShape {
   name: string;
   schema: object;
   maxTokens: number;
+  model?: string;
 }
 
 const CHAT_REPLY: ReplyShape = { name: "chat_reply", schema: CHAT_REPLY_SCHEMA, maxTokens: MAX_ANSWER_TOKENS };
@@ -52,7 +53,7 @@ export const streamChatCompletion = async (
   shape: ReplyShape = CHAT_REPLY,
 ): Promise<ChatCompletionStream> => {
   const body = JSON.stringify({
-    model: chatModel.model,
+    model: shape.model ?? chatModel.model,
     max_completion_tokens: shape.maxTokens,
     messages,
     prompt_cache_key: cacheKey,

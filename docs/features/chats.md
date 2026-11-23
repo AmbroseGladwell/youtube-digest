@@ -957,6 +957,8 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
     sourcesMenuOpened, readOpened, sourcePinned, sourceRemoved, overviewFollowed and plansFollowed.
   - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted and deleteUndone. The last
     three carry `scope`: library, project or overview (OV-363).
+  - `questions.*` and `question.*`: the suggested questions under the field (OV-350,
+    `suggested-questions.md`, "Slice 3: on the Ask page").
 
 ## Over MCP
 

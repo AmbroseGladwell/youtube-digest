@@ -47,3 +47,4 @@ export * from "./podcast/composePodcastPrompt.js";
 export * from "./podcast/generatePodcastOverview.js";
 export * from "./tiktok/TikTokGenerationInput.js";
 export * from "./social/SocialGenerationInput.js";
+export { ANTHROPIC_MESSAGES_URL, anthropicServerHeaders } from "./providers/anthropicAdapter.js";

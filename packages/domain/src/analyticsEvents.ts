@@ -102,6 +102,9 @@ const ChatMeterState = z.enum(["half", "warning", "month", "library"]);
 // What a conversation in the Ask drawer is over: the drawer lists overviews' too (OV-363).
 const AskDrawerScope = z.enum([...AskScope.options, "overview"]);
 const ChatWait = z.enum(["month", "libraryMonth", "day", "everyone", "conversationFull"]);
+// A question on the Ask page the server wrote for the reader (OV-350), or one of the template starters.
+const AskQuestionKind = z.enum(["custom", "template"]);
+const AskQuestionRemoval = z.enum(["notUseful", "hidden"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
@@ -1461,6 +1464,41 @@ export const analyticsEvents = {
         scope: AskScope,
         state: ChatMeterState,
         plan: Plan,
+      }),
+    },
+    // docs/features/suggested-questions.md, "Slice 3: on the Ask page".
+    questions: {
+      shown: event("A set of three questions shows under the Ask field, with how many of them were written for the reader", {
+        plan: Plan,
+        scope: AskScope,
+        custom: z.number().int().nonnegative(),
+      }),
+      differentPressed: event("The reader presses Different questions on the Ask page for the next three", {
+        plan: Plan,
+        scope: AskScope,
+      }),
+    },
+    question: {
+      asked: event("The reader asks one of the questions under the Ask field, and whether it was written for them", {
+        plan: Plan,
+        scope: AskScope,
+        kind: AskQuestionKind,
+      }),
+      dismissed: event("The reader hides a question written for them on the Ask page", { plan: Plan, scope: AskScope }),
+      markedGlad: event("The reader marks a question written for them a good question, or takes the mark off", {
+        plan: Plan,
+        scope: AskScope,
+        glad: z.boolean(),
+      }),
+      markedObvious: event("The reader says a question written for them is not useful", { plan: Plan, scope: AskScope }),
+      undone: event("The reader undoes hiding a question, or saying it is not useful, before it was written", {
+        plan: Plan,
+        scope: AskScope,
+        action: AskQuestionRemoval,
+      }),
+      chipOpened: event("The reader opens one of the two overviews a question written for them draws on", {
+        plan: Plan,
+        scope: AskScope,
       }),
     },
     drawer: {

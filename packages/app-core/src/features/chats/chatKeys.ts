@@ -3,4 +3,5 @@ export const chatKeys = {
   list: (overviewId: string) => [...chatKeys.all, "list", overviewId] as const,
   asked: () => [...chatKeys.all, "asked"] as const,
   usage: (accountId: string | null) => [...chatKeys.all, "usage", accountId] as const,
+  suggested: (projectId: string | null) => [...chatKeys.all, "suggested", { projectId }] as const,
 };

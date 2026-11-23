@@ -4,11 +4,13 @@ import {
   apiLogLines,
   BY_FILING,
   BY_READER,
+  isInProject,
   mergeProjectMember,
   OverviewId,
   ProjectId,
   ProjectPatch,
   projectMemberId,
+  type ProjectMember,
 } from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
@@ -21,6 +23,8 @@ import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
 import { tombstoneChats } from "../records/tombstoneChats.js";
 import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
+import { tombstoneSuggestedQuestions } from "../records/tombstoneSuggestedQuestions.js";
+import type { WriteDecision } from "../records/WriteDecision.js";
 
 const Params = z.object({ id: ProjectId });
 const MemberParams = z.object({ projectId: ProjectId, overviewId: OverviewId });
@@ -41,6 +45,9 @@ const MemberChange = z.union([
 ]);
 
 const isLive = (record: StoredRecord | null): boolean => record !== null && !record.deleted;
+
+const leavesProject = (decision: WriteDecision): boolean =>
+  decision.action === "upsert" && !isInProject(decision.body as Pick<ProjectMember, "addedAt" | "removedAt">);
 
 // An assistant's writes go through the connector instead: docs/features/projects.md, "Over MCP".
 export const projectRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
@@ -87,6 +94,7 @@ export const projectRoutes = (app: FastifyInstance, records: RecordsRepository):
     ]);
     await tombstoneProjectMembers(records, accountId, { projectId: id });
     await tombstoneChats(records, accountId, { kind: "project", id });
+    await tombstoneSuggestedQuestions(records, accountId, { projectId: id });
     if (project === null || project === undefined) {
       request.log.info(apiLogLines.sync.recordAlreadyDeleted({ kind: "project", id }));
       return reply.status(204).send();
@@ -100,7 +108,9 @@ export const projectRoutes = (app: FastifyInstance, records: RecordsRepository):
     const { updatedAt, ...change } = parseOrThrow(MemberChange, request.body, "The project member change");
     const id = projectMemberId(projectId, overviewId);
     const adding = "addedAt" in change;
-    const [written] = await records.write(request.session!.accountId, [
+    const accountId = request.session!.accountId;
+    let left = false;
+    const [written] = await records.write(accountId, [
       {
         kind: "projectMember",
         id,
@@ -115,7 +125,7 @@ export const projectRoutes = (app: FastifyInstance, records: RecordsRepository):
           if (adding && overview?.deleted === true) {
             throw new ApiError("not_found", "No such overview");
           }
-          return decideMerge(
+          const decision = decideMerge(
             "projectMember",
             current,
             {
@@ -128,9 +138,14 @@ export const projectRoutes = (app: FastifyInstance, records: RecordsRepository):
             },
             request.client!,
           );
+          left = leavesProject(decision);
+          return decision;
         },
       },
     ]);
+    if (left) {
+      await tombstoneSuggestedQuestions(records, accountId, { projectId, overviewId });
+    }
     return sendWritten(reply, written!);
   });
 };
