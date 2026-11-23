@@ -571,6 +571,12 @@ whatever the tap opened (the Ask button's did, 22 Nov 2026).
 - Pass `false` where the tip isn't in use (text that isn't cut, a label shown at that
   width), so a long press there behaves as the browser's own.
 - A readout that follows a drag, like the player scrubber's time, is not a tip.
+- Where a parent clips (`overflow`), as the chat's source chips sit inside the panel, the
+  drawer and the "+N" menu, the mixin's tip would be cut off. There, spread
+  `useFloatingTip(cut).trigger` (`util/useFloatingTip.ts`) on the element and render
+  `FloatingTip` (`components/shared/FloatingTip`), which puts the tip on `document.body`,
+  keeps it on screen, and hides it on leaving, blur, a lifted finger, Escape (which then
+  closes nothing else) or any scroll (OV-392).
 
 ### 4.3 Every field names itself
 
