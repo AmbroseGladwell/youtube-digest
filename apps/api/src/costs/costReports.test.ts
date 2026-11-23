@@ -172,7 +172,8 @@ test("no report names an account by its id or its email", async () => {
     `select row_to_json(l)::text as row from cost_reports.cost_lines l
      union all select row_to_json(m)::text from cost_reports.account_months m
      union all select row_to_json(d)::text from cost_reports.cost_days d
-     union all select row_to_json(c)::text from cost_reports.chat_months c`,
+     union all select row_to_json(c)::text from cost_reports.chat_months c
+     union all select row_to_json(f)::text from cost_reports.feedback_entries f`,
   );
 
   for (const { row } of reports) {
@@ -195,6 +196,43 @@ test("a deleted account leaves the reports with its rows", async () => {
   await sql.close();
 });
 
+test("feedback reaches the reports as counts by plan, surface, kind and triage, never its text or overview (OV-185)", async () => {
+  const sql = await seeded();
+  await sql.query(
+    `insert into feedback (account_id, created_at, surface, client_version, overview_id, kind, text, triaged_at, triage_outcome) values
+       ($1, '2026-11-23T09:00:00Z', 'web', 30, 'b0000000-0000-4000-8000-000000000001', 'wrong', 'A private sentence', '2026-11-23T12:00:00Z', 'new-card'),
+       ($1, '2026-11-23T10:00:00Z', 'extension', 30, null, null, 'Another private sentence', null, null)`,
+    [READER],
+  );
+
+  const rows = await sql.query<Record<string, unknown>>("select * from cost_reports.feedback_entries order by surface desc");
+
+  assert.deepEqual(rows, [
+    {
+      day: rows[0]!.day,
+      account: await opaque(sql, READER),
+      plan: "plus",
+      surface: "web",
+      kind: "wrong",
+      from_overview: true,
+      triaged: true,
+      outcome: "new-card",
+    },
+    {
+      day: rows[1]!.day,
+      account: await opaque(sql, READER),
+      plan: "plus",
+      surface: "extension",
+      kind: "none",
+      from_overview: false,
+      triaged: false,
+      outcome: null,
+    },
+  ]);
+  assert.doesNotMatch(JSON.stringify(rows), /private sentence|b0000000/);
+  await sql.close();
+});
+
 test("the reader role can read the reports and no table behind them", async () => {
   const sql = await seeded();
 
@@ -210,6 +248,7 @@ test("the reader role can read the reports and no table behind them", async () =
     "cost_reports.chat_months",
     "cost_reports.cost_days",
     "cost_reports.cost_lines",
+    "cost_reports.feedback_entries",
     "cost_reports.plan_accounts",
   ]);
 

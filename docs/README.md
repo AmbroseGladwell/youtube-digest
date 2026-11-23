@@ -115,6 +115,9 @@ Five folders, five different questions.
 
 ## `features/` — feature-specific design, one file per feature
 
+- `feedback.md` — OV-185: a signed-in reader's feedback, from the account menu or an overview's
+  menu, stored in our own database with emails and key-like strings redacted, counted in
+  PostHog without its words, deleted with the account, and triaged by Claude against the board.
 - `byo-providers.md` — generation on a key from any of six providers: what was checked
   against their live APIs first, one adapter per provider behind one interface, the single
   JSON Schema five of them take and the words the sixth gets instead, model lists fetched

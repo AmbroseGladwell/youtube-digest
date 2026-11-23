@@ -33,6 +33,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | A shared copy of an overview behind an unguessable link, and the public document and card image it serves at `/s/<token>`, outside `/api` | `migrations/V0010__shares.sql`, `src/shares/`, `src/routes/shareRoutes.ts`, `apps/api/assets/fonts/`; `docs/features/sharing.md` |
 | The app's analytics at `POST /api/events`, from a session or under the anonymous id a reader without an account agreed to, checked against the catalogue, logged, and passed on to PostHog when there is a key | `packages/domain`: `analyticsEvents.ts`, `AnalyticsEventBatch.ts`; `src/events/`; `docs/architecture/analytics.md` |
 | The app's errors at `POST /api/errors`, with or without a session, redacted again, logged, and passed on to PostHog's error tracking when there is a key | `packages/domain`: `ClientErrorBatch.ts`, `redactErrorMessage.ts`; `src/errors/`; `docs/architecture/errors-and-logs.md` |
+| A signed-in reader's feedback at `POST /api/feedback`, emails and key-like strings redacted, stored for triage with no copy to a third party | `packages/domain`: `Feedback.ts`, `redactFeedbackText.ts`; `src/feedback/`; `docs/features/feedback.md` |
 | One id per request, the client's when it sent a usable one, said back in `X-Request-Id` | `packages/domain/src/RequestId.ts`, `src/http/requestIdFor.ts`; "Request ids", below |
 
 ## Shape
@@ -331,6 +332,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `anonymousEventsAddress` | 60 | minute, per address | `POST /api/events` without a session, and `POST /api/events/declined`: per address, because a reader without an account has no account to count against (`docs/features/analytics-consent.md`) |
 | `sharedPageEventsAddress` | 60 | minute, per address | `POST /api/shares/:token/events`: per address, because most people on a shared link have no account (`docs/architecture/analytics.md`, "The shared page") |
 | `errorsAddress` | 30 | minute, per address | `POST /api/errors`: per address, because most readers sending errors have no account (`docs/architecture/errors-and-logs.md`) |
+| `feedbackAccount` | 20 | hour, per account | `POST /api/feedback`: far more than anyone writes by hand, and a stop on a script filling the table (`docs/features/feedback.md`) |
 
 The numbers are in `src/rateLimit/rateLimits.ts`. What they are for:
 
