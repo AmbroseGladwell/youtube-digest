@@ -450,6 +450,10 @@ export class BackendSimulator {
     if ("article" in request.input) {
       return { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." };
     }
+    // As the server does (generateOverviewOf), a TikTok's overview keeps its TikTok source.
+    if ("tiktok" in request.input) {
+      return makeOverview({ id: request.overviewId, source: request.input.tiktok, inOneLine: "Made from the TikTok." });
+    }
     return makeOverview({
       id: request.overviewId,
       source: youTubeSource(request.input.video),

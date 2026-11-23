@@ -90,6 +90,7 @@ test("a TikTok with no captions says on Your link that it will be transcribed, a
   await onboarding.createAccount(ADA);
 
   await onboarding.verifyOnScreen("wait");
+  await onboarding.verifyWaitStage(0, { state: "done", text: "TikTok transcribed · 58 s" });
   await onboarding.verifyCanOpenOverview(true);
   expect(backendSimulator.tiktok.transcriptionAsks()).toEqual([VIDEO.url]);
   expect(backendSimulator.ourKey.generations()[0]?.input).toHaveProperty("tiktok.handle", "bbcnews");

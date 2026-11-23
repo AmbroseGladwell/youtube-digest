@@ -90,6 +90,7 @@ export const OnboardingWaitScreen = ({
       ingredients: overview?.recipe?.ingredients.length ?? null,
       steps: overview?.recipe?.steps.length ?? null,
       episodeMinutes,
+      clipSeconds: found?.source.kind === "tiktok" && found.source.durationMs !== null ? Math.round(found.source.durationMs / 1000) : null,
     }),
   );
 
