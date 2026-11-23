@@ -27,6 +27,7 @@ import { noteBudgetProps } from "./util/noteBudgetProps.js";
 import { runErrorOf } from "./util/runErrorOf.js";
 import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
+import type { EpisodeTranscription } from "../podcasts/types/EpisodeTranscription.js";
 import type { ArticleRun, NewOverviewRun } from "./types/NewOverviewRun.js";
 import type { PodcastRunRequest, TikTokRunRequest } from "./api/generationPipeline.js";
 
@@ -60,12 +61,15 @@ export interface NewOverviewRunController {
   start: (url: string, options: StartOverviewRunOptions) => void;
   startArticle: (request: ArticleRunRequest) => void;
   startPodcast: (request: PodcastRunRequest & StartOverviewRunOptions) => void;
-  transcribePodcast: () => void;
+  // Asked after Create, or tried again: the last episode or TikTok, transcribed this time.
+  transcribeAgain: () => void;
   startTikTok: (request: TikTokRunRequest & StartOverviewRunOptions) => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
 }
+
+type LastTranscribable = { podcast: PodcastRunRequest & StartOverviewRunOptions } | { tiktok: TikTokRunRequest & StartOverviewRunOptions };
 
 const noteKindOf = (overview: Overview): "recipe" | "process" | "default" => {
   if (overview.recipe != null) {
@@ -194,6 +198,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
                 postedAt: tiktokRequest.video.postedAt,
                 coverUrl: tiktokRequest.video.coverUrl,
                 words: null,
+                transcription: tiktokRequest.words === null ? { state: "starting" } : null,
               },
         transcriptWords: null,
         overview: null,
@@ -244,18 +249,15 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
             }
           },
           onTranscription: (progress) => {
+            const transcription: EpisodeTranscription =
+              progress === "transcribing" ? { state: "transcribing", since: Date.now() } : { state: "starting" };
             if (isCurrent()) {
-              setRun((current) =>
-                current?.podcast == null
-                  ? current
-                  : {
-                      ...current,
-                      podcast: {
-                        ...current.podcast,
-                        transcription: progress === "transcribing" ? { state: "transcribing", since: Date.now() } : { state: "starting" },
-                      },
-                    },
-              );
+              setRun((current) => {
+                if (current?.podcast != null) {
+                  return { ...current, podcast: { ...current.podcast, transcription } };
+                }
+                return current?.tiktok == null ? current : { ...current, tiktok: { ...current.tiktok, transcription } };
+              });
             }
           },
           onArticleRead: (article) => {
@@ -410,10 +412,10 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     [generate],
   );
 
-  const lastPodcast = useRef<(PodcastRunRequest & StartOverviewRunOptions) | null>(null);
+  const lastTranscribable = useRef<LastTranscribable | null>(null);
   const startPodcast = useCallback(
     (request: PodcastRunRequest & StartOverviewRunOptions) => {
-      lastPodcast.current = request;
+      lastTranscribable.current = { podcast: request };
       const runId = (runIdRef.current += 1);
       setHeld(null);
       generate(request.sharedFrom, request, runId, null, {
@@ -425,22 +427,32 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     [generate],
   );
 
-  const transcribePodcast = useCallback(() => {
-    if (lastPodcast.current === null) {
-      return;
-    }
-    const asked = latestRun.current?.error?.kind === "podcastNeedsTranscribing";
-    startPodcast({ ...lastPodcast.current, transcribe: asked ? "asked" : "retried" });
-  }, [startPodcast]);
-
   const startTikTok = useCallback(
     (request: TikTokRunRequest & StartOverviewRunOptions) => {
+      lastTranscribable.current = request.words === null ? { tiktok: request } : null;
       const runId = (runIdRef.current += 1);
       setHeld(null);
-      generate(request.video.url, request, runId, null, null, { video: request.video, words: request.words });
+      generate(request.video.url, request, runId, null, null, {
+        video: request.video,
+        words: request.words,
+        transcribe: request.transcribe,
+      });
     },
     [generate],
   );
+
+  const transcribeAgain = useCallback(() => {
+    const last = lastTranscribable.current;
+    if (last === null) {
+      return;
+    }
+    if ("tiktok" in last) {
+      startTikTok({ ...last.tiktok, transcribe: "retried" });
+      return;
+    }
+    const asked = latestRun.current?.error?.kind === "podcastNeedsTranscribing";
+    startPodcast({ ...last.podcast, transcribe: asked ? "asked" : "retried" });
+  }, [startPodcast, startTikTok]);
 
   const setCaptureReason = useCallback((captureReason: string) => {
     draftRef.current = captureReason;
@@ -488,7 +500,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     start,
     startArticle,
     startPodcast,
-    transcribePodcast,
+    transcribeAgain,
     startTikTok,
     dismiss,
     setCaptureReason,

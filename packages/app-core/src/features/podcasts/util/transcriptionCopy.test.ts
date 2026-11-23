@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { transcriptionCopy } from "./transcriptionCopy.js";
+import { audioLength, transcriptionCopy } from "./transcriptionCopy.js";
 
 const HOUR = 3600;
 const usage = (usedSeconds: number, limitHours = 5) => ({ usedSeconds, limitSeconds: limitHours * HOUR, episodes: 1 });
@@ -53,5 +53,18 @@ describe("transcriptionCopy", () => {
     expect(transcriptionCopy.failed("failed")).toMatchObject({ heading: "Transcribing stopped partway", retry: true });
     expect(transcriptionCopy.failed("audio-unreachable")).toMatchObject({ heading: "We couldn’t get the episode’s audio", retry: false });
     expect(transcriptionCopy.failed("failed").body).toContain("Nothing was counted: no transcribing time and no overview.");
+  });
+
+  it("says a TikTok's length in seconds under a minute, and names it as a TikTok", () => {
+    expect(audioLength(38)).toBe("38 s");
+    expect(audioLength(0.4)).toBe("1 s");
+    expect(audioLength(80)).toBe("1 min");
+    expect(transcriptionCopy.uses(38, usage(0))).toBe("Uses 38 s of your 5 hr transcribing left, and one overview");
+    expect(transcriptionCopy.free("transcribed", "tiktok")).toBe("You transcribed this TikTok before, so it uses no transcribing time.");
+    expect(transcriptionCopy.failed("audio-unreachable", "tiktok")).toMatchObject({
+      heading: "We couldn’t get the TikTok’s sound",
+      retry: true,
+    });
+    expect(transcriptionCopy.failed("no-speech", "tiktok").body).toContain("The TikTok’s sound has no speech");
   });
 });

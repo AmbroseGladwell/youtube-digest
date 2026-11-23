@@ -281,6 +281,7 @@ export class BackendSimulator {
   #podcastTranscribable = false;
   #transcriptionScript: PodcastTranscription[] = [];
   #transcriptionAsks: Array<{ feedUrl: string; guid: string }> = [];
+  #tiktokTranscriptionAsks: string[] = [];
   #transcriptionUsage: TranscriptionUsage | undefined = undefined;
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
@@ -1046,9 +1047,14 @@ export class BackendSimulator {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(check) });
     });
 
-    await this.#page.route("**/api/podcasts/transcription**", (route) => {
+    await this.#page.route(/\/api\/(podcasts|tiktok)\/transcription/, (route) => {
       if (route.request().method() === "POST") {
-        this.#transcriptionAsks.push(route.request().postDataJSON() as { feedUrl: string; guid: string });
+        const asked = route.request().postDataJSON() as { feedUrl: string; guid: string } | { url: string };
+        if ("url" in asked) {
+          this.#tiktokTranscriptionAsks.push(asked.url);
+        } else {
+          this.#transcriptionAsks.push(asked);
+        }
       }
       const next = this.#transcriptionScript.length > 1 ? this.#transcriptionScript.shift()! : this.#transcriptionScript[0];
       if (next === undefined) {
@@ -1735,6 +1741,8 @@ export class BackendSimulator {
       this.#tiktokAnswer = read;
     },
     reads: (): string[] => [...this.#tiktokReads],
+    // The states come from `podcasts.transcribesAs`, which both share, as the server's queue is shared.
+    transcriptionAsks: (): string[] => [...this.#tiktokTranscriptionAsks],
   };
 
   podcasts = {

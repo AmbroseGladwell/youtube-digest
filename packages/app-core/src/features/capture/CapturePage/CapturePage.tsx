@@ -242,7 +242,7 @@ export const CapturePage = () => {
           onDismiss={dismiss}
           onCaptureReasonChange={controller.setCaptureReason}
           onCaptureReasonCommit={controller.commitCaptureReason}
-          onTranscribe={controller.transcribePodcast}
+          onTranscribe={controller.transcribeAgain}
         />
       </div>
     );
@@ -494,7 +494,7 @@ const RunInProgress = ({ run, onDismiss, onCaptureReasonChange, onCaptureReasonC
           className={styles.error}
           testId={capturePageTestIds.error}
           testIds={capturePageTestIds.runError}
-          episodeSeconds={run.podcast?.durationSeconds ?? null}
+          episodeSeconds={run.podcast?.durationSeconds ?? run.tiktok?.durationSeconds ?? null}
           onTranscribe={onTranscribe}
           onNotNow={onDismiss}
         />

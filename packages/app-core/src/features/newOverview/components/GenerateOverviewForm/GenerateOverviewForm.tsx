@@ -104,7 +104,7 @@ export const GenerateOverviewForm = ({
   const startArticle = useStartArticleFromLink();
   const podcast = usePodcastLink(url);
   const tiktok = useTikTokLink(url);
-  const { startPodcast, transcribePodcast, startTikTok, run } = useNewOverviewRunController();
+  const { startPodcast, transcribeAgain, startTikTok, run } = useNewOverviewRunController();
   const { podcastShown, tiktokShown, reading, generateOffered, episodeAction } = pastedLinkState(article.link, podcast, tiktok.link);
   const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
@@ -131,9 +131,10 @@ export const GenerateOverviewForm = ({
       return;
     }
     if (tiktokShown) {
-      if (tiktok.link.status === "found" && tiktok.link.words !== null && tiktok.link.stop === null) {
+      const transcribe = transcribeChoiceOf(episodeAction);
+      if (tiktok.link.status === "found" && generateOffered && (tiktok.link.words !== null || transcribe !== undefined)) {
         setValidationError(null);
-        startTikTok({ video: tiktok.link.video, words: tiktok.link.words, from: "dialog" });
+        startTikTok({ video: tiktok.link.video, words: tiktok.link.words, transcribe, from: "dialog" });
       }
       return;
     }
@@ -194,7 +195,9 @@ export const GenerateOverviewForm = ({
 
   const readsWhat = () => {
     if (tiktokShown) {
-      return "Reads the TikTok’s captions";
+      return episodeAction?.kind === "transcribe" || episodeAction?.kind === "free"
+        ? "Transcribes the TikTok’s sound"
+        : "Reads the TikTok’s captions";
     }
     if (podcastShown) {
       return "Finds the episode’s transcript";
@@ -342,8 +345,8 @@ export const GenerateOverviewForm = ({
           testId={generateOverviewFormTestIds.generationError}
           testIds={generateOverviewFormTestIds.runError}
           onFollowed={onCancel}
-          episodeSeconds={run?.podcast?.durationSeconds ?? null}
-          onTranscribe={transcribePodcast}
+          episodeSeconds={run?.podcast?.durationSeconds ?? run?.tiktok?.durationSeconds ?? null}
+          onTranscribe={transcribeAgain}
           onNotNow={onCancel}
         />
       )}

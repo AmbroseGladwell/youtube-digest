@@ -34,6 +34,7 @@ export interface TikTokRun {
   postedAt: string | null;
   coverUrl: string | null;
   words: number | null;
+  transcription: EpisodeTranscription | null;
 }
 
 // It outlives the dialog: docs/features/overview-redesign.md, "Generating in the background".

@@ -7,6 +7,7 @@ export const tiktokLinkStatusTestIds = {
   facts: "TikTokLinkStatus.facts",
   length: "TikTokLinkStatus.length",
   looked: "TikTokLinkStatus.looked",
+  needs: "TikTokLinkStatus.needs",
   held: "TikTokLinkStatus.held",
   openHeld: "TikTokLinkStatus.openHeld",
 } as const;

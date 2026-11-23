@@ -223,7 +223,7 @@ export const useOnboardingRun = ({
       readPodcast: (url) => rememberEpisodeRead(episodeReads.current, url, latest.current.readPodcast),
       checkEpisode: (episode) => latest.current.checkEpisode(episode),
       readTikTok: (url) => latest.current.readTikTok(url),
-      tiktok: (video, words, options) => latest.current.runTikTok(video, words, options, latest.current.shown),
+      tiktok: (video, words, options) => latest.current.runTikTok({ video, words }, options, latest.current.shown),
     };
 
     kind

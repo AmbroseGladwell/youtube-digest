@@ -58,7 +58,12 @@ describe("readTikTokLink", () => {
     const { own } = ownReading({ status: "read", video, transcript });
     const { server, asked } = serverAnswering(VENDOR_READ);
 
-    expect(await readTikTokLink(LINK, { own, server })).toEqual({ status: "read", video, words: { transcript, source: "tiktok-tab" } });
+    expect(await readTikTokLink(LINK, { own, server })).toEqual({
+      status: "read",
+      video,
+      words: { transcript, source: "tiktok-tab" },
+      transcription: null,
+    });
     expect(asked).toEqual([]);
   });
 
@@ -72,7 +77,12 @@ describe("readTikTokLink", () => {
     const { own } = ownReading(answer);
     const { server, asked } = serverAnswering(VENDOR_READ);
 
-    expect(await readTikTokLink(LINK, { own, server })).toEqual({ status: "read", video, words: { transcript, source: "tiktok-vendor" } });
+    expect(await readTikTokLink(LINK, { own, server })).toEqual({
+      status: "read",
+      video,
+      words: { transcript, source: "tiktok-vendor" },
+      transcription: null,
+    });
     expect(asked).toEqual([LINK]);
   });
 
@@ -104,6 +114,15 @@ describe("readTikTokLink", () => {
       status: "read",
       video,
       words: null,
+      transcription: null,
     });
+  });
+
+  it("with no captions anywhere, passes on whether our server can transcribe it", async () => {
+    const transcription = { status: "needed" as const, episodeSeconds: 42, usage: { usedSeconds: 0, limitSeconds: 18_000, episodes: 0 } };
+    const { own } = ownReading({ status: "read", video, transcript: null });
+    const { server } = serverAnswering({ status: "read", video, transcript: null, transcription });
+
+    expect(await readTikTokLink(LINK, { own, server })).toEqual({ status: "read", video, words: null, transcription });
   });
 });
