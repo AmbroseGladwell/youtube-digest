@@ -42,6 +42,7 @@ export interface TestApp {
   drainAudio(): Promise<void>;
   drainEmbeddings(): Promise<void>;
   drainTranscriptions(): Promise<void>;
+  drainQuestions(): Promise<void>;
   seedVoiceSamples(): Promise<SeededVoiceSamples>;
   close(): Promise<void>;
 }
@@ -153,6 +154,9 @@ export const createTestApp = async (
     },
     drainTranscriptions: async () => {
       await app.transcriptionQueue?.drain();
+    },
+    drainQuestions: async () => {
+      await app.questionRefresher?.drain();
     },
     seedVoiceSamples: () =>
       seedVoiceSamples({

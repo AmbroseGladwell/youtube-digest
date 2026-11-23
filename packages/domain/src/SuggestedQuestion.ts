@@ -102,3 +102,13 @@ export const mergeSuggestedQuestion = (base: Record<string, unknown>, change: Re
   const once = Object.fromEntries(ONCE_FIELDS.map((field) => [field, earlierOf(base[field], change[field])]));
   return { ...base, ...once, feedback: laterFeedbackOf(base.feedback, change.feedback) };
 };
+
+// Questions arrive through sync, not this answer: docs/features/suggested-questions.md, "Slice 2: the refresh".
+export const SuggestedQuestionRefreshRequest = z.object({ scope: SuggestedQuestionScope }).strict();
+export type SuggestedQuestionRefreshRequest = z.infer<typeof SuggestedQuestionRefreshRequest>;
+
+export const SuggestedQuestionRefreshStatus = z.enum(["started", "free", "unavailable", "busy", "not-due", "capped"]);
+export type SuggestedQuestionRefreshStatus = z.infer<typeof SuggestedQuestionRefreshStatus>;
+
+export const SuggestedQuestionRefreshResponse = z.object({ status: SuggestedQuestionRefreshStatus }).strict();
+export type SuggestedQuestionRefreshResponse = z.infer<typeof SuggestedQuestionRefreshResponse>;

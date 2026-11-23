@@ -36,6 +36,7 @@ read.
 | `transcripts` | `speech-to-text` | seconds of audio transcribed | the worker's seconds at its GPU's list price (`GPU_DOLLARS_PER_HOUR`), an unknown card at the dearest | `TranscriptionQueue` |
 | `transcripts` | `proxy` | bytes through the residential proxy | $4 per GB, a GB being 10⁹ bytes as Decodo counts it (`PROXY_PRICE`, checked 10 Nov 2026) | `ServiceTranscripts` |
 | `chat` | `message`, `message-failed` | prompt and output tokens of a question answered in an overview (OV-309) | list price | `ChatAnswerer` |
+| `questions` | `label`, `write`, each also `-failed` | prompt and output tokens of labelling a candidate pair (Luna) and writing a refresh's suggested questions (Sol) (OV-350) | list price | `SuggestedQuestionRefresher` |
 
 - **A transcription costs the account that asked,** or `signed-out` for a trial. A transcript
   is never shared, so each reader's ask is its own job and its own cost. Modal bills one workspace for dev and prod,

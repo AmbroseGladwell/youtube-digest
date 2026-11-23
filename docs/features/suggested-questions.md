@@ -5,9 +5,9 @@ Each question rests on two overviews whose ideas connect. The measurement behind
 `connections.md`, and its cost is in `docs/architecture/cost-model.md`, "Connections and library
 questions".
 
-Slice 1 is the record only: where a question is kept, how what became of it syncs, and how it is
-deleted. Nothing writes a question yet. Slice 2 finds the pairs, writes the questions in batches
-and decides which to show; the Ask page shows them after its design round.
+Slice 1 is the record: where a question is kept, how what became of it syncs, and how it is
+deleted. Slice 2 is the server's refresh, which finds the pairs and writes the questions in
+batches. The Ask page shows them after its design round (slice 4).
 
 ## One record per question
 
@@ -112,8 +112,133 @@ stays on the device until the server's tombstone for it comes down.
 
 Nothing shows them yet.
 
+## Slice 2: the refresh
+
+The server writes questions only when the Ask page asks for them, a few times a week at most, so
+nothing is spent on a library nobody opens and switching questions on costs nothing for an
+existing library, whatever its size (`connections.md`, "Cost"). `SuggestedQuestionRefresher`
+(`apps/api/src/questions/`) does the work. Every rule below is code with a named constant; no
+model decides whether, when or how much.
+
+### Trigger
+
+`POST /api/suggested-questions/refresh`, signed in, with `{ scope: { kind: "library" } }` or
+`{ scope: { kind: "project", projectId } }` (`SuggestedQuestionRefreshRequest`). The Ask page
+calls it when the library or a project's chat opens. It answers **202** at once with
+`{ status }` (`SuggestedQuestionRefreshStatus`):
+
+| `status` | Meaning |
+|---|---|
+| `started` | a refresh began; any questions it writes arrive through sync |
+| `free` | the account's plan doesn't have suggested questions |
+| `capped` | this month's `questions` costs reached the cap |
+| `busy` | a refresh for this account is still running |
+| `not-due` | too soon, too many this week, or nothing new saved since the last |
+| `unavailable` | this server has no OpenAI key of ours or no meaning search |
+
+The route awaits only the policy, never the writing: the refresh runs in the background and its
+promise never rejects. A failure is logged (`api.questions.refreshFailed`) and the refresh row
+marked `failed`.
+
+### Policy
+
+| Constant | Value | Rule |
+|---|---|---|
+| `QUESTION_PLANS` | BYO Plus, Plus | anything else is `free`, and nothing is recorded |
+| `QUESTIONS_MONTHLY_CAP_DOLLARS` | $0.40 | this calendar month's (UTC) `questions` costs at or over it stop a refresh |
+| `REFRESHES_PER_WINDOW` in `REFRESH_WINDOW_DAYS` | 3 in 7 days | rolling |
+| `REFRESH_GAP_DAYS` | 2 | since the last counted refresh started |
+| `REFRESH_STALE_MINUTES` | 15 | a refresh still `running` after this no longer holds the lock |
+
+- **Something new.** A refresh starts only when an overview was saved or changed (its record
+  stored) since the last counted refresh started, or there has never been one.
+- **Counted** means the refresh labelled at least one pair, or is still marked `running`. One
+  that found every slot taken (`full`) or no candidates (`no-pairs`) before calling a model
+  doesn't count against the next.
+- **One at a time.** The account's row is locked while the rules are checked, and a fresh
+  `running` row is the lock. The cap is a design limit, not a spend figure (`cost-model.md`).
+- **Opened scopes.** A paid reader's refresh records the scope it was asked from in
+  `question_scopes_opened`, with the time. A project takes part only once its chat has been
+  opened, most recently opened first.
+
+Each refresh that passes the rules is a row in `question_refreshes`: when it started and
+finished, the scopes it filled, the pairs it labelled, the questions it wrote and its `outcome`
+(`running`, `written`, `full`, `no-pairs`, `failed`). Both tables go with the account
+(`account-deletion.md`).
+
+### Slots
+
+A question is **used up** once asked, dismissed, marked obvious, or first shown more than
+`SHOWN_QUESTION_LASTS_DAYS` (3) days ago (`isUsedUp`). The rest are unused, and on show.
+
+| Constant | Value |
+|---|---|
+| `UNUSED_LIBRARY_QUESTIONS_MAX` | 6 unused library questions |
+| `UNUSED_PROJECT_QUESTIONS_MAX` | 4 unused per project |
+| `NEW_QUESTIONS_PER_REFRESH` | 6 in all |
+| `NEW_LIBRARY_QUESTIONS_MAX` | 3 for the library |
+| `NEW_PROJECT_QUESTIONS_MAX` | 2 per project |
+
+`allocateQuestionSlots` fills the library first, then each opened project that isn't archived
+and has at least `PROJECT_MEMBERS_MIN` (2) live members, until six are allocated. Nothing to fill
+means no candidates are looked for and no model is called.
+
+### Candidates
+
+Found by code from the claim embeddings OV-229 stores (`search-by-meaning.md`), at each
+overview's current rev only, and never from the big picture, as measured (`connections.md`). Two
+overviews' distance is their best pair of claims, in pgvector (`ClaimPairsRepository`).
+
+- **Library:** the `RECENT_OVERVIEWS_PAIRED` (20) most recently saved live overviews, and for each,
+  from its `PARTNERS_LOOKED_AT` (10) closest: its `similarTo` links (`verdict.similarTo`), its
+  closest partner sharing no topic, and its closest partner. The three lists are taken in turn,
+  `similarTo` first since it was the best source, newest save first, each pair once.
+- **Project:** every pair among its `PROJECT_MEMBERS_PAIRED` (30) most recently added live
+  members, closest first.
+- **Never twice.** A pair that has ever had a question in that scope, live, used up or
+  tombstoned, is left out. Overviews that are gone are never candidates.
+
+Up to `LIBRARY_PAIRS_LABELLED` (8) library pairs and `PROJECT_PAIRS_LABELLED` (4) per project
+are labelled by Luna (`QUESTION_LABEL_MODEL`, chat's model), with the strict rubric of
+`connections.md` round 2 (`LABEL_PROMPT`), the reader's About you and what was learned
+(`composeReaderContext`, as chat sends it), the names and purposes of their projects, and for a
+project's pair, that project. Only `real` ones are kept, `different_view` and `contradicts`
+first, up to a scope's slots plus `SPARE_PAIRS_PER_SCOPE` (1) so the writer can skip one. The
+measured prompt's "for you" line is left out, since nothing reads it.
+
+### Writing
+
+One call per refresh, with `QUESTION_WRITER_MODEL`, which is GPT-6.1 Sol. It is one constant so
+it can be swapped while Sol and Sonnet are compared; an Anthropic writer would need its own call.
+The prompt (`questionWriterPrompt`) is the measured one (`connections.md`, round 4) plus:
+
+- each pair says how many questions its place can take;
+- every question must draw on **both** overviews of its pair, since the obvious ones in the
+  owner's review had dropped one;
+- the reader's own questions marked obvious, the `OBVIOUS_EXAMPLES` (4) most recent, as "the
+  reader found questions like these obvious";
+- the questions on show in the scopes being filled, as themes not to repeat.
+
+Each pair is sent compactly: its overviews' titles and core claims and the claims the pair met
+on. Code then keeps a question only when its pair number exists, its text passes
+`SuggestedQuestionText` and is one sentence, its pair hasn't a question already in this batch, and
+its scope has room. The rest are written by `writeSuggestedQuestions`, which still skips any
+whose overviews or project membership went meanwhile.
+
+### Cost and logging
+
+Every call is recorded in the cost tally under the area **`questions`**, at list price
+(`modelPrices.ts`), as chat's are: `label`, `write`, and `label-failed` or `write-failed` for a
+reply that billed but couldn't be read (`unit-economics.md`). Questions aren't counted against
+the chat allowance.
+
+`api.questions.refreshed` is logged for every ask with the plan and `status`, and again when a
+started refresh ends, with its `outcome`, whether it filled the library, how many projects, the
+pairs labelled and the questions written. Never a question, a title, an id or a cost.
+
 ## Privacy
 
-This slice adds where a question is kept, how what became of it syncs and how it is deleted, but
-nothing writes one until slice 2, which sends pairs of overviews to a model. `/privacy` describes
-what the software does, so it changes in slice 2's PR.
+A refresh sends overviews' titles and claims, the reader's About you and what was learned, and
+their projects' names and purposes to OpenAI, for a new purpose, so `/privacy` says so
+("Asking questions about an overview", "Suggested questions") and the retention table lists the
+questions (`legal-pages.md`, revision log, 23 Nov).

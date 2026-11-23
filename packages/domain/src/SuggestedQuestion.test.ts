@@ -144,7 +144,7 @@ test("a question dismissed or marked obvious is no longer live; one asked or mar
 
 test("Good question toggles off with a later none, which still loses to a later mark", () => {
   const glad = { feedback: { verdict: "glad", at: AT } };
-  const cleared = { feedback: { verdict: "none", at: LATER } };
+  const cleared = { feedback: { verdict: "none" as const, at: LATER } };
   assert.deepEqual(applyAll([glad, cleared]).feedback, cleared.feedback);
   assert.deepEqual(applyAll([cleared, glad]).feedback, cleared.feedback);
   const gladAgain = { feedback: { verdict: "glad", at: LATEST } };

@@ -3,7 +3,7 @@ import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 
-export type CostArea = "generation" | "embeddings" | "transcripts" | "chat";
+export type CostArea = "generation" | "embeddings" | "transcripts" | "chat" | "questions";
 
 export type CostPayer = { accountId: AccountId } | "signed-out";
 
@@ -79,6 +79,14 @@ export class AccountCostsRepository {
         }),
       );
     }
+  }
+
+  async monthDollars(accountId: AccountId, area: CostArea, now: Date): Promise<number> {
+    const [row] = await this.#sql.query<{ dollars: number | string | null }>(
+      `select sum(dollars) as dollars from account_costs where account_id = $1 and area = $2 and day >= $3::date`,
+      [accountId, area, `${usageDay(now).slice(0, 7)}-01`],
+    );
+    return Number(row?.dollars ?? 0);
   }
 
   async of(payer: CostPayer): Promise<DayCost[]> {

@@ -251,14 +251,14 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           We also keep a daily tally of what serving each account costs us, so we can price the plans fairly: for overviews and the smaller
-          passes made on our key, and questions you ask about an overview, the tokens used and their cost at OpenAI's list price, including
-          attempts that failed; the tokens used to make your library and your searches searchable by meaning, and their cost; and the bytes
-          fetched through our transcript proxy for you. It holds amounts only, never what was sent or found. What a device without an
-          account costs is tallied with no device or account on it. Once a day PostHog copies a monthly summary of the tally for our cost
-          dashboard: the month, your plan, what you cost and how many overviews, narrations, questions and transcriptions you made, how much
-          of the month's chat you used and how much of that went on questions across your library or a project, under a coded id that is
-          neither your account's id nor the one analytics uses. It also copies each day's total cost across everyone, by kind of work, with
-          no account or plan on it. When an account is deleted, the next day's copy leaves it out.
+          passes made on our key, questions you ask about an overview and suggested questions, the tokens used and their cost at OpenAI's
+          list price, including attempts that failed; the tokens used to make your library and your searches searchable by meaning, and
+          their cost; and the bytes fetched through our transcript proxy for you. It holds amounts only, never what was sent or found. What
+          a device without an account costs is tallied with no device or account on it. Once a day PostHog copies a monthly summary of the
+          tally for our cost dashboard: the month, your plan, what you cost and how many overviews, narrations, questions and transcriptions
+          you made, how much of the month's chat you used and how much of that went on questions across your library or a project, under a
+          coded id that is neither your account's id nor the one analytics uses. It also copies each day's total cost across everyone, by
+          kind of work, with no account or plan on it. When an account is deleted, the next day's copy leaves it out.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping
@@ -309,6 +309,18 @@ const sections: readonly LegalSection[] = [
           devices can read and delete a conversation but never change one. Deleting a conversation removes it from every device. Deleting
           the overview, or the project, deletes its conversations; a conversation over your whole library goes when you delete it or your
           account, and your account takes every conversation with it.
+        </p>
+        <p>
+          <strong>Suggested questions.</strong> On a paid plan, opening your library's or a project's chat may have our server write a few
+          questions you could ask there, each resting on two of your saved overviews whose ideas connect. It happens a few times a week at
+          most, never on a free plan. Our server picks likely pairs by comparing your overviews' embeddings, as search by meaning does, and
+          sends OpenAI in the United States each pair's titles, big pictures, claims and key points, your About you sentence and what we
+          have learned from your overviews, and your projects' names and what each is for. To write the questions it also sends the ones you
+          marked obvious and the ones already on show, so new ones differ. We keep when you last opened each of those chats, and a record of
+          each time questions were written: when, for which chats, and how many pairs and questions. The questions are kept as part of your
+          library and synced to your devices with what you did with each; they are deleted with either of their overviews, with their
+          project, or with your account. Each call's tokens and cost go into the daily cost tally, and the log says how many pairs and
+          questions there were, never the questions themselves.
         </p>
         <p>
           We count the questions each account asks each day, against its monthly allowance. Each question's tokens and their cost at
@@ -532,7 +544,7 @@ const sections: readonly LegalSection[] = [
             ["Brevo", "sends sign-in emails", "European Union"],
             [
               "OpenAI",
-              "writes overviews, topic suggestions and what we learn from your overviews when made on our key, answers the questions you ask about an overview, and turns your overviews' claims and your searches into embeddings for search",
+              "writes overviews, topic suggestions and what we learn from your overviews when made on our key, answers the questions you ask about an overview, suggests questions from pairs of your overviews on a paid plan, and turns your overviews' claims and your searches into embeddings for search",
               UNITED_STATES,
             ],
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
@@ -617,6 +629,10 @@ const sections: readonly LegalSection[] = [
           ],
           ["Your library and settings", "until you delete the overview or the account"],
           ["Your conversations", "until you delete the conversation, the overview or project it belongs to, or the account"],
+          [
+            "Suggested questions, when you last opened each chat they are for, and when they were written",
+            "until you delete either overview or the project a question rests on, or the account; the rest with the account",
+          ],
           ["What we learn from your overviews, and the items you removed", "with your settings, until you delete the account"],
           ["Embeddings of your overviews, for search", "until the overview changes or is deleted, or the account is"],
           [

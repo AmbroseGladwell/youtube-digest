@@ -227,3 +227,12 @@ rounds and the owner's review are in `docs/features/connections.md`.
 Questions are written only when shown, on our key, for paid plans only, and aren't counted
 against the chat allowance (OV-350). Finding candidate pairs is vector maths on the embeddings
 OV-229 already stores, so it costs nothing and doesn't grow with the size of a library.
+
+### Suggested questions (OV-350)
+
+The refresh that writes them records every call in the cost tally under its own area,
+`questions` (details `label` and `write`, `unit-economics.md`), so what they really cost each
+paid reader can be read beside the measured figure above, which comes from the harness runs in
+`connections.md` ("Cost"). The $0.40 a month is `QUESTIONS_MONTHLY_CAP_DOLLARS`, a limit the
+refresh checks against that tally before it starts (`suggested-questions.md`, "Policy"); it adds
+no spend figure of its own.
