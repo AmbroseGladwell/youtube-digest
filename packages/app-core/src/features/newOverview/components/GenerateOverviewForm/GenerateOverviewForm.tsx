@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
-import { DEFAULT_PLAN, domainOf, tiktokTitle } from "@overview/domain";
+import { DEFAULT_PLAN, domainOf, SOCIAL_PLATFORM_NAME, socialTitle, tiktokTitle } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { keyPromptDetail } from "../../../transcripts/transcriptSourceNote.js";
 import { KeyPromptNote } from "../../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
@@ -24,6 +24,8 @@ import { useStartArticleFromLink } from "../../useStartArticleFromLink.js";
 import { PastedLinkStatus } from "../PastedLinkStatus/PastedLinkStatus.js";
 import { isPlatformPodcastLink, usePodcastLink } from "../../usePodcastLink.js";
 import { isTikTokLink, useTikTokLink } from "../../useTikTokLink.js";
+import { isSocialLink, useSocialLink, type SocialLink } from "../../useSocialLink.js";
+import type { EpisodeAction } from "../../../podcasts/util/episodeActionOf.js";
 import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { pastedLinkState } from "../../util/pastedLinkState.js";
 import { resetDate } from "../../util/usageLine.js";
@@ -66,6 +68,14 @@ const urlPlaceholder = (articleAvailable: boolean, playlistsAvailable: boolean):
   return playlistsAvailable ? "Paste a YouTube video or playlist link" : "Paste a YouTube link";
 };
 
+// A post is read for its description; a video's words come with it, or are transcribed when chosen.
+const socialReadsWhat = (link: SocialLink, action: EpisodeAction | null): string => {
+  if (link.status === "found" && link.post.media !== "video") {
+    return "Reads the post’s description";
+  }
+  return action?.kind === "transcribe" || action?.kind === "free" ? "Transcribes the video’s sound" : "Reads the video’s captions";
+};
+
 export const GenerateOverviewForm = ({
   url,
   onUrlChange,
@@ -104,11 +114,19 @@ export const GenerateOverviewForm = ({
   const startArticle = useStartArticleFromLink();
   const podcast = usePodcastLink(url);
   const tiktok = useTikTokLink(url);
-  const { startPodcast, transcribeAgain, startTikTok, run } = useNewOverviewRunController();
-  const { podcastShown, tiktokShown, reading, generateOffered, episodeAction } = pastedLinkState(article.link, podcast, tiktok.link);
+  const social = useSocialLink(url);
+  const { startPodcast, transcribeAgain, startTikTok, startSocial, run } = useNewOverviewRunController();
+  const { podcastShown, tiktokShown, socialShown, reading, generateOffered, episodeAction } = pastedLinkState(
+    article.link,
+    podcast,
+    tiktok.link,
+    social.link,
+  );
   const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
-      recognised: isYouTubeUrl(url) || (article.available && (isArticleLink(url) || isPlatformPodcastLink(url) || isTikTokLink(url))),
+      recognised:
+        isYouTubeUrl(url) ||
+        (article.available && (isArticleLink(url) || isPlatformPodcastLink(url) || isTikTokLink(url) || isSocialLink(url))),
       from: "dialog",
     }),
   );
@@ -135,6 +153,15 @@ export const GenerateOverviewForm = ({
       if (tiktok.link.status === "found" && generateOffered && (tiktok.link.words !== null || transcribe !== undefined)) {
         setValidationError(null);
         startTikTok({ video: tiktok.link.video, words: tiktok.link.words, transcribe, from: "dialog" });
+      }
+      return;
+    }
+    if (socialShown) {
+      const transcribe = transcribeChoiceOf(episodeAction);
+      const link = social.link;
+      if (link.status === "found" && generateOffered && (link.words !== null || link.post.media !== "video" || transcribe !== undefined)) {
+        setValidationError(null);
+        startSocial({ post: link.post, words: link.words, transcribe, from: "dialog" });
       }
       return;
     }
@@ -181,6 +208,13 @@ export const GenerateOverviewForm = ({
         title: tiktokTitle(tiktok.link.video.description, tiktok.link.video.handle),
       };
     }
+    if (social.link.status === "found") {
+      const { post } = social.link;
+      return {
+        kicker: `${post.handle === null ? post.authorName : `@${post.handle}`} · ${SOCIAL_PLATFORM_NAME[post.platform]}`,
+        title: socialTitle(post),
+      };
+    }
     if (podcast.link.status === "found") {
       return { kicker: `${podcast.link.episode.showName} · Podcast`, title: podcast.link.episode.title };
     }
@@ -198,6 +232,9 @@ export const GenerateOverviewForm = ({
       return episodeAction?.kind === "transcribe" || episodeAction?.kind === "free"
         ? "Transcribes the TikTok’s sound"
         : "Reads the TikTok’s captions";
+    }
+    if (socialShown) {
+      return socialReadsWhat(social.link, episodeAction);
     }
     if (podcastShown) {
       return "Finds the episode’s transcript";
@@ -287,6 +324,7 @@ export const GenerateOverviewForm = ({
         article={article}
         podcast={podcast}
         tiktok={tiktok}
+        social={social}
         url={url.trim()}
         onClear={() => onUrlChange("")}
         onOpened={onCancel}
@@ -345,7 +383,7 @@ export const GenerateOverviewForm = ({
           testId={generateOverviewFormTestIds.generationError}
           testIds={generateOverviewFormTestIds.runError}
           onFollowed={onCancel}
-          episodeSeconds={run?.podcast?.durationSeconds ?? run?.tiktok?.durationSeconds ?? null}
+          episodeSeconds={run?.podcast?.durationSeconds ?? run?.tiktok?.durationSeconds ?? run?.social?.post.durationSeconds ?? null}
           onTranscribe={transcribeAgain}
           onNotNow={onCancel}
         />

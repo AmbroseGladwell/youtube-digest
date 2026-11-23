@@ -47,6 +47,7 @@ import { useEpisodeTab, type EpisodeTabState } from "../useEpisodeTab.js";
 import { useTikTokTab } from "../useTikTokTab.js";
 import { TikTokOffer } from "../components/TikTokOffer/TikTokOffer.js";
 import { isTikTokLink } from "../../newOverview/useTikTokLink.js";
+import { isSocialLink } from "../../newOverview/useSocialLink.js";
 import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
@@ -97,9 +98,13 @@ export const CapturePage = () => {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
   const pages = useArticlePages();
-  // Never an article: a Spotify or Apple tab is an episode or a show (106k), and our server doesn't read TikTok (130i).
+  // Never an article: Spotify or Apple is an episode (106k); TikTok, Instagram and Facebook pages are never read (130i, OV-365).
   const offeredPage =
-    activeVideoUrl === null && isOfferedPage(activePage) && !isPlatformPodcastLink(activePage.url) && !isTikTokLink(activePage.url)
+    activeVideoUrl === null &&
+    isOfferedPage(activePage) &&
+    !isPlatformPodcastLink(activePage.url) &&
+    !isTikTokLink(activePage.url) &&
+    !isSocialLink(activePage.url)
       ? activePage
       : null;
   const episodeTab = useEpisodeTab();
@@ -505,7 +510,7 @@ const RunInProgress = ({ run, onDismiss, onCaptureReasonChange, onCaptureReasonC
           className={styles.error}
           testId={capturePageTestIds.error}
           testIds={capturePageTestIds.runError}
-          episodeSeconds={run.podcast?.durationSeconds ?? run.tiktok?.durationSeconds ?? null}
+          episodeSeconds={run.podcast?.durationSeconds ?? run.tiktok?.durationSeconds ?? run.social?.post.durationSeconds ?? null}
           onTranscribe={onTranscribe}
           onNotNow={onDismiss}
         />

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { DUBIOUS_BASIS_LABEL, formatTimestamp, youtubeTimestampUrl } from "@overview/domain";
+import { DUBIOUS_BASIS_LABEL, formatTimestamp, youtubeMomentUrl, youtubeTimestampUrl } from "@overview/domain";
 import type { DubiousClaim, VideoSource } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -101,7 +101,12 @@ export const DubiousReasonsPanel = ({ dubiousClaims, video, onClose }: DubiousRe
                 <p className={styles.reason}>{dubiousClaim.reason}</p>
                 {dubiousClaim.startMs !== null && (
                   <div>
-                    {seek === null ? (
+                    {seek === null && youtubeMomentUrl(video.url, dubiousClaim.startMs) === null && (
+                      <span className={styles.moment} data-testid={dubiousReasonsPanelTestIds.watchLink}>
+                        {formatTimestamp(dubiousClaim.startMs)}
+                      </span>
+                    )}
+                    {seek === null && youtubeMomentUrl(video.url, dubiousClaim.startMs) !== null && (
                       <a
                         className={styles.moment}
                         href={youtubeTimestampUrl(video.url, dubiousClaim.startMs)}
@@ -114,7 +119,8 @@ export const DubiousReasonsPanel = ({ dubiousClaims, video, onClose }: DubiousRe
                         <StrokeIcon name="openOut" size={14} />
                         Watch from {formatTimestamp(dubiousClaim.startMs)}
                       </a>
-                    ) : (
+                    )}
+                    {seek !== null && (
                       <button
                         type="button"
                         className={styles.moment}

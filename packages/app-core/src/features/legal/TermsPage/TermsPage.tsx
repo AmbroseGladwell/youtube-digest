@@ -181,10 +181,10 @@ const sections: readonly LegalSection[] = [
     body: (
       <>
         <p>
-          {service} is not affiliated with YouTube or Google, TikTok, Apple, Spotify, any podcast or its host, or any provider you bring a
-          key for. Watching a video, following a playlist, reading a page, listening to an episode and playing a TikTok happen under those
-          sites' own terms. If a site withdraws something, or stops the service reading it, the service may stop working for that content,
-          and that is not a failure on our part.
+          {service} is not affiliated with YouTube or Google, TikTok, Instagram, Facebook or Meta, Apple, Spotify, any podcast or its host,
+          or any provider you bring a key for. Watching a video, following a playlist, reading a page, listening to an episode, playing a
+          TikTok and opening an Instagram or Facebook post happen under those sites' own terms. If a site withdraws something, or stops the
+          service reading it, the service may stop working for that content, and that is not a failure on our part.
         </p>
         <p>
           Following a playlist and finding a podcast episode on its show's YouTube channel use YouTube API Services. By using them you agree
@@ -193,7 +193,7 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           Apple Podcasts and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other countries and regions. Spotify is
-          a trademark of Spotify AB. TikTok is a trademark of ByteDance Ltd.
+          a trademark of Spotify AB. TikTok is a trademark of ByteDance Ltd. Instagram and Facebook are trademarks of Meta Platforms, Inc.
         </p>
       </>
     ),

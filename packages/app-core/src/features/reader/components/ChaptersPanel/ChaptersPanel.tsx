@@ -1,4 +1,4 @@
-import { chapterStepsLabel, youtubeTimestampUrl, formatTimestamp } from "@overview/domain";
+import { chapterStepsLabel, youtubeMomentUrl, youtubeTimestampUrl, formatTimestamp } from "@overview/domain";
 import type { Chapter, RecipeStep, StoredTranscript, VideoSource } from "@overview/domain";
 import type { FetchStatus } from "@tanstack/react-query";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
@@ -187,7 +187,8 @@ const ChapterRange = ({ chapter, video, seek, linksOut }: ChapterRangeProps) => 
       </button>
     );
   }
-  if (linksOut) {
+  // Only YouTube takes a time in its address; elsewhere with no player the time is plain text.
+  if (linksOut && youtubeMomentUrl(video.url, chapter.startMs) !== null) {
     return (
       <a
         className={styles.rangeControl}

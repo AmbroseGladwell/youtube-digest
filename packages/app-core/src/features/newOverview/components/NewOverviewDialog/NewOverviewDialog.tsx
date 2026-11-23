@@ -1,6 +1,6 @@
 import { episodeFacts } from "../PodcastLinkStatus/PodcastLinkStatus.js";
 import { TikTokCover } from "../../../reader/components/TikTokPlayer/TikTokPlayer.js";
-import { formatClock, tiktokTitle } from "@overview/domain";
+import { formatClock, SOCIAL_PLATFORM_NAME, socialTitle, tiktokTitle } from "@overview/domain";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Overview } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
@@ -290,6 +290,25 @@ const RunSource = ({ run, headingId }: RunSourceProps) => {
             {tiktokTitle(run.tiktok.caption, run.tiktok.handle)}
           </h2>
           <p className={styles.sourceMeta}>{[`@${run.tiktok.handle}`, "TikTok", length].filter(Boolean).join(" · ")}</p>
+        </div>
+      </>
+    );
+  }
+  // As a TikTok's: the portrait cover, never a landscape crop; a photo post shows its picture.
+  if (run.social !== null) {
+    const { post } = run.social;
+    const length = post.durationSeconds === null ? null : formatClock(post.durationSeconds);
+    const by = post.handle === null ? post.authorName : `@${post.handle}`;
+    return (
+      <>
+        <span className={styles.tiktokCover}>
+          <TikTokCover className={styles.tiktokCoverImage} url={post.coverUrl} />
+        </span>
+        <div className={styles.sourceText}>
+          <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
+            {socialTitle(post)}
+          </h2>
+          <p className={styles.sourceMeta}>{[by, SOCIAL_PLATFORM_NAME[post.platform], length].filter(Boolean).join(" · ")}</p>
         </div>
       </>
     );

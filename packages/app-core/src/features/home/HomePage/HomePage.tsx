@@ -145,7 +145,7 @@ const SignedInHome = ({ place }: { place: LibraryPlace }) => {
 
 // Same run as + New, so one pipeline: docs/features/stone-theme.md, "What was built".
 const FirstRunHero = () => {
-  const { readiness, ready, limit, url, setUrl, validationError, generate, article, podcast, tiktok, pasted } = useStartFromLink();
+  const { readiness, ready, limit, url, setUrl, validationError, generate, article, podcast, tiktok, social, pasted } = useStartFromLink();
   const analytics = useAnalytics();
   const urlFieldId = useId();
   const linkName = article.available ? "YouTube, podcast or article link" : "YouTube link";
@@ -215,7 +215,7 @@ const FirstRunHero = () => {
         )}
       </form>
 
-      <PastedLinkStatus article={article} podcast={podcast} tiktok={tiktok} url={url.trim()} onClear={() => setUrl("")} />
+      <PastedLinkStatus article={article} podcast={podcast} tiktok={tiktok} social={social} url={url.trim()} onClear={() => setUrl("")} />
 
       {validationError && (
         <p className={styles.heroError} data-testid={homePageTestIds.validationError}>

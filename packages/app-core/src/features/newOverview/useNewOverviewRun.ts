@@ -8,6 +8,7 @@ import {
   type ClientTimingReport,
   type Overview,
   podcastPlatform,
+  wordCount,
 } from "@overview/domain";
 import { headedParts, offeredLinks } from "@overview/generation";
 import { useStores } from "../../stores/StoresContext.js";
@@ -29,7 +30,7 @@ import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
 import type { EpisodeTranscription } from "../podcasts/types/EpisodeTranscription.js";
 import type { ArticleRun, NewOverviewRun } from "./types/NewOverviewRun.js";
-import type { PodcastRunRequest, TikTokRunRequest } from "./api/generationPipeline.js";
+import type { PodcastRunRequest, SocialRunRequest, TikTokRunRequest } from "./api/generationPipeline.js";
 
 export interface StartOverviewRunOptions {
   from: CaptureEntry;
@@ -64,12 +65,16 @@ export interface NewOverviewRunController {
   // Asked after Create, or tried again: the last episode or TikTok, transcribed this time.
   transcribeAgain: () => void;
   startTikTok: (request: TikTokRunRequest & StartOverviewRunOptions) => void;
+  startSocial: (request: SocialRunRequest & StartOverviewRunOptions) => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
 }
 
-type LastTranscribable = { podcast: PodcastRunRequest & StartOverviewRunOptions } | { tiktok: TikTokRunRequest & StartOverviewRunOptions };
+type LastTranscribable =
+  | { podcast: PodcastRunRequest & StartOverviewRunOptions }
+  | { tiktok: TikTokRunRequest & StartOverviewRunOptions }
+  | { social: SocialRunRequest & StartOverviewRunOptions };
 
 const noteKindOf = (overview: Overview): "recipe" | "process" | "default" => {
   if (overview.recipe != null) {
@@ -133,6 +138,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       articleRequest: ArticleRunRequest | null = null,
       podcastRequest: PodcastRunRequest | null = null,
       tiktokRequest: TikTokRunRequest | null = null,
+      socialRequest: SocialRunRequest | null = null,
     ) => {
       const isCurrent = () => runIdRef.current === runId;
       const { from } = options;
@@ -200,13 +206,28 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
                 words: null,
                 transcription: tiktokRequest.words === null ? { state: "starting" } : null,
               },
+        social:
+          socialRequest === null
+            ? null
+            : {
+                post: socialRequest.post,
+                words: null,
+                transcription: socialRequest.post.media === "video" && socialRequest.words === null ? { state: "starting" } : null,
+              },
         transcriptWords: null,
         overview: null,
         error: null,
         captureReason: draftRef.current,
       });
 
+      if (socialRequest !== null && socialRequest.post.media !== "video") {
+        transcriptSource = "article";
+        sourceWords = wordCount(socialRequest.post.description);
+      }
       const whatToRead = () => {
+        if (socialRequest !== null) {
+          return { social: socialRequest };
+        }
         if (tiktokRequest !== null) {
           return { tiktok: tiktokRequest };
         }
@@ -255,6 +276,9 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
               setRun((current) => {
                 if (current?.podcast != null) {
                   return { ...current, podcast: { ...current.podcast, transcription } };
+                }
+                if (current?.social != null) {
+                  return { ...current, social: { ...current.social, transcription } };
                 }
                 return current?.tiktok == null ? current : { ...current, tiktok: { ...current.tiktok, transcription } };
               });
@@ -441,6 +465,20 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     [generate],
   );
 
+  const startSocial = useCallback(
+    (request: SocialRunRequest & StartOverviewRunOptions) => {
+      lastTranscribable.current = request.post.media === "video" && request.words === null ? { social: request } : null;
+      const runId = (runIdRef.current += 1);
+      setHeld(null);
+      generate(request.post.url, request, runId, null, null, null, {
+        post: request.post,
+        words: request.words,
+        transcribe: request.transcribe,
+      });
+    },
+    [generate],
+  );
+
   const transcribeAgain = useCallback(() => {
     const last = lastTranscribable.current;
     if (last === null) {
@@ -450,9 +488,13 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       startTikTok({ ...last.tiktok, transcribe: "retried" });
       return;
     }
+    if ("social" in last) {
+      startSocial({ ...last.social, transcribe: "retried" });
+      return;
+    }
     const asked = latestRun.current?.error?.kind === "podcastNeedsTranscribing";
     startPodcast({ ...last.podcast, transcribe: asked ? "asked" : "retried" });
-  }, [startPodcast, startTikTok]);
+  }, [startPodcast, startTikTok, startSocial]);
 
   const setCaptureReason = useCallback((captureReason: string) => {
     draftRef.current = captureReason;
@@ -502,6 +544,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     startPodcast,
     transcribeAgain,
     startTikTok,
+    startSocial,
     dismiss,
     setCaptureReason,
     commitCaptureReason,

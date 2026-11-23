@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { pastedLinkState } from "./pastedLinkState.js";
-import type { PodcastEpisode, TikTokVideo, TranscriptionOffer } from "@overview/domain";
+import type { PodcastEpisode, SocialPost, TikTokVideo, TranscriptionOffer } from "@overview/domain";
+import type { SocialLink, SocialStop } from "../useSocialLink.js";
 import type { TikTokLink } from "../useTikTokLink.js";
 
 const episode = { title: "An episode" } as PodcastEpisode;
@@ -19,6 +20,7 @@ describe("pastedLinkState", () => {
     expect(pastedLinkState({ status: "none" }, { link: { status: "reading" }, platformLink: true })).toEqual({
       podcastShown: true,
       tiktokShown: false,
+      socialShown: false,
       reading: true,
       generateOffered: true,
       episodeAction: null,
@@ -78,5 +80,34 @@ describe("pastedLinkState", () => {
     expect(transcribes).toMatchObject({ tiktokShown: true, generateOffered: true, episodeAction: { kind: "transcribe" } });
     expect(outOfHours).toMatchObject({ generateOffered: false, episodeAction: { kind: "stop" } });
     expect(noCaptions).toMatchObject({ generateOffered: false, episodeAction: null });
+  });
+
+  it("offers to transcribe an Instagram video with no words, never a photo post, and stops a post with too little written", () => {
+    const usage = { usedSeconds: 0, limitSeconds: 18_000, episodes: 0 };
+    const reel = { platform: "instagram", media: "video", durationSeconds: 40 } as SocialPost;
+    const found = (post: SocialPost, transcription: TranscriptionOffer | null, stop: SocialStop | null = null): SocialLink => ({
+      status: "found",
+      post,
+      words: null,
+      transcription,
+      stop,
+    });
+    const transcribes = pastedLinkState(
+      { status: "none" },
+      noPodcast,
+      undefined,
+      found(reel, { status: "needed", episodeSeconds: 40, usage }),
+    );
+    const photo = pastedLinkState({ status: "none" }, noPodcast, undefined, found({ ...reel, media: "photo" }, null));
+    const tooShort = pastedLinkState({ status: "none" }, noPodcast, undefined, found({ ...reel, media: "text" }, null, "too-few-words"));
+
+    expect(transcribes).toMatchObject({
+      socialShown: true,
+      tiktokShown: false,
+      generateOffered: true,
+      episodeAction: { kind: "transcribe" },
+    });
+    expect(photo).toMatchObject({ socialShown: true, generateOffered: true, episodeAction: null });
+    expect(tooShort).toMatchObject({ generateOffered: false, episodeAction: null });
   });
 });

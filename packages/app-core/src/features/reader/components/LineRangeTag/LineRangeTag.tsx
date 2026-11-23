@@ -5,6 +5,7 @@ import {
   SOURCE_STEPS_SECTION,
   WATCH_ANYWAY_SECTION,
   formatTimestamp,
+  youtubeMomentUrl,
   youtubeTimestampUrl,
   type NoteLine,
   type TimeRange,
@@ -188,7 +189,7 @@ export const LineRangeTag = ({
 
   const actions = (
     <>
-      {seek === null ? (
+      {seek === null && youtubeMomentUrl(video.url, range.startMs) !== null && (
         <a
           className={firstItemClass}
           role={itemRole}
@@ -203,7 +204,8 @@ export const LineRangeTag = ({
           <StrokeIcon name="openOut" size={iconSize} />
           <span className={styles.itemLabel}>Watch from {start}</span>
         </a>
-      ) : (
+      )}
+      {seek !== null && (
         <button
           type="button"
           className={firstItemClass}

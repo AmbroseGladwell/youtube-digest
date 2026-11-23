@@ -8,6 +8,7 @@ export const makeNewOverviewRun = (overrides: Partial<NewOverviewRun> = {}): New
   article: null,
   podcast: null,
   tiktok: null,
+  social: null,
   transcriptWords: null,
   overview: null,
   error: null,
