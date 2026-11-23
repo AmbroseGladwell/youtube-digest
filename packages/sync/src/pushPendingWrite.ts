@@ -77,6 +77,8 @@ const send = async (
       const filed = (addedBy as { by?: unknown } | undefined)?.by === "filing";
       return written(await api.changeProjectMember(projectId, overviewId, filed ? { ...sent, addedBy } : sent, entry.updatedAt));
     }
+    case "suggestedQuestion":
+      return written(await api.changeSuggestedQuestion(entry.id, change.change, entry.updatedAt));
     case "delete": {
       await deleteFor(api, entry);
       return { result: "gone" };

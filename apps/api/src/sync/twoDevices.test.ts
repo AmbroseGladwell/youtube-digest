@@ -14,6 +14,7 @@ import {
 import { makeOverview, makeProject, makeStoredTranscript } from "@overview/store-conformance";
 import { appendChatMessages } from "../chats/appendChatMessages.js";
 import { migrationSteps } from "../db/migrationSteps.js";
+import { writeSuggestedQuestions } from "../questions/writeSuggestedQuestions.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
@@ -665,5 +666,58 @@ test("a project's chat and a library chat reach both devices; deleted on one, a 
   assert.equal((await account.change("chat", projectChat)).deleted, true);
   assert.equal((await account.change("chat", libraryKept)).deleted, false);
   assert.equal((await phone.sync()).pending, 0);
+  await testApp.close();
+});
+
+test("questions the server writes reach both devices; dismissed or found obvious on one, they leave the other's list, and go with their overview", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  const distinct = () => makeOverview({ source: distinctVideo() });
+  const [first, second, third] = [distinct(), distinct(), distinct()];
+  for (const overview of [first, second, third]) {
+    await laptop.overviews.saveOverview(overview);
+  }
+  await laptop.sync();
+  const records = new RecordsRepository(testApp.sql, () => testApp.clock.now);
+  const library = { kind: "library" as const };
+  const text = "Does the routine in one survive the warning in the other?";
+  const written = await writeSuggestedQuestions(
+    records,
+    account.accountId,
+    [
+      { scope: library, overviewIds: [first.id, second.id], text },
+      { scope: library, overviewIds: [second.id, third.id], text },
+      { scope: library, overviewIds: [first.id, third.id], text },
+    ],
+    testApp.clock.now,
+  );
+  const [dismissed, obvious, kept] = written.map((outcome) => outcome!.id);
+
+  await laptop.sync();
+  await phone.sync();
+  assert.equal((await phone.questions.listSuggestedQuestions(library)).length, 3);
+  assert.equal((await laptop.questions.listSuggestedQuestions(library)).length, 3);
+
+  const at = testApp.clock.now.toISOString();
+  await laptop.questions.changeSuggestedQuestion(dismissed!, { shownAt: at, dismissedAt: at });
+  await laptop.questions.changeSuggestedQuestion(obvious!, { askedAt: at, feedback: { verdict: "obvious", at } });
+  await laptop.sync();
+  await phone.sync();
+
+  assert.deepEqual(
+    (await phone.questions.listSuggestedQuestions(library)).map(({ id }) => id),
+    [kept],
+  );
+  assert.deepEqual((await phone.questions.getSuggestedQuestion(obvious!))?.feedback, { verdict: "obvious", at });
+  assert.equal((await account.change("suggestedQuestion", dismissed!)).body!.dismissedAt, at);
+
+  await phone.overviews.deleteOverview(third.id);
+  await phone.sync();
+  await laptop.sync();
+  assert.deepEqual(await laptop.questions.listSuggestedQuestions(library), []);
+  assert.equal((await account.change("suggestedQuestion", kept!)).deleted, true);
+  assert.equal((await laptop.sync()).pending, 0);
   await testApp.close();
 });

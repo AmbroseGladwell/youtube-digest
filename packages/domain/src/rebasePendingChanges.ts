@@ -1,5 +1,6 @@
 import { mergeSettingsRecord } from "./mergeSettingsRecord.js";
 import { mergeProjectMember } from "./ProjectMember.js";
+import { mergeSuggestedQuestion } from "./SuggestedQuestion.js";
 import type { OutboxEntry } from "./OutboxEntry.js";
 import { stampUpdatedAt } from "./storedUpdatedAt.js";
 
@@ -35,6 +36,8 @@ const apply = (record: Record<string, unknown>, entry: OutboxEntry): Record<stri
       return { ...record, ...change.patch };
     case "member":
       return mergeProjectMember(record, change.change);
+    case "suggestedQuestion":
+      return mergeSuggestedQuestion(record, change.change);
     case "delete":
       return null;
     case "transcript":

@@ -20,6 +20,7 @@ import {
   type ProjectStore,
 } from "@overview/domain";
 import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
+import { forgetSuggestedQuestions } from "./forgetSuggestedQuestions.js";
 import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
 import {
   CHATS_BY_PROJECT_INDEX,
@@ -27,6 +28,8 @@ import {
   MEMBERS_BY_PROJECT_INDEX,
   PROJECTS_STORE,
   PROJECT_MEMBERS_STORE,
+  QUESTIONS_BY_PROJECT_INDEX,
+  SUGGESTED_QUESTIONS_STORE,
 } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
@@ -106,7 +109,10 @@ export class IndexedDbProjectStore implements ProjectStore {
 
   // Not journaled one by one: the server's delete takes them with it.
   async deleteProject(id: ProjectId): Promise<void> {
-    const transaction = this.#db.transaction([PROJECTS_STORE, PROJECT_MEMBERS_STORE, CHATS_STORE, ...JOURNALLED_STORES], "readwrite");
+    const transaction = this.#db.transaction(
+      [PROJECTS_STORE, PROJECT_MEMBERS_STORE, CHATS_STORE, SUGGESTED_QUESTIONS_STORE, ...JOURNALLED_STORES],
+      "readwrite",
+    );
     const projects = transaction.objectStore(PROJECTS_STORE);
     const existing = await promisifyRequest<unknown>(projects.get(id));
     projects.delete(id);
@@ -118,6 +124,7 @@ export class IndexedDbProjectStore implements ProjectStore {
     for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_PROJECT_INDEX).getAllKeys(id))) {
       chats.delete(key);
     }
+    await forgetSuggestedQuestions(transaction, QUESTIONS_BY_PROJECT_INDEX, id);
     const journaled =
       existing !== undefined &&
       (await appendPendingWrite(transaction, { kind: "project", id, updatedAt: new Date().toISOString(), change: { op: "delete" } }));

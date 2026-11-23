@@ -16,6 +16,7 @@ import {
   projectMemberId,
   BY_READER,
   SETTINGS_MIGRATIONS,
+  SUGGESTED_QUESTION_MIGRATIONS,
   QueuedCapture,
   StoredTranscript,
   SYNCED_RECORD_KINDS,
@@ -53,6 +54,9 @@ import {
   OUTBOX_STORE,
   PROJECTS_STORE,
   PROJECT_MEMBERS_STORE,
+  QUESTIONS_BY_OVERVIEW_INDEX,
+  QUESTIONS_BY_PROJECT_INDEX,
+  SUGGESTED_QUESTIONS_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   PLAYLIST_CHECKS_STORE,
@@ -68,6 +72,7 @@ import {
   TRANSCRIPTS_STORE,
 } from "./localDatabaseSchema.js";
 import { appendPendingWrite } from "./appendPendingWrite.js";
+import { forgetSuggestedQuestions } from "./forgetSuggestedQuestions.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
 
@@ -80,6 +85,7 @@ const RECORD_STORES: Record<SyncedRecordKind, string> = {
   project: PROJECTS_STORE,
   projectMember: PROJECT_MEMBERS_STORE,
   chat: CHATS_STORE,
+  suggestedQuestion: SUGGESTED_QUESTIONS_STORE,
 };
 
 const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
@@ -91,6 +97,7 @@ const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
   project: "id",
   projectMember: "id",
   chat: "id",
+  suggestedQuestion: "id",
 };
 
 const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
@@ -102,6 +109,7 @@ const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
   project: PROJECT_MIGRATIONS,
   projectMember: PROJECT_MEMBER_MIGRATIONS,
   chat: CHAT_MIGRATIONS,
+  suggestedQuestion: SUGGESTED_QUESTION_MIGRATIONS,
 };
 
 // What every library that pulled before the cursor's kinds were kept was pulled with.
@@ -408,12 +416,14 @@ export class IndexedDbSyncStorage implements SyncStorage {
         }
         if (change.kind === "overview") {
           await forgetChats(transaction, CHATS_BY_OVERVIEW_INDEX, change.id);
+          await forgetSuggestedQuestions(transaction, QUESTIONS_BY_OVERVIEW_INDEX, change.id);
         }
         if (change.kind === "project") {
           await forgetMembers(transaction, MEMBERS_BY_PROJECT_INDEX, change.id);
         }
         if (change.kind === "project") {
           await forgetChats(transaction, CHATS_BY_PROJECT_INDEX, change.id);
+          await forgetSuggestedQuestions(transaction, QUESTIONS_BY_PROJECT_INDEX, change.id);
         }
         revisions.delete([change.kind, change.id]);
         continue;

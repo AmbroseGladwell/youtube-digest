@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { logRecordWritten } from "../records/logRecordWritten.js";
+import { tombstoneSuggestedQuestions } from "../records/tombstoneSuggestedQuestions.js";
 import { OVERVIEWS_PER_MARK } from "./markOverviews.js";
 import { mcpTool, toolError } from "./McpTool.js";
 import { projectMemberWrite } from "./projectMemberWrite.js";
@@ -61,6 +62,9 @@ export const changeProjectMembers = mcpTool({
         if (outcome !== null) {
           logRecordWritten(log, outcome);
         }
+      }
+      for (const overviewId of removing) {
+        await tombstoneSuggestedQuestions(records, accountId, { projectId: project.id, overviewId });
       }
     } catch (error) {
       const refusal = projectWriteRefusal(error);

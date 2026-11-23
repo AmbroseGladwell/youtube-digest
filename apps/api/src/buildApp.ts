@@ -79,6 +79,7 @@ import { shareRoutes } from "./routes/shareRoutes.js";
 import { sampleRoutes } from "./routes/sampleRoutes.js";
 import { topicRoutes } from "./routes/topicRoutes.js";
 import { projectRoutes } from "./routes/projectRoutes.js";
+import { suggestedQuestionRoutes } from "./routes/suggestedQuestionRoutes.js";
 import { chatRoutes } from "./routes/chatRoutes.js";
 import { transcriptRoutes } from "./routes/transcriptRoutes.js";
 import { sharePagePlugin } from "./shares/sharePagePlugin.js";
@@ -305,6 +306,7 @@ export const buildApp = async ({
       transcriptSearchRoutes(api, { passages: new TranscriptPassagesRepository(sql), records, transcripts });
       followedPlaylistRoutes(api, records);
       projectRoutes(api, records);
+      suggestedQuestionRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);

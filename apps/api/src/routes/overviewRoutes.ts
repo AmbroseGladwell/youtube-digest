@@ -22,6 +22,7 @@ import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository
 import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
 import { tombstoneChats } from "../records/tombstoneChats.js";
 import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
+import { tombstoneSuggestedQuestions } from "../records/tombstoneSuggestedQuestions.js";
 import { ApiError } from "../http/ApiError.js";
 
 const Params = z.object({ id: OverviewId });
@@ -147,6 +148,7 @@ export const overviewRoutes = (
     // On every delete, the retry of one already done included, so a failure here heals.
     await tombstoneProjectMembers(records, accountId, { overviewId: id });
     await tombstoneChats(records, accountId, { kind: "overview", id });
+    await tombstoneSuggestedQuestions(records, accountId, { overviewId: id });
     const forgotten = await transcripts.forgetUnnoted(accountId);
     if (forgotten > 0) {
       request.log.info(apiLogLines.transcripts.forgotten({ count: forgotten }));

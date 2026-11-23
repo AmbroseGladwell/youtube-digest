@@ -201,6 +201,10 @@ Five folders, five different questions.
 - `chats.md` — chat about one overview, as records (OV-308): one synced `chat` record per
   conversation, written by the server, with citations worked out by code; a reader deletes a
   conversation; an overview's chats go with it and survive its regeneration.
+- `suggested-questions.md` — questions on the Ask page that rest on two overviews whose
+  ideas connect (OV-350): one synced `suggestedQuestion` record each, written by the server;
+  what became of it (shown, asked, dismissed, glad or obvious) through a merge that
+  commutes; swept with either overview, its project, or an overview leaving the project.
 - `capture-queue.md` — the videos waiting on this device to become overviews: made one at a
   time, oldest first, while the app is open; the library's queue group, the queue page and
   the strip's seven states; what needs attention and why; waiting without a key; and
