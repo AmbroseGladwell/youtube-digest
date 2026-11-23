@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { domainOf, podcastPlatform, recipeMinutes, type PodcastEpisode } from "@overview/domain";
+import { domainOf, podcastPlatform, recipeMinutes, type PodcastEpisode, type TranscribedSource } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
@@ -94,9 +94,10 @@ export interface EpisodeWordsNoteProps {
   words: EpisodeWords;
   episodeSeconds: number | null;
   onFollowed?: (() => void) | undefined;
+  source?: TranscribedSource;
 }
 
-export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed }: EpisodeWordsNoteProps) => {
+export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed, source = "podcast" }: EpisodeWordsNoteProps) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const action = episodeActionOf(words);
   switch (action.kind) {
@@ -109,7 +110,7 @@ export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed }: EpisodeW
     case "free":
       return (
         <p className={styles.line} data-testid={podcastLinkStatusTestIds.free}>
-          {transcriptionCopy.free(action.offer.why)}
+          {transcriptionCopy.free(action.offer.why, source)}
         </p>
       );
     case "stop": {

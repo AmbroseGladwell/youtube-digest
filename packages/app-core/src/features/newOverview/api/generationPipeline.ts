@@ -45,7 +45,7 @@ import { ArticleReadError } from "./ArticleReadError.js";
 import { CaptureStopwatch } from "./CaptureStopwatch.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
 import type { OverviewMeta } from "./makeOverviewOnKeys.js";
-import type { TranscriptionProgress } from "../../podcasts/api/transcribeEpisode.js";
+import type { TranscriptionProgress } from "../../podcasts/api/transcribeAudio.js";
 
 // Receipts rather than "thinking": docs/features/overview-redesign.md, "The receipts".
 export interface GenerationProgress {
@@ -195,12 +195,14 @@ export const runPodcastOverviewGeneration = async (
 
 export interface TikTokRunRequest {
   video: TikTokVideo;
-  words: TikTokWords;
+  // None when it has no captions: then it is transcribed, only if the reader chose to.
+  words: TikTokWords | null;
+  transcribe?: TranscribeChoice | undefined;
 }
 
 export interface TikTokWords {
   transcript: StoredTranscript;
-  source: Extract<CaptureTranscriptSource, "tiktok-tab" | "tiktok-vendor">;
+  source: Extract<CaptureTranscriptSource, "tiktok-tab" | "tiktok-vendor" | "tiktok-transcribed">;
 }
 
 // The words come with the read, so a clip that can't be read costs nothing to write (docs/features/tiktok-links.md).

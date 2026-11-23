@@ -112,22 +112,46 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
 
   // Designs 130d, 130d-2: the words came with the read, so finding them is quick but still said.
   if (run.tiktok !== null) {
-    const { durationSeconds } = run.tiktok;
+    const { durationSeconds, transcription } = run.tiktok;
+    const found: GenerationStep = {
+      number: "01",
+      label: "Found the video",
+      detail: durationSeconds === null ? "TikTok" : `TikTok · ${formatClock(durationSeconds)}`,
+      state: "done",
+    };
+    const words = transcriptDone ? `${run.transcriptWords!.toLocaleString("en-GB")} words` : null;
+    // With no captions, transcribing is its own step, as an episode's is.
+    const finding: GenerationStep[] =
+      transcription === null
+        ? [
+            {
+              number: "02",
+              label: transcriptDone ? "Captions found" : "Looking for captions",
+              detail: words ?? "TikTok’s own captions",
+              state: transcriptDone ? "done" : "running",
+            },
+          ]
+        : [
+            { number: "02", label: "Looked for captions", detail: "None, so we’re making a transcript", state: "done" },
+            {
+              number: "03",
+              label: transcriptDone ? "Transcribing the TikTok" : "Transcribing the TikTok…",
+              detail:
+                words === null
+                  ? transcriptionCopy.progress(
+                      transcription.state,
+                      durationSeconds,
+                      transcription.state === "transcribing" ? now - transcription.since : 0,
+                    )
+                  : `Transcribed · ${words}`,
+              state: transcriptDone ? "done" : "running",
+            },
+          ];
     return [
+      found,
+      ...finding,
       {
-        number: "01",
-        label: "Found the video",
-        detail: durationSeconds === null ? "TikTok" : `TikTok · ${formatClock(durationSeconds)}`,
-        state: "done",
-      },
-      {
-        number: "02",
-        label: transcriptDone ? "Captions found" : "Looking for captions",
-        detail: transcriptDone ? `${run.transcriptWords!.toLocaleString("en-GB")} words` : "TikTok’s own captions",
-        state: transcriptDone ? "done" : "running",
-      },
-      {
-        number: "03",
+        number: transcription === null ? "03" : "04",
         label: WRITING,
         detail: writingDetail(run, transcriptDone),
         state: writingState(overviewDone, transcriptDone),

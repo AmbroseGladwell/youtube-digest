@@ -1,8 +1,10 @@
-import type { TikTokRead, TikTokVideo } from "@overview/domain";
+import type { TikTokRead, TikTokVideo, TranscriptionOffer } from "@overview/domain";
 import type { TikTokPages } from "../../../app/TikTokPagesContext.js";
 import type { TikTokWords } from "../../newOverview/api/generationPipeline.js";
 
-export type TikTokLinkRead = { status: "read"; video: TikTokVideo; words: TikTokWords | null } | Extract<TikTokRead, { status: "failed" }>;
+export type TikTokLinkRead =
+  | { status: "read"; video: TikTokVideo; words: TikTokWords | null; transcription: TranscriptionOffer | null }
+  | Extract<TikTokRead, { status: "failed" }>;
 
 export interface TikTokReaders {
   own: TikTokPages | null;
@@ -17,7 +19,7 @@ export const readTikTokLink = async (link: string, { own, server }: TikTokReader
   if (own !== null && (await own.hasAccess())) {
     const read = await own.read(link).catch(() => null);
     if (read?.status === "read" && read.transcript !== null) {
-      return { status: "read", video: read.video, words: { transcript: read.transcript, source: "tiktok-tab" } };
+      return { status: "read", video: read.video, words: { transcript: read.transcript, source: "tiktok-tab" }, transcription: null };
     }
     if (read?.status === "failed" && settledByOwnRead(read.reason)) {
       return { status: "failed", reason: "not-a-video" };
@@ -31,5 +33,6 @@ export const readTikTokLink = async (link: string, { own, server }: TikTokReader
     status: "read",
     video: read.video,
     words: read.transcript === null ? null : { transcript: read.transcript, source: "tiktok-vendor" },
+    transcription: read.transcription ?? null,
   };
 };

@@ -1,10 +1,23 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { DEFAULT_PROVIDER, modelFor, PROVIDER_SHORT_LABEL, type ArticleRead, type Overview, type TikTokVideo } from "@overview/domain";
+import {
+  DEFAULT_PROVIDER,
+  modelFor,
+  PROVIDER_SHORT_LABEL,
+  type ArticleRead,
+  type CaptureEntry,
+  type Overview,
+  type StoredTranscript,
+  type TranscribeChoice,
+  type TranscribedSource,
+} from "@overview/domain";
 import type { OverviewInput } from "@overview/generation";
-import { createFetchGenerationApi, createFetchPodcastApi } from "@overview/sync";
+import { createFetchGenerationApi, createFetchPodcastApi, createFetchTikTokApi } from "@overview/sync";
 import { podcastTranscript } from "../podcasts/api/podcastTranscript.js";
-import { transcribeEpisode, type TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
+import type { TranscriptionProgress } from "../podcasts/api/transcribeAudio.js";
+import { transcribeEpisode } from "../podcasts/api/transcribeEpisode.js";
+import { transcribeTikTok } from "../tiktok/api/transcribeTikTok.js";
+import type { Analytics } from "../analytics/createAnalytics.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
 import { TranscriptionFailedError } from "../podcasts/api/TranscriptionFailedError.js";
 import { TranscriptionRefusedError } from "../podcasts/api/TranscriptionRefusedError.js";
@@ -22,7 +35,7 @@ import {
   runOverviewGeneration,
   runPodcastOverviewGeneration,
   runTikTokOverviewGeneration,
-  type TikTokWords,
+  type TikTokRunRequest,
   type PodcastRunRequest,
   type RunOverviewGenerationOptions,
 } from "./api/generationPipeline.js";
@@ -97,16 +110,89 @@ export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
   );
 };
 
-// The words come with the read, so writing asks for nothing more (docs/features/tiktok-links.md).
+interface TrackedTranscription {
+  from: CaptureEntry;
+  when: TranscribeChoice;
+  seconds: number | null;
+  source: TranscribedSource;
+  onTranscription: RunOverviewGenerationOptions["onTranscription"];
+}
+
+type Transcribe = (onProgress: (progress: TranscriptionProgress) => void) => Promise<{ transcript: StoredTranscript }>;
+
+// A transcription's events, for an episode or a TikTok alike; an episode's leave `source` out, as before TikToks.
+const trackedTranscription = async (
+  analytics: Analytics,
+  { from, when, seconds, source, onTranscription }: TrackedTranscription,
+  transcribe: Transcribe,
+): Promise<{ transcript: StoredTranscript }> => {
+  const about = {
+    episodeMinutes: seconds === null ? undefined : Math.round(seconds / 60),
+    ...(source === "podcast" ? {} : { source }),
+  };
+  const askedAt = Date.now();
+  let startedAt: number | null = null;
+  analytics.capture.episodeTranscription.chosen({ from, when, ...about });
+  try {
+    const words = await transcribe((progress) => {
+      if (progress === "transcribing" && startedAt === null) {
+        startedAt = Date.now();
+      }
+      onTranscription?.(progress);
+    });
+    const doneAt = Date.now();
+    analytics.capture.episodeTranscription.finished({
+      from,
+      waitedMs: (startedAt ?? doneAt) - askedAt,
+      transcribingMs: startedAt === null ? 0 : doneAt - startedAt,
+      ...about,
+    });
+    return words;
+  } catch (error) {
+    if (error instanceof TranscriptionFailedError) {
+      analytics.capture.episodeTranscription.failed({ from, reason: error.reason, ...(source === "podcast" ? {} : { source }) });
+    }
+    if (error instanceof TranscriptionRefusedError) {
+      analytics.capture.episodeTranscription.failed({ from, reason: error.refusal, ...(source === "podcast" ? {} : { source }) });
+    }
+    throw error;
+  }
+};
+
+// Words that came with the read are written at once; a TikTok with none is transcribed first, when the reader chose it.
 export const useRunTikTokGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const analytics = useAnalytics();
   const shown = useStores();
+  const knownApiUrl = useKnownApiUrl();
+  const { connection } = useSyncConnection();
 
   return useCallback(
-    async (video: TikTokVideo, words: TikTokWords, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> =>
-      runTikTokOverviewGeneration(
+    async (request: TikTokRunRequest, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> => {
+      const { video, words } = request;
+      const findWords = async () => {
+        if (words !== null) {
+          return words;
+        }
+        if (knownApiUrl === null || request.transcribe === undefined) {
+          throw new Error("This TikTok has no captions, and transcribing it wasn't chosen");
+        }
+        const api = createFetchTikTokApi({ baseUrl: knownApiUrl, token: connection.token });
+        const tracked = {
+          from: options.from ?? "dialog",
+          when: request.transcribe,
+          seconds: video.durationSeconds,
+          source: "tiktok" as const,
+          onTranscription: options.onTranscription,
+        };
+        const { transcript } = await trackedTranscription(analytics, tracked, (onProgress) =>
+          transcribeTikTok(api, video, { isCancelled: options.isCancelled, onProgress }),
+        );
+        return { transcript, source: "tiktok-transcribed" as const };
+      };
+      return runTikTokOverviewGeneration(
         video,
-        async () => words,
+        findWords,
         {
           makeOverview: makeWith(),
           overviewStore: stores.overviewStore,
@@ -117,8 +203,9 @@ export const useRunTikTokGeneration = (apiKeys: ApiKeys) => {
         options,
       )
         .then((overview) => learnFrom(overview, stores))
-        .finally(settled),
-    [makeWith, learnFrom, settled, shown],
+        .finally(settled);
+    },
+    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, analytics],
   );
 };
 
@@ -141,38 +228,12 @@ export const useRunPodcastGeneration = (apiKeys: ApiKeys) => {
       const episodeMinutes = {
         episodeMinutes: request.episode.durationSeconds === null ? undefined : Math.round(request.episode.durationSeconds / 60),
       };
-      const transcribe = async (episode: typeof request.episode, onTranscription: RunOverviewGenerationOptions["onTranscription"]) => {
-        const askedAt = Date.now();
-        let startedAt: number | null = null;
-        analytics.capture.episodeTranscription.chosen({ from, when: request.transcribe!, ...episodeMinutes });
-        try {
-          const words = await transcribeEpisode(api, episode, {
-            isCancelled: options.isCancelled,
-            onProgress: (progress: TranscriptionProgress) => {
-              if (progress === "transcribing" && startedAt === null) {
-                startedAt = Date.now();
-              }
-              onTranscription?.(progress);
-            },
-          });
-          const doneAt = Date.now();
-          analytics.capture.episodeTranscription.finished({
-            from,
-            waitedMs: (startedAt ?? doneAt) - askedAt,
-            transcribingMs: startedAt === null ? 0 : doneAt - startedAt,
-            ...episodeMinutes,
-          });
-          return words;
-        } catch (error) {
-          if (error instanceof TranscriptionFailedError) {
-            analytics.capture.episodeTranscription.failed({ from, reason: error.reason });
-          }
-          if (error instanceof TranscriptionRefusedError) {
-            analytics.capture.episodeTranscription.failed({ from, reason: error.refusal });
-          }
-          throw error;
-        }
-      };
+      const transcribe = (episode: typeof request.episode, onTranscription: RunOverviewGenerationOptions["onTranscription"]) =>
+        trackedTranscription(
+          analytics,
+          { from, when: request.transcribe!, seconds: episode.durationSeconds, source: "podcast", onTranscription },
+          (onProgress) => transcribeEpisode(api, episode, { isCancelled: options.isCancelled, onProgress }),
+        );
       return runPodcastOverviewGeneration(
         request,
         (episode, { onTranscription }) =>

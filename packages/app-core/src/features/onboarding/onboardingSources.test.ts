@@ -13,7 +13,7 @@ import { makeArticleOverview, makeOverview, makeTikTokOverview } from "../overvi
 import { TikTokNoCaptionsError, TikTokReadError } from "../newOverview/api/TikTokReadError.js";
 import type { TikTokWords } from "../newOverview/api/generationPipeline.js";
 import { foundIn, onboardingSourceOf, onboardingSources, type OnboardingMakers } from "./onboardingSources.js";
-import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
+import type { TranscriptionProgress } from "../podcasts/api/transcribeAudio.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import { EpisodeCannotBeMadeError } from "./EpisodeCannotBeMadeError.js";
@@ -413,7 +413,7 @@ describe("onboarding's run, before and after the account", () => {
       const makers = {
         readTikTok: async () => {
           order.push("read");
-          return { status: "read", video: clip, words };
+          return { status: "read", video: clip, words, transcription: null };
         },
         tiktok: async (video, given) => {
           order.push(`written ${video.id} ${given.source}`);

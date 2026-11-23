@@ -18,14 +18,23 @@ export interface PastedPodcast {
   platformLink: boolean;
 }
 
+// One with no captions is offered to transcribe as an episode is.
+const tiktokActionOf = (tiktok: TikTokLink): EpisodeAction | null =>
+  tiktok.status === "found" && tiktok.words === null && tiktok.stop === null && tiktok.transcription !== null
+    ? episodeActionOf({ state: "none", transcription: tiktok.transcription })
+    : null;
+
 // A TikTok link is never an article's: it is read as a TikTok, or refused as one (130a, 130l–130n).
-const tiktokState = (tiktok: TikTokLink): PastedLinkState => ({
-  podcastShown: false,
-  tiktokShown: true,
-  reading: tiktok.status === "reading",
-  generateOffered: (tiktok.status === "found" && tiktok.stop === null) || tiktok.status === "reading",
-  episodeAction: null,
-});
+const tiktokState = (tiktok: TikTokLink): PastedLinkState => {
+  const episodeAction = tiktokActionOf(tiktok);
+  return {
+    podcastShown: false,
+    tiktokShown: true,
+    reading: tiktok.status === "reading",
+    generateOffered: (tiktok.status === "found" && tiktok.stop === null && episodeAction?.kind !== "stop") || tiktok.status === "reading",
+    episodeAction,
+  };
+};
 
 // A non-platform page is an episode only once our server has found one there.
 export const pastedLinkState = (article: ArticleLink, podcast: PastedPodcast, tiktok: TikTokLink = { status: "none" }): PastedLinkState => {

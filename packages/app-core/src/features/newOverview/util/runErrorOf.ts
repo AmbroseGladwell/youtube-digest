@@ -16,10 +16,10 @@ export const runErrorOf = (error: Error, fetched: FetchedArticle | null = null, 
   if (episode && error instanceof EpisodeNeedsTranscribingError) {
     return { kind: "podcastNeedsTranscribing" };
   }
-  if (episode && error instanceof TranscriptionFailedError) {
-    return { kind: "transcriptionFailed", reason: error.reason };
+  if (error instanceof TranscriptionFailedError) {
+    return { kind: "transcriptionFailed", reason: error.reason, source: error.source };
   }
-  if (episode && error instanceof TranscriptionRefusedError) {
+  if (error instanceof TranscriptionRefusedError) {
     return { kind: "transcriptionRefused", refusal: error.refusal, episodeSeconds: error.episodeSeconds };
   }
   if (episode && error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {

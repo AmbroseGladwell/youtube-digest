@@ -216,6 +216,18 @@ overview from"), both counted in code. Music or sound is the kind check's answer
 "This one is music or sound rather than talk". That run stop (`RunError` `noSpeech`) serves every
 kind, so a YouTube Short with no speech says so too.
 
+**No captions, but it can be transcribed** (slice 5, 23 Nov 2026): when the read says our server
+can transcribe it, the no-captions stop gives way to an episode's offer, in the same words and
+components: the steps it got through, "Needs transcribing · about 1 min", "Uses 38 s of your 5 hr
+transcribing left, and one overview" (lengths under a minute in seconds), and Create becomes
+"Transcribe and create". Not enough hours left is the episode's stop in Create's place. The run
+gets its own step, "Transcribing the TikTok", counting down as an episode's does, and the words
+are saved as `tiktok-transcribed`. A failure says it of the TikTok ("We couldn't get the TikTok's
+sound", with Try again, which `transcribeAgain` reruns for an episode or a TikTok alike). The
+transcription loop is `transcribeAudio`, shared with episodes (`transcribeTikTok`,
+`transcribeEpisode`). Analytics are the episodes' `capture.episodeTranscription` events, with
+`source: "tiktok"`.
+
 **Failures**, each ending "Nothing was used." and never naming the vendor: private or removed;
 TikTok refused (Try again); a photo post or a profile, known from the address without a read; and
 our server not reading TikTok at all ("TikTok links aren't working right now").

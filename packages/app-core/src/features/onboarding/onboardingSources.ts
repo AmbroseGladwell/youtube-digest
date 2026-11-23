@@ -35,7 +35,7 @@ import { GenerationCancelledError } from "../newOverview/api/GenerationCancelled
 import { PodcastNoTranscriptError, PodcastReadError } from "../newOverview/api/PodcastReadError.js";
 import { VideoReadError } from "../newOverview/api/VideoReadError.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
-import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
+import type { TranscriptionProgress } from "../podcasts/api/transcribeAudio.js";
 import { isPlatformPodcastLink } from "../newOverview/usePodcastLink.js";
 import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
