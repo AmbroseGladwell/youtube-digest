@@ -114,6 +114,59 @@ const readyRender = (key: string, lineCount: number, secondsPerLine = SIMULATED_
   fileUrl: `/api/audio/${key}/file`,
 });
 
+// A streamed render is HLS packed audio, as the real one is, but in MP3, which headless Chromium can decode.
+const MP3_FRAME_SAMPLES = 1152;
+const MP3_SAMPLE_RATE = 44_100;
+const MP3_FRAMES_PER_LINE = Math.round((SIMULATED_SECONDS_PER_LINE * MP3_SAMPLE_RATE) / MP3_FRAME_SAMPLES);
+export const SIMULATED_STREAM_SECONDS_PER_LINE = (MP3_FRAMES_PER_LINE * MP3_FRAME_SAMPLES) / MP3_SAMPLE_RATE;
+
+const silentMp3Frame = (): Buffer => {
+  const frame = Buffer.alloc(417);
+  frame.set([0xff, 0xfb, 0x90, 0xc4]);
+  return frame;
+};
+
+const packedMp3Segment = (index: number): Buffer => {
+  const owner = Buffer.from("com.apple.streaming.transportStreamTimestamp\0", "latin1");
+  const ticks = Buffer.alloc(8);
+  ticks.writeBigUInt64BE(BigInt(Math.floor((index * MP3_FRAMES_PER_LINE * MP3_FRAME_SAMPLES * 90_000) / MP3_SAMPLE_RATE)));
+  const body = Buffer.concat([owner, ticks]);
+  const frameHead = Buffer.alloc(10);
+  frameHead.write("PRIV", 0, "latin1");
+  frameHead.writeUInt32BE(body.length, 4);
+  const tag = Buffer.alloc(10);
+  tag.write("ID3", 0, "latin1");
+  tag.set([4, 0, 0], 3);
+  const size = frameHead.length + body.length;
+  tag.set([(size >> 21) & 0x7f, (size >> 14) & 0x7f, (size >> 7) & 0x7f, size & 0x7f], 6);
+  const frame = silentMp3Frame();
+  return Buffer.concat([tag, frameHead, body, ...Array.from({ length: MP3_FRAMES_PER_LINE }, () => frame)]);
+};
+
+const streamingRender = (key: string, linesMade: number): NarrationRender => ({
+  key,
+  status: "rendering",
+  lineStartsSeconds: Array.from({ length: linesMade }, (_, index) => index * SIMULATED_STREAM_SECONDS_PER_LINE),
+  renderedSeconds: linesMade * SIMULATED_STREAM_SECONDS_PER_LINE,
+  playlistUrl: `/api/audio/${key}/playlist.m3u8`,
+});
+
+const playlistOf = (segments: number, closed: boolean): string =>
+  [
+    "#EXTM3U",
+    "#EXT-X-VERSION:6",
+    `#EXT-X-TARGETDURATION:${Math.ceil(SIMULATED_STREAM_SECONDS_PER_LINE)}`,
+    "#EXT-X-MEDIA-SEQUENCE:0",
+    "#EXT-X-PLAYLIST-TYPE:EVENT",
+    "#EXT-X-START:TIME-OFFSET=0,PRECISE=YES",
+    ...Array.from({ length: segments }, (_, index) => [
+      `#EXTINF:${SIMULATED_STREAM_SECONDS_PER_LINE.toFixed(6)},`,
+      `segments/${index}.mp3`,
+    ]).flat(),
+    ...(closed ? ["#EXT-X-ENDLIST"] : []),
+    "",
+  ].join("\n");
+
 // Headless Chromium can't decode the real M4A, so the simulated file is silent 8-bit WAV.
 const silentWav = (seconds: number): Buffer => {
   const sampleRate = 8000;
@@ -291,7 +344,7 @@ export class BackendSimulator {
   #decisions: Array<{ requestId: string; approve: boolean }> = [];
   #connections: Connection[] = [];
   #revoked: string[] = [];
-  #renders = new Map<string, { render: NarrationRender; lineCount: number }>();
+  #renders = new Map<string, { render: NarrationRender; lineCount: number; streamed?: number }>();
   #narrationBusy = false;
   #narrationDailyCapSpent = false;
   #narrationPriorities: string[] = [];
@@ -951,6 +1004,26 @@ export class BackendSimulator {
         onError: unavailable,
       }),
     );
+
+    await this.#page.route("**/api/audio/*/playlist.m3u8", (route) => {
+      const key = new URL(route.request().url()).pathname.split("/").at(-2)!;
+      const held = this.#renders.get(key);
+      if (held?.streamed === undefined) {
+        return route.fulfill({ status: 404, body: "" });
+      }
+      const closed = held.render.status === "ready";
+      return route.fulfill({
+        status: 200,
+        contentType: "application/vnd.apple.mpegurl",
+        headers: { "cache-control": "no-store" },
+        body: playlistOf(closed ? held.lineCount : held.streamed, closed),
+      });
+    });
+
+    await this.#page.route("**/api/audio/*/segments/*", (route) => {
+      const index = Number.parseInt(new URL(route.request().url()).pathname.split("/").at(-1)!, 10);
+      return route.fulfill({ status: 200, contentType: "audio/mpeg", body: packedMp3Segment(index) });
+    });
 
     await this.#page.route("**/api/audio/*/file", (route) => {
       const key = new URL(route.request().url()).pathname.split("/").at(-2)!;
@@ -1847,6 +1920,15 @@ export class BackendSimulator {
       for (const [key, held] of this.#renders) {
         if (held.render.status !== "ready") {
           held.render = readyRender(key, held.lineCount);
+        }
+      }
+    },
+    // Renders under way stream their first lines, as OV-42's server does: docs/features/audio-player.md, "Playing while it renders".
+    streamRenders: (linesMade: number): void => {
+      for (const [key, held] of this.#renders) {
+        if (held.render.status !== "ready") {
+          held.streamed = Math.min(linesMade, held.lineCount);
+          held.render = streamingRender(key, held.streamed);
         }
       }
     },

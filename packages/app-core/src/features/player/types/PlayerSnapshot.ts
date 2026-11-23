@@ -34,4 +34,6 @@ export interface PlayerSnapshot {
 export interface StreamProgress {
   renderedSeconds: number;
   holdingLine: number | null;
+  holdingFrom: number | null;
+  renderPace: number | null;
 }

@@ -105,7 +105,7 @@ const ChatWait = z.enum(["month", "libraryMonth", "day", "everyone", "conversati
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
-const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay"]);
+const PlayerMainButton = z.enum(["play", "pause", "cancel", "starting", "buffering", "replay"]);
 // Tells a first listen from a resume; playerBarView.test.ts keeps it in step with PlayerStatus.
 export const PlayerState = z.enum(["ready", "preparing", "playing", "paused", "buffering", "ended", "failed", "busy"]);
 export type PlayerState = z.infer<typeof PlayerState>;

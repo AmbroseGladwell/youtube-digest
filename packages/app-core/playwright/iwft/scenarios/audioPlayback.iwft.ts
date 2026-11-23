@@ -134,9 +134,8 @@ test("an old note makes its audio on first play, saying so while it waits", asyn
   await reader.verifyBarSays("Audio is made on first play · about 20 s");
   await reader.clickPlayPause();
 
-  await reader.verifyBarSays("Preparing audio · Queued");
-  await reader.verifyShowsPreparingSweep();
-  await reader.verifyPlayButtonReads("Cancel preparing audio");
+  await reader.verifyBarSays("Starting");
+  await reader.verifyPlayButtonReads("Pause, starting");
 
   backendSimulator.narration.finishRenders();
   await reader.verifyBarSays(/^Now playing · /);
@@ -151,7 +150,7 @@ test("a render that gives up says so in plain words, and reading along instead s
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
   await reader.clickPlayPause();
-  await reader.verifyBarSays("Preparing audio · Queued");
+  await reader.verifyBarSays("Starting");
 
   backendSimulator.narration.failRenders();
   await reader.verifyBarSays("Couldn't prepare the audio");
@@ -416,7 +415,7 @@ test("pressing play while a background render is under way asks for it at the fr
 
   await reader.clickPlayPause();
 
-  await reader.verifyPlayButtonReads("Cancel preparing audio");
+  await reader.verifyPlayButtonReads("Pause, starting");
   expect(backendSimulator.narration.requestedPriorities()).toEqual(["background", "interactive"]);
   backendSimulator.narration.finishRenders();
   await reader.verifyBarSays(/^Now playing · /);
@@ -509,7 +508,7 @@ test("narration made on the press counts its wait as prepared", async ({ launche
   const reader = await library.nthCard(0).openReader();
 
   await reader.clickPlayPause();
-  await reader.verifyBarSays("Preparing audio · Queued");
+  await reader.verifyBarSays("Starting");
   backendSimulator.narration.finishRenders();
   await reader.verifyBarSays(/^Now playing · /);
 
