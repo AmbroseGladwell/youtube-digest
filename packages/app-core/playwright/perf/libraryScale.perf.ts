@@ -1,9 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test } from "../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../network/BackendSimulator.testHelper.js";
-import type { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
-import { makeOverview, makeOverviewState } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
-import { makeTopic } from "../../src/features/overviews/types/TopicFactory.testHelper.js";
+import { seedLargeLibrary } from "./seedLargeLibrary.testHelper.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { librarySearchTestIds } from "../../src/features/library/components/LibrarySearch/LibrarySearchTestIds.js";
 import { filterPanelTestIds } from "../../src/features/library/components/FilterPanel/FilterPanelTestIds.js";
@@ -15,7 +13,6 @@ const SIZES = (process.env.SIZES ?? "300,500,2000,5000").split(",").map(Number);
 const THROTTLE = Number(process.env.THROTTLE ?? 4);
 const WIDTH = Number(process.env.WIDTH ?? 390);
 const SIGNED_IN = { sync: true, syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" } };
-const WORDS = "light sleep coffee training memory habit focus protein walking stress reading breathing".split(" ");
 
 interface Probe {
   transitions: { click: number; ready: number | null }[];
@@ -61,25 +58,6 @@ const probe = () => {
   }) as typeof document.startViewTransition;
 };
 
-const seedLibrary = (backend: BackendSimulator, size: number) => {
-  const topics = ["Sleep", "Training", "Food", "Work"].map((name) => makeTopic({ name }));
-  for (const topic of topics) {
-    backend.overviews.seedTopic(topic);
-  }
-  for (let index = 0; index < size; index += 1) {
-    const words = Array.from({ length: 3 + ((index * 7) % 11) }, (_, at) => WORDS[(index + at * 5) % WORDS.length]).join(" ");
-    const overview = makeOverview({
-      savedAt: new Date(Date.UTC(2025, 0, 1) + index * 3_600_000).toISOString(),
-      topicIds: [topics[index % topics.length]!.id],
-    });
-    overview.source.title = `${index} ${words}`;
-    backend.overviews.seedSynced(overview);
-    if (index % 2 === 0) {
-      backend.overviews.seedState(makeOverviewState(overview.id, { read: true }));
-    }
-  }
-};
-
 const take = (page: Page) =>
   page.evaluate(() => {
     const p = window.__probe;
@@ -103,7 +81,7 @@ for (const size of SIZES) {
     const devtools = await page.context().newCDPSession(page);
     await devtools.send("Performance.enable");
     await devtools.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
-    seedLibrary(backendSimulator, size);
+    seedLargeLibrary(backendSimulator, size);
     const results: Record<string, unknown> = { size, width: WIDTH, throttle: THROTTLE };
 
     const launchedAt = Date.now();
