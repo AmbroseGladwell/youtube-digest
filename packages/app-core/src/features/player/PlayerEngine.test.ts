@@ -889,6 +889,7 @@ describe("PlayerEngine", () => {
       const engine = await pressedWith([FIRST_LINES, READY]);
       await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
 
+      media.reachTime(0.4);
       media.reachTime(9.4);
       media.end();
       engine.play("playerBar");
@@ -955,6 +956,29 @@ describe("PlayerEngine", () => {
       expect(engine.getSnapshot().status).toBe("buffering");
     });
 
+    it("a playlist the element starts near its end, as Safari does, is moved back to where the listen meant to start", async () => {
+      const engine = await pressedWith([FIRST_LINES]);
+      const seeksBefore = media.seeks.length;
+
+      media.reachTime(3.5);
+      media.reachTime(0.4);
+      media.reachTime(3.5);
+
+      expect(media.seeks.slice(seeksBefore)).toEqual([0]);
+      expect(engine.getSnapshot().status).toBe("playing");
+      expect(engine.getTime()).toBe(3.5);
+    });
+
+    it("a playlist that starts where it was meant to is left alone once it is moving", async () => {
+      await pressedWith([FIRST_LINES]);
+      const seeksBefore = media.seeks.length;
+
+      media.reachTime(0.4);
+      media.reachTime(4);
+
+      expect(media.seeks.slice(seeksBefore)).toEqual([]);
+    });
+
     it("first sound from a playlist says it streamed", async () => {
       const heard = vi.fn<(report: FirstSoundReport) => void>();
       await pressedWith([FIRST_LINES], { onFirstSound: heard });
@@ -979,6 +1003,7 @@ describe("PlayerEngine", () => {
       const engine = await pressedWith([FIRST_LINES, READY], { loadStream });
       await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
 
+      media.reachTime(0.4);
       media.reachTime(9.4);
       media.end();
       engine.play("playerBar");

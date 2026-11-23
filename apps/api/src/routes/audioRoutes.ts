@@ -85,7 +85,7 @@ export const playlistOf = (render: AudioRender): string => {
   const segments = render.segmentSeconds ?? [];
   return [
     "#EXTM3U",
-    "#EXT-X-VERSION:3",
+    "#EXT-X-VERSION:6",
     `#EXT-X-TARGETDURATION:${Math.max(1, Math.ceil(Math.max(0, ...segments)))}`,
     "#EXT-X-MEDIA-SEQUENCE:0",
     "#EXT-X-PLAYLIST-TYPE:EVENT",

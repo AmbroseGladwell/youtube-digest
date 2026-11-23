@@ -36,6 +36,8 @@ const POLL_FAILURES_BEFORE_GIVING_UP = 3;
 // How much audio a first play waits for, and a jump past the render then needs, before sound: docs/features/audio-player.md, "Playing while it renders".
 export const STREAM_LEAD_SECONDS = 5;
 export const HELD_LEAD_SECONDS = 2;
+const STREAM_START_SLACK_SECONDS = 0.5;
+const STREAM_STARTED_SECONDS = 0.25;
 
 export type PlayerMedia = Pick<
   HTMLMediaElement,
@@ -190,6 +192,7 @@ export class PlayerEngine {
   #releaseStream: () => void = () => undefined;
   #loadStream: LoadStream;
   #hold: Hold | null = null;
+  #streamStartPending = false;
   #onWaitedAhead: (report: WaitedAheadReport) => void;
   #replacing: string | null = null;
   #generation = 0;
@@ -1042,7 +1045,11 @@ export class PlayerEngine {
     if (this.#media === null) {
       const media = this.#createMedia();
       media.preload = "auto";
-      media.addEventListener("playing", () => this.#fromMedia("playing"));
+      media.addEventListener("loadedmetadata", () => this.#startStreamWhereMeant());
+      media.addEventListener("playing", () => {
+        this.#startStreamWhereMeant();
+        this.#fromMedia("playing");
+      });
       media.addEventListener("pause", () => {
         if (this.#hold !== null) {
           return;
@@ -1059,7 +1066,7 @@ export class PlayerEngine {
       media.addEventListener("ended", () => this.#fromMedia("ended"));
       media.addEventListener("error", () => this.#fromMedia("failed"));
       media.addEventListener("timeupdate", () => {
-        if (!this.#mediaIsCurrent() || this.#hold !== null) {
+        if (!this.#mediaIsCurrent() || this.#hold !== null || this.#startStreamWhereMeant()) {
           return;
         }
         const before = this.#time;
@@ -1108,6 +1115,7 @@ export class PlayerEngine {
       this.#releaseStream();
       this.#releaseStream = () => undefined;
       if (url === this.#streamUrl) {
+        this.#streamStartPending = true;
         this.#releaseStream = this.#loadStream(media, url, () => this.#snapshot.status === "playing");
       } else {
         media.src = url;
@@ -1165,6 +1173,24 @@ export class PlayerEngine {
     this.#watchForStall();
     this.#armStop();
     this.#emitTime();
+  }
+
+  // Safari starts a growing playlist near its end, as if it were live, whatever EXT-X-START says.
+  #startStreamWhereMeant(): boolean {
+    if (!this.#streamStartPending || !this.#mediaIsCurrent() || this.#hold !== null) {
+      return false;
+    }
+    const media = this.#media!;
+    const off = media.currentTime - this.#time;
+    if (Math.abs(off) > STREAM_START_SLACK_SECONDS) {
+      this.#streamStartPending = false;
+      media.currentTime = this.#time;
+      return true;
+    }
+    if (off > STREAM_STARTED_SECONDS) {
+      this.#streamStartPending = false;
+    }
+    return false;
   }
 
   // A playlist can report its end at the last point it had buffered while the render was still going.
