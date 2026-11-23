@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { chatSourceKind, formatClock, MAX_CHAT_PICKS, overviewMarkdown, type Overview, type Project } from "@overview/domain";
+import {
+  isWrittenSource,
+  chatSourceKind,
+  formatClock,
+  MAX_CHAT_PICKS,
+  overviewMarkdown,
+  type Overview,
+  type Project,
+} from "@overview/domain";
 import type { Passage } from "./transcriptPassages.js";
 import { ANSWER_SHAPE_RULES, CHAT_REPLY_SCHEMA } from "./ChatReply.js";
 import { NO_MARKS, type OverviewMarks } from "./planScope.js";
@@ -77,7 +85,7 @@ export interface LibraryChatMaterial {
 const labelled = (label: string, overview: Overview) => overviewMarkdown(overview, { partIds: true, partIdPrefix: `${label}.` });
 
 const minutesOf = ({ source }: Overview): number | null => {
-  if (source.kind === "web") {
+  if (isWrittenSource(source)) {
     return Math.max(1, Math.round(source.wordCount / WORDS_A_MINUTE));
   }
   return source.durationMs === null ? null : Math.max(1, Math.round(source.durationMs / 60_000));

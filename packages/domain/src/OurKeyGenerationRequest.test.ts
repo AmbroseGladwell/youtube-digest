@@ -100,6 +100,7 @@ const reel: SocialSource = {
   handle: "windowsillgarden",
   authorName: "Windowsill Garden",
   media: "video",
+  wordCount: 120,
   durationMs: 59_000,
   publishedAt: null,
   imageUrl: null,
@@ -132,7 +133,38 @@ test("an Instagram reel sent to be made on our key arrives as the reel, its whol
       tagAliases: {},
     },
   });
-  assert.ok("social" in request.input);
+  assert.ok("social" in request.input && "video" in request.input);
   assert.deepEqual(request.input.social, reel);
   assert.equal(request.input.video.fullDescription, fullDescription);
+});
+
+test("a photo post sent to be made on our key arrives as the post with its description as the article", () => {
+  const photo: SocialSource = { ...reel, media: "photo", durationMs: null };
+  const request = OurKeyGenerationRequest.parse({
+    overviewId: OverviewId.parse("00000000-0000-4000-8000-000000000001"),
+    input: {
+      social: photo,
+      article: {
+        url: photo.url,
+        title: photo.title,
+        siteName: "Instagram",
+        author: photo.authorName,
+        publishedAt: null,
+        language: null,
+        imageUrl: null,
+        sections: [{ heading: null, anchor: null, text: "Water from below.", links: [] }],
+        wordCount: 3,
+        recipe: null,
+      },
+      captureReason: null,
+      readerContext: null,
+      sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
+      existingTopics: [],
+      pastClaims: [],
+      existingTags: [],
+      tagAliases: {},
+    },
+  });
+  assert.ok("social" in request.input && "article" in request.input);
+  assert.deepEqual(request.input.social, photo);
 });

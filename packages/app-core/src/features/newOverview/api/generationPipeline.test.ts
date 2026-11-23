@@ -34,6 +34,7 @@ import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
 import { InMemoryProjectStore } from "../../projects/types/InMemoryProjectStore.testHelper.js";
 import { makeProject } from "../../projects/types/ProjectFactory.testHelper.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
+import { SocialPostTooShortError } from "./SocialPostTooShortError.js";
 import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
@@ -683,6 +684,27 @@ describe("runSocialOverviewGeneration", () => {
     expect(input.video.channel).toBe("Windowsill Garden");
     expect(input.video.fullDescription.endsWith(lastLine)).toBe(true);
     expect(progress).toMatchObject({ transcriptWords: 5, transcriptSource: "social-transcribed" });
+  });
+
+  it("writes a photo post from its description alone, as an article, never asking for words", async () => {
+    const { deps, made, kept } = setUp();
+    const findWords = async (): Promise<SocialWords> => {
+      throw new Error("a photo post has no words to find");
+    };
+    await runSocialOverviewGeneration({ ...reel, media: "photo", durationSeconds: null }, findWords, deps);
+    const input = made[0] as { social: { media: string }; article: { siteName: string; sections: { text: string }[] } };
+    expect(input.social.media).toBe("photo");
+    expect(input.article.siteName).toBe("Instagram");
+    expect(input.article.sections[0]?.text.endsWith(lastLine)).toBe(true);
+    expect(kept).toHaveLength(0);
+  });
+
+  it("refuses a photo post with too few words to write from, before spending anything", async () => {
+    const { deps, made } = setUp();
+    await expect(
+      runSocialOverviewGeneration({ ...reel, media: "text", durationSeconds: null, description: "Sunday vibes" }, async () => words, deps),
+    ).rejects.toBeInstanceOf(SocialPostTooShortError);
+    expect(made).toHaveLength(0);
   });
 
   it("refuses a post already in the library before asking for its words", async () => {

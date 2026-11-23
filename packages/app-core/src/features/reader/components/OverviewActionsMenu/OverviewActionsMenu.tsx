@@ -6,6 +6,7 @@ import {
   sourceUrl as linkOf,
   type OverviewMenuItem,
   type Source,
+  isWrittenPost,
 } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
@@ -59,7 +60,7 @@ const wayOut = (source: Source, recipe: boolean): WayOut => {
   const platform = isClipSource(source) ? clipPlatformName(source) : "YouTube";
   return {
     open: "watchOnYouTube",
-    openLabel: recipe ? OPEN_RECIPE : `Watch on ${platform}`,
+    openLabel: recipe ? OPEN_RECIPE : `${isWrittenPost(source) ? "Open" : "Watch"} on ${platform}`,
     copy: "copyYouTubeLink",
     copyLabel: recipe ? COPY_RECIPE_LINK : `Copy ${platform} link`,
   };

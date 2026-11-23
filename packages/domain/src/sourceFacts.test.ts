@@ -6,6 +6,8 @@ import {
   Source,
   articleSourceId,
   keptSharedLink,
+  hasTooFewWords,
+  isWrittenSource,
   socialSource,
   socialTitle,
   tiktokSource,
@@ -234,4 +236,14 @@ test("a social title cuts a long first line at a word, and names who posted it w
     socialTitle({ ...reel, platform: "facebook", handle: null, authorName: "", media: "text", description: "" }),
     "A Facebook post",
   );
+});
+
+test("a photo or text post is a written source, too short under 30 words of description; a reel is not", () => {
+  const photo = socialSource({ ...reel, media: "photo", durationSeconds: null });
+  assert.equal(photo.wordCount, 18);
+  assert.ok(isWrittenSource(photo) && hasTooFewWords(photo));
+  assert.equal(isWrittenSource(socialSource(reel)), false);
+  assert.equal(isWrittenSource(article), true);
+  const long = socialSource({ ...reel, media: "text", durationSeconds: null, description: "word ".repeat(30) });
+  assert.ok(isWrittenSource(long) && !hasTooFewWords(long));
 });

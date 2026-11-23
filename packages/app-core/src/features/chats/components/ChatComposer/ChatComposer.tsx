@@ -1,5 +1,5 @@
 import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
-import { MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
+import { isWrittenPost, MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { useProjectMembersQuery } from "../../../projects/queries/projectMembersQuery.js";
@@ -54,6 +54,9 @@ const optionDetailOf = (option: PickerOption): string => {
   }
   if (option.overview.source.kind === "web") {
     return "Article";
+  }
+  if (isWrittenPost(option.overview.source)) {
+    return "Post";
   }
   return option.overview.recipe !== null ? "Recipe" : "Video";
 };

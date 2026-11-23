@@ -110,6 +110,7 @@ export const makeSocialOverview = (overrides: Partial<Overview> = {}): Overview 
       handle: "windowsillgarden",
       authorName: "Windowsill Garden",
       media: "video",
+      wordCount: 120,
       durationMs: 59_000,
       publishedAt: "2026-11-21T23:29:40.000Z",
       imageUrl: "https://scontent.cdninstagram.example/thumb.jpg",

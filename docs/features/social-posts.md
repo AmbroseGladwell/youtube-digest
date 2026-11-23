@@ -119,13 +119,28 @@ description, and **the whole of it** as `fullDescription`, which a social post m
 20,000 characters (`FULL_DESCRIPTION_MOST`), where a YouTube description stops at 5,000.
 Instagram's captions stop at 2,200 characters, so theirs always goes whole.
 
-Photo and text posts are written from the description alone, as a short written note (the
-next slice): every screen that tells a written note from a spoken one asks
-`source.kind === "web"` today.
+A photo or text post is written from its description alone, as a short article is
+(`postAsArticle`): the description becomes a one-section article, its blank lines paragraph
+breaks, with the platform as the site and the poster as the author, and the article prompt
+writes it, then the post gets its own source back. A post's `wordCount` is its
+description's, so the written budget (three key points under 400 words), time saved and
+"Read it anyway?" all work as they do for an article. There are no words to look up, no
+transcript is kept, and the note has no Transcript tab or player.
+
+**Too few words, nothing spent.** A photo or text post under 30 words of description
+(`POST_LEAST_WORDS`) is refused before anything is written: a note would only restate it
+(`SocialPostTooShortError`). A video is never refused this way: its words count, as a
+TikTok's do.
+
+`isWrittenSource` (`Source.ts`) is the question "is this note read rather than watched?":
+an article, or a photo or text post. Time saved, chat (answered from the note alone, as an
+article's is), "Read it anyway?", the MCP transcript tools and onboarding's expected length
+ask it. Article-only parts (chapter places on the page, resources, the article byline) still
+ask for `web`, so a post's note has none of them. In the library a post files under
+Articles; its chip still says Instagram or Facebook.
 
 ## Not yet
 
-- Photo and text posts written from their description (the next slice).
 - The screens: pasting, the player, onboarding (they take no Instagram or Facebook link
   yet), the shared page's player.
 - Timestamps: with no player that can seek, they will show as plain times, not "Watch from

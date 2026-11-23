@@ -21,6 +21,7 @@ import {
   openPodcastLabel,
   sourceName,
   sourceUrl,
+  isWrittenPost,
 } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -155,7 +156,7 @@ const sourceLinkLabel = (source: Source, recipeVideo: boolean, recipePage: boole
     return openPodcastLabel(source.sharedFrom);
   }
   if (isClipSource(source)) {
-    return recipeVideo ? `Open the video on ${clipPlatformName(source)}` : `Watch on ${clipPlatformName(source)}`;
+    return recipeVideo || isWrittenPost(source) ? `Open on ${clipPlatformName(source)}` : `Watch on ${clipPlatformName(source)}`;
   }
   return `${recipePage ? "Open the recipe" : "Read the article"} on ${sourceName(source)}`;
 };

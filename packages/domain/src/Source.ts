@@ -5,6 +5,7 @@ import type { PodcastEpisode } from "./PodcastEpisode.js";
 import { SOCIAL_PLATFORM_NAME, SocialPlatform, type SocialPost } from "./SocialPost.js";
 import type { TikTokVideo } from "./TikTokVideo.js";
 import { VideoSource } from "./VideoSource.js";
+import { wordCount } from "./wordCount.js";
 
 export const YouTubeSource = VideoSource.extend({ kind: z.literal("youtube") });
 export type YouTubeSource = z.infer<typeof YouTubeSource>;
@@ -67,6 +68,8 @@ export const SocialSource = z.object({
   handle: z.string().min(1).nullable(),
   authorName: z.string(),
   media: SocialMedia,
+  // The description's, which a photo or text post is read for.
+  wordCount: z.number().int().nonnegative(),
   durationMs: z.number().int().positive().nullable(),
   publishedAt: z.iso.datetime().nullable(),
   imageUrl: z.url().nullable(),
@@ -191,6 +194,7 @@ export const socialSource = (post: SocialPost): SocialSource => ({
   handle: post.handle,
   authorName: post.authorName,
   media: post.media,
+  wordCount: wordCount(post.description),
   durationMs: post.durationSeconds === null ? null : post.durationSeconds * 1000,
   publishedAt: post.postedAt,
   imageUrl: post.coverUrl,
@@ -204,3 +208,17 @@ export type ClipSource = TikTokSource | SocialSource;
 export const isClipSource = (source: Source): source is ClipSource => source.kind === "tiktok" || isSocialSource(source);
 
 export const clipPlatformName = (source: ClipSource): string => (source.kind === "tiktok" ? "TikTok" : SOCIAL_PLATFORM_NAME[source.kind]);
+
+export type WrittenPost = SocialSource & { media: "photo" | "text" };
+
+// A photo or text post is read for its description, so its note is written as an article's is (docs/features/social-posts.md).
+export const isWrittenPost = (source: Source): source is WrittenPost => isSocialSource(source) && source.media !== "video";
+
+export type WrittenSource = WebSource | WrittenPost;
+
+export const isWrittenSource = (source: Source): source is WrittenSource => source.kind === "web" || isWrittenPost(source);
+
+export const POST_LEAST_WORDS = 30;
+
+// Under this, a note would only restate the post: nothing is spent on it.
+export const hasTooFewWords = (post: WrittenPost): boolean => post.wordCount < POST_LEAST_WORDS;
