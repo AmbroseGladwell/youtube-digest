@@ -17,6 +17,7 @@ import { DEFAULT_SYNC_CONNECTION, libraryAccountIdOf, SyncConnection } from "../
 import type { IwftHooksConfig } from "./network/IwftHooksConfig.testHelper.js";
 import { IwftActiveVideoSource } from "./network/IwftActiveVideoSource.testHelper.js";
 import { IwftArticlePages } from "./network/IwftArticlePages.testHelper.js";
+import { IwftTikTokPages } from "./network/IwftTikTokPages.testHelper.js";
 import { IwftPlaybackSource } from "./network/IwftPlaybackSource.testHelper.js";
 import { IwftRunBridge } from "./network/IwftRunBridge.testHelper.js";
 import { iwftYouTubeFetch } from "./network/IwftYouTubeFetch.testHelper.js";
@@ -147,6 +148,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftBuild__ = hooksConfig?.build ?? null;
   window.__iwftActiveVideo__ = hooksConfig?.activeVideoUrl === undefined ? null : new IwftActiveVideoSource(hooksConfig.activeVideoUrl);
   window.__iwftArticlePages__ = hooksConfig?.articlePages === undefined ? null : new IwftArticlePages(hooksConfig.articlePages);
+  window.__iwftTikTokPages__ = hooksConfig?.tiktokPages === undefined ? null : new IwftTikTokPages(hooksConfig.tiktokPages);
   window.__iwftPlayback__ = hooksConfig?.playback === undefined ? null : new IwftPlaybackSource(hooksConfig.playback);
   window.__iwftRunBridge__ = hooksConfig?.runBridge === true ? new IwftRunBridge() : null;
   window.__iwftYouTubeFetch__ = hooksConfig?.youTubeFetch === true ? iwftYouTubeFetch : null;

@@ -1,4 +1,5 @@
 import type { IwftArticlePagesConfig } from "../network/IwftArticlePages.testHelper.js";
+import type { IwftTikTokPagesConfig } from "../network/IwftTikTokPages.testHelper.js";
 import { expect, test, type ComponentFixtures } from "@playwright/experimental-ct-react";
 import type { Page } from "@playwright/test";
 import type { AppBuild } from "../../src/app/AppBuildContext.js";
@@ -86,6 +87,7 @@ export interface LaunchOptions {
   build?: AppBuild;
   activeVideoUrl?: string | null;
   articlePages?: IwftArticlePagesConfig;
+  tiktokPages?: IwftTikTokPagesConfig;
   playback?: PlaybackPosition | null;
   plan?: Plan;
   narrationVoice?: NarrationVoice;
@@ -207,6 +209,7 @@ export class Launcher {
         build: options.build,
         activeVideoUrl: options.activeVideoUrl,
         articlePages: options.articlePages,
+        tiktokPages: options.tiktokPages,
         playback: options.playback,
         runBridge: options.runBridge,
         youTubeFetch: options.youTubeFetch,

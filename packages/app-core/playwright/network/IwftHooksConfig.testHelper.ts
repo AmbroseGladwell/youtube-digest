@@ -1,3 +1,4 @@
+import type { IwftTikTokPagesConfig } from "./IwftTikTokPages.testHelper.js";
 import type { IwftArticlePagesConfig } from "./IwftArticlePages.testHelper.js";
 import type { SignedOutTrial } from "../../src/features/signedOutTrial/types/SignedOutTrial.js";
 import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
@@ -57,6 +58,7 @@ export interface IwftHooksConfig {
   activeVideoUrl?: string | null;
   // Absent is a shell with no tabs to read, which is the web app.
   articlePages?: IwftArticlePagesConfig;
+  tiktokPages?: IwftTikTokPagesConfig;
   // Absent is a shell that can't see the player; null is one that can, with nothing to report yet.
   playback?: PlaybackPosition | null;
   runBridge?: boolean;

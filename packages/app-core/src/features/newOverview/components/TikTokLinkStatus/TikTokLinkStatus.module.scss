@@ -12,6 +12,12 @@
   box-shadow: var(--shadow-card);
 }
 
+.tinted {
+  margin-top: 0;
+  background: var(--surface);
+  box-shadow: none;
+}
+
 .blank,
 .cover {
   position: relative;

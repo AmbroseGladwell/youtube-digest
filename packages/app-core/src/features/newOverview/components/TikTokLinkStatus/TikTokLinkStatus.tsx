@@ -86,18 +86,20 @@ export const TikTokLinkStatus = ({ link, onRetry, onClear, onOpened }: TikTokLin
   }
 };
 
-interface TikTokCardProps {
+export interface TikTokCardProps {
   video: TikTokVideo;
+  // Inside the panel's offer it sits on the surface tint, not as a card of its own (130i).
+  tinted?: boolean;
 }
 
-const TikTokCard = ({ video }: TikTokCardProps) => {
+export const TikTokCard = ({ video, tinted = false }: TikTokCardProps) => {
   const [failed, setFailed] = useState(false);
   const caption = video.description.trim();
   const words = tiktokTitle(video.description, video.handle);
   const hashtags = caption !== "" && words !== caption && caption.startsWith(words) ? caption.slice(words.length).trim() : "";
   const length = lengthOf(video);
   return (
-    <div className={styles.card} data-testid={tiktokLinkStatusTestIds.found}>
+    <div className={`${styles.card} ${tinted ? styles.tinted : ""}`} data-testid={tiktokLinkStatusTestIds.found}>
       <span className={styles.cover}>
         {video.coverUrl !== null && !failed && (
           <img className={styles.coverImage} src={video.coverUrl} alt="" onError={() => setFailed(true)} />
