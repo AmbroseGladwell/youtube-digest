@@ -126,6 +126,11 @@ export const apiLogLines = coded("api", {
     renderGaveUp: line("error", "audio render gave up", "A render failed past MAX_RENDER_ATTEMPTS and will not be retried."),
     workerStopped: line("error", "audio worker stopped", "A queue worker threw and stopped taking jobs."),
     deleted: line("info", "audio deleted", "Stored narration was removed."),
+    segmentsSwept: line(
+      "info",
+      "audio segments swept",
+      "Streamed segments kept for first plays were deleted once SEGMENTS_KEPT_MS had passed.",
+    ),
   },
   auth: {
     magicLinkSent: line("info", "magic link sent", "A sign-in link went out. Never the address, the link or its token."),

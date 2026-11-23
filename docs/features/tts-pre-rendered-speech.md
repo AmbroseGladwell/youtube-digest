@@ -170,6 +170,39 @@ before the whole file arrives) as base64 beside `lineStartsSeconds`, `durationSe
 
 Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s of audio.
 
+## Streaming
+
+Built for OV-42, so a first play can start before the whole note is rendered. `POST
+/render/stream` takes the same request as `/render` and answers NDJSON, one event a line, as
+each line is spoken: `{ type: "line", index, startSeconds, segments }`, then `{ type: "done",
+… }` carrying everything `/render` returns plus the segments after the last line. A failure
+partway is `{ type: "error", error }`, since the status has already been sent. A wrong version
+or an unknown voice is still refused with a status before anything streams.
+
+- **One encoder for the whole note.** Lines are fed to a single ffmpeg AAC encoder as they are
+  spoken, and its output is read back as raw ADTS frames, 1,024 samples each. The note is never
+  encoded line by line, which would put the encoder's start-up delay in front of every line and
+  drift the timings.
+- **A segment is about a second of frames, and a line starts a new one.** Each line's segments
+  end halfway through the 0.4 s gap after it. The encoder has already let go of those frames,
+  because the gap is written with the line rather than before the next. So a line can be played
+  as soon as it is spoken, and no segment ever waits for the next line (the ~3.5 s stalls the
+  device test heard from a segmenter that held each line's tail).
+- **Segments are HLS packed audio:** an ID3 tag carrying the segment's start on the timeline in
+  90 kHz units, then the frames as they are. The encoder's 1,024 samples of priming put every
+  line 43 ms later on the segments' timeline than in `lineStartsSeconds`, a constant too small to
+  see in the highlight.
+- **The stored file is unchanged.** When the stream ends, the whole note is encoded by
+  `encode_m4a` exactly as `/render` does it, so the M4A, its timings and the render version are
+  what they were.
+- `test_kokoro_model.py` checks against real speech that each streamed line goes from silence to
+  speech where its start says.
+
+The API (`httpNarrator`) reads the stream as it arrives. For each line the worker stores the
+segments in R2 (`<key>/segments/<n>.aac`) and records the line starts and every segment's length
+on the render (`segment_seconds`), but only from the attempt that claimed it. A retry starts the
+lists again.
+
 ## The API side
 
 `apps/api/src/audio` and `routes/audioRoutes.ts`. The routes:
@@ -177,8 +210,10 @@ Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s o
 | | |
 |---|---|
 | `POST /api/audio` | `{ lines, voice?, priority? }`, checked with `SpokenScript` and `NarrationVoice`. Ready audio answers `200` with its timings at once; anything else is queued and answers `202` |
-| `GET /api/audio/:key` | the status to poll: `queued`, `rendering`, `ready` with `lineStartsSeconds`, `durationSeconds` and `fileUrl`, or `failed` |
+| `GET /api/audio/:key` | the status to poll: `queued`, `rendering`, `ready` with `lineStartsSeconds`, `durationSeconds` and `fileUrl`, or `failed`. A render streaming its first lines is `rendering` with the `lineStartsSeconds` so far, `renderedSeconds` and `playlistUrl` |
 | `GET /api/audio/:key/file` | the M4A, with single byte ranges answered `206`, which Safari needs before it will play media |
+| `GET /api/audio/:key/playlist.m3u8` | public: while the render streams, an HLS event playlist of the segments so far, starting at zero; closed with `#EXT-X-ENDLIST` once ready. `404` once its segments are swept |
+| `GET /api/audio/:key/segments/:n.aac` | public: one segment, with byte ranges |
 | `POST /api/audio/lookup` | `{ keys }`, up to 32: every render that exists under them, in any state. How a note finds narration in a voice other than the chosen one (`narration-voice.md`, "Old audio") |
 | `DELETE /api/audio/:key` | the render and its file, for the account that asked for it and no other; `204`, or `404` for anyone else |
 | `GET /api/audio/samples` | public: the current voice samples that are ready, one per voice (`narration-voice.md`, "The samples") |
@@ -199,6 +234,10 @@ Measured locally, a three-line script in `bm_george` renders in 2.7 s to 6.4 s o
   the third failure marks the job `failed`, and asking for it again starts it from nothing. A
   job whose worker vanished (the API machine stopped mid-render) is taken up again after 15
   minutes.
+- **Segments are kept an hour after the render finishes,** long enough for any first play that
+  began on them to reach the end, then swept whenever a worker finds the queue empty
+  (`SEGMENTS_KEPT_MS`). Deleting a render, or the account that asked for it, deletes its
+  segments with the file, listed by prefix in R2.
 - **Three waiting per account.** An account with three renders queued or running is refused a
   fourth with `429 too_many_requests`; asking again for one already waiting is never refused.
 - **Every render is logged** as `audio rendered`, with its voice, priority, attempt, line

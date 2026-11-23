@@ -108,6 +108,7 @@ export const finishAccountDeletion = async (
     try {
       for (const key of deletion.narrationKeys) {
         await withinTime(narrationStore.delete(key), stepTimeoutMs, "narration");
+        await withinTime(narrationStore.deleteSegments(key), stepTimeoutMs, "narration");
       }
       steps.narration = "done";
     } catch (error) {

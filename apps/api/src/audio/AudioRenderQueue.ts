@@ -2,11 +2,14 @@ import { randomUUID } from "node:crypto";
 import { apiLogLines, narrationLanguage, NarrationVoice, redactErrorMessage } from "@overview/domain";
 import type { AudioRendersRepository } from "./AudioRendersRepository.js";
 import type { AudioStore } from "./AudioStore.js";
-import type { Narrator } from "./Narrator.js";
+import type { NarrationSegment, Narrator } from "./Narrator.js";
 
 export const MAX_RENDER_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [30_000, 120_000];
 const STALE_RENDER_MS = 15 * 60 * 1000;
+// Long enough for any first play that began on the segments to reach the end of them.
+export const SEGMENTS_KEPT_MS = 60 * 60 * 1000;
+const SEGMENT_SWEEP_BATCH = 20;
 
 export interface RenderLog {
   info(line: object): void;
@@ -51,8 +54,21 @@ export class AudioRenderQueue {
   async #work(): Promise<void> {
     try {
       while (await this.#renderNext()) {}
+      await this.sweepSegments();
     } catch (error) {
       this.#options.log.error(apiLogLines.audio.workerStopped({ error: redactErrorMessage(String(error)) }));
+    }
+  }
+
+  async sweepSegments(): Promise<void> {
+    const { renders, store, clock, log } = this.#options;
+    const keys = await renders.segmentsKeptSince(new Date(clock().getTime() - SEGMENTS_KEPT_MS), SEGMENT_SWEEP_BATCH);
+    for (const key of keys) {
+      await store.deleteSegments(key);
+      await renders.forgetSegments(key);
+    }
+    if (keys.length > 0) {
+      log.info(apiLogLines.audio.segmentsSwept({ renders: keys.length }));
     }
   }
 
@@ -72,21 +88,41 @@ export class AudioRenderQueue {
       ttsRequestId: randomUUID(),
       queueWaitSeconds: (claimedAt.getTime() - job.requestedAt.getTime()) / 1000,
     };
+    const lineStarts: number[] = [];
+    const segmentSeconds: number[] = [];
+    const firstAudio: { at: Date | null } = { at: null };
+    const keepSegments = async (segments: NarrationSegment[]) => {
+      for (const segment of segments) {
+        await store.putSegment(job.key, segment.index, segment.audio);
+        segmentSeconds.push(segment.durationSeconds);
+      }
+    };
     try {
       const voice = NarrationVoice.parse(job.voice);
       const narration = await narrator.narrate(
         { lines: job.lines, voice, language: narrationLanguage(voice), renderVersion: job.renderVersion },
         entry.ttsRequestId,
+        async (line) => {
+          await keepSegments(line.segments);
+          lineStarts.push(line.startSeconds);
+          await renders.recordLines(job.key, job.attempts, lineStarts, segmentSeconds);
+          if (firstAudio.at === null && segmentSeconds.length > 0) {
+            firstAudio.at = clock();
+          }
+        },
       );
+      await keepSegments(narration.trailingSegments);
       await store.put(job.key, narration.audio);
       const readyAt = clock();
-      await renders.markReady(job.key, narration.lineStartsSeconds, narration.durationSeconds, readyAt);
+      await renders.markReady(job.key, narration.lineStartsSeconds, narration.durationSeconds, segmentSeconds, readyAt);
       log.info(
         apiLogLines.audio.rendered({
           ...entry,
           synthesisSeconds: narration.synthesisSeconds,
           audioSeconds: narration.durationSeconds,
           bytes: narration.audio.byteLength,
+          segments: segmentSeconds.length,
+          requestToFirstAudioSeconds: firstAudio.at === null ? null : (firstAudio.at.getTime() - job.requestedAt.getTime()) / 1000,
           requestToReadySeconds: (readyAt.getTime() - job.requestedAt.getTime()) / 1000,
         }),
       );

@@ -30,6 +30,9 @@ export type NarrationVoice = z.infer<typeof NarrationVoice>;
 
 export const DEFAULT_NARRATION_VOICE: NarrationVoice = "af_heart";
 
+export const NARRATION_FILE_TYPE = "audio/mp4";
+export const NARRATION_SEGMENT_TYPE = "audio/aac";
+
 const LANGUAGE_BY_ACCENT: Record<NarrationAccent, string> = {
   american: "en-us",
   british: "en-gb",

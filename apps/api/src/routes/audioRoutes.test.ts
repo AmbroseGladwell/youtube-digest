@@ -9,7 +9,7 @@ import {
 } from "@overview/domain";
 import { audioKey } from "../audio/audioKey.js";
 import { AudioRendersRepository } from "../audio/AudioRendersRepository.js";
-import { MAX_RENDER_ATTEMPTS } from "../audio/AudioRenderQueue.js";
+import { MAX_RENDER_ATTEMPTS, SEGMENTS_KEPT_MS } from "../audio/AudioRenderQueue.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { MAX_KEYS_PER_LOOKUP, MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY, MAX_OUTSTANDING_RENDERS_PER_ACCOUNT } from "./audioRoutes.js";
@@ -457,5 +457,141 @@ test("a voice sample cannot be deleted by any account", async () => {
 
   assert.equal(refused.json().error.code, "not_found");
   assert.equal((await fileOf(testApp, key)).statusCode, 200);
+  await testApp.close();
+});
+
+const playlistOf = (testApp: TestApp, key: string) => testApp.app.inject({ method: "GET", url: `/api/audio/${key}/playlist.m3u8` });
+
+const segmentOf = (testApp: TestApp, key: string, name: string, headers: Record<string, string> = {}) =>
+  testApp.app.inject({ method: "GET", url: `/api/audio/${key}/segments/${name}`, headers });
+
+const halfRendered = async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const { key } = (await ask(account, { lines: LINES })).json();
+  const pause = testApp.narrator.pauseAfterLine(1);
+  const draining = testApp.drainAudio();
+  await pause.reached;
+  const finish = async () => {
+    pause.resume();
+    await draining;
+  };
+  return { testApp, account, key, finish };
+};
+
+test("narration partway through its render is polled with the lines so far and a playlist to play them from", async () => {
+  const { testApp, account, key, finish } = await halfRendered();
+
+  const polled = await poll(account, key);
+
+  assert.deepEqual(polled.json(), {
+    key,
+    status: "rendering",
+    lineStartsSeconds: [0, 1],
+    renderedSeconds: 2,
+    playlistUrl: `/api/audio/${key}/playlist.m3u8`,
+  });
+  await finish();
+  await testApp.close();
+});
+
+test("the playlist lists every segment rendered so far and stays open until the render is ready", async () => {
+  const { testApp, key, finish } = await halfRendered();
+
+  const growing = await playlistOf(testApp, key);
+  await finish();
+  const closed = await playlistOf(testApp, key);
+
+  assert.equal(growing.statusCode, 200);
+  assert.equal(growing.headers["content-type"], "application/vnd.apple.mpegurl");
+  assert.equal(growing.headers["cache-control"], "no-store");
+  assert.match(growing.body, /#EXT-X-PLAYLIST-TYPE:EVENT/);
+  assert.match(growing.body, /#EXT-X-START:TIME-OFFSET=0/);
+  assert.deepEqual(growing.body.match(/segments\/\d+\.aac/g), ["segments/0.aac", "segments/1.aac"]);
+  assert.doesNotMatch(growing.body, /#EXT-X-ENDLIST/);
+  assert.deepEqual(closed.body.match(/segments\/\d+\.aac/g), ["segments/0.aac", "segments/1.aac", "segments/2.aac", "segments/3.aac"]);
+  assert.match(closed.body, /#EXT-X-ENDLIST\n$/);
+  await testApp.close();
+});
+
+test("a segment is served as AAC to anyone holding the key, in byte ranges when asked", async () => {
+  const { testApp, key, finish } = await halfRendered();
+
+  const whole = await segmentOf(testApp, key, "1.aac");
+  const part = await segmentOf(testApp, key, "1.aac", { range: "bytes=0-6" });
+  const missing = await segmentOf(testApp, key, "9.aac");
+  const malformed = await segmentOf(testApp, key, "1.mp3");
+
+  assert.equal(whole.statusCode, 200);
+  assert.equal(whole.headers["content-type"], "audio/aac");
+  assert.equal(whole.body, "segment 1: Recycled.");
+  assert.equal(part.statusCode, 206);
+  assert.equal(part.body, "segment");
+  assert.equal(missing.statusCode, 404);
+  assert.equal(malformed.statusCode, 400);
+  await finish();
+  await testApp.close();
+});
+
+test("narration not yet streaming has no playlist, and polling offers none", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const { key } = (await ask(account, { lines: LINES })).json();
+
+  assert.equal((await playlistOf(testApp, key)).statusCode, 404);
+  assert.deepEqual((await poll(account, key)).json(), { key, status: "queued" });
+  await testApp.close();
+});
+
+test("a render that fails partway goes back on the queue without its playlist, and its retry streams from the start", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const { key } = (await ask(account, { lines: LINES })).json();
+  testApp.narrator.failAfterLine(1, "the model fell over");
+
+  await testApp.drainAudio();
+  const afterFailure = await poll(account, key);
+  testApp.clock.advance(MINUTE_MS);
+  const pause = testApp.narrator.pauseAfterLine(0);
+  const draining = testApp.drainAudio();
+  await pause.reached;
+  const retrying = await poll(account, key);
+  pause.resume();
+  await draining;
+
+  assert.deepEqual(afterFailure.json(), { key, status: "queued" });
+  assert.deepEqual(retrying.json().lineStartsSeconds, [0]);
+  assert.equal(retrying.json().renderedSeconds, 1);
+  await testApp.close();
+});
+
+test("segments are kept for an hour after the render is ready, then swept", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const { key } = (await ask(account, { lines: LINES })).json();
+  await testApp.drainAudio();
+
+  testApp.clock.advance(SEGMENTS_KEPT_MS - MINUTE_MS);
+  await testApp.app.audioQueue!.sweepSegments();
+  const withinTheHour = await segmentOf(testApp, key, "0.aac");
+  testApp.clock.advance(2 * MINUTE_MS);
+  await testApp.app.audioQueue!.sweepSegments();
+
+  assert.equal(withinTheHour.statusCode, 200);
+  assert.equal((await segmentOf(testApp, key, "0.aac")).statusCode, 404);
+  assert.equal((await playlistOf(testApp, key)).statusCode, 404);
+  assert.equal((await fileOf(testApp, key)).statusCode, 200);
+  await testApp.close();
+});
+
+test("deleting narration deletes its segments too", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const { key } = (await ask(account, { lines: LINES })).json();
+  await testApp.drainAudio();
+
+  await account.inject({ method: "DELETE", url: `/api/audio/${key}` });
+
+  assert.equal(testApp.audioStore.segments.size, 0);
   await testApp.close();
 });

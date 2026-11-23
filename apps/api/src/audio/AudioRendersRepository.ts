@@ -19,6 +19,7 @@ export interface AudioRender {
   requestedAt: Date;
   lineStartsSeconds: number[] | null;
   durationSeconds: number | null;
+  segmentSeconds: number[] | null;
 }
 
 interface AudioRenderRow {
@@ -32,9 +33,11 @@ interface AudioRenderRow {
   requested_at: Date | string;
   line_starts: number[] | null;
   duration_seconds: number | null;
+  segment_seconds: number[] | null;
 }
 
-const COLUMNS = "key, voice, render_version, lines, status, priority, attempts, requested_at, line_starts, duration_seconds";
+const COLUMNS =
+  "key, voice, render_version, lines, status, priority, attempts, requested_at, line_starts, duration_seconds, segment_seconds";
 
 const fromRow = (row: AudioRenderRow): AudioRender => ({
   key: row.key,
@@ -47,6 +50,7 @@ const fromRow = (row: AudioRenderRow): AudioRender => ({
   requestedAt: new Date(row.requested_at),
   lineStartsSeconds: row.line_starts,
   durationSeconds: row.duration_seconds === null ? null : Number(row.duration_seconds),
+  segmentSeconds: row.segment_seconds,
 });
 
 export interface EnqueueAudio {
@@ -142,7 +146,8 @@ export class AudioRendersRepository {
         [now.toISOString(), staleBefore.toISOString(), maxAttempts],
       );
       const rows = await tx.query<AudioRenderRow>(
-        `update audio_renders set status = 'rendering', started_at = $1::timestamptz, attempts = attempts + 1
+        `update audio_renders set status = 'rendering', started_at = $1::timestamptz, attempts = attempts + 1,
+           line_starts = null, segment_seconds = null
          where key = (
            select key from audio_renders
            where (status = 'queued' and not_before <= $1::timestamptz)
@@ -158,13 +163,37 @@ export class AudioRendersRepository {
     });
   }
 
-  async markReady(key: string, lineStartsSeconds: number[], durationSeconds: number, now: Date): Promise<void> {
+  // Only the attempt that claimed the render may say how far it has got.
+  async recordLines(key: string, attempt: number, lineStartsSeconds: number[], segmentSeconds: number[]): Promise<void> {
+    await this.#sql.query(
+      `update audio_renders set line_starts = $3::jsonb, segment_seconds = $4::jsonb
+       where key = $1 and status = 'rendering' and attempts = $2`,
+      [key, attempt, JSON.stringify(lineStartsSeconds), JSON.stringify(segmentSeconds)],
+    );
+  }
+
+  async markReady(key: string, lineStartsSeconds: number[], durationSeconds: number, segmentSeconds: number[], now: Date): Promise<void> {
     await this.#sql.query(
       `update audio_renders set status = 'ready', line_starts = $2::jsonb, duration_seconds = $3,
-         finished_at = $4::timestamptz, last_error = null
+         segment_seconds = $4::jsonb, finished_at = $5::timestamptz, last_error = null
        where key = $1`,
-      [key, JSON.stringify(lineStartsSeconds), durationSeconds, now.toISOString()],
+      [key, JSON.stringify(lineStartsSeconds), durationSeconds, JSON.stringify(segmentSeconds), now.toISOString()],
     );
+  }
+
+  async segmentsKeptSince(before: Date, limit: number): Promise<string[]> {
+    const rows = await this.#sql.query<{ key: string }>(
+      `select key from audio_renders
+       where segment_seconds is not null and status in ('ready', 'failed') and finished_at < $1::timestamptz
+       order by finished_at
+       limit $2`,
+      [before.toISOString(), limit],
+    );
+    return rows.map(({ key }) => key);
+  }
+
+  async forgetSegments(key: string): Promise<void> {
+    await this.#sql.query("update audio_renders set segment_seconds = null where key = $1", [key]);
   }
 
   async markAttemptFailed(key: string, error: string, retryAt: Date, maxAttempts: number, now: Date): Promise<AudioRenderStatus> {

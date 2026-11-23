@@ -9,6 +9,7 @@ import pytest
 from overview_tts.encode_m4a import encode_m4a
 from overview_tts.kokoro_synthesiser import MODEL_FILE, VOICES_FILE, KokoroSynthesiser
 from overview_tts.render_script import LINE_GAP_SECONDS, render_script
+from overview_tts.stream_script import ENCODER_PRIMING_SAMPLES, stream_script
 
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", Path(__file__).parent.parent / "models"))
 SAMPLE_RECORD = Path(__file__).parents[3] / "samples/records/fitness__add-sets-not-weight-for-bigger-arms.json"
@@ -76,3 +77,30 @@ def test_each_line_starts_where_the_audio_goes_from_silence_to_speech(narration)
     for start in rendered.line_starts_seconds[1:]:
         assert loudness(audio, start - LINE_GAP_SECONDS + 0.1, start - 0.1) < 0.005
         assert loudness(audio, start, start + 0.6) > 0.01
+
+
+@pytest.fixture(scope="module")
+def streamed(synthesiser, narration):
+    lines, _, _ = narration
+    events = list(stream_script(synthesiser, lines, "af_heart", "en-us"))
+    audio = b"".join(segment.audio for event in events for segment in event.segments)
+    pcm = subprocess.run(
+        ["ffmpeg", "-loglevel", "error", "-f", "aac", "-i", "-", "-f", "f32le", "-ac", "1", "-ar", str(DECODE_RATE), "-"],
+        input=audio, capture_output=True, check=True,
+    ).stdout
+    return events[-1].rendered, np.frombuffer(pcm, dtype=np.float32)
+
+
+def test_streamed_lines_start_where_the_whole_render_puts_them(narration, streamed):
+    _, rendered, _ = narration
+
+    assert streamed[0].line_starts_seconds == rendered.line_starts_seconds
+
+
+def test_each_streamed_line_starts_where_its_segments_go_from_silence_to_speech(streamed):
+    rendered, audio = streamed
+    priming = ENCODER_PRIMING_SAMPLES / DECODE_RATE
+
+    for start in rendered.line_starts_seconds[1:]:
+        assert loudness(audio, start + priming - LINE_GAP_SECONDS + 0.1, start + priming - 0.1) < 0.005
+        assert loudness(audio, start + priming, start + priming + 0.6) > 0.01

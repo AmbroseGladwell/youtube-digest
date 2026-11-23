@@ -1,6 +1,13 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
-import { apiLogLines, DEFAULT_NARRATION_VOICE, NarrationVoice, SpokenScript } from "@overview/domain";
+import {
+  apiLogLines,
+  DEFAULT_NARRATION_VOICE,
+  NARRATION_FILE_TYPE,
+  NARRATION_SEGMENT_TYPE,
+  NarrationVoice,
+  SpokenScript,
+} from "@overview/domain";
 import { AUDIO_KEY_PATTERN, TTS_RENDER_VERSION, audioKey } from "../audio/audioKey.js";
 import type { AudioRender, AudioRendersRepository } from "../audio/AudioRendersRepository.js";
 import type { AudioRenderQueue } from "../audio/AudioRenderQueue.js";
@@ -29,13 +36,36 @@ const AudioRequest = z.object({
   priority: z.enum(["interactive", "background"]).default("interactive"),
 });
 
+const CONTENT_TYPE = "content-type";
+const AUDIO_KEY_LABEL = "The audio key";
+
 const KeyParams = z.object({ key: z.string().regex(AUDIO_KEY_PATTERN) });
+
+const SegmentParams = z.object({
+  key: z.string().regex(AUDIO_KEY_PATTERN),
+  segment: z
+    .string()
+    .regex(/^\d{1,5}\.aac$/)
+    .transform((name) => Number.parseInt(name, 10)),
+});
 
 const AudioLookup = z.object({
   keys: z.array(z.string().regex(AUDIO_KEY_PATTERN)).min(1).max(MAX_KEYS_PER_LOOKUP),
 });
 
 const fileUrlOf = (key: string) => `/api/audio/${key}/file`;
+const playlistUrlOf = (key: string) => `/api/audio/${key}/playlist.m3u8`;
+
+const sum = (values: readonly number[]) => values.reduce((total, value) => total + value, 0);
+
+const streamedSoFar = (render: AudioRender) =>
+  render.status === "rendering" && render.segmentSeconds !== null && render.segmentSeconds.length > 0
+    ? {
+        lineStartsSeconds: render.lineStartsSeconds ?? [],
+        renderedSeconds: Number(sum(render.segmentSeconds).toFixed(3)),
+        playlistUrl: playlistUrlOf(render.key),
+      }
+    : {};
 
 const describe = (render: AudioRender) => ({
   key: render.key,
@@ -46,8 +76,39 @@ const describe = (render: AudioRender) => ({
         durationSeconds: render.durationSeconds,
         fileUrl: fileUrlOf(render.key),
       }
-    : {}),
+    : streamedSoFar(render)),
 });
+
+// A growing HLS playlist of packed-audio segments, closed once the render is ready.
+export const playlistOf = (render: AudioRender): string => {
+  const segments = render.segmentSeconds ?? [];
+  return [
+    "#EXTM3U",
+    "#EXT-X-VERSION:3",
+    `#EXT-X-TARGETDURATION:${Math.max(1, Math.ceil(Math.max(0, ...segments)))}`,
+    "#EXT-X-MEDIA-SEQUENCE:0",
+    "#EXT-X-PLAYLIST-TYPE:EVENT",
+    "#EXT-X-START:TIME-OFFSET=0,PRECISE=YES",
+    ...segments.flatMap((seconds, index) => [`#EXTINF:${seconds.toFixed(6)},`, `segments/${index}.aac`]),
+    ...(render.status === "ready" ? ["#EXT-X-ENDLIST"] : []),
+    "",
+  ].join("\n");
+};
+
+const sendRanged = (rangeHeader: string | undefined, body: Buffer, reply: FastifyReply) => {
+  reply.header("accept-ranges", "bytes");
+  const range = byteRange(rangeHeader, body.length);
+  if (range === "unsatisfiable") {
+    return reply.status(416).header("content-range", `bytes */${body.length}`).send();
+  }
+  if (range === null) {
+    return reply.send(body);
+  }
+  return reply
+    .status(206)
+    .header("content-range", `bytes ${range.start}-${range.end}/${body.length}`)
+    .send(body.subarray(range.start, range.end + 1));
+};
 
 // Why the audio file is public: docs/features/tts-pre-rendered-speech.md, "The API side".
 export const audioRoutes = (app: FastifyInstance, audio: AudioServices | null, clock: () => Date): void => {
@@ -122,18 +183,19 @@ export const audioRoutes = (app: FastifyInstance, audio: AudioServices | null, c
 
   app.delete("/audio/:key", async (request, reply) => {
     const { renders, store } = services();
-    const { key } = parseOrThrow(KeyParams, request.params, "The audio key");
+    const { key } = parseOrThrow(KeyParams, request.params, AUDIO_KEY_LABEL);
     if (!(await renders.deleteRequestedBy(key, request.session!.accountId))) {
       throw new ApiError("not_found", "No narration this account asked for has this key");
     }
     await store.delete(key);
+    await store.deleteSegments(key);
     request.log.info(apiLogLines.audio.deleted({ key }));
     return reply.status(204).send();
   });
 
   app.get("/audio/:key", async (request) => {
     const { renders } = services();
-    const { key } = parseOrThrow(KeyParams, request.params, "The audio key");
+    const { key } = parseOrThrow(KeyParams, request.params, AUDIO_KEY_LABEL);
     const render = await renders.get(key);
     if (render === null) {
       throw new ApiError("not_found", "No narration has been asked for with this key");
@@ -141,27 +203,35 @@ export const audioRoutes = (app: FastifyInstance, audio: AudioServices | null, c
     return describe(render);
   });
 
+  app.get("/audio/:key/playlist.m3u8", { config: { public: true } }, async (request, reply) => {
+    const { renders } = services();
+    const { key } = parseOrThrow(KeyParams, request.params, AUDIO_KEY_LABEL);
+    const render = await renders.get(key);
+    if (render === null || render.segmentSeconds === null || render.segmentSeconds.length === 0) {
+      throw new ApiError("not_found", "No narration is being streamed with this key");
+    }
+    return reply.header(CONTENT_TYPE, "application/vnd.apple.mpegurl").header("cache-control", "no-store").send(playlistOf(render));
+  });
+
+  app.get("/audio/:key/segments/:segment", { config: { public: true } }, async (request, reply) => {
+    const { store } = services();
+    const { key, segment: index } = parseOrThrow(SegmentParams, request.params, "The segment");
+    const segment = await store.getSegment(key, index);
+    if (segment === null) {
+      throw new ApiError("not_found", "No segment is stored with this key and number");
+    }
+    reply.header(CONTENT_TYPE, NARRATION_SEGMENT_TYPE).header("cache-control", "public, max-age=3600, immutable");
+    return sendRanged(request.headers.range, segment, reply);
+  });
+
   app.get("/audio/:key/file", { config: { public: true } }, async (request, reply) => {
     const { store } = services();
-    const { key } = parseOrThrow(KeyParams, request.params, "The audio key");
+    const { key } = parseOrThrow(KeyParams, request.params, AUDIO_KEY_LABEL);
     const file = await store.get(key);
     if (file === null) {
       throw new ApiError("not_found", "No narration is stored with this key");
     }
-    reply
-      .header("content-type", "audio/mp4")
-      .header("accept-ranges", "bytes")
-      .header("cache-control", "public, max-age=31536000, immutable");
-    const range = byteRange(request.headers.range, file.length);
-    if (range === "unsatisfiable") {
-      return reply.status(416).header("content-range", `bytes */${file.length}`).send();
-    }
-    if (range === null) {
-      return reply.send(file);
-    }
-    return reply
-      .status(206)
-      .header("content-range", `bytes ${range.start}-${range.end}/${file.length}`)
-      .send(file.subarray(range.start, range.end + 1));
+    reply.header(CONTENT_TYPE, NARRATION_FILE_TYPE).header("cache-control", "public, max-age=31536000, immutable");
+    return sendRanged(request.headers.range, file, reply);
   });
 };

@@ -1,4 +1,5 @@
 import base64
+import json
 import threading
 
 import pytest
@@ -172,3 +173,65 @@ def test_a_model_that_fails_to_load_still_lets_the_machine_stop():
     LoadingSynthesiser(broken_load, on_ready=ready.set)
 
     assert ready.wait(timeout=5)
+
+
+class KokoroRateSynthesiser(FakeSynthesiser):
+    sample_rate = 24000
+    samples_per_character = 480
+
+
+@pytest.fixture
+def streaming_service():
+    schedule = FakeSchedule()
+    idle_exit = IdleExit(15, lambda: None, schedule)
+    idle_exit.start()
+    return TestClient(create_app(KokoroRateSynthesiser(), idle_exit))
+
+
+def streamed(response) -> list[dict]:
+    return [json.loads(line) for line in response.text.splitlines()]
+
+
+def test_a_streamed_render_sends_each_line_then_the_m4a(streaming_service):
+    response = streaming_service.post("/render/stream", json=render_body())
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/x-ndjson"
+    events = streamed(response)
+    assert [event["type"] for event in events] == ["line", "line", "line", "done"]
+    assert [event["index"] for event in events[:-1]] == [0, 1, 2]
+    assert all(event["segments"] for event in events[:-1])
+    done = events[-1]
+    assert done["renderVersion"] == RENDER_VERSION
+    assert done["lineStartsSeconds"] == [event["startSeconds"] for event in events[:-1]]
+    assert base64.b64decode(done["audioBase64"])[4:8] == b"ftyp"
+
+
+def test_a_streamed_render_numbers_its_segments_across_lines(streaming_service):
+    events = streamed(streaming_service.post("/render/stream", json=render_body()))
+    segments = [segment for event in events for segment in event["segments"]]
+
+    assert [segment["index"] for segment in segments] == list(range(len(segments)))
+    assert base64.b64decode(segments[0]["audioBase64"])[:3] == b"ID3"
+
+
+def test_a_streamed_render_for_another_version_is_refused_before_anything_is_sent(streaming_service):
+    response = streaming_service.post("/render/stream", json=render_body(renderVersion=RENDER_VERSION + 1))
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "render_version_mismatch"
+
+
+def test_a_streamed_render_that_fails_partway_ends_with_an_error_event():
+    class Failing(KokoroRateSynthesiser):
+        def speak(self, text, voice, language):
+            if text == "Standard advice.":
+                raise RuntimeError("the model fell over")
+            return super().speak(text, voice, language)
+
+    idle_exit = IdleExit(15, lambda: None, FakeSchedule())
+    idle_exit.start()
+    events = streamed(TestClient(create_app(Failing(), idle_exit)).post("/render/stream", json=render_body()))
+
+    assert [event["type"] for event in events] == ["line", "line", "error"]
+    assert events[-1]["error"]["code"] == "internal_error"

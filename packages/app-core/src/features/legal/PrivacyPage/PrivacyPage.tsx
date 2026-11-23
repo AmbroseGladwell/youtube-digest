@@ -365,7 +365,9 @@ const sections: readonly LegalSection[] = [
           R2, named by a hash of the words and the voice, so two readers whose overviews contain the same words in the same voice share one
           file. The file can be fetched by anyone who holds its name, which isn't listed anywhere and isn't guessable; this is also how a
           shared link plays its narration without an account. We count renders per account per day, and keep each file for as long as an
-          overview uses it, which for a file two readers share means while either does.
+          overview uses it, which for a file two readers share means while either does. So that narration can start playing before it is
+          finished, it is also stored in short pieces as it is made, fetched the same way; the pieces are deleted an hour after the file is
+          finished.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you.
@@ -616,7 +618,7 @@ const sections: readonly LegalSection[] = [
           ["Embeddings of your overviews, for search", "until the overview changes or is deleted, or the account is"],
           [
             "Narration audio",
-            "while an overview uses it; every file your account asked for goes with the account, and is made again for a reader who shared it the next time they play it",
+            "while an overview uses it; the short pieces it is first played from, an hour after it is finished; every file your account asked for goes with the account, and is made again for a reader who shared it the next time they play it",
           ],
           ["Shared links", "until you stop them; the copy goes with the account"],
           ["Your own copy of the words behind your overviews", "while a note of yours uses the video or episode; gone with the account"],
