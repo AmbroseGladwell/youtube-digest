@@ -133,3 +133,22 @@ test("a question over the library or a project goes to its own route, and says w
   assert.deepEqual(progress, [{ type: "picking" }, picked]);
   assert.equal(project.sent[0]?.url, `https://o.example/api/chats/projects/${PROJECT}/messages`);
 });
+
+test("asking for suggested questions posts the scope and reads back what the server did", async () => {
+  const PROJECT = "7c2e9f10-0b8f-4f51-8a43-6a1d3c2e5f5a";
+  const sent: Array<{ url: string; body: unknown }> = [];
+  const fetch = async (input: string | URL | Request, init: RequestInit = {}) => {
+    sent.push({ url: String(input), body: JSON.parse(String(init.body)) });
+    return new Response(JSON.stringify({ status: "started" }), { status: 202 });
+  };
+
+  const status = await createFetchChatApi({ baseUrl: "https://o.example", fetch }).refreshSuggestedQuestions({
+    kind: "project",
+    projectId: PROJECT as never,
+  });
+
+  assert.equal(status, "started");
+  assert.deepEqual(sent, [
+    { url: "https://o.example/api/suggested-questions/refresh", body: { scope: { kind: "project", projectId: PROJECT } } },
+  ]);
+});

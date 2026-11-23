@@ -7,6 +7,7 @@ import {
   SuggestedQuestionChange,
   SuggestedQuestionRefreshRequest,
   type SuggestedQuestionRefreshResponse,
+  SUGGESTED_QUESTIONS_REFRESH_PATH,
 } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { sendWritten, UpdatedAt } from "../http/writeHeaders.js";
@@ -57,7 +58,7 @@ export const suggestedQuestionRoutes = (
   });
 
   // The page never waits for the writing: docs/features/suggested-questions.md, "Slice 2: the refresh".
-  app.post("/suggested-questions/refresh", async (request, reply) => {
+  app.post(SUGGESTED_QUESTIONS_REFRESH_PATH, async (request, reply) => {
     const { scope } = parseOrThrow(SuggestedQuestionRefreshRequest, request.body, "The refresh");
     const answer = (body: SuggestedQuestionRefreshResponse) => reply.code(202).send(body);
     if (refresher === null) {

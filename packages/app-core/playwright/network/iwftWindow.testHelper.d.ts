@@ -13,6 +13,7 @@ import type { YouTubeFetch } from "@overview/transcripts";
 import type { InMemoryCaptureQueueStore } from "../../src/features/captureQueue/types/InMemoryCaptureQueueStore.testHelper.js";
 import type { InMemoryProjectStore } from "../../src/features/projects/types/InMemoryProjectStore.testHelper.js";
 import type { InMemoryChatStore } from "../../src/features/chats/types/InMemoryChatStore.testHelper.js";
+import type { InMemorySuggestedQuestionStore } from "../../src/features/chats/types/InMemorySuggestedQuestionStore.testHelper.js";
 import type { InMemoryFollowedPlaylistStore } from "../../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
@@ -32,6 +33,7 @@ declare global {
       captureQueueStore: InMemoryCaptureQueueStore;
       projectStore: InMemoryProjectStore;
       chatStore: InMemoryChatStore;
+      suggestedQuestionStore: InMemorySuggestedQuestionStore;
       syncStorage: InMemorySyncStorage | null;
     };
     // The no-account library is under null.

@@ -7,7 +7,8 @@ questions".
 
 Slice 1 is the record: where a question is kept, how what became of it syncs, and how it is
 deleted. Slice 2 is the server's refresh, which finds the pairs and writes the questions in
-batches. The Ask page shows them after its design round (slice 4).
+batches. Slice 3 is the Ask page's logic, with nothing drawn yet, and slice 4 draws it to the
+design round's hand-off.
 
 ## One record per question
 
@@ -239,6 +240,75 @@ the chat allowance.
 `api.questions.refreshed` is logged for every ask with the plan and `status`, and again when a
 started refresh ends, with its `outcome`, whether it filled the library, how many projects, the
 pairs labelled and the questions written. Never a question, a title, an id or a cost.
+
+## Slice 3: on the Ask page
+
+Everything the Ask page needs, as app-core code with no components or styles:
+`useSuggestedQuestions` (`features/chats/`), the pure set and paging in `askQuestionSet`, the
+refresh call on `ChatApi`, and the events. Slice 4 renders it to the design hand-off: Claude Design
+project 668753e1…, page "OV-350 1 Suggested Questions", frames 350a–350o (owner, 23 Nov 2026).
+The library and each project use the same logic, keyed by scope.
+
+### The set
+
+- **The reader's questions first, then the template starters** (`askStarters`, unchanged), three at
+  a time (`askQuestionSet`, `askQuestionPage`). The reader's are the device's live ones,
+  newest first (`listSuggestedQuestions`), less any held for Undo. Whether one is used up is the
+  server's call, not the device's.
+- **A question waits for its overviews.** One whose overviews aren't both on the device is left out
+  until they are. Each one shown carries both, resolved from the local library (id, title, kind,
+  image), for the "This question draws on" menu.
+- **Templates only**, exactly today's three, on a free plan, while the plan isn't known yet
+  (`usage.plan`), and whenever there are none of the reader's own.
+- **Different questions** moves to the next three and wraps after the last. The hook says which
+  page of how many ("1 of 3"), and `canCycle` is false at three or fewer, which hides the button.
+- **A card taken away lets the next move up** within the page on show. A removal that leaves fewer
+  pages stays on the last there is.
+
+### What the reader does to one
+
+| Action | Writes | When |
+|---|---|---|
+| **Good question** | `feedback` glad, or `none` to take the mark off | at once |
+| **Not useful** | `feedback` obvious | when Undo's 5 s are up |
+| **Hide** | `dismissedAt` | when Undo's 5 s are up |
+| **Asking it** | `askedAt` | at once |
+| **Shown** | `shownAt` | the first time it is among the three on show |
+
+- **The held write.** `dismissedAt` keeps the earliest time and syncs, and obvious stops a question
+  coming back, so an undone removal must never have been written. Not useful and Hide take the card
+  away at once and hold the change for `UNDO_QUESTION_MS` (5 s); Undo drops it unwritten. It is
+  written when the time is up, at once when a second card is taken away, and at once when the page
+  is left (unmount or `pagehide`), so nothing is lost. The toast and its Undo are slice 4's.
+- **Asking one** gives back its text and both overview ids, which `useAskPage`'s `ask` pins for that
+  question (its third argument), as the "@" pins do.
+- **Shown** means on screen: the hook is told whether the questions are showing (the empty Ask page
+  with no wait), and records `shownAt` only for the reader's questions in the three on show, once,
+  and not for one another device already showed.
+
+### The refresh call
+
+`ChatApi.refreshSuggestedQuestions(scope)` posts to `POST /api/suggested-questions/refresh`. The
+hook calls it once each time the page opens on a scope, signed in, never on a plan known to be free,
+without waiting and swallowing any failure: questions arrive through sync, and what the server
+answered matters only to its own log (`api.questions.refreshed`). The page isn't wired to the hook
+until slice 4, so nothing is spent on questions no one can see yet.
+
+### Events
+
+`ask.questions.*` and `ask.question.*`, each with `plan` and `scope` (library or project), never a
+question, a title or an id:
+
+- `questions.shown`: a set of three on show, with how many are the reader's (`custom`), once per set
+  while showing.
+- `questions.differentPressed`.
+- `question.asked`, with `kind`: `custom` or `template`.
+- `question.markedGlad`, with `glad`, since Good question also takes the mark off.
+- `question.markedObvious` and `question.dismissed`, sent when the held write is made, so an undone
+  one is never counted.
+- `question.undone`, with `action`: `notUseful` or `hidden`.
+- `question.chipOpened`: an overview opened from the "This question draws on" menu, through the
+  hook's `chipOpened`.
 
 ## Privacy
 

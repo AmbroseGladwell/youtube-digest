@@ -6,6 +6,7 @@ import type {
   OverviewStore,
   ProjectStore,
   SettingsStore,
+  SuggestedQuestionStore,
   SyncStorage,
   TranscriptStore,
 } from "@overview/domain";
@@ -18,6 +19,7 @@ export interface Stores {
   captureQueueStore: CaptureQueueStore;
   projectStore: ProjectStore;
   chatStore: ChatStore;
+  suggestedQuestionStore: SuggestedQuestionStore;
   // Null in a shell whose library cannot sync, and every sync control then hides itself.
   syncStorage: SyncStorage | null;
 }
