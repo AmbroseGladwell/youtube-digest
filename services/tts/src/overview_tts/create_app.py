@@ -1,4 +1,5 @@
 import base64
+import json
 import logging
 import threading
 import time
@@ -6,7 +7,7 @@ from typing import Annotated, Literal
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.background import BackgroundTask
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 from pydantic.alias_generators import to_camel
@@ -17,6 +18,7 @@ from .idle_exit import IdleExit
 from .posthog_exception_reporter import ExceptionReporter
 from .request_id import REQUEST_ID_HEADER, current_request_id, request_id_for
 from .render_script import RENDER_VERSION, Synthesiser, render_script
+from .stream_script import LineSpoken, Segment, stream_script
 
 MAX_SCRIPT_CHARACTERS = 20_000
 
@@ -59,6 +61,17 @@ class ServiceError(Exception):
         self.status = status
         self.code = code
         self.message = message
+
+
+def _segments(segments: list[Segment]) -> list[dict]:
+    return [
+        {"index": s.index, "durationSeconds": s.duration_seconds, "audioBase64": base64.b64encode(s.audio).decode("ascii")}
+        for s in segments
+    ]
+
+
+def _event(body: dict) -> bytes:
+    return (json.dumps(body, separators=(",", ":")) + "\n").encode()
 
 
 def error_response(status: int, code: str, message: str) -> JSONResponse:
@@ -116,6 +129,75 @@ def create_app(
     def health() -> dict:
         return {"renderVersion": RENDER_VERSION, "voices": sorted(synthesiser.voices())}
 
+    def refuse_unless_renderable(request: RenderRequest) -> None:
+        if request.render_version != RENDER_VERSION:
+            raise ServiceError(
+                409,
+                "render_version_mismatch",
+                f"This service renders version {RENDER_VERSION}, not {request.render_version}",
+            )
+        if request.voice not in synthesiser.voices():
+            raise ServiceError(422, "unknown_voice", f"No voice named {request.voice}")
+
+    # NDJSON, one event per line as it is spoken: docs/features/tts-pre-rendered-speech.md, "Streaming".
+    @app.post("/render/stream")
+    def render_stream(request: RenderRequest) -> StreamingResponse:
+        script = {
+            "voice": request.voice,
+            "language": request.language,
+            "renderVersion": request.render_version,
+            "lines": len(request.lines),
+            "characters": sum(len(line) for line in request.lines),
+            "streamed": True,
+        }
+        log_lines.RENDER_REQUESTED.write(log, **script)
+        with idle_exit.busy():
+            refuse_unless_renderable(request)
+        request_id = current_request_id.get()
+
+        # Each resume runs in a fresh context copy, so the id is set before each log line.
+        def events():
+            try:
+                with idle_exit.busy(), one_render_at_a_time:
+                    started = time.perf_counter()
+                    first_line_seconds = None
+                    for event in stream_script(synthesiser, request.lines, request.voice, request.language):
+                        if isinstance(event, LineSpoken):
+                            if first_line_seconds is None and event.segments:
+                                first_line_seconds = time.perf_counter() - started
+                            yield _event({"type": "line", "index": event.index, "startSeconds": event.start_seconds, "segments": _segments(event.segments)})
+                            continue
+                        synthesis_seconds = time.perf_counter() - started
+                        audio = encode_m4a(event.rendered.samples, event.rendered.sample_rate)
+                        current_request_id.set(request_id)
+                        log_lines.RENDER_FINISHED.write(
+                            log,
+                            **script,
+                            synthesisSeconds=round(synthesis_seconds, 2),
+                            firstLineSeconds=None if first_line_seconds is None else round(first_line_seconds, 2),
+                            audioSeconds=round(event.rendered.duration_seconds, 2),
+                            bytes=len(audio),
+                        )
+                        yield _event(
+                            {
+                                "type": "done",
+                                "renderVersion": RENDER_VERSION,
+                                "lineStartsSeconds": event.rendered.line_starts_seconds,
+                                "durationSeconds": event.rendered.duration_seconds,
+                                "synthesisSeconds": round(synthesis_seconds, 2),
+                                "audioBase64": base64.b64encode(audio).decode("ascii"),
+                                "segments": _segments(event.segments),
+                            }
+                        )
+            except Exception as error:
+                current_request_id.set(request_id)
+                log_lines.HTTP_UNHANDLED_ERROR.write(log, exc_info=error, reqId=request_id)
+                if report_exception is not None:
+                    report(error)
+                yield _event({"type": "error", "error": {"code": "internal_error", "message": "Something went wrong"}})
+
+        return StreamingResponse(events(), media_type="application/x-ndjson")
+
     @app.post("/render", response_model=RenderResponse, response_model_by_alias=True)
     def render(request: RenderRequest) -> RenderResponse:
         script = {
@@ -127,14 +209,7 @@ def create_app(
         }
         log_lines.RENDER_REQUESTED.write(log, **script)
         with idle_exit.busy():
-            if request.render_version != RENDER_VERSION:
-                raise ServiceError(
-                    409,
-                    "render_version_mismatch",
-                    f"This service renders version {RENDER_VERSION}, not {request.render_version}",
-                )
-            if request.voice not in synthesiser.voices():
-                raise ServiceError(422, "unknown_voice", f"No voice named {request.voice}")
+            refuse_unless_renderable(request)
             with one_render_at_a_time:
                 started = time.perf_counter()
                 rendered = render_script(synthesiser, request.lines, request.voice, request.language)

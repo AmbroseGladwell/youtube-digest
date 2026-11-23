@@ -79,6 +79,7 @@ const seedEverything = async (testApp: TestApp, session: TestSession, email: str
     [narrationKey, now, accountId],
   );
   await testApp.audioStore.put(narrationKey, Buffer.from("audio"));
+  await testApp.audioStore.putSegment(narrationKey, 0, Buffer.from("segment"));
   await sql.query(
     `insert into shares (token, account_id, overview_id, snapshot, content_hash, shared_at, updated_at)
      values ($1, $2, $3, '{}'::jsonb, 'hash', $4::timestamptz, $4::timestamptz)`,
@@ -230,6 +231,7 @@ test("a fresh session deletes everything under the account, its transcripts incl
     0,
   );
   assert.equal(await loggedApp.audioStore.get(key), null);
+  assert.equal(await loggedApp.audioStore.getSegment(key, 0), null);
   assert.equal((await loggedApp.app.inject({ method: "GET", url: `/s/${SHARE_TOKEN}` })).statusCode, 404);
   assert.deepEqual(loggedApp.personEraser.erased, [session.accountId, ANONYMOUS_ID]);
 

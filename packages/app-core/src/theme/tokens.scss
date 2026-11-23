@@ -7,6 +7,7 @@
 
   --ground: #f6f4f0;
   --surface: #eae7e1;
+  --track-made: #c9c3b8;
   --card: #ffffff;
   --card-hover: #ffffff;
   --dialog: #ffffff;
@@ -114,6 +115,7 @@
 @mixin dark-tokens {
   --ground: #151618;
   --surface: #222428;
+  --track-made: #4c4e54;
   --card: #1e1f22;
   --card-hover: #292b2f;
   --dialog: #26282c;

@@ -8,6 +8,7 @@ import { NarrationApiProvider } from "./NarrationApiContext.js";
 import { PlayerEngine } from "./PlayerEngine.js";
 import { PlayerProvider } from "./PlayerContext.js";
 import { bindMediaSession } from "./util/bindMediaSession.js";
+import { loadStreamWithHls } from "./util/loadStreamWithHls.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
 import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
@@ -36,6 +37,8 @@ export const PlayerRuntime = ({ children }: { children: ReactNode }) => {
         onFirstSound: (report) => latestAnalytics.current.player.playback.firstSound(report),
         onListenStarted: (report) => latestAnalytics.current.player.playback.started(report),
         onListenEnded: (report) => latestAnalytics.current.player.playback.ended(report),
+        onWaitedAhead: (report) => latestAnalytics.current.player.playback.waitedAhead(report),
+        loadStream: loadStreamWithHls,
       }),
   );
 

@@ -43,6 +43,7 @@ export const seedVoiceSamples = async ({ renders, samples, store, now }: SeedVoi
   const deleted = await samples.supersededBefore(new Date(now.getTime() - SUPERSEDED_SAMPLE_KEPT_MS));
   for (const key of deleted) {
     await store.delete(key);
+    await store.deleteSegments(key);
     await renders.delete(key);
   }
   return { queued, deleted };

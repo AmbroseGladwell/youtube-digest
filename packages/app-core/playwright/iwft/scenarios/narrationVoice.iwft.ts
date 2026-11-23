@@ -99,7 +99,7 @@ test("a note narrated before the reader chose another voice plays as it was, and
   await reader.verifyOffersReRecord("Re-record in Emma");
 
   await reader.clickReRecord();
-  await reader.verifyBarSays(/^Preparing audio/);
+  await reader.verifyBarSays("Starting");
   backendSimulator.narration.finishRenders();
 
   await reader.verifyBarSays(/^Now playing/);

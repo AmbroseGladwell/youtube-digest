@@ -3,7 +3,7 @@ import { access, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { createServer, type ServerResponse } from "node:http";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { formatTimestamp, type Overview } from "@overview/domain";
+import { formatTimestamp, NARRATION_FILE_TYPE, type Overview } from "@overview/domain";
 import type { FetchedTranscript } from "@overview/transcripts";
 import { blindListenPageHtml } from "../blindListenPageHtml.js";
 import { comparisonPaths } from "../comparisonPaths.js";
@@ -150,7 +150,7 @@ const server = createServer(async (request, response) => {
         return send(response, 404, "text/plain", "unknown pair; reload the page");
       }
       const side: Side = (audio[2] === "A") === showing.newWasA ? "new" : "old";
-      return send(response, 200, "audio/mp4", await readFile(audioPath(showing.pair.videoId, side)));
+      return send(response, 200, NARRATION_FILE_TYPE, await readFile(audioPath(showing.pair.videoId, side)));
     }
 
     if (request.method === "POST" && url === "/api/pick") {

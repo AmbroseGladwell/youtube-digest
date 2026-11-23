@@ -105,7 +105,7 @@ const ChatWait = z.enum(["month", "libraryMonth", "day", "everyone", "conversati
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
-const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay"]);
+const PlayerMainButton = z.enum(["play", "pause", "cancel", "starting", "buffering", "replay"]);
 // Tells a first listen from a resume; playerBarView.test.ts keeps it in step with PlayerStatus.
 export const PlayerState = z.enum(["ready", "preparing", "playing", "paused", "buffering", "ended", "failed", "busy"]);
 export type PlayerState = z.infer<typeof PlayerState>;
@@ -606,13 +606,22 @@ export const analyticsEvents = {
         { overviewId: OverviewId, source: PlaybackSource },
       ),
       firstSound: event(
-        "The reader hears the narration, or sees the pacer move, after starting a listen: how long they waited in milliseconds, where they pressed play, whether it was audio or the pacer, and whether the press waited on the audio being made. A resume from paused sends nothing",
+        "The reader hears the narration, or sees the pacer move, after starting a listen: how long they waited in milliseconds, where they pressed play, whether it was audio or the pacer, whether the press waited on the audio being made, and whether that audio played while still being made. A resume from paused sends nothing",
         {
           overviewId: OverviewId,
           waitMs: z.number().int().min(0).max(MAX_FIRST_SOUND_WAIT_MS),
           from: PlaybackFrom,
           source: PlaybackSource,
           prepared: z.boolean(),
+          streamed: z.boolean().optional(),
+        },
+      ),
+      waitedAhead: event(
+        "The reader moved to a part of the note still being made and waited for it: how long in milliseconds, and whether its sound came or they moved on first",
+        {
+          overviewId: OverviewId,
+          waitMs: z.number().int().min(0).max(MAX_FIRST_SOUND_WAIT_MS),
+          outcome: z.enum(["played", "abandoned"]),
         },
       ),
       ended: event(

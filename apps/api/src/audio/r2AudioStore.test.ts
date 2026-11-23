@@ -55,3 +55,34 @@ test("deletes the object with a signed DELETE, and a key already gone is not an 
   assert.equal(requests[0]!.url, `https://${SETTINGS.accountId}.r2.cloudflarestorage.com/${SETTINGS.bucket}/${KEY}.m4a`);
   await assert.rejects(createR2AudioStore(SETTINGS, answering(403).fetchImpl).delete(KEY), /403/);
 });
+
+test("a segment is a signed PUT of an AAC object under the key's segments", async () => {
+  const { requests, fetchImpl } = answering(200);
+
+  await createR2AudioStore(SETTINGS, fetchImpl).putSegment(KEY, 3, Buffer.from("segment"));
+
+  assert.equal(requests[0]!.method, "PUT");
+  assert.equal(requests[0]!.url, `https://${SETTINGS.accountId}.r2.cloudflarestorage.com/${SETTINGS.bucket}/${KEY}/segments/3.aac`);
+  assert.equal(requests[0]!.headers.get("content-type"), "audio/aac");
+});
+
+test("deleting a key's segments lists them by prefix and deletes each one it finds", async () => {
+  const requests: Request[] = [];
+  const listing = `<ListBucketResult><Contents><Key>${KEY}/segments/0.aac</Key></Contents><Contents><Key>${KEY}/segments/1.aac</Key></Contents></ListBucketResult>`;
+  const fetchImpl = (async (request: Request) => {
+    requests.push(request);
+    return new Response(request.method === "GET" ? listing : null, { status: request.method === "GET" ? 200 : 204 });
+  }) as typeof fetch;
+
+  await createR2AudioStore(SETTINGS, fetchImpl).deleteSegments(KEY);
+
+  const bucket = `https://${SETTINGS.accountId}.r2.cloudflarestorage.com/${SETTINGS.bucket}/`;
+  assert.equal(requests[0]!.url, `${bucket}?list-type=2&prefix=${KEY}%2Fsegments%2F`);
+  assert.deepEqual(
+    requests.slice(1).map((request) => [request.method, request.url]),
+    [
+      ["DELETE", `${bucket}${KEY}/segments/0.aac`],
+      ["DELETE", `${bucket}${KEY}/segments/1.aac`],
+    ],
+  );
+});

@@ -134,9 +134,8 @@ test("an old note makes its audio on first play, saying so while it waits", asyn
   await reader.verifyBarSays("Audio is made on first play · about 20 s");
   await reader.clickPlayPause();
 
-  await reader.verifyBarSays("Preparing audio · Queued");
-  await reader.verifyShowsPreparingSweep();
-  await reader.verifyPlayButtonReads("Cancel preparing audio");
+  await reader.verifyBarSays("Starting");
+  await reader.verifyPlayButtonReads("Pause, starting");
 
   backendSimulator.narration.finishRenders();
   await reader.verifyBarSays(/^Now playing · /);
@@ -151,7 +150,7 @@ test("a render that gives up says so in plain words, and reading along instead s
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
   await reader.clickPlayPause();
-  await reader.verifyBarSays("Preparing audio · Queued");
+  await reader.verifyBarSays("Starting");
 
   backendSimulator.narration.failRenders();
   await reader.verifyBarSays("Couldn't prepare the audio");
@@ -416,7 +415,7 @@ test("pressing play while a background render is under way asks for it at the fr
 
   await reader.clickPlayPause();
 
-  await reader.verifyPlayButtonReads("Cancel preparing audio");
+  await reader.verifyPlayButtonReads("Pause, starting");
   expect(backendSimulator.narration.requestedPriorities()).toEqual(["background", "interactive"]);
   backendSimulator.narration.finishRenders();
   await reader.verifyBarSays(/^Now playing · /);
@@ -497,7 +496,7 @@ test("the wait from pressing play to the first sound is counted, with narration 
 
   await expect
     .poll(() => firstSounds(backendSimulator))
-    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: false, waitMs: expect.any(Number) }]);
+    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: false, streamed: false, waitMs: expect.any(Number) }]);
   const { waitMs } = firstSounds(backendSimulator)[0]!;
   expect(Number.isInteger(waitMs)).toBe(true);
   expect(waitMs).toBeGreaterThanOrEqual(0);
@@ -509,13 +508,13 @@ test("narration made on the press counts its wait as prepared", async ({ launche
   const reader = await library.nthCard(0).openReader();
 
   await reader.clickPlayPause();
-  await reader.verifyBarSays("Preparing audio · Queued");
+  await reader.verifyBarSays("Starting");
   backendSimulator.narration.finishRenders();
   await reader.verifyBarSays(/^Now playing · /);
 
   await expect
     .poll(() => firstSounds(backendSimulator))
-    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: true, waitMs: expect.any(Number) }]);
+    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: true, streamed: false, waitMs: expect.any(Number) }]);
 });
 
 test("Listen in the library counts its first sound as from the row, and pausing then playing again does not count twice", async ({
@@ -530,7 +529,7 @@ test("Listen in the library counts its first sound as from the row, and pausing 
   await card.clickListen();
   await expect
     .poll(() => firstSounds(backendSimulator))
-    .toEqual([{ overviewId: NOTE.id, from: "libraryRow", source: "audio", prepared: false, waitMs: expect.any(Number) }]);
+    .toEqual([{ overviewId: NOTE.id, from: "libraryRow", source: "audio", prepared: false, streamed: false, waitMs: expect.any(Number) }]);
 
   await launcher.miniPlayer.clickPlayPause();
   await launcher.miniPlayer.verifyPlayButtonReads("Play");

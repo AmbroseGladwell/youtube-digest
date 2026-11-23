@@ -670,7 +670,9 @@ transcript is found by their `sessionId`, as a missing note is.
 
 `docs/features/tts-pre-rendered-speech.md`, "The API side", lists them: `audio requested`,
 `audio queued`, `audio rendered`, `audio render failed` (`warn`, to be tried again),
-`audio render gave up` (`error`), `audio worker stopped` (`error`) and `audio deleted`.
+`audio render gave up` (`error`), `audio worker stopped` (`error`), `audio deleted` and
+`audio segments swept`. `audio rendered` also carries how many segments were streamed and
+`requestToFirstAudioSeconds`, the time from the request to the first line anyone could play.
 The renders run on the API's queue, outside any request, so their lines carry no `reqId` or
 account. They're joined to the request by the audio `key`, which both carry, and to the TTS
 service's lines by `ttsRequestId` ("The TTS service"). A failure's
