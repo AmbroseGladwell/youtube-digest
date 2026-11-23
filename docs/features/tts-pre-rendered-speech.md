@@ -65,6 +65,51 @@ At London's prices ($0.0489, $0.0977 and $0.1954 an hour for the three performan
 
 For comparison, hosted APIs charge $4 per million characters for the robotic standard voices and $15 to $80 for voices comparable to or better than Kokoro. Kokoro on `performance-4x` works out at about $1.08 per million, at the price of running the service ourselves. ElevenLabs and OpenAI sound better; Kokoro was judged good enough to ship first.
 
+## Against GPU models (OV-340)
+
+Kokoro stays. Measured 23 Nov 2026: two GPU models with better-reviewed voices, Ming-3.0-tts 0.5B (MIT) and
+Qwen3-TTS CustomVoice (Apache 2.0), both render **slower than realtime** on a Modal L4. That makes them 25 to
+50 times Kokoro's cost per note, and moves a 3-minute note's first play from under a minute to 4 to 7 minutes.
+The owner judged that no voice could be good enough to justify that.
+
+Every engine rendered the five `samples/records/` and a pronunciation probe. Each line went through
+production's own `render_script` and `encode_m4a`, after `speakable` from `@overview/domain`. Kokoro ran on an M1;
+its Fly figures are in "Measured on Fly.io" above.
+
+| Engine, voice | Card | Realtime factor | Render cost per note |
+|---|---|---|---|
+| Kokoro `af_heart` | Fly `performance-4x` | 3.2x | about $0.002–0.003 |
+| Ming-3.0-tts `US_Emma` | L4, $0.80/h | 0.70x | $0.068 |
+| Ming-3.0-tts `UK_George` | L4 | 0.72x | $0.073 |
+| Ming-3.0-tts `UK_Charlotte` | L4 | 0.47x | $0.109 |
+| Qwen3-TTS 1.7B `Ryan` | L4 | 0.41x | $0.133 |
+| Qwen3-TTS 0.6B `Aiden` | L4 | 0.45x | $0.119 |
+
+- **The GPU is not the limit.** In both models' runs, CPU time equalled wall time: one Python thread was busy
+  the whole time, handing the GPU a step at a time. Both generate audio step by step: Qwen runs once for each 12 Hz
+  audio token, and Ming decodes each roughly 24-character piece of text separately, with guidance. So the 0.6B Qwen
+  is no faster than the 1.7B. Batching a note's lines (Qwen takes a list), vLLM-Omni serving, or splitting a note
+  across containers might change the numbers. None of them was tried, because they are only worth the work
+  if a voice clearly wins by ear.
+- **Few English voices.** Ming has three built-in English voices and Qwen two, against the fifteen
+  `NarrationVoice` offers. Anything more means voice design from a text description, or cloning.
+- **Memory:** about 2.9 GB of GPU memory for Ming and 4.2 GB for Qwen 1.7B; model load was 6–14 s once the image was on the card.
+
+The blind listen pairs each GPU voice with the closest Kokoro voice (Heart, George, Emma, Michael). At the time of
+writing the owner had judged none of the pairs, having decided on cost and time first.
+
+Run it again from `services/tts/` (`uv sync --group benchmark`). Kokoro needs the dev shell and `models/`.
+The GPU engines need the Modal token from `overview-dev` through `scripts/secrets.sh run`:
+
+```sh
+.venv/bin/python modal_benchmark.py --voice af_heart
+.venv/bin/modal run modal_benchmark.py --engine ming --voice UK_George [--only probe]
+python3 blind_listen.py --name <listen> --pair kokoro/af_heart:ming/US_Emma [--pair …] [--report]
+```
+
+Renders, results and picks go to `.local/tts-benchmark/`. Start Modal runs one at a time: starting six at once got a
+429 from the secrets fetch. Keep the Mac awake, too, because Modal stops an app whose client stops sending heartbeats.
+
 ## The spoken script
 
 What gets narrated is `spokenScript(overview)` in `@overview/domain`: one entry for every `NoteLine` the reader shows, in order, headings included. Each entry is the line's `spoken` text when it has one and its `text` otherwise, passed through `speakable`. Five decisions are packed into that:
