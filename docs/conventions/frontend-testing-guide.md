@@ -407,6 +407,12 @@ Do this for every browser test, not just the ones that render dates. Relative da
 Pin locale and timezone in the Playwright config too (`locale: 'en-GB'`,
 `timezoneId: 'Europe/London'`) — date formatting differs per runner otherwise.
 
+**In this project:** `install()` alone keeps time flowing in real time, so a running
+countdown can tick between an action and its assertion (`cookingTimers.iwft.ts` read 13:59
+for 14:00 about one run in four, OV-391). Where a test reads a running clock, pause it once
+the screen is up, `page.clock.pauseAt(now + a second)`, and move it only with
+`fastForward`.
+
 ---
 
 ## Part 6 — `window.testHooks`: the deliberate escape hatch
