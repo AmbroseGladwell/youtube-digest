@@ -148,7 +148,7 @@ test.describe("milestones", () => {
     await library.cardWithTitle("7 minute video").clickMarkRead();
 
     await library.milestones.verifyFrontCardIs("30 minutes");
-    await library.milestones.verifyFigureSays("Time saved: 31 minutes");
+    await library.milestones.verifyFigureSays("31 minutes saved");
     await library.milestones.verifyNoCount();
     await library.milestones.verifyDismissIsLabelled("Hide until your next milestone");
     await expect(async () => {
@@ -270,7 +270,7 @@ test.describe("on the panel's home", () => {
     const capture = await launcher.launchPanel({ milestones: { "30m": { crossedAt: hoursAgo(1), dismissedAt: null } } });
 
     await capture.milestones.verifyFrontCardIs("30 minutes");
-    await capture.milestones.verifyFigureSays("Time saved: 39 minutes");
+    await capture.milestones.verifyFigureSays("39 minutes saved");
   });
 
   test("a library already past a milestone with no mark records it and shows it", async ({ launcher, backendSimulator }) => {

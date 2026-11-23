@@ -1,7 +1,6 @@
 import type { FastifyBaseLogger, FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
-import { apiLogLines, parseTikTokLink, type StoredTranscript, type TikTokRead } from "@overview/domain";
-import { TranscriptFetchError } from "@overview/transcripts";
+import { apiLogLines, parseTikTokLink, TIKTOK_READ_PATH, type TikTokRead } from "@overview/domain";
 import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
@@ -13,12 +12,6 @@ import type { TrialsRepository } from "../usage/TrialsRepository.js";
 import { reserveTrialRead } from "../usage/reserveTrialRead.js";
 
 const ReadBody = z.object({ url: z.string().min(1).max(2048) });
-const TranscriptBody = z.object({
-  url: z
-    .url()
-    .max(2048)
-    .refine((url) => parseTikTokLink(url)?.kind === "video", "A TikTok video's address"),
-});
 
 interface TikTokRoutesOptions {
   reader: TikTokReader | null;
@@ -66,7 +59,7 @@ export const tiktokRoutes = (app: FastifyInstance, { reader, costs, trials, cloc
   };
 
   app.post(
-    "/tiktok/read",
+    TIKTOK_READ_PATH,
     {
       config: { optionalSession: true },
       preHandler: rateLimitHook(rateLimits.tiktokReadPerAddress, (request) => request.clientAddress, clock),
@@ -83,40 +76,12 @@ export const tiktokRoutes = (app: FastifyInstance, { reader, costs, trials, cloc
           link: parseTikTokLink(url)?.kind ?? "none",
           outcome: read.status === "read" ? "read" : read.reason,
           captions: read.status === "read" ? read.video.captions.length : null,
+          segments: read.status === "read" ? (read.transcript?.segments.length ?? 0) : null,
           ...spent,
           ms: clock().getTime() - startedAt,
         }),
       );
       return read;
-    },
-  );
-
-  app.post(
-    "/tiktok/transcript",
-    {
-      preHandler: rateLimitHook(rateLimits.tiktokTranscriptPerAddress, (request) => request.clientAddress, clock),
-    },
-    async (request): Promise<StoredTranscript> => {
-      const { url } = parseOrThrow(TranscriptBody, request.body, "The TikTok video");
-      if (request.session === null) {
-        throw new ApiError("unauthenticated", "Sign in to make an overview");
-      }
-      const tiktok = readerOrRefuse();
-      const startedAt = clock().getTime();
-      const { spend, spent } = spendFor(request, request.log);
-      try {
-        const { transcript, source } = await tiktok.transcript(url, spend);
-        request.log.info(
-          apiLogLines.tiktok.transcript({ source, segments: transcript.segments.length, ...spent, ms: clock().getTime() - startedAt }),
-        );
-        return transcript;
-      } catch (error) {
-        if (!(error instanceof TranscriptFetchError)) {
-          throw error;
-        }
-        request.log.info(apiLogLines.tiktok.transcript({ failure: error.failure, ...spent, ms: clock().getTime() - startedAt }));
-        throw new ApiError("transcript_unavailable", error.message, { failure: error.failure });
-      }
     },
   );
 };

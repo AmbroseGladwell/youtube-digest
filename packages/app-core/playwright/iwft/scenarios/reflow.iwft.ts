@@ -2,7 +2,8 @@ import { expect, test } from "../../support/fixtures.testHelper.js";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
 import type { Chat } from "@overview/domain";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
-import type { PageObject } from "../../pageObjects/PageObject.testHelper.js";
+import type { AxeAllowance, PageObject } from "../../pageObjects/PageObject.testHelper.js";
+import { libraryPageTestIds } from "../../../src/features/library/LibraryPage/LibraryPageTestIds.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
@@ -46,9 +47,7 @@ interface Screen<Shown extends PageObject = PageObject> {
 
 const screen = <Shown extends PageObject>(described: Screen<Shown>): Screen => described as unknown as Screen;
 
-const ZOOMED = reflowConditions[0]!.name;
-const SHEET_TOO_SHORT = "OV-385: bottom sheets leave their lists too little room";
-const TIME_SAVED_NAME = "OV-389: the time-saved button's name leaves out its visible text";
+const SPOKEN_TIME_SAVED: AxeAllowance = { rule: "label-content-name-mismatch", testId: libraryPageTestIds.timeSavedButton };
 
 const openLibrary = (launcher: Launcher, backendSimulator: BackendSimulator) => {
   backendSimulator.overviews.seedSynced(NOTE);
@@ -60,7 +59,6 @@ const screens: Screen[] = [
     name: "the library",
     open: openLibrary,
     verify: (library) => library.verifyReflows(),
-    brokenUntil: { axe: TIME_SAVED_NAME },
   }),
   screen({
     name: "the library's filters",
@@ -70,7 +68,6 @@ const screens: Screen[] = [
       return library;
     },
     verify: (library) => library.verifyFilterControlsCanBeReached(),
-    brokenUntil: { [ZOOMED]: SHEET_TOO_SHORT, axe: TIME_SAVED_NAME },
   }),
   screen({
     name: "the account menu",
@@ -79,7 +76,15 @@ const screens: Screen[] = [
       return launcher.appShell.accountMenu.open();
     },
     verify: (menu) => menu.verifyItemsCanBeReached(),
-    brokenUntil: { [ZOOMED]: "OV-386: the account menu runs off the screen", axe: TIME_SAVED_NAME },
+  }),
+  screen({
+    name: "the sort menu",
+    open: async (launcher, backendSimulator) => {
+      const library = await openLibrary(launcher, backendSimulator);
+      await library.sortPill.open();
+      return library.sortPill;
+    },
+    verify: (sort) => sort.verifyOptionsCanBeReached(),
   }),
   screen({
     name: "an overview with its player",
@@ -89,6 +94,28 @@ const screens: Screen[] = [
       return library.nthCard(0).openReader();
     },
     verify: (reader) => reader.verifyReflows(),
+  }),
+  screen({
+    name: "an overview's chat",
+    open: async (launcher, backendSimulator) => {
+      const library = await openLibrary(launcher, backendSimulator);
+      const reader = await library.nthCard(0).openReader();
+      await reader.chat.openFromMenu();
+      await reader.chat.verifyIsOpen(true);
+      return reader.chat;
+    },
+    verify: (chat) => chat.verifyChatControlsCanBeReached(),
+  }),
+  screen({
+    name: "an overview's actions menu",
+    open: async (launcher, backendSimulator) => {
+      const library = await openLibrary(launcher, backendSimulator);
+      const reader = await library.nthCard(0).openReader();
+      await reader.openActionsMenu();
+      await reader.verifyActionsMenuIsShown(true);
+      return reader;
+    },
+    verify: (reader) => reader.verifyActionsCanBeReached(),
   }),
   screen({
     name: "the Ask page",
@@ -108,7 +135,6 @@ const screens: Screen[] = [
       return ask;
     },
     verify: (ask) => ask.verifyDrawerControlsCanBeReached(),
-    brokenUntil: { [ZOOMED]: SHEET_TOO_SHORT },
   }),
   screen({
     name: "Settings",
@@ -153,7 +179,7 @@ test.describe("axe", () => {
     test(`finds nothing on ${screen.name}`, async ({ launcher, backendSimulator }) => {
       markBroken(screen, "axe");
       const shown = await screen.open(launcher, backendSimulator);
-      await shown.verifyIsAccessible();
+      await shown.verifyIsAccessible([SPOKEN_TIME_SAVED]);
     });
   }
 });

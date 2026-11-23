@@ -7,6 +7,9 @@ import {
   domainOf,
   formatClock,
   parsePodcastLink,
+  parseTikTokLink,
+  tiktokSource,
+  type TikTokVideo,
   recipeMinutes,
   sourceName,
   webSource,
@@ -25,7 +28,9 @@ import {
   type SourceKey,
 } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
-import type { PodcastRunRequest, RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
+import type { PodcastRunRequest, RunOverviewGenerationOptions, TikTokWords } from "../newOverview/api/generationPipeline.js";
+import { TikTokNoCaptionsError, TikTokReadError } from "../newOverview/api/TikTokReadError.js";
+import type { TikTokLinkRead } from "../tiktok/api/readTikTokLink.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
 import { PodcastNoTranscriptError, PodcastReadError } from "../newOverview/api/PodcastReadError.js";
 import { VideoReadError } from "../newOverview/api/VideoReadError.js";
@@ -62,6 +67,8 @@ export interface OnboardingMakers {
   article: (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readArticle: (url: string) => Promise<ArticleRead>;
   podcast: (request: PodcastRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
+  readTikTok: (url: string) => Promise<TikTokLinkRead>;
+  tiktok: (video: TikTokVideo, words: TikTokWords, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readPodcast: (url: string) => Promise<PodcastRead>;
   // Free, and fetches no words (design 305c).
   checkEpisode: (episode: PodcastEpisode) => Promise<TranscriptCheck>;
@@ -172,6 +179,20 @@ const episodeFacts = (source: Source): string =>
     .join(" · ");
 
 const readMinutes = (source: Source): string | null => (source.kind === "web" ? `${articleReadMinutes(source.wordCount)} min read` : null);
+
+export const TIKTOK_AT_START = false;
+
+const clipLength = (source: Source): string | null =>
+  source.kind === "tiktok" && source.durationMs !== null ? formatClock(source.durationMs / 1000) : null;
+
+// "42 seconds from …": a clip is said in seconds, where spokenLength would round it to a minute or none.
+const spokenClipLength = (source: Source): string | null => {
+  if (source.kind !== "tiktok" || source.durationMs === null) {
+    return null;
+  }
+  const seconds = Math.round(source.durationMs / 1000);
+  return seconds < 60 ? `${seconds} seconds` : spokenLength(source.durationMs);
+};
 
 // Web stays last: it takes any address no other kind claims.
 export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingSource } = {
@@ -325,20 +346,50 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
           };
     },
   },
-  // Recognises no link until onboarding reads TikTok (OV-130, step 5), so the web entry still takes one.
+  // Off until the screens, with /privacy naming the vendor (docs/features/tiktok-links.md, "Onboarding").
   tiktok: {
-    linkKind: () => null,
+    linkKind: (link) =>
+      TIKTOK_AT_START && parseTikTokLink(link)?.kind !== undefined && parseTikTokLink(link)?.kind !== "not-a-video" ? "video" : null,
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: () => Promise.reject(new Error("Onboarding doesn't read TikTok links yet.")),
+    make: async (target, makers, { onFound, isCancelled, waitToSpend, onSourceWords, onWriting }) => {
+      const read = await makers.readTikTok(target);
+      if (read.status === "failed") {
+        throw new TikTokReadError(read.reason);
+      }
+      if (read.words === null) {
+        throw new TikTokNoCaptionsError();
+      }
+      const opening = read.words.transcript.segments
+        .map((segment) => segment.text)
+        .join(" ")
+        .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+      onFound({
+        source: tiktokSource(read.video),
+        recipe: null,
+        about: [read.video.description.trim(), opening].filter((part) => part !== "").join("\n\n"),
+      });
+      await waitToSpend();
+      if (isCancelled()) {
+        throw new GenerationCancelledError();
+      }
+      return makers.tiktok(read.video, read.words, {
+        isCancelled,
+        onProgress: ({ transcriptWords }) => onSourceWords?.(transcriptWords),
+        onWriting,
+      });
+    },
     noun: () => "video",
     pending: () => null,
     finding: "Finding the TikTok…",
     notFound: "We couldn't find that TikTok.",
-    card: ({ source }) => ({ kicker: `${sourceName(source)} · TikTok`, facts: { line: "TikTok" } }),
+    card: ({ source }) => ({
+      kicker: `${sourceName(source)} · TikTok`,
+      facts: { line: [clipLength(source), "TikTok"].filter(Boolean).join(" · ") },
+    }),
     yourLink: ({ source }, minutes) => ({
       heading: "Here’s what’s in the TikTok you saved.",
-      line: `${fromWhom(null, sourceName(source))}, ${turnedInto(minutes)}`,
+      line: `${fromWhom(spokenClipLength(source), sourceName(source))}, ${turnedInto(minutes)}`,
       pills: "readListen",
       inside: INSIDE,
     }),

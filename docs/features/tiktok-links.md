@@ -14,10 +14,12 @@ tab) and speech-to-text for videos without captions are the next slices, in the 
 | What a TikTok page says, for the extension to read the reader's own tab | `readTikTokPage`, `spokenCaptionTrack` in `packages/transcripts` |
 | The vendor our server reads TikTok through | `apps/api/src/tiktok/createScrapeCreatorsTikTok.ts` |
 | From a link to the video, and from the video to its words | `createTikTokReader.ts` |
-| The routes | `POST /api/tiktok/read`, `POST /api/tiktok/transcript`, `src/routes/tiktokRoutes.ts` |
+| The route | `POST /api/tiktok/read`, `src/routes/tiktokRoutes.ts` |
 | What an overview of a TikTok is of | `TikTokSource`, `tiktokSource` in `packages/domain/src/Source.ts` |
 | Writing its note as a video's, and giving it back its source | `clipAsVideo`, `isTikTokInput` in `packages/generation/src/tiktok` |
 | From a read and its words to a saved note | `runTikTokOverviewGeneration` in `app-core`'s `generationPipeline.ts` |
+| The reader's own browser first, the vendor when it can't answer | `readTikTokLink` in `app-core/src/features/tiktok/api` |
+| The extension's own read, and the access it asks for | `chromeTikTokPages.ts` in `apps/extension` |
 
 ## Who reads TikTok
 
@@ -25,8 +27,8 @@ The owner, 22 Nov 2026: **the extension first, the vendor everywhere else.**
 
 - **In the extension**, the reader's own browser reads the TikTok page, from the tab they're on or
   by fetching a pasted link. That is free, it stays closest to the reader's own viewing, and nothing
-  goes to the vendor. `readTikTokPage` is that reading, shared so the extension can use it. It is
-  built in the screens slice.
+  goes to the vendor. `readTikTokPage` is that reading, shared so the extension can use it
+  ("The extension's own read" below).
 - **On the web, on a phone, and in the extension when its own read can't answer**, our server
   asks ScrapeCreators (https://scrapecreators.com). **Our server never reads TikTok's pages
   itself.** Doing that as well would add a second exposure to TikTok's terms ("Terms" below) for
@@ -45,6 +47,45 @@ Measured on 22 Nov 2026 (the card's comments): 20 of 21 recent videos from news,
 explainer accounts carried an `ASR` track, read from a home connection, and 8 of 8 read the same way
 from a Fly machine. The one without was music over on-screen text. `readTikTokPage` was checked
 against live pages the same day, with our own user agent and no cookies.
+
+## The extension's own read
+
+Step 4 of the card, 22 Nov 2026. Nothing calls it yet: the panel offer and the paste flow are
+the screens, after the Design round.
+
+**It fetches the video's page rather than reading the tab.** TikTok is a single-page app, so the
+page data in a tab is from whichever video the tab first loaded, not the one now playing. Fetching
+the video's own address gives that video's data whether the link came from the tab or was pasted.
+The fetch goes from the extension with no cookies (`credentials: "omit"`), so TikTok sees a
+signed-out visitor, as it did in the measurements above. Then the spoken caption track's WebVTT
+is fetched and parsed by the same parser the server uses (`parsePodcastTranscript`, now in
+`packages/transcripts`), so a note made from either route has the same lines.
+
+**Access is asked for once, for TikTok and its CDNs together:** `*.tiktok.com` (pages and short
+links) and `*.tiktokcdn.com`, `*.tiktokcdn-eu.com`, `*.tiktokcdn-us.com` and `*.tiktokv.com`, where
+the caption files are (a read from the UK on 22 Nov 2026 got them from `tiktokcdn-eu.com`). They sit
+inside the manifest's existing optional `https://*/*`, so the manifest doesn't change, and Chrome
+asks the reader only when the screens call `requestAccess` from a click.
+
+**When it falls back** (`readTikTokLink`): without that access, or on the web, the vendor reads it.
+With access, a read that comes back with words is used and the vendor is never asked
+(`transcriptSource: "tiktok-tab"`). A page saying the post is a photo post is believed, and costs
+nothing. Anything else (no captions, a page that won't read, a refusal, a network failure) goes
+to the vendor, whose answer is the one shown (`tiktok-vendor`).
+
+## Onboarding
+
+Step 5 of the card, 22 Nov 2026. `onboardingSources.tiktok` is a full entry: it reads the link
+through `readTikTokLink` (the extension's own read, then the vendor, a trial's read signed out),
+shows the card from the read, and writes the note with the words it came with once there is an
+account (`runTikTokOverviewGeneration`), as a video's does. A link it can't read stops with
+`TikTokReadError`, and a video with no captions with `TikTokNoCaptionsError`, each before
+anything is spent on writing. Their words in `onboardingFailureCopy` follow the other kinds' until
+the Design round's failure frames.
+
+**It isn't offered yet.** `TIKTOK_AT_START` is false, so the entry recognises no link and a pasted
+TikTok still goes to the web entry, as before. It is switched on with the screens, in the PR that
+names ScrapeCreators in `/privacy`, once production has the vendor's key.
 
 ## From a link to a video
 
@@ -72,15 +113,21 @@ How a read fails, by name:
 
 ## From a video to its words
 
-`POST /api/tiktok/transcript` takes `{ url }`, the video's address from the read. It asks the same
-vendor endpoint with `get_transcript=true`, which returns TikTok's own captions as WebVTT for
-the same one credit. Those are parsed by the podcast transcript parser (`parsePodcastTranscript`)
-into `StoredTranscript` segments, keyed `tiktok:<id>`. `generated` is true unless the caption
-track is one the creator wrote (`is_auto_generated: false`), so the reader is told when the words
-are machine-heard.
+**The words come with the read** (step 3 of the card, 22 Nov 2026). `POST /api/tiktok/read` asks
+the vendor with `get_transcript=true`, which returns TikTok's own captions as WebVTT in the same
+answer for the same one credit, so a read answers `{ status: "read", video, transcript }`. Slice 1
+had a second route, `POST /api/tiktok/transcript`, for the words alone: two credits a note. It was
+removed before any client called it.
 
-No captions, or empty ones, is `transcript_unavailable` with `failure: "no-captions"`. The vendor's
-AI transcript endpoint, and our own speech-to-text, are slice 5's question.
+The captions are parsed by the podcast transcript parser (`parsePodcastTranscript`) into
+`StoredTranscript` segments, keyed `tiktok:<id>`. `generated` is true unless the caption track is one
+the creator wrote (`is_auto_generated: false`), so the reader is told when the words are
+machine-heard. No captions, or empty ones, is a read with `transcript: null`: the video is still
+found, and the client decides what to say. The vendor's AI transcript endpoint, and our own
+speech-to-text, are slice 5's question.
+
+A trial's read signed out gets the words too, as a YouTube read does: onboarding shows the card
+from the read and writes the note once there is an account.
 
 **The words are the account's own copy**, returned to the caller and kept nowhere on the server,
 the rule since OV-295.
@@ -128,8 +175,8 @@ fetching them again means a read, and a read costs a credit. Which route found t
 ## Cost
 
 Every call is one ScrapeCreators credit, priced at `SCRAPECREATORS_PRICE` ($47 for 25,000 on the
-Freelance plan, from its homepage on 22 Nov 2026, since its pricing page was missing). A read and a
-transcript are two credits. Each one is recorded in the cost tally under `transcripts` /
+Freelance plan, from its homepage on 22 Nov 2026, since its pricing page was missing). A read,
+words included, is one credit. Each one is recorded in the cost tally under `transcripts` /
 `tiktok-vendor`, on the account, or on no one yet for a trial's read. Credits only ever come from
 what the vendor's answer says it charged.
 

@@ -41,6 +41,14 @@ export class SortPillPageObject extends PageObject {
       await expect(this.get(sortPillTestIds.menu)).toHaveCount(open ? 1 : 0);
     });
 
+  open = () =>
+    this.step("open", async () => {
+      await this.click(sortPillTestIds.trigger);
+      await this.verifyIsOpen(true);
+    });
+
+  verifyOptionsCanBeReached = () => this.verifyControlsCanBeReached(this.get(sortPillTestIds.menu));
+
   openWithKeyboard = () =>
     this.step("openWithKeyboard", async () => {
       await this.get(sortPillTestIds.trigger).focus();

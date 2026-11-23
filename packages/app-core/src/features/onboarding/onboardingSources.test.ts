@@ -5,10 +5,13 @@ import {
   type ArticleRead,
   type PodcastEpisode,
   type StoredTranscript,
+  type TikTokVideo,
   type TranscriptCheck,
   type VideoSource,
 } from "@overview/domain";
-import { makeArticleOverview, makeOverview } from "../overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeTikTokOverview } from "../overviews/types/OverviewFactory.testHelper.js";
+import { TikTokNoCaptionsError, TikTokReadError } from "../newOverview/api/TikTokReadError.js";
+import type { TikTokWords } from "../newOverview/api/generationPipeline.js";
 import { foundIn, onboardingSourceOf, onboardingSources, type OnboardingMakers } from "./onboardingSources.js";
 import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
@@ -373,6 +376,85 @@ describe("onboarding's run, before and after the account", () => {
       expect(noAudio.stop).toMatch(/^This episode’s audio isn’t in the public feed/);
       expect(withWords.notice ?? null).toBeNull();
       expect(withWords.stop ?? null).toBeNull();
+    });
+  });
+
+  describe("a TikTok", () => {
+    const TIKTOK = "https://www.tiktok.com/@kitchenwithada/video/7301234567890123456";
+    const clip: TikTokVideo = {
+      id: "7301234567890123456",
+      url: TIKTOK,
+      handle: "kitchenwithada",
+      authorName: "Kitchen with Ada",
+      description: "Sunday jollof #jollof",
+      durationSeconds: 42,
+      coverUrl: null,
+      postedAt: null,
+      captions: [{ language: "eng-US", source: "ASR" }],
+    };
+    const words: TikTokWords = {
+      transcript: {
+        videoId: VideoId.parse("tiktok:7301234567890123456"),
+        segments: [{ text: "Fry the base until the oil floats.", startMs: 0, endMs: 3000 }],
+        generated: true,
+        fetchedAt: "2026-11-22T09:00:00.000Z",
+      },
+      source: "tiktok-vendor",
+    };
+
+    it("isn't taken at Start until the screens switch it on, so the web entry keeps its links", () => {
+      expect(onboardingSources.tiktok.linkKind(TIKTOK)).toBeNull();
+    });
+
+    it("reads a TikTok and shows it, and writes it with the words it came with only once there's an account", async () => {
+      const order: string[] = [];
+      const makers = {
+        readTikTok: async () => {
+          order.push("read");
+          return { status: "read", video: clip, words };
+        },
+        tiktok: async (video, given) => {
+          order.push(`written ${video.id} ${given.source}`);
+          return makeTikTokOverview();
+        },
+      } as Pick<OnboardingMakers, "readTikTok" | "tiktok"> as OnboardingMakers;
+      const { open, waitToSpend } = account();
+      const found: string[] = [];
+
+      const run = onboardingSources.tiktok.make(TIKTOK, makers, {
+        onFound: (it) => found.push(`${it.source.kind} | ${it.source.title} | ${it.about}`),
+        isCancelled: () => false,
+        waitToSpend,
+      });
+      await settle();
+
+      expect(order).toEqual(["read"]);
+      expect(found).toEqual(["tiktok | Sunday jollof #jollof | Sunday jollof #jollof\n\nFry the base until the oil floats."]);
+      open();
+      await run;
+      expect(order).toEqual(["read", "written 7301234567890123456 tiktok-vendor"]);
+    });
+
+    it.each([
+      ["a TikTok it couldn't read", { status: "failed", reason: "unavailable" }, TikTokReadError],
+      ["a TikTok with no captions", { status: "read", video: clip, words: null }, TikTokNoCaptionsError],
+    ] as const)("stops at %s, having spent nothing", async (_, read, failure) => {
+      const makers = {
+        readTikTok: async () => read,
+        tiktok: async () => {
+          throw new Error("never written");
+        },
+      } as Pick<OnboardingMakers, "readTikTok" | "tiktok"> as OnboardingMakers;
+
+      await expect(
+        onboardingSources.tiktok.make(TIKTOK, makers, { onFound: () => {}, isCancelled: () => false, waitToSpend: async () => {} }),
+      ).rejects.toBeInstanceOf(failure);
+    });
+
+    it("gives its card the creator and the length, and says a clip in seconds", () => {
+      const found = foundIn(makeTikTokOverview());
+      expect(onboardingSources.tiktok.card(found)).toEqual({ kicker: "Kitchen with Ada · TikTok", facts: { line: "0:42 · TikTok" } });
+      expect(onboardingSources.tiktok.yourLink(found, null).line).toMatch(/^42 seconds from Kitchen with Ada, turned into an overview/);
     });
   });
 });

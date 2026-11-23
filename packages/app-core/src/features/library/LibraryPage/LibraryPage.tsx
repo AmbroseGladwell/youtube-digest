@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId, type SelectionAction, type TopicId } from "@overview/domain";
+import { timeSavedName, timeSavedSummary, type Overview, type OverviewId, type SelectionAction, type TopicId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
@@ -461,7 +461,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       }}
       aria-haspopup="dialog"
       aria-expanded={timeSavedOpen}
-      aria-label={`Time saved: ${spokenTimeSaved(timeSaved.minutes)}`}
+      aria-label={timeSavedName(timeSaved.minutes)}
       data-testid={libraryPageTestIds.timeSavedButton}
     >
       <TimeSavedFigure minutes={timeSaved.minutes} />

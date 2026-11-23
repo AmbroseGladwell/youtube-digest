@@ -33,7 +33,15 @@ syncs and can never drift from the data.
 **The total (34q).** One rolling figure in the library subtitle, `13 overviews · 5 unread ·
 9h 47m saved`. A change rolls like a mechanical counter: minutes first, carrying into tens
 and then hours (`odometerColumns`). The figure is a button whose accessible name is the
-figure in words, *Time saved: 9 hours 47 minutes*; it opens the breakdown.
+figure in words, *9 hours 47 minutes saved*; it opens the breakdown.
+
+**Its spoken name (OV-389).** The name says the figure in full rather than as shown
+(`timeSavedName`), on this button and on the milestone card. That falls short of WCAG 2.5.3
+(Label in Name), which wants the visible *9h 47m* inside the name so voice control matches
+what is on screen. The owner chose it deliberately on 22 Nov 2026: someone reading a time
+says hours and minutes, and the full form is clearer to a screen reader. So
+`reflow.iwft.ts` allows axe's `label-content-name-mismatch` on this one button
+(`SPOKEN_TIME_SAVED`), and every other control is held to it.
 
 **The breakdown (34ai).** The figure, how it is counted, the way to the next milestone in
 that milestone's colour, the ones already reached, what was left out, and the 1× caveat. A
