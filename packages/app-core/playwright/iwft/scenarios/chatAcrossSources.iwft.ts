@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { overviewPartHash, type ChatCitation, type Overview } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
@@ -14,6 +15,14 @@ const titled = (title: string, savedAt: string): Overview => {
   overview.source.title = title;
   return overview;
 };
+
+// Chromium's touch emulation is what turns (hover: hover) off.
+const useATouchScreen = async (page: Page) => {
+  const devtools = await page.context().newCDPSession(page);
+  await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+};
+
+const LONG_TITLE = "A very long title about everything you ever wanted to know about fermenting vegetables at home";
 
 const STEW = "Bean & halloumi stew";
 const SOUP = "Chorizo & chickpea soup";
@@ -314,5 +323,86 @@ test.describe("Chat across sources", () => {
 
     await reader.chat.verifyNextSourcesRead([longTitles[2]!, "+2"]);
     await reader.chat.verifyNextSourcesWithinPanel();
+  });
+
+  test("a source's cut-off title shows in full in a tip on hover and keyboard focus, also in the +N menu, and goes on leaving, Escape or a scroll; a title that fits shows none (OV-392)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    const found = [
+      titled(LONG_TITLE, "2026-11-03T09:00:00.000Z"),
+      titled(SOUP, "2026-11-04T09:00:00.000Z"),
+      titled(CURRY, "2026-11-05T09:00:00.000Z"),
+    ];
+    for (const overview of [...found, titled(STEW, "2026-11-10T09:00:00.000Z")]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
+    backendSimulator.chats.answerWith({
+      text: "Have a large handful of beans a day.",
+      found: found.map((overview) => ({ overviewId: overview.id, title: overview.source.title })),
+    });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How do my healthy-eating overviews apply to this?");
+
+    await reader.chat.hoverDrewOnChip("found", 0, 0);
+
+    await reader.chat.verifyChipTipReads(LONG_TITLE);
+
+    await reader.chat.moveMouseAway();
+
+    await reader.chat.verifyChipTipReads(null);
+
+    await reader.chat.focusDrewOnChip("found", 0, 0);
+
+    await reader.chat.verifyChipTipReads(LONG_TITLE);
+
+    await reader.chat.pressEscape();
+
+    await reader.chat.verifyChipTipReads(null);
+
+    await reader.chat.hoverDrewOnChip("found", 0, 0);
+    await reader.chat.scrollPanel();
+
+    await reader.chat.verifyChipTipReads(null);
+
+    await reader.chat.verifyDrewOnFolds("found", 0, [LONG_TITLE, SOUP], [CURRY]);
+    await reader.chat.hoverDrewOnChip("found", 0, 1, true);
+
+    await reader.chat.verifyChipTipReads(null);
+
+    await reader.chat.hoverDrewOnChip("found", 0, 0, true);
+
+    await reader.chat.verifyChipTipReads(LONG_TITLE);
+    await reader.chat.verifyChipTipWithinScreen();
+  });
+
+  test("on a narrow touch screen a source's cut-off title shows in a tip on a long press, inside the screen, gone once the finger lifts, without following it (OV-392)", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await useATouchScreen(page);
+    const found = titled(LONG_TITLE, "2026-11-03T09:00:00.000Z");
+    backendSimulator.overviews.seedSynced(found);
+    backendSimulator.overviews.seedSynced(titled(STEW, "2026-11-10T09:00:00.000Z"));
+    backendSimulator.chats.answerWith({
+      text: "Have a large handful of beans a day.",
+      found: [{ overviewId: found.id, title: LONG_TITLE }],
+    });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How do my healthy-eating overviews apply to this?");
+
+    await reader.chat.holdDrewOnChip("found", 0, 0);
+
+    await reader.chat.verifyChipTipReads(LONG_TITLE);
+    await reader.chat.verifyChipTipWithinScreen();
+
+    await reader.chat.liftDrewOnChip("found", 0, 0);
+
+    await reader.chat.verifyChipTipReads(null);
+    await reader.chat.verifyDrewOn("found", 0, [LONG_TITLE]);
   });
 });

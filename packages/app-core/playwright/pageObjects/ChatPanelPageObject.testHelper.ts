@@ -7,6 +7,7 @@ import { chatComposerTestIds } from "../../src/features/chats/components/ChatCom
 import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChipRow/ChatChipRowTestIds.js";
 import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewOn/ChatDrewOnTestIds.js";
 import { chatSourceChipTestIds } from "../../src/features/chats/components/ChatSourceChip/ChatSourceChipTestIds.js";
+import { floatingTipTestIds } from "../../src/components/shared/FloatingTip/FloatingTipTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
 import { chatConversationMenuTestIds } from "../../src/features/chats/components/ChatConversationMenu/ChatConversationMenuTestIds.js";
@@ -593,6 +594,66 @@ export class ChatPanelPageObject extends PageObject {
       await expect(more).toHaveAccessibleName(`${hidden.length} more: ${hidden.join(", ")}`);
       await more.click();
       await expect(row.getByTestId(chatChipRowTestIds.menu).getByTestId(chatSourceChipTestIds.chip)).toHaveText([...shown, ...hidden]);
+    });
+
+  private drewOnChip = (how: "pinned" | "found", question: number, index: number, inMenu: boolean) => {
+    const row = this.panel()
+      .getByTestId(how === "pinned" ? chatDrewOnTestIds.pinned : chatDrewOnTestIds.found)
+      .nth(question)
+      .getByTestId(chatChipRowTestIds.root);
+    const chips = inMenu
+      ? row.getByTestId(chatChipRowTestIds.menu).getByTestId(chatSourceChipTestIds.chip)
+      : row.getByTestId(chatSourceChipTestIds.chip);
+    return chips.nth(index).locator(":scope > :first-child");
+  };
+
+  private chipTip = () => this.page.getByTestId(floatingTipTestIds.tip);
+
+  hoverDrewOnChip = (how: "pinned" | "found", question: number, index: number, inMenu = false) =>
+    this.step(`hoverDrewOnChip ${how} ${question} ${index} ${inMenu}`, () => this.drewOnChip(how, question, index, inMenu).hover());
+
+  focusDrewOnChip = (how: "pinned" | "found", question: number, index: number) =>
+    this.step(`focusDrewOnChip ${how} ${question} ${index}`, async () => {
+      await this.page.mouse.move(0, 0);
+      await this.drewOnChip(how, question, index, false).focus();
+    });
+
+  holdDrewOnChip = (how: "pinned" | "found", question: number, index: number) =>
+    this.step(`holdDrewOnChip ${how} ${question} ${index}`, async () => {
+      const chip = this.drewOnChip(how, question, index, false);
+      await chip.dispatchEvent("touchstart");
+      await expect(this.chipTip()).toBeVisible();
+    });
+
+  liftDrewOnChip = (how: "pinned" | "found", question: number, index: number) =>
+    this.step(`liftDrewOnChip ${how} ${question} ${index}`, async () => {
+      const chip = this.drewOnChip(how, question, index, false);
+      await chip.dispatchEvent("touchend");
+      await chip.dispatchEvent("click");
+    });
+
+  moveMouseAway = () => this.step("moveMouseAway", () => this.page.mouse.move(0, 0));
+
+  scrollPanel = () =>
+    this.step("scrollPanel", () => this.panel().evaluate((panel) => panel.dispatchEvent(new Event("scroll", { bubbles: false }))));
+
+  verifyChipTipReads = (text: string | null) =>
+    this.step(`verifyChipTipReads ${text}`, async () => {
+      if (text === null) {
+        await expect(this.chipTip()).toHaveCount(0);
+        return;
+      }
+      await expect(this.chipTip()).toBeVisible();
+      await expect(this.chipTip()).toHaveText(text);
+    });
+
+  verifyChipTipWithinScreen = () =>
+    this.step("verifyChipTipWithinScreen", async () => {
+      const box = await this.chipTip().boundingBox();
+      const width = await this.page.evaluate(() => document.documentElement.clientWidth);
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width);
     });
 
   followDrewOn = (how: "pinned" | "found", index: number) =>

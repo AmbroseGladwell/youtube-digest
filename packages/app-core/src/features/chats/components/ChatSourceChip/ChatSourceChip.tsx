@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { FloatingTip } from "../../../../components/shared/FloatingTip/FloatingTip.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useFloatingTip, type FloatingTipTriggerProps } from "../../../../util/useFloatingTip.js";
 import styles from "./ChatSourceChip.module.scss";
 import { chatSourceChipTestIds } from "./ChatSourceChipTestIds.js";
 
@@ -31,13 +33,14 @@ interface ChipFaceProps {
   state: unknown;
   onFollow: (() => void) | undefined;
   onPress: ((chip: HTMLButtonElement) => void) | undefined;
+  tip: FloatingTipTriggerProps;
   testId: string | undefined;
 }
 
-const ChipFace = ({ body, name, deleted, to, state, onFollow, onPress, testId }: ChipFaceProps) => {
+const ChipFace = ({ body, name, deleted, to, state, onFollow, onPress, tip, testId }: ChipFaceProps) => {
   if (deleted) {
     return (
-      <span className={styles.face} data-testid={testId ?? chatSourceChipTestIds.deleted}>
+      <span className={styles.face} {...tip} data-testid={testId ?? chatSourceChipTestIds.deleted}>
         {body}
       </span>
     );
@@ -47,6 +50,7 @@ const ChipFace = ({ body, name, deleted, to, state, onFollow, onPress, testId }:
       <button
         type="button"
         className={styles.face}
+        {...tip}
         aria-label={name}
         onClick={(event) => onPress(event.currentTarget)}
         data-testid={testId}
@@ -57,13 +61,13 @@ const ChipFace = ({ body, name, deleted, to, state, onFollow, onPress, testId }:
   }
   if (to !== undefined) {
     return (
-      <PageLink className={styles.face} to={to} state={state} aria-label={name} onClick={onFollow} data-testid={testId}>
+      <PageLink className={styles.face} {...tip} to={to} state={state} aria-label={name} onClick={onFollow} data-testid={testId}>
         {body}
       </PageLink>
     );
   }
   return (
-    <span className={styles.face} role="img" aria-label={name} data-testid={testId}>
+    <span className={styles.face} {...tip} role="img" aria-label={name} data-testid={testId}>
       {body}
     </span>
   );
@@ -87,7 +91,24 @@ export const ChatSourceChip = ({
   deletedDetail = "deleted",
   testId,
 }: ChatSourceChipProps) => {
-  const className = `${styles.chip} ${quiet ? styles.quiet : styles.outline} ${deleted ? styles.deleted : ""}`;
+  const chip = useRef<HTMLSpanElement | null>(null);
+  const titleText = useRef<HTMLSpanElement | null>(null);
+  const [cut, setCut] = useState(false);
+  const { shown, trigger } = useFloatingTip(cut);
+
+  useLayoutEffect(() => {
+    const shownTitle = titleText.current;
+    if (shownTitle === null) {
+      return;
+    }
+    const measure = () => setCut(shownTitle.scrollWidth > shownTitle.clientWidth + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(shownTitle);
+    return () => observer.disconnect();
+  }, [title]);
+
+  const className = `${styles.chip} ${quiet ? styles.quiet : styles.outline} ${deleted ? styles.deleted : ""} ${cut ? styles.cut : ""}`;
   const thumbnail = imageUrl ? (
     <img className={`${styles.thumb} ${wide ? styles.wide : ""}`} src={imageUrl} alt="" loading="lazy" />
   ) : (
@@ -96,7 +117,7 @@ export const ChatSourceChip = ({
   const body: ReactNode = (
     <>
       {thumbnail}
-      <span className={styles.title} data-cuttable>
+      <span ref={titleText} className={styles.title} data-cuttable>
         {title}
       </span>
       {detail === undefined ? null : <span className={styles.detail}> · {detail}</span>}
@@ -106,8 +127,19 @@ export const ChatSourceChip = ({
   );
   const name = more.length === 0 ? label : `${label}, and ${more.join(", ")}`;
   return (
-    <span className={className} data-testid={chatSourceChipTestIds.chip}>
-      <ChipFace body={body} name={name} deleted={deleted} to={to} state={state} onFollow={onFollow} onPress={onPress} testId={testId} />
+    <span ref={chip} className={className} data-testid={chatSourceChipTestIds.chip}>
+      <ChipFace
+        body={body}
+        name={name}
+        deleted={deleted}
+        to={to}
+        state={state}
+        onFollow={onFollow}
+        onPress={onPress}
+        tip={trigger}
+        testId={testId}
+      />
+      <FloatingTip text={title} shown={shown} anchor={chip} />
       {onRemove === undefined ? null : (
         <button
           type="button"
