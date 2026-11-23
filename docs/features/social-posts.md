@@ -139,11 +139,35 @@ ask it. Article-only parts (chapter places on the page, resources, the article b
 ask for `web`, so a post's note has none of them. In the library a post files under
 Articles; its chip still says Instagram or Facebook.
 
+## Pasting a link
+
+`useSocialLink` reads a pasted Instagram or Facebook link through `POST /api/social/read`
+as soon as it settles, with an account (TikTok's flow, `tiktok-links.md`, without the
+browser read). `SocialLinkStatus` shows the post's card: who posted it and the platform, the
+title, and "0:59 · Posted 21 Nov 2026" for a video or "Photo post · 56 words" otherwise.
+What it can't make stops before Create, and costs nothing (`socialStopCopy`):
+
+- a video with no words and nothing to transcribe with, or under 30 words said;
+- a photo or text post with under 30 words of description.
+
+A video with no words offers Transcribe and create, on the month's hours, as a TikTok does,
+and transcribing sends the post's own address, without the sharer's parameters. Failures say
+what happened and never name the vendor (`socialLinkFailureCopy`).
+
+**Never read as a page.** An Instagram or Facebook link is never an article: the article and
+podcast readers skip it, the extension panel doesn't offer such a tab as a page, and
+right-clicking one opens the paste dialog with its link instead of reading the tab (where
+comments sit beside the post). TikTok links get the same right-click treatment.
+
+## Timestamps
+
+No player can seek an Instagram or Facebook video, so a note's times show as plain text:
+`youtubeMomentUrl` answers only for YouTube, and key point, chapter, dubious-claim and chat
+citation times link out only where it does. The Transcript tab still reads along.
+
 ## Not yet
 
-- The screens: pasting, the player, onboarding (they take no Instagram or Facebook link
-  yet), the shared page's player.
-- Timestamps: with no player that can seek, they will show as plain times, not "Watch from
-  … on YouTube" links (the screens' slice).
+- Onboarding: it takes no Instagram or Facebook link yet (the next slice).
+- The extension panel offers nothing for an open Instagram or Facebook tab; paste the link.
 - Videos inside a carousel: a carousel is read for its description only.
 - Comments, by decision (above).

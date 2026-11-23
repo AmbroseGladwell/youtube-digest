@@ -12,11 +12,12 @@ import {
   type TranscribedSource,
 } from "@overview/domain";
 import type { OverviewInput } from "@overview/generation";
-import { createFetchGenerationApi, createFetchPodcastApi, createFetchTikTokApi } from "@overview/sync";
+import { createFetchGenerationApi, createFetchPodcastApi, createFetchSocialApi, createFetchTikTokApi } from "@overview/sync";
 import { podcastTranscript } from "../podcasts/api/podcastTranscript.js";
 import type { TranscriptionProgress } from "../podcasts/api/transcribeAudio.js";
 import { transcribeEpisode } from "../podcasts/api/transcribeEpisode.js";
 import { transcribeTikTok } from "../tiktok/api/transcribeTikTok.js";
+import { transcribeSocial } from "../social/api/transcribeSocial.js";
 import type { Analytics } from "../analytics/createAnalytics.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
 import { TranscriptionFailedError } from "../podcasts/api/TranscriptionFailedError.js";
@@ -35,6 +36,8 @@ import {
   runOverviewGeneration,
   runPodcastOverviewGeneration,
   runTikTokOverviewGeneration,
+  runSocialOverviewGeneration,
+  type SocialRunRequest,
   type TikTokRunRequest,
   type PodcastRunRequest,
   type RunOverviewGenerationOptions,
@@ -192,6 +195,56 @@ export const useRunTikTokGeneration = (apiKeys: ApiKeys) => {
       };
       return runTikTokOverviewGeneration(
         video,
+        findWords,
+        {
+          makeOverview: makeWith(),
+          overviewStore: stores.overviewStore,
+          settingsStore: stores.settingsStore,
+          transcriptStore: stores.transcriptStore,
+          projectStore: stores.projectStore,
+        },
+        options,
+      )
+        .then((overview) => learnFrom(overview, stores))
+        .finally(settled);
+    },
+    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, analytics],
+  );
+};
+
+// A photo or text post is written from its description; a video from its words, transcribed first when chosen.
+export const useRunSocialGeneration = (apiKeys: ApiKeys) => {
+  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const analytics = useAnalytics();
+  const shown = useStores();
+  const knownApiUrl = useKnownApiUrl();
+  const { connection } = useSyncConnection();
+
+  return useCallback(
+    async (request: SocialRunRequest, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> => {
+      const { post, words } = request;
+      const findWords = async () => {
+        if (words !== null) {
+          return words;
+        }
+        if (knownApiUrl === null || request.transcribe === undefined) {
+          throw new Error("This video has no words, and transcribing it wasn't chosen");
+        }
+        const api = createFetchSocialApi({ baseUrl: knownApiUrl, token: connection.token });
+        const tracked = {
+          from: options.from ?? "dialog",
+          when: request.transcribe,
+          seconds: post.durationSeconds,
+          source: post.platform,
+          onTranscription: options.onTranscription,
+        };
+        const { transcript } = await trackedTranscription(analytics, tracked, (onProgress) =>
+          transcribeSocial(api, post, { isCancelled: options.isCancelled, onProgress }),
+        );
+        return { transcript, source: "social-transcribed" as const };
+      };
+      return runSocialOverviewGeneration(
+        post,
         findWords,
         {
           makeOverview: makeWith(),

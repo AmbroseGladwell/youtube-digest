@@ -5,17 +5,24 @@ import { transcriptKeys } from "../../transcripts/transcriptKeys.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import type { ApiKeys } from "../../apiKeys/ApiKeys.js";
-import type { PodcastRunRequest, RunOverviewGenerationOptions, TikTokRunRequest } from "../api/generationPipeline.js";
+import type { PodcastRunRequest, RunOverviewGenerationOptions, SocialRunRequest, TikTokRunRequest } from "../api/generationPipeline.js";
 import {
   useRunArticleGeneration,
   useRunOverviewGeneration,
   useRunPodcastGeneration,
+  useRunSocialGeneration,
   useRunTikTokGeneration,
 } from "../useRunOverviewGeneration.js";
 
 // Callbacks are variables, fixed at mutate() time, so a later run can't write into this one's state.
 export type GenerateOverviewVariables = RunOverviewGenerationOptions &
-  ({ url: string } | { readArticle: () => Promise<ArticleRead> } | { podcast: PodcastRunRequest } | { tiktok: TikTokRunRequest });
+  (
+    | { url: string }
+    | { readArticle: () => Promise<ArticleRead> }
+    | { podcast: PodcastRunRequest }
+    | { tiktok: TikTokRunRequest }
+    | { social: SocialRunRequest }
+  );
 
 export const useGenerateOverviewMutation = (apiKeys: ApiKeys) => {
   const queryClient = useQueryClient();
@@ -24,10 +31,15 @@ export const useGenerateOverviewMutation = (apiKeys: ApiKeys) => {
   const generateArticle = useRunArticleGeneration(apiKeys);
   const generatePodcast = useRunPodcastGeneration(apiKeys);
   const generateTikTok = useRunTikTokGeneration(apiKeys);
+  const generateSocial = useRunSocialGeneration(apiKeys);
 
   return useMutation<Overview, Error, GenerateOverviewVariables>({
     mutationKey: overviewKeys.all,
     mutationFn: (variables) => {
+      if ("social" in variables) {
+        const { social, ...options } = variables;
+        return generateSocial(social, options);
+      }
       if ("tiktok" in variables) {
         const { tiktok, ...options } = variables;
         return generateTikTok(tiktok, options);

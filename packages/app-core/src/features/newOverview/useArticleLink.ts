@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { articleSourceId, heldOverviewOf, OverviewId, sourceKey, type ExtractedArticle, parseTikTokLink } from "@overview/domain";
+import {
+  articleSourceId,
+  heldOverviewOf,
+  OverviewId,
+  sourceKey,
+  type ExtractedArticle,
+  parseSocialPostLink,
+  parseTikTokLink,
+} from "@overview/domain";
 import { createFetchArticleApi } from "@overview/sync";
 import { useStores } from "../../stores/StoresContext.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
@@ -27,10 +35,17 @@ export type ArticleLink =
 const SETTLED_MS = 350;
 const KEPT_MS = 5 * 60 * 1000;
 
-// Never a TikTok: our server doesn't read TikTok's pages (docs/features/tiktok-links.md, "Who reads TikTok").
+// Never a TikTok, Instagram or Facebook link: our server never reads their pages (tiktok-links.md, social-posts.md).
 export const isArticleLink = (input: string): boolean => {
   const link = input.trim();
-  if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null || isPlatformPodcastLink(link) || parseTikTokLink(link) !== null) {
+  if (
+    link === "" ||
+    isYouTubeUrl(link) ||
+    youTubeLink(link) !== null ||
+    isPlatformPodcastLink(link) ||
+    parseTikTokLink(link) !== null ||
+    parseSocialPostLink(link) !== null
+  ) {
     return false;
   }
   try {

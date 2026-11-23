@@ -1,8 +1,14 @@
-import { formatClock, recipeMinutes } from "@overview/domain";
+import { formatClock, recipeMinutes, SOCIAL_PLATFORM_NAME, wordCount } from "@overview/domain";
 import { transcriptionCopy } from "../../podcasts/util/transcriptionCopy.js";
-import type { ArticleRun, NewOverviewRun } from "../types/NewOverviewRun.js";
+import type { ArticleRun, NewOverviewRun, SocialRun } from "../types/NewOverviewRun.js";
 import { overviewReadMinutes } from "./overviewReadMinutes.js";
 import { recipeCounts } from "./recipeCounts.js";
+
+const FOUND_VIDEO = "Found the video";
+const CAPTIONS_FOUND = "Captions found";
+const LOOKING_FOR_CAPTIONS = "Looking for captions";
+const LOOKED_FOR_CAPTIONS = "Looked for captions";
+const MAKING_A_TRANSCRIPT = "None, so we’re making a transcript";
 
 const SUMMARISING = "Summarising, scoring and filing";
 const QUEUED = "Queued";
@@ -110,12 +116,16 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
     ];
   }
 
+  if (run.social !== null) {
+    return socialSteps(run, run.social, { transcriptDone, overviewDone, now });
+  }
+
   // Designs 130d, 130d-2: the words came with the read, so finding them is quick but still said.
   if (run.tiktok !== null) {
     const { durationSeconds, transcription } = run.tiktok;
     const found: GenerationStep = {
       number: "01",
-      label: "Found the video",
+      label: FOUND_VIDEO,
       detail: durationSeconds === null ? "TikTok" : `TikTok · ${formatClock(durationSeconds)}`,
       state: "done",
     };
@@ -126,13 +136,13 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
         ? [
             {
               number: "02",
-              label: transcriptDone ? "Captions found" : "Looking for captions",
+              label: transcriptDone ? CAPTIONS_FOUND : LOOKING_FOR_CAPTIONS,
               detail: words ?? "TikTok’s own captions",
               state: transcriptDone ? "done" : "running",
             },
           ]
         : [
-            { number: "02", label: "Looked for captions", detail: "None, so we’re making a transcript", state: "done" },
+            { number: "02", label: LOOKED_FOR_CAPTIONS, detail: MAKING_A_TRANSCRIPT, state: "done" },
             {
               number: "03",
               label: transcriptDone ? "Transcribing the TikTok" : "Transcribing the TikTok…",
@@ -192,6 +202,72 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
       number: "02",
       label: "Creating overview",
       detail: creatingDetail(run),
+      state: writingState(overviewDone, transcriptDone),
+    },
+  ];
+};
+
+interface SocialStepState {
+  transcriptDone: boolean;
+  overviewDone: boolean;
+  now: number;
+}
+
+// As a TikTok's (130d); a photo or text post's description is its words, read with the post.
+const socialSteps = (run: NewOverviewRun, { post, transcription }: SocialRun, { transcriptDone, overviewDone, now }: SocialStepState) => {
+  const platform = SOCIAL_PLATFORM_NAME[post.platform];
+  if (post.media !== "video") {
+    return [
+      { number: "01", label: "Found the post", detail: `${platform} · ${post.media} post`, state: "done" },
+      {
+        number: "02",
+        label: "Read the description",
+        detail: `${wordCount(post.description).toLocaleString("en-GB")} words`,
+        state: "done",
+      },
+      { number: "03", label: WRITING, detail: writingDetail(run, true), state: writingState(overviewDone, true) },
+    ] satisfies GenerationStep[];
+  }
+  const found: GenerationStep = {
+    number: "01",
+    label: FOUND_VIDEO,
+    detail: post.durationSeconds === null ? platform : `${platform} · ${formatClock(post.durationSeconds)}`,
+    state: "done",
+  };
+  const words = transcriptDone ? `${run.transcriptWords!.toLocaleString("en-GB")} words` : null;
+  const finding: GenerationStep[] =
+    transcription === null
+      ? [
+          {
+            number: "02",
+            label: transcriptDone ? CAPTIONS_FOUND : LOOKING_FOR_CAPTIONS,
+            detail: words ?? `${platform}’s captions`,
+            state: transcriptDone ? "done" : "running",
+          },
+        ]
+      : [
+          { number: "02", label: LOOKED_FOR_CAPTIONS, detail: MAKING_A_TRANSCRIPT, state: "done" },
+          {
+            number: "03",
+            label: transcriptDone ? "Transcribing the video" : "Transcribing the video…",
+            detail:
+              words === null
+                ? transcriptionCopy.progress(
+                    transcription.state,
+                    post.durationSeconds,
+                    transcription.state === "transcribing" ? now - transcription.since : 0,
+                  )
+                : `Transcribed · ${words}`,
+            state: transcriptDone ? "done" : "running",
+          },
+        ];
+  return [
+    found,
+    ...finding,
+    {
+      number: transcription === null ? "03" : "04",
+      label: WRITING,
+      detail: writingDetail(run, transcriptDone),
       state: writingState(overviewDone, transcriptDone),
     },
   ];

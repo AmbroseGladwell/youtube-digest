@@ -247,6 +247,13 @@ export const runTikTokOverviewGeneration = async (
   );
 };
 
+export interface SocialRunRequest {
+  post: SocialPost;
+  // None for a photo or text post, or a video without them: then it is transcribed, only if the reader chose to.
+  words: SocialWords | null;
+  transcribe?: TranscribeChoice | undefined;
+}
+
 export interface SocialWords {
   transcript: StoredTranscript;
   source: Extract<CaptureTranscriptSource, "social-vendor" | "social-transcribed">;

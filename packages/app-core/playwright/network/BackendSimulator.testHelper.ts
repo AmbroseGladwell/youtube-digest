@@ -42,6 +42,7 @@ import {
   type VideoRead,
   type PodcastRead,
   type TikTokRead,
+  type SocialRead,
   type PodcastTranscription,
   type TranscriptCheck,
   type TranscriptionUsage,
@@ -325,6 +326,9 @@ export class BackendSimulator {
   #podcastAnswer: PodcastRead = { status: "failed", reason: "not-an-episode" };
   #tiktokAnswer: TikTokRead | "unavailable" = "unavailable";
   #tiktokReads: string[] = [];
+  #socialAnswer: SocialRead | "unavailable" = "unavailable";
+  #socialReads: string[] = [];
+  #socialTranscriptionAsks: string[] = [];
   #podcastWords: StoredTranscript | null = null;
   #podcastReads: string[] = [];
   #videoReads: string[] = [];
@@ -505,6 +509,10 @@ export class BackendSimulator {
     }
     if ("article" in request.input) {
       return { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." };
+    }
+    // As the server does (generateOverviewOf), a post's overview keeps its own source, written as an article when it isn't a video.
+    if ("social" in request.input) {
+      return makeOverview({ id: request.overviewId, source: request.input.social, inOneLine: "Made from the post." });
     }
     // As the server does (generateOverviewOf), a TikTok's overview keeps its TikTok source.
     if ("tiktok" in request.input) {
@@ -1101,6 +1109,17 @@ export class BackendSimulator {
         : route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#tiktokAnswer) });
     });
 
+    await this.#page.route("**/api/social/read", (route) => {
+      this.#socialReads.push((route.request().postDataJSON() as { url: string }).url);
+      return this.#socialAnswer === "unavailable"
+        ? route.fulfill({
+            status: 503,
+            contentType: "application/json",
+            body: JSON.stringify({ error: { code: "unavailable", message: "This server does not read Instagram or Facebook links" } }),
+          })
+        : route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#socialAnswer) });
+    });
+
     await this.#page.route("**/api/podcasts/read", async (route) => {
       this.#podcastReads.push((route.request().postDataJSON() as { url: string }).url);
       const held = this.#podcastReadsHeld;
@@ -1127,10 +1146,12 @@ export class BackendSimulator {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(check) });
     });
 
-    await this.#page.route(/\/api\/(podcasts|tiktok)\/transcription/, (route) => {
+    await this.#page.route(/\/api\/(podcasts|tiktok|social)\/transcription/, (route) => {
       if (route.request().method() === "POST") {
         const asked = route.request().postDataJSON() as { feedUrl: string; guid: string } | { url: string };
-        if ("url" in asked) {
+        if ("url" in asked && route.request().url().includes("/api/social/")) {
+          this.#socialTranscriptionAsks.push(asked.url);
+        } else if ("url" in asked) {
           this.#tiktokTranscriptionAsks.push(asked.url);
         } else {
           this.#transcriptionAsks.push(asked);
@@ -1830,6 +1851,15 @@ export class BackendSimulator {
     reads: (): string[] => [...this.#tiktokReads],
     // The states come from `podcasts.transcribesAs`, which both share, as the server's queue is shared.
     transcriptionAsks: (): string[] => [...this.#tiktokTranscriptionAsks],
+  };
+
+  social = {
+    answerWith: (read: SocialRead): void => {
+      this.#socialAnswer = read;
+    },
+    reads: (): string[] => [...this.#socialReads],
+    // The states come from `podcasts.transcribesAs`, which all share, as the server's queue is shared.
+    transcriptionAsks: (): string[] => [...this.#socialTranscriptionAsks],
   };
 
   podcasts = {
