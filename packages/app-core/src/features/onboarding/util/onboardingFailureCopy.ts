@@ -1,8 +1,11 @@
-import { domainOf, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY, type TikTokReadFailure } from "@overview/domain";
+import { domainOf, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY, type SocialReadFailure, type TikTokReadFailure } from "@overview/domain";
 import type { ReaderPlace } from "../../newOverview/util/pastedLinkFailureCopy.js";
 import type { OnboardingFailure } from "./onboardingFailureOf.js";
 import { podcastLinkFailureCopy } from "../../newOverview/util/podcastLinkFailureCopy.js";
 import { transcriptionCopy } from "../../podcasts/util/transcriptionCopy.js";
+
+const GONE_OR_PRIVATE = "It may be private or taken down. Try another link.";
+const TRY_AGAIN_SOON = "Try again in a moment, or use another link.";
 
 export interface OnboardingFailureCopy {
   title: string;
@@ -35,9 +38,20 @@ const tiktokReadCopy = (reason: TikTokReadFailure): OnboardingFailureCopy => {
     return failed("That isn’t a TikTok video", "It may be a photo post or a profile. Paste a link to a video.");
   }
   if (reason === "unavailable") {
-    return failed("We couldn't find that TikTok", "It may be private or taken down. Try another link.");
+    return failed("We couldn't find that TikTok", GONE_OR_PRIVATE);
   }
-  return failed("We couldn't reach TikTok just now", "Try again in a moment, or use another link.", { tryAgain: true });
+  return failed("We couldn't reach TikTok just now", TRY_AGAIN_SOON, { tryAgain: true });
+};
+
+// In the words the paste field uses for these posts (socialLinkFailureCopy), never naming the vendor.
+const socialReadCopy = (reason: SocialReadFailure): OnboardingFailureCopy => {
+  if (reason === "not-a-post") {
+    return failed("That isn’t a post", "It may be a profile or a story. Paste a link to one post, reel or video.");
+  }
+  if (reason === "unavailable" || reason === "unreadable") {
+    return failed("We couldn't find that post", GONE_OR_PRIVATE);
+  }
+  return failed("We couldn't reach Instagram or Facebook just now", TRY_AGAIN_SOON, { tryAgain: true });
 };
 
 // Why these words aren't the paste field's: docs/features/onboarding.md, "Any kind of link".
@@ -55,8 +69,8 @@ export const onboardingFailureCopy = (failure: OnboardingFailure, link: string, 
       );
     case "videoRead":
       return failure.reason === "not-found"
-        ? failed("We couldn't find that video", "It may be private or taken down. Try another link.")
-        : failed("We couldn't reach YouTube just now", "Try again in a moment, or use another link.", { tryAgain: true });
+        ? failed("We couldn't find that video", GONE_OR_PRIVATE)
+        : failed("We couldn't reach YouTube just now", TRY_AGAIN_SOON, { tryAgain: true });
     case "other":
       return failed("We couldn't read that page", "Something went wrong reading it. Try again in a moment, or use another link.", {
         tryAgain: true,
@@ -95,6 +109,15 @@ export const onboardingFailureCopy = (failure: OnboardingFailure, link: string, 
         "This TikTok has no captions",
         "We found it, but TikTok has no words for it, and an overview is written from what’s said. Try another link.",
       );
+    case "socialRead":
+      return socialReadCopy(failure.reason);
+    case "socialNoWords":
+      return failed("This video has no words we can find", "An overview is written from what’s said. Try another link.");
+    case "socialTooShort":
+      return failed(
+        "There isn’t enough written in this post",
+        "An overview of a photo post is written from its description. Try another link.",
+      );
     case "read":
       break;
   }
@@ -112,7 +135,7 @@ export const onboardingFailureCopy = (failure: OnboardingFailure, link: string, 
         tryAgain: true,
       });
     case "unfinished":
-      return failed("We couldn't finish reading that page", "Try again in a moment, or use another link.", { tryAgain: true });
+      return failed("We couldn't finish reading that page", TRY_AGAIN_SOON, { tryAgain: true });
     case "paywalled":
       return failed(
         "That article is behind a paywall",

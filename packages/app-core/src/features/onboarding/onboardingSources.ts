@@ -9,9 +9,15 @@ import {
   parsePodcastLink,
   parseTikTokLink,
   isClipSource,
+  isWrittenSource,
   SOCIAL_PLATFORM_NAME,
   tiktokSource,
   type SocialPlatform,
+  type SocialRead,
+  parseSocialPostLink,
+  socialSource,
+  wordCount,
+  POST_LEAST_WORDS,
   recipeMinutes,
   sourceName,
   webSource,
@@ -30,7 +36,16 @@ import {
   type SourceKey,
 } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
-import type { PodcastRunRequest, RunOverviewGenerationOptions, TikTokRunRequest } from "../newOverview/api/generationPipeline.js";
+import type {
+  PodcastRunRequest,
+  RunOverviewGenerationOptions,
+  SocialRunRequest,
+  SocialWords,
+  TikTokRunRequest,
+} from "../newOverview/api/generationPipeline.js";
+import { SocialPostReadError } from "../newOverview/api/SocialPostReadError.js";
+import { SocialNoWordsError } from "../newOverview/api/SocialNoWordsError.js";
+import { SocialPostTooShortError } from "../newOverview/api/SocialPostTooShortError.js";
 import { isTranscribable } from "../newOverview/useTikTokLink.js";
 import { TikTokNoCaptionsError, TikTokReadError } from "../newOverview/api/TikTokReadError.js";
 import type { TikTokLinkRead } from "../tiktok/api/readTikTokLink.js";
@@ -71,6 +86,8 @@ export interface OnboardingMakers {
   readArticle: (url: string) => Promise<ArticleRead>;
   podcast: (request: PodcastRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readTikTok: (url: string) => Promise<TikTokLinkRead>;
+  readSocial: (url: string) => Promise<SocialRead>;
+  social: (request: SocialRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
   tiktok: (request: TikTokRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readPodcast: (url: string) => Promise<PodcastRead>;
   // Free, and fetches no words (design 305c).
@@ -197,15 +214,61 @@ const spokenClipLength = (source: Source): string | null => {
   return seconds < 60 ? `${seconds} seconds` : spokenLength(source.durationMs);
 };
 
-// Takes no link until onboarding reads posts (docs/features/social-posts.md), so web still takes them.
-const socialNotYet = (platform: SocialPlatform): OnboardingSource => {
+// docs/features/social-posts.md, "Onboarding": read through our server, as a TikTok is when the browser can't.
+const socialSourceFor = (platform: SocialPlatform): OnboardingSource => {
   const name = SOCIAL_PLATFORM_NAME[platform];
   return {
-    linkKind: () => null,
+    linkKind: (link) => {
+      const parsed = parseSocialPostLink(link);
+      return parsed !== null && parsed.platform === platform && parsed.kind !== "not-a-post" ? "video" : null;
+    },
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: () => Promise.reject(new Error(`Onboarding doesn't read ${name} links yet.`)),
-    noun: () => "video",
+    // A video with no words is transcribed, as a TikTok's is, once Looks right has said so; a post is its description.
+    make: async (target, makers, { onFound, onTranscription, isCancelled, waitToSpend, transcribe, onSourceWords, onWriting }) => {
+      const read = await makers.readSocial(target);
+      if (read.status === "failed") {
+        throw new SocialPostReadError(read.reason);
+      }
+      const { post } = read;
+      const transcription = read.transcription ?? null;
+      const words: SocialWords | null = read.transcript === null ? null : { transcript: read.transcript, source: "social-vendor" };
+      const isVideo = post.media === "video";
+      if (!isVideo && wordCount(post.description) < POST_LEAST_WORDS) {
+        throw new SocialPostTooShortError(wordCount(post.description));
+      }
+      if (isVideo && words === null && (!isTranscribable(transcription) || transcription.status === "too-long")) {
+        throw new SocialNoWordsError();
+      }
+      const opening = (words?.transcript.segments ?? [])
+        .map((segment) => segment.text)
+        .join(" ")
+        .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+      onFound({
+        source: socialSource(post),
+        recipe: null,
+        about: [post.description.trim(), opening].filter((part) => part !== "").join("\n\n"),
+        ...(isVideo && words === null && transcription !== null ? { episodeWords: { words: "none", transcription } } : {}),
+      });
+      await waitToSpend();
+      if (isCancelled()) {
+        throw new GenerationCancelledError();
+      }
+      if (!isVideo) {
+        onSourceWords?.(wordCount(post.description));
+      }
+      const choice = transcribe ?? (transcription?.status === "free" ? "free" : "chosen");
+      return makers.social(
+        { post, words, transcribe: isVideo && words === null ? choice : undefined },
+        {
+          isCancelled,
+          onTranscription,
+          onProgress: ({ transcriptWords }) => onSourceWords?.(transcriptWords),
+          onWriting,
+        },
+      );
+    },
+    noun: (_linkKind, found) => (found !== null && isWrittenSource(found.source) ? "post" : "video"),
     pending: () => null,
     finding: `Finding the ${name} post…`,
     notFound: `We couldn't find that ${name} post.`,
@@ -213,11 +276,12 @@ const socialNotYet = (platform: SocialPlatform): OnboardingSource => {
       kicker: `${sourceName(source)} · ${name}`,
       facts: { line: [clipLength(source), name].filter(Boolean).join(" · ") },
     }),
-    yourLink: ({ source }, minutes) => ({
+    yourLink: ({ source, episodeWords }, minutes) => ({
       heading: `Here’s what’s in the ${name} post you saved.`,
       line: `${fromWhom(spokenClipLength(source), sourceName(source))}, ${turnedInto(minutes)}`,
       pills: "readListen",
       inside: INSIDE,
+      notice: tiktokWordsNotice(episodeWords).notice,
     }),
   };
 };
@@ -431,8 +495,8 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       notice: tiktokWordsNotice(episodeWords).notice,
     }),
   },
-  instagram: socialNotYet("instagram"),
-  facebook: socialNotYet("facebook"),
+  instagram: socialSourceFor("instagram"),
+  facebook: socialSourceFor("facebook"),
   web: {
     linkKind: (link) => (isArticleLink(link) ? "article" : null),
     keyFromLink: () => null,

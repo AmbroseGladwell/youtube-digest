@@ -8,9 +8,11 @@ import {
   useRunOverviewGeneration,
   useRunPodcastGeneration,
   useRunTikTokGeneration,
+  useRunSocialGeneration,
 } from "../newOverview/useRunOverviewGeneration.js";
-import { createFetchPodcastApi, createFetchTikTokApi, createFetchVideoApi } from "@overview/sync";
+import { createFetchPodcastApi, createFetchSocialApi, createFetchTikTokApi, createFetchVideoApi } from "@overview/sync";
 import { createTrialTikTokApi } from "../signedOutTrial/api/createTrialTikTokApi.js";
+import { createTrialSocialApi } from "../signedOutTrial/api/createTrialSocialApi.js";
 import { useTikTokPages } from "../../app/TikTokPagesContext.js";
 import { readTikTokLink } from "../tiktok/api/readTikTokLink.js";
 import { createTrialPodcastApi } from "../signedOutTrial/api/createTrialPodcastApi.js";
@@ -84,6 +86,7 @@ export const useOnboardingRun = ({
   const runArticle = useRunArticleGeneration(apiKeys);
   const runPodcast = useRunPodcastGeneration(apiKeys);
   const runTikTok = useRunTikTokGeneration(apiKeys);
+  const runSocial = useRunSocialGeneration(apiKeys);
   const tiktokPages = useTikTokPages();
   const { connection } = useSyncConnection();
   const knownApiUrl = useKnownApiUrl();
@@ -132,6 +135,16 @@ export const useOnboardingRun = ({
         : createTrialTikTokApi({ baseUrl: knownApiUrl });
     return readTikTokLink(url, { own: tiktokPages, server: api.read });
   };
+  const readSocial = async (url: string) => {
+    if (knownApiUrl === null) {
+      throw new Error(NO_SERVER);
+    }
+    const api =
+      libraryAccountIdOf(connection) !== null
+        ? createFetchSocialApi({ baseUrl: knownApiUrl, token: connection.token })
+        : createTrialSocialApi({ baseUrl: knownApiUrl });
+    return api.read(url);
+  };
   const checkEpisode = async (episode: PodcastEpisode) => {
     if (knownApiUrl === null) {
       throw new Error("There's no server to check that episode through.");
@@ -148,10 +161,12 @@ export const useOnboardingRun = ({
     runArticle,
     runPodcast,
     runTikTok,
+    runSocial,
     readArticle,
     readVideo,
     readPodcast,
     readTikTok,
+    readSocial,
     checkEpisode,
     onFound,
     onMade,
@@ -166,10 +181,12 @@ export const useOnboardingRun = ({
     runArticle,
     runPodcast,
     runTikTok,
+    runSocial,
     readArticle,
     readVideo,
     readPodcast,
     readTikTok,
+    readSocial,
     checkEpisode,
     onFound,
     onMade,
@@ -224,6 +241,8 @@ export const useOnboardingRun = ({
       checkEpisode: (episode) => latest.current.checkEpisode(episode),
       readTikTok: (url) => latest.current.readTikTok(url),
       tiktok: (request, options) => latest.current.runTikTok(request, options, latest.current.shown),
+      readSocial: (url) => latest.current.readSocial(url),
+      social: (request, options) => latest.current.runSocial(request, options, latest.current.shown),
     };
 
     kind

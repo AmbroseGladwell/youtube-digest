@@ -165,9 +165,20 @@ No player can seek an Instagram or Facebook video, so a note's times show as pla
 `youtubeMomentUrl` answers only for YouTube, and key point, chapter, dubious-claim and chat
 citation times link out only where it does. The Transcript tab still reads along.
 
+## Onboarding
+
+Start takes an Instagram or Facebook link as it takes a TikTok (`onboardingSources`,
+`socialSourceFor`). It reads the post before there's an account, on the device's trial reads
+(`createTrialSocialApi`), and shows it back as the platform's post, then writes it once the
+account exists ("Nothing paid before the account"). The stops before anything is spent are
+the paste field's: not a post, private or removed, a video with no words to transcribe, a
+photo or text post with too little written. A video with no words says on Your link that it
+will be transcribed, as a TikTok does. A photo or text post waits as an article does, with
+its description's words as the page's. Start's line of accepted links names Instagram and
+Facebook.
+
 ## Not yet
 
-- Onboarding: it takes no Instagram or Facebook link yet (the next slice).
 - The extension panel offers nothing for an open Instagram or Facebook tab; paste the link.
 - Videos inside a carousel: a carousel is read for its description only.
 - Comments, by decision (above).
