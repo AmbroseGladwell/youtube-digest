@@ -339,12 +339,17 @@ const jsonSchemaOf = (schema: z.ZodType): object => {
   return json;
 };
 
-const openAiJson = async <T>(system: string, user: string, schema: z.ZodType<T>): Promise<T & Priced> => {
+const openAiJson = async <T>(
+  system: string,
+  user: string,
+  schema: z.ZodType<T>,
+  model: { provider: "openai"; model: string } = LABELLER,
+): Promise<T & Priced> => {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${process.env["OPENAI_API_KEY"]}` },
     body: JSON.stringify({
-      model: LABELLER.model,
+      model: model.model,
       max_completion_tokens: 4_000,
       messages: [
         { role: "system", content: system },
@@ -360,7 +365,7 @@ const openAiJson = async <T>(system: string, user: string, schema: z.ZodType<T>)
   const body = (await response.json()) as { choices: Array<{ message: { content: string | null } }> };
   const usage = tokenUsageOf("openai", body);
   const parsed = schema.parse(JSON.parse(body.choices[0]?.message.content ?? ""));
-  return { ...parsed, usage, costDollars: usage === null ? 0 : costInDollars(priceOf(LABELLER)!, usage) };
+  return { ...parsed, usage, costDollars: usage === null ? 0 : costInDollars(priceOf(model)!, usage) };
 };
 
 const anthropicJson = async <T>(
@@ -1542,6 +1547,9 @@ const obviousExamplesOf = async (dataDir: string): Promise<string> => {
     .join("\n");
 };
 
+const SOL = { provider: "openai", model: "gpt-6.1-sol" } as const;
+type QuestionWriter = "sonnet" | "sol";
+
 const writeQuestions = (
   entries: Map<string, Entry>,
   scopes: Scope[],
@@ -1549,6 +1557,7 @@ const writeQuestions = (
   obvious: string,
   projectsNow: Scope[],
   chosen: ScopedPair[],
+  writer: QuestionWriter = "sonnet",
 ) => {
   const scopeName = (id: string) =>
     id === "library" ? "the whole library" : `the project "${scopes.find((scope) => scope.id === id)!.name}"`;
@@ -1559,12 +1568,9 @@ const writeQuestions = (
         `## Pair ${index + 1}, for ${scopeName(row.scope)} (${row.label.relation.replace(/_/g, " ")})\n- A: ${compactNote(entries.get(row.candidate.a)!, row.candidate.aClaim)}\n- B: ${compactNote(entries.get(row.candidate.b)!, row.candidate.bClaim)}`,
     )
     .join("\n\n");
-  return anthropicJson(
-    QUESTION_PROMPT.replace("{OBVIOUS}", obvious),
-    `${reader}\n\n# Projects in this round\n${projectLines}\n\n${pairsText}`,
-    WrittenQuestions,
-    WRITERS.sonnet,
-  );
+  const system = QUESTION_PROMPT.replace("{OBVIOUS}", obvious);
+  const user = `${reader}\n\n# Projects in this round\n${projectLines}\n\n${pairsText}`;
+  return writer === "sol" ? openAiJson(system, user, WrittenQuestions, SOL) : anthropicJson(system, user, WrittenQuestions, WRITERS.sonnet);
 };
 
 const questionsRun = async (dataDir: string, budget: number): Promise<void> => {
@@ -1635,14 +1641,14 @@ const questionsRun = async (dataDir: string, budget: number): Promise<void> => {
   );
 };
 
-const questionsRewrite = async (dataDir: string, budget: number): Promise<void> => {
+const questionsRewrite = async (dataDir: string, budget: number, writer: QuestionWriter = "sonnet"): Promise<void> => {
   const entries = await loadLibrary(dataDir);
   const reader = await readerBlockOf(dataDir);
   const scopes = await scopesOf(dataDir, entries);
   const pool = new Map((await libraryPool(dataDir, entries)).map((candidate) => [candidate.key, candidate]));
   const obvious = await obviousExamplesOf(dataDir);
   const source = JSON.parse(await readFile(join(dataDir, "questions.json"), "utf-8")) as Results4;
-  const resultsPath = join(dataDir, "questions-short.json");
+  const resultsPath = join(dataDir, writer === "sol" ? "questions-short-sol.json" : "questions-short.json");
   const results: Results4 = JSON.parse(
     await readFile(resultsPath, "utf-8").catch(() => JSON.stringify({ labels: source.labels, refreshes: [] })),
   );
@@ -1659,7 +1665,7 @@ const questionsRewrite = async (dataDir: string, budget: number): Promise<void> 
       const candidate = scope === undefined ? pool.get(pair.key)! : projectCandidates(entries, scope).find((row) => row.key === pair.key)!;
       return { scope: pair.scope, candidate, label: source.labels[`${pair.scope}:${pair.key}`]! };
     });
-    const written = await writeQuestions(entries, scopes, reader, obvious, projectsNow, chosen);
+    const written = await writeQuestions(entries, scopes, reader, obvious, projectsNow, chosen, writer);
     results.refreshes.push({ pairs, written, labelCost: source.refreshes[refresh]!.labelCost });
     await writeFile(resultsPath, `${JSON.stringify(results, null, 1)}\n`);
     const words = written.questions.map((question) => question.question.split(/\s+/).length);
@@ -1739,7 +1745,7 @@ const { positionals, values } = parseArgs({
 });
 const [command, dataDir] = positionals;
 const usage =
-  "usage: connectionsCheck candidates <data dir> | run <data dir> [--limit 30] [--budget 1] | report <data dir> | review <data dir> | candidates2 <data dir> | run2 <data dir> [--budget 1] | report2 <data dir> | review-page <data dir> | run3 <data dir> [--budget 1] | report3 <data dir> | review-page3 <data dir> | gate <data dir> [--budget 1] | questions <data dir> [--budget 1] | questions-page <data dir> | questions-short <data dir> [--budget 1] | questions-short-page <data dir>";
+  "usage: connectionsCheck candidates <data dir> | run <data dir> [--limit 30] [--budget 1] | report <data dir> | review <data dir> | candidates2 <data dir> | run2 <data dir> [--budget 1] | report2 <data dir> | review-page <data dir> | run3 <data dir> [--budget 1] | report3 <data dir> | review-page3 <data dir> | gate <data dir> [--budget 1] | questions <data dir> [--budget 1] | questions-page <data dir> | questions-short <data dir> [--budget 1] | questions-short-page <data dir> | questions-sol <data dir> [--budget 1]";
 if (dataDir === undefined) {
   console.error(usage);
   process.exit(1);
@@ -1774,6 +1780,8 @@ if (command === "candidates") {
   await questionsPage(dataDir);
 } else if (command === "questions-short") {
   await questionsRewrite(dataDir, Number(values.budget));
+} else if (command === "questions-sol") {
+  await questionsRewrite(dataDir, Number(values.budget), "sol");
 } else if (command === "questions-short-page") {
   await questionsPage(dataDir, "questions-short");
 } else {
