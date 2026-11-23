@@ -33,13 +33,16 @@ const firstJsonObject = (text: string): string => {
   return text.slice(start);
 };
 
-// Sent by hand: it's the header Anthropic requires before it answers a browser at all.
-const headers = (apiKey: string) => ({
+export const ANTHROPIC_MESSAGES_URL = `${BASE_URL}/messages`;
+
+export const anthropicServerHeaders = (apiKey: string) => ({
   "content-type": "application/json",
   "x-api-key": apiKey,
   "anthropic-version": "2023-06-01",
-  "anthropic-dangerous-direct-browser-access": "true",
 });
+
+// Sent by hand: it's the header Anthropic requires before it answers a browser at all.
+const headers = (apiKey: string) => ({ ...anthropicServerHeaders(apiKey), "anthropic-dangerous-direct-browser-access": "true" });
 
 // docs/features/overview-generation-decisions.md, "The schema has to fit Claude's grammar".
 const GRAMMAR_REFUSED = /compiled grammar is too large|schema is too complex/i;
@@ -48,7 +51,7 @@ export const anthropicAdapter: ProviderAdapter = {
   async generate(call: ProviderCall, request: GenerationRequest, http: typeof fetch): Promise<unknown> {
     const schema = providerJsonSchema(request.schema);
     const send = (enforced: boolean) =>
-      http(`${BASE_URL}/messages`, {
+      http(ANTHROPIC_MESSAGES_URL, {
         method: "POST",
         headers: headers(call.apiKey),
         body: JSON.stringify({

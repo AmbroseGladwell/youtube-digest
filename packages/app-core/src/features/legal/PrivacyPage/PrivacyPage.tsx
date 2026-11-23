@@ -315,12 +315,13 @@ const sections: readonly LegalSection[] = [
           questions you could ask there, each resting on two of your saved overviews whose ideas connect. It happens a few times a week at
           most, never on a free plan. Our server picks likely pairs by comparing your overviews' embeddings, as search by meaning does, and
           sends OpenAI in the United States each pair's titles, big pictures, claims and key points, your About you sentence and what we
-          have learned from your overviews, and your projects' names and what each is for. To write the questions it also sends the ones you
-          marked obvious and the ones already on show, so new ones differ. We keep when you last opened each of those chats, and a record of
-          each time questions were written: when, for which chats, and how many pairs and questions. The questions are kept as part of your
-          library and synced to your devices with what you did with each; they are deleted with either of their overviews, with their
-          project, or with your account. Each call's tokens and cost go into the daily cost tally, and the log says how many pairs and
-          questions there were, never the questions themselves.
+          have learned from your overviews, and your projects' names and what each is for, to judge which pairs connect. It then sends
+          Anthropic in the United States the pairs that do, with their titles, claims and closest points, the same About you and project
+          details, and the questions you marked obvious and the ones already on show, so new ones differ, and Anthropic writes the
+          questions. We keep when you last opened each of those chats, and a record of each time questions were written: when, for which
+          chats, and how many pairs and questions. The questions are kept as part of your library and synced to your devices with what you
+          did with each; they are deleted with either of their overviews, with their project, or with your account. Each call's tokens and
+          cost go into the daily cost tally, and the log says how many pairs and questions there were, never the questions themselves.
         </p>
         <p>
           We count the questions each account asks each day, against its monthly allowance. Each question's tokens and their cost at
@@ -544,9 +545,10 @@ const sections: readonly LegalSection[] = [
             ["Brevo", "sends sign-in emails", "European Union"],
             [
               "OpenAI",
-              "writes overviews, topic suggestions and what we learn from your overviews when made on our key, answers the questions you ask about an overview, suggests questions from pairs of your overviews on a paid plan, and turns your overviews' claims and your searches into embeddings for search",
+              "writes overviews, topic suggestions and what we learn from your overviews when made on our key, answers the questions you ask about an overview, judges which pairs of your overviews connect for suggested questions on a paid plan, and turns your overviews' claims and your searches into embeddings for search",
               UNITED_STATES,
             ],
+            ["Anthropic", "writes suggested questions from pairs of your overviews on a paid plan", UNITED_STATES],
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
             [
               "ScrapeCreators",
@@ -583,8 +585,8 @@ const sections: readonly LegalSection[] = [
           about you.
         </p>
         <p>
-          A provider you bring your own key for (Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral) is not our processor. Your device
-          sends to it directly, under the agreement between you and that provider.
+          A provider you bring your own key for (Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral) is not our processor for what your key
+          does. Your device sends to it directly, under the agreement between you and that provider.
         </p>
         <p>
           Where a provider is outside the United Kingdom, the transfer relies on the UK's adequacy regulations for the European Union, and

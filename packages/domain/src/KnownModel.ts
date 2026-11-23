@@ -1,6 +1,8 @@
 import { PROVIDERS, type Provider } from "./Provider.js";
 
 // A floor, not the catalogue: docs/features/byo-providers.md, "Which models are offered".
+export const SONNET_MODEL_ID = "claude-sonnet-5-5";
+
 export interface KnownModel {
   id: string;
   label: string;
@@ -18,7 +20,7 @@ export const KNOWN_MODELS: Record<Provider, readonly [KnownModel, ...KnownModel[
       pricePerMillion: { input: 4, output: 20 },
     },
     {
-      id: "claude-sonnet-5-5",
+      id: SONNET_MODEL_ID,
       label: "Claude Sonnet 5.5",
       description: "Faster and cheaper, a step down in depth.",
       pricePerMillion: { input: 2, output: 10 },

@@ -28,6 +28,7 @@ import { readSettings } from "../records/readSettings.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
 import { allocateQuestionSlots, isUsedUp, NEW_QUESTIONS_PER_REFRESH, scopeKeyOf, type ScopeSlots } from "./allocateQuestionSlots.js";
+import { askClaudeForJson } from "./askClaudeForJson.js";
 import { askForJson, UnreadableReplyError } from "./askForJson.js";
 import { ClaimPairsRepository } from "./ClaimPairsRepository.js";
 import { compactNote, LABEL_PROMPT, PAIR_LABEL_SHAPE, PairLabel, pairNotes, TENSIONS } from "./PairLabel.js";
@@ -54,6 +55,7 @@ export const OBVIOUS_EXAMPLES = 4;
 
 export interface SuggestedQuestionRefresherOptions {
   apiKey: string;
+  anthropicApiKey: string;
   http: typeof fetch;
   sql: SqlClient;
   records: RecordsRepository;
@@ -84,7 +86,7 @@ interface EligibleProject {
 }
 
 interface QuestionCall<T> {
-  model: { provider: "openai"; model: string };
+  model: { provider: "openai" | "anthropic"; model: string };
   shape: Omit<ReplyShape, "model">;
   schema: z.ZodType<T>;
   detail: string;
@@ -345,18 +347,22 @@ export class SuggestedQuestionRefresher {
   }
 
   async #ask<T>(accountId: AccountId, messages: readonly PromptMessage[], call: QuestionCall<T>, log: FastifyBaseLogger): Promise<T> {
-    const { apiKey, http, sleep } = this.#options;
+    const { apiKey, anthropicApiKey, http, sleep } = this.#options;
     const setup: ChatCompletionSetup = {
       apiKey,
       http,
       sleep: sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))),
       retried: (status: number) => log.info(apiLogLines.chat.retried({ status })),
     };
+    const shape = { ...call.shape, model: call.model.model };
     const cacheKey = `questions-${createHash("sha256").update(accountId).digest("hex").slice(0, 16)}`;
     const record = (usage: TokenUsage | null, detail: string) =>
       recordQuestionCost(this.#options, accountId, call.model, usage, detail, log);
     try {
-      const reply = await askForJson(setup, messages, cacheKey, { ...call.shape, model: call.model.model }, call.schema);
+      const reply =
+        call.model.provider === "anthropic"
+          ? await askClaudeForJson({ ...setup, apiKey: anthropicApiKey }, messages, shape, call.schema)
+          : await askForJson(setup, messages, cacheKey, shape, call.schema);
       await record(reply.usage, call.detail);
       return reply.value;
     } catch (error) {

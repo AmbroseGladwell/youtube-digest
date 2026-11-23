@@ -1,3 +1,4 @@
+import { makeFakeClaude, type FakeClaude } from "./FakeClaude.testHelper.js";
 import assert from "node:assert/strict";
 import type { FastifyBaseLogger } from "fastify";
 import { randomUUID } from "node:crypto";
@@ -9,7 +10,6 @@ import { makeConceptEmbedder } from "../meaning/ConceptEmbedder.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { distinctVideo, storedOverview, UPDATED_AT } from "../testing/storedRecords.testHelper.js";
-import { QUESTION_WRITER_MODEL } from "./questionModels.js";
 
 export const REAL_TENSION = { relation: "different_view", verdict: "real", reason: "One says rest first; the other says routine first." };
 export const DAY_MS = 24 * 60 * 60 * 1000;
@@ -29,7 +29,7 @@ export interface RefreshSetting {
   testApp: TestApp;
   account: TestAccount;
   labeller: FakeChatOpenAi;
-  writer: FakeChatOpenAi;
+  writer: FakeClaude;
   labelled: () => string[];
   written: () => PromptMessage[][];
   save: (title: string, coreClaim: string, points: string[], overrides?: Partial<Overview>) => Promise<string>;
@@ -71,17 +71,16 @@ export const setUpRefresh = async (
   { writerReply = { questions: [] }, plan = "plus", logger, answersAfter = Promise.resolve() }: RefreshSetUp = {},
 ): Promise<RefreshSetting> => {
   const labeller = makeFakeChatOpenAi({ reply: REAL_TENSION });
-  const writer = makeFakeChatOpenAi({ reply: writerReply });
+  const writer = makeFakeClaude({ reply: writerReply });
   const http = (async (url: string | URL | Request, init: RequestInit = {}) => {
-    const { model } = JSON.parse(String(init.body)) as { model: string };
     await answersAfter;
-    return (model === QUESTION_WRITER_MODEL.model ? writer : labeller).http(url, init);
+    return (String(url).includes("anthropic.com") ? writer : labeller).http(url, init);
   }) as typeof fetch;
   const testApp = await createTestApp(
     {},
     {
       embedder: questionConcepts(),
-      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, dailyChatMessages: 100, http },
+      ourKey: { apiKey: "sk-test-ours", anthropicApiKey: "sk-ant-test-ours", dailyGenerations: 300, dailyChatMessages: 100, http },
       ...(logger === undefined ? {} : { logger }),
     },
   );

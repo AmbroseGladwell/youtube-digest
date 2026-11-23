@@ -1,7 +1,7 @@
+import { SONNET_MODEL_ID } from "@overview/domain";
 import { chatModel } from "../chats/chatModel.js";
-import { ourKeyModel } from "../generation/ourKeyModel.js";
 
 export const QUESTION_LABEL_MODEL = chatModel;
 
-// One place to swap the writer; Sol and Sonnet are still being compared (docs/features/suggested-questions.md, "Writing").
-export const QUESTION_WRITER_MODEL = ourKeyModel;
+// Sonnet won the owner's blind comparison with Sol (docs/features/suggested-questions.md, "Writing").
+export const QUESTION_WRITER_MODEL = { provider: "anthropic", model: SONNET_MODEL_ID } as const;

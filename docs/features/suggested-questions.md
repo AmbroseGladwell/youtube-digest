@@ -134,7 +134,7 @@ calls it when the library or a project's chat opens. It answers **202** at once 
 | `capped` | this month's `questions` costs reached the cap |
 | `busy` | a refresh for this account is still running |
 | `not-due` | too soon, too many this week, or nothing new saved since the last |
-| `unavailable` | this server has no OpenAI key of ours or no meaning search |
+| `unavailable` | this server has no OpenAI or Anthropic key of ours, or no meaning search |
 
 The route awaits only the policy, never the writing: the refresh runs in the background and its
 promise never rejects. A failure is logged (`api.questions.refreshFailed`) and the refresh row
@@ -208,8 +208,12 @@ measured prompt's "for you" line is left out, since nothing reads it.
 
 ### Writing
 
-One call per refresh, with `QUESTION_WRITER_MODEL`, which is GPT-6.1 Sol. It is one constant so
-it can be swapped while Sol and Sonnet are compared; an Anthropic writer would need its own call.
+One call per refresh, with `QUESTION_WRITER_MODEL`: Claude Sonnet 5.5, on our Anthropic key
+(`ANTHROPIC_API_KEY`), through `askClaudeForJson` with the reply held to its JSON schema. On the
+owner's blind comparison of the same 16 pairs (23 Nov 2026), Sonnet wrote 15 questions, 10 the
+owner was glad to ask and 3 wrong; GPT-6.1 Sol wrote 12, 7 glad and 5 wrong, mostly too specific,
+though its wording was preferred where both were good. Labelling stays on Luna.
+
 The prompt (`questionWriterPrompt`) is the measured one (`connections.md`, round 4) plus:
 
 - each pair says how many questions its place can take;

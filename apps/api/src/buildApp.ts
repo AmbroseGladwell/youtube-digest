@@ -127,6 +127,7 @@ export interface TranscriptServiceSetup {
 
 export interface OurKeySetup {
   apiKey: string;
+  anthropicApiKey?: string | null;
   dailyGenerations: number;
   dailyChatMessages: number;
   http: typeof fetch;
@@ -247,10 +248,11 @@ export const buildApp = async ({
   const meaningSearch = meaning === null ? null : new MeaningSearch(claimEmbeddings, meaning.embedder, { costs, clock, log: app.log });
   const overviewsWritten = () => embeddingQueue?.kick();
   const questionRefresher =
-    ourKey === null || meaning === null
+    ourKey === null || meaning === null || ourKey.anthropicApiKey == null
       ? null
       : new SuggestedQuestionRefresher({
           apiKey: ourKey.apiKey,
+          anthropicApiKey: ourKey.anthropicApiKey,
           http: ourKey.http,
           sql,
           records: new RecordsRepository(sql, clock),

@@ -1,3 +1,4 @@
+import { QUESTION_WRITER_MODEL } from "./questionModels.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { SuggestedQuestionScope } from "@overview/domain";
@@ -241,7 +242,7 @@ test("a refresh labels fresh pairs, writes what passes the record's rules, and c
   assert.ok(!labelledPairs.includes("Founders|Habits"));
   assert.equal(setting.writer.requests.length, 1);
   const [system, user] = setting.written()[0]!;
-  assert.equal(setting.writer.requests[0]!.model, "gpt-6.1-sol");
+  assert.equal(setting.writer.requests[0]!.model, QUESTION_WRITER_MODEL.model);
   assert.match(system!.content, /found questions like these obvious:\n- Do founders need habits too\?/);
   assert.match(system!.content, /already on show\. Don't repeat their themes:\n- Does memory decide who succeeds a founder\?/);
   assert.match(system!.content, /draws on both overviews of its pair/);
