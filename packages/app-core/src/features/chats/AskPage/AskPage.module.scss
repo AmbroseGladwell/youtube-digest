@@ -113,6 +113,10 @@
   &:hover {
     background: var(--surface);
   }
+
+  &[aria-disabled="true"] {
+    cursor: default;
+  }
 }
 
 .messages {
@@ -277,6 +281,29 @@
   cursor: pointer;
 }
 
+// Design 350e and 350h-3: Undo after Not useful or Hide, low on the empty page.
+.questionToastSpot {
+  bottom: calc(26px + env(safe-area-inset-bottom));
+}
+
+.questionToast {
+  gap: 14px;
+  padding: 9px 10px 9px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  font: 600 0.84375rem/normal var(--font-body);
+}
+
+.questionUndo {
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
 .live {
   position: absolute;
   width: 1px;
@@ -316,5 +343,9 @@
 
   .question {
     max-width: 86%;
+  }
+
+  .questionToastSpot {
+    bottom: calc(30px + env(safe-area-inset-bottom));
   }
 }

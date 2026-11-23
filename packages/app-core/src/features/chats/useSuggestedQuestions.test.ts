@@ -104,7 +104,7 @@ describe("useSuggestedQuestionsWith", () => {
       seed(4);
       render();
       expect(texts()).toEqual(["Custom 1?", "Custom 2?", "Custom 3?"]);
-      expect(hook).toMatchObject({ page: 0, pages: 3, canCycle: true });
+      expect(hook).toMatchObject({ page: 0, pages: 3, total: 7, canCycle: true });
       act(() => hook.next());
       expect(texts()).toEqual(["Custom 4?", TEMPLATES[0], TEMPLATES[1]]);
       act(() => hook.next());

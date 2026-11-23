@@ -110,6 +110,9 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   for (const member of hooksConfig?.seedProjectMembers ?? []) {
     projectStore.seedMember(member);
   }
+  for (const question of hooksConfig?.seedSuggestedQuestions ?? []) {
+    seeded.suggestedQuestionStore.seedSuggestedQuestion(question);
+  }
   for (const read of hooksConfig?.failingReads ?? []) {
     overviewStore.failOn(read);
   }

@@ -12,6 +12,7 @@ import type {
   QueuedCapture,
   Settings,
   StoredTranscript,
+  SuggestedQuestion,
   Topic,
   UnreadableRecord,
 } from "@overview/domain";
@@ -37,6 +38,7 @@ export interface IwftHooksConfig {
   seedQueue?: QueuedCapture[];
   seedProjects?: Project[];
   seedProjectMembers?: ProjectMember[];
+  seedSuggestedQuestions?: SuggestedQuestion[];
   failingReads?: InMemoryStoreRead[];
   apiKeys?: ApiKeys;
   syncAvailable?: boolean;

@@ -111,7 +111,7 @@ a project's when it deletes the project or pulls its tombstone, without journali
 the server's delete takes them. A project's question on an overview taken out of the project
 stays on the device until the server's tombstone for it comes down.
 
-Nothing shows them yet.
+The Ask page shows them (slice 4).
 
 ## Slice 2: the refresh
 
@@ -291,8 +291,8 @@ The library and each project use the same logic, keyed by scope.
 `ChatApi.refreshSuggestedQuestions(scope)` posts to `POST /api/suggested-questions/refresh`. The
 hook calls it once each time the page opens on a scope, signed in, never on a plan known to be free,
 without waiting and swallowing any failure: questions arrive through sync, and what the server
-answered matters only to its own log (`api.questions.refreshed`). The page isn't wired to the hook
-until slice 4, so nothing is spent on questions no one can see yet.
+answered matters only to its own log (`api.questions.refreshed`). Slice 4 wired the page to the hook,
+so the refresh runs from then on.
 
 ### Events
 
@@ -309,6 +309,55 @@ question, a title or an id:
 - `question.undone`, with `action`: `notUseful` or `hidden`.
 - `question.chipOpened`: an overview opened from the "This question draws on" menu, through the
   hook's `chipOpened`.
+
+## Slice 4: the screens
+
+The Ask page's empty state draws the set to the hand-off, frames 350a–350i (Claude Design project
+668753e1…, "OV-350 1 Suggested Questions"; owner, 23 Nov 2026). `AskPage` calls
+`useSuggestedQuestions` with `askStarters` as the templates and `showing` while the page is empty and
+the field isn't waiting for anything but the connection. The values come from the frames' generated
+CSS (`_gen/ov350.js`), as rendered.
+
+- **`AskQuestionCards`** is the list, "Questions to start with", and Different questions under it.
+  - It shows when any of the reader's questions are in the set. With templates only (a free plan, the
+    plan not known yet, none of the reader's own), the page keeps today's three starters exactly
+    (354u, 350i), with no Different questions.
+  - Different questions is 266j's outlined pill with "1 of 3" beside it, shown only when `canCycle`.
+    Rows fade and lift out, the next settle 40ms apart (none with reduced motion), focus stays on the
+    button, and a polite region says "Questions 4 to 6 of 7" (`askQuestionSetAnnouncement`, from the
+    hook's `total`).
+  - Not useful and Hide fade the card and lift it 4px first, then hand it to the hook, focus the
+    question now in its place, and say "Question removed."
+- **`AskQuestionCard`** is one card: chat's question bubble (surface, 18/18/4/18, the 12px tail at the
+  bottom right with a 7px margin), the turn arrow, the question at 14px (the frames render 14px: a
+  later rule in their CSS overrides the 14.5px the README gives). Only the question row is a button,
+  tints and shows the pointer.
+  - A reader's question has a top row: Good question (thumb up, `aria-pressed`, the thumb fills), Not
+    useful (thumb down) and Hide (×), a labelled group "Feedback on this question" with each button
+    named with the question, then the references button. The three are 28px, 36px on touch; on a
+    screen that hovers they show on hover or keyboard focus within the card, their space kept, and on
+    touch always.
+  - Their tips ("Good question", "Not useful", "Hide", "Overviews it draws on") sit above the button,
+    after 400ms on hover or keyboard focus, at once with reduced motion, and on a long press on touch
+    (`theme/tip.scss`'s `shows`, `label-above` and `label-shown`, with `useLongPressTip`).
+  - While offline the questions show and their buttons are `aria-disabled`, beside the "You're
+    offline" wait.
+- **`AskQuestionReferences`** is the references button and its menu: both thumbnails at chat citation
+  size (20×14 a video, 14×14 otherwise, a blank tile if the image is missing or fails), "2" and a
+  chevron, in a 30px pill with a 1.5px outline; named "2 overviews this question draws on: {title} and
+  {title}" with `aria-haspopup="menu"`. The count leads the name so the visible "2" is in it (WCAG
+  2.5.3), a small change from the hand-off's wording.
+  - The menu (350b-3, 350h-4) opens under the button, aligned right: "This question draws on", then a
+    menuitem per overview named by its full title, with its thumbnail, the title cut with an ellipsis,
+    and its kind ("Video", "Podcast episode", "Article", "Recipe"). Arrow keys move, Escape or a press
+    outside closes it and returns focus, and a row opens that overview and calls `chipOpened`.
+- **The toast** is the Ask page's own, with Undo for the hook's five seconds: "Thanks. We won't suggest
+  it again." or "Hidden.", lower on the empty page than the conversation's toasts (26px, 30px on a
+  phone), with no icon, as in 350e and 350h-3.
+
+`suggestedQuestions.iwft.ts` covers the order, cycling, feedback, Undo and the held write, asking with
+both pinned, the menu, the free plan, offline and touch; `reflow.iwft.ts` covers the state at 400%
+zoom, 200% text and on a phone. The simulator seeds questions through `seedSuggestedQuestions`.
 
 ## Privacy
 
