@@ -1,4 +1,4 @@
-import { ShareToken, shareSnapshot, type SharePayload } from "@overview/domain";
+import { ShareToken, VideoId, shareSnapshot, type SharePayload } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { routeTikTokPlayer } from "../../network/fixtures/tiktokPlayerFixtures.js";
@@ -20,11 +20,15 @@ const payload = (): SharePayload => {
       overview: {
         ...overview,
         source: {
-          ...overview.source,
+          kind: "tiktok",
+          id: VideoId.parse("7438291055512345678"),
+          url: "https://www.tiktok.com/@bbcnews/video/7438291055512345678",
           title: "Why is the UK telling people to stockpile?",
-          authorName: "BBC News",
           handle: "bbcnews",
+          authorName: "BBC News",
           durationMs: 58_000,
+          publishedAt: "2026-11-12T18:30:00.000Z",
+          imageUrl: null,
         },
         keyPoints: [
           { text: "The government wants every household to keep three days of supplies.", range: { startMs: 6_000, endMs: 20_000 } },
