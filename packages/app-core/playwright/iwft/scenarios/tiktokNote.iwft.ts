@@ -42,7 +42,7 @@ test("a TikTok's library row mattes its portrait cover, leads with its chip and 
   }
 });
 
-test("a TikTok's note shows the caption as its title, the creator with their handle and no Chapters tab", async ({
+test("a TikTok's note shows the caption as its title, the creator with their handle, no Chapters tab and its matted cover to play", async ({
   page,
   launcher,
   backendSimulator,
@@ -55,8 +55,8 @@ test("a TikTok's note shows the caption as its title, the creator with their han
   await expect(page.getByTestId("ReaderMasthead.channel")).toHaveText("BBC News @bbcnews");
   await expect(page.getByRole("tab")).toHaveText(["Overview", "Transcript"]);
   await expect(page.getByTestId("ReaderMasthead.meta")).toContainText("58 s video");
-  const head = page.getByTestId("HeadImage.image");
-  const box = await head.boundingBox();
+  const cover = page.getByTestId("TikTokPlayer.cover").locator("img");
+  const box = await cover.boundingBox();
   expect(box!.height / box!.width).toBeCloseTo(16 / 9, 1);
   if (SHOTS) {
     await page.screenshot({ path: `${SHOTS}/130g-note.png` });
