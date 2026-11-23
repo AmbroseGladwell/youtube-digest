@@ -8,6 +8,7 @@ import { ToastPageObject } from "./ToastPageObject.testHelper.js";
 import { SelectionBarPageObject } from "./SelectionBarPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
+import { filterPanelTestIds } from "../../src/features/library/components/FilterPanel/FilterPanelTestIds.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import type { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
@@ -237,6 +238,17 @@ export class LibraryPageObject extends PageObject {
         expect(rail.y < height - 40).toBe(open);
       }).toPass({ timeout: 4_000 }),
     );
+
+  verifyFilterSheetIsReachable = (reachable: boolean) =>
+    this.step(`verifyFilterSheetIsReachable ${reachable}`, async () => {
+      await expect(this.get(libraryPageTestIds.rail)).toHaveJSProperty("inert", !reachable);
+      const option = this.page.getByTestId(filterPanelTestIds.favouriteChip);
+      const tookFocus = await option.evaluate((button: HTMLElement) => {
+        button.focus();
+        return document.activeElement === button;
+      });
+      expect(tookFocus).toBe(reachable);
+    });
 
   verifyFilterSheetClearsTheBar = () =>
     this.step("verifyFilterSheetClearsTheBar", async () => {

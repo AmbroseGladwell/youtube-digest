@@ -527,6 +527,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           ref={rail}
           className={`${styles.rail} ${filtersOpen ? styles.railOpen : ""}`}
           aria-label="Filters"
+          inert={railIsSheet && !filtersOpen}
           data-testid={libraryPageTestIds.rail}
         >
           <span className={styles.sheetHandle} aria-hidden="true" />

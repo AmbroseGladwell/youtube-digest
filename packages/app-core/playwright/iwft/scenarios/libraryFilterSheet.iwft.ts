@@ -23,6 +23,31 @@ test("the filter sheet opens clear of the bar, rather than sliding its head unde
   await library.verifyFilterSheetClearsTheBar();
 });
 
+test("the closed sheet is out of reach of screen readers and the keyboard, and back in reach once opened", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  backendSimulator.overviews.seed(makeOverview());
+  await page.setViewportSize(PHONE);
+  const library = await launcher.launchExpectingLibrary();
+  await library.verifyFilterSheetIsReachable(false);
+
+  await library.openFilters();
+  await library.verifyFilterSheetIsReachable(true);
+
+  await library.closeFiltersWithEscape();
+  await library.verifyFilterSheetIsReachable(false);
+});
+
+test("on a wide screen the filters stay in reach, as a rail rather than a sheet", async ({ launcher, backendSimulator, page }) => {
+  backendSimulator.overviews.seed(makeOverview());
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const library = await launcher.launchExpectingLibrary();
+
+  await library.verifyFilterSheetIsReachable(true);
+});
+
 test("the open sheet holds the keyboard, and gives it back to the button that opened it", async ({ launcher, backendSimulator, page }) => {
   backendSimulator.overviews.seed(makeOverview());
   await page.setViewportSize(PHONE);
