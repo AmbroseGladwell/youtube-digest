@@ -1,7 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createScrapeCreatorsTikTok } from "./createScrapeCreatorsTikTok.js";
-import { CAPTIONS_VTT, makeAwemeDetail, makeVendorAnswer, VIDEO_ID, VIDEO_URL } from "./ScrapeCreatorsAnswerFactory.testHelper.js";
+import {
+  CAPTIONS_VTT,
+  makeAwemeDetail,
+  makeVendorAnswer,
+  SMALLEST_MEDIA_URL,
+  VIDEO_ID,
+  VIDEO_URL,
+} from "./ScrapeCreatorsAnswerFactory.testHelper.js";
 
 const vendorAnswering = (status: number, body: unknown) => {
   const asked: { url: URL; key: string | null }[] = [];
@@ -31,6 +38,7 @@ test("a video comes back with its author, length, cover, date and caption tracks
       captions: [{ language: "eng-US", source: "ASR" }],
     },
     vtt: null,
+    mediaUrl: SMALLEST_MEDIA_URL,
     credits: 1,
   });
   assert.equal(asked[0]?.key, "test-key");
@@ -46,6 +54,20 @@ test("asked for the words, it asks for TikTok's own captions and hands back thei
 
   assert.equal(asked[0]?.url.searchParams.get("get_transcript"), "true");
   assert.equal(answer.status === "found" ? answer.vtt : null, CAPTIONS_VTT);
+});
+
+test("the video file to transcribe is its smallest rendition, or its play address, or none", async () => {
+  const mediaOf = async (videoOverrides: Record<string, unknown>) => {
+    const answer = await vendorAnswering(200, makeVendorAnswer({ detail: makeAwemeDetail({}, videoOverrides) })).vendor.video(VIDEO_URL, {
+      withTranscript: false,
+    });
+    return answer.status === "found" ? answer.mediaUrl : "failed";
+  };
+
+  assert.equal(await mediaOf({}), SMALLEST_MEDIA_URL);
+  assert.equal(await mediaOf({ bit_rate: [] }), "https://v16m.tiktokcdn.example/play.mp4");
+  assert.equal(await mediaOf({ bit_rate: undefined, play_addr: undefined }), null);
+  assert.equal(await mediaOf({ bit_rate: [], play_addr: { url_list: ["http://insecure.example/a.mp4"] } }), null);
 });
 
 test("captions a creator added are told apart from TikTok's machine ones", async () => {

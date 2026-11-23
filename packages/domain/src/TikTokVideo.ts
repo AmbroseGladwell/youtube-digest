@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TranscriptionOffer } from "./PodcastTranscription.js";
 import { StoredTranscript } from "./StoredTranscript.js";
 
 export const TikTokCaptionTrack = z.object({
@@ -22,13 +23,19 @@ export const TikTokVideo = z.object({
 export type TikTokVideo = z.infer<typeof TikTokVideo>;
 
 export const TIKTOK_READ_PATH = "/tiktok/read";
+export const TIKTOK_TRANSCRIPTION_PATH = "/tiktok/transcription";
 
 export const TikTokReadFailure = z.enum(["not-a-video", "unavailable", "blocked", "unreadable", "no-answer"]);
 export type TikTokReadFailure = z.infer<typeof TikTokReadFailure>;
 
 export const TikTokRead = z.discriminatedUnion("status", [
-  // The words come in the same call for the same credit; null when the video has no captions.
-  z.object({ status: z.literal("read"), video: TikTokVideo, transcript: StoredTranscript.nullable() }),
+  // Words in the same call for the same credit; with none, whether we can transcribe it.
+  z.object({
+    status: z.literal("read"),
+    video: TikTokVideo,
+    transcript: StoredTranscript.nullable(),
+    transcription: TranscriptionOffer.optional(),
+  }),
   z.object({ status: z.literal("failed"), reason: TikTokReadFailure }),
 ]);
 export type TikTokRead = z.infer<typeof TikTokRead>;

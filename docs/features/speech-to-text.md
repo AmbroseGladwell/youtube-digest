@@ -1,5 +1,8 @@
 # Speech-to-text for podcast episodes
 
+A TikTok with no captions is transcribed by the same rung since OV-130 slice 5: see
+`docs/features/tiktok-links.md`, "Transcribing a TikTok with no captions".
+
 Design note for OV-305. Status: provider chosen by measurement; the server rung and the screens built behind `STT_URL`.
 
 ## The gap

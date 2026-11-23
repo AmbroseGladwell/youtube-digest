@@ -2,7 +2,7 @@ import { TikTokVideo, type TikTokReadFailure } from "@overview/domain";
 import { z } from "zod";
 
 export type VendorVideo =
-  | { status: "found"; video: TikTokVideo; vtt: string | null; credits: number }
+  | { status: "found"; video: TikTokVideo; vtt: string | null; mediaUrl: string | null; credits: number }
   | { status: "failed"; reason: TikTokReadFailure; credits: number; vendorStatus: number | null };
 
 export interface TikTokVendor {
@@ -31,6 +31,10 @@ const Answer = z.object({
   transcript: z.string().nullish(),
 });
 
+const Address = z.object({ url_list: z.array(z.string()) });
+
+const Rendition = z.object({ play_addr: Address.extend({ data_size: z.number().optional() }) });
+
 const Aweme = z.object({
   aweme_id: z.string(),
   desc: z.string().catch(""),
@@ -40,7 +44,9 @@ const Aweme = z.object({
   video: z
     .object({
       duration: z.number().optional(),
-      cover: z.object({ url_list: z.array(z.string()) }).optional(),
+      cover: Address.optional(),
+      play_addr: Address.optional(),
+      bit_rate: z.array(Rendition).catch([]).optional(),
       cla_info: z
         .object({
           caption_infos: z
@@ -61,6 +67,19 @@ const urlOrNull = (value: string | undefined): string | null => (z.url().safePar
 // Milliseconds, checked live (docs/features/tiktok-links.md, "Checked against the vendor").
 const secondsOf = (milliseconds: number | undefined): number | null =>
   milliseconds !== undefined && milliseconds > 0 ? Math.max(1, Math.round(milliseconds / 1000)) : null;
+
+// The smallest rendition is enough for speech-to-text, which keeps only the sound.
+const mediaUrlOf = (detail: unknown): string | null => {
+  const video = Aweme.safeParse(detail).data?.video;
+  const smallestFirst = [...(video?.bit_rate ?? [])].sort(
+    (a, b) => (a.play_addr.data_size ?? Infinity) - (b.play_addr.data_size ?? Infinity),
+  );
+  const addresses = [
+    ...smallestFirst.map((rendition) => rendition.play_addr),
+    ...(video?.play_addr === undefined ? [] : [video.play_addr]),
+  ];
+  return addresses.flatMap((address) => address.url_list).find((url) => URL.parse(url)?.protocol === "https:") ?? null;
+};
 
 const videoFromAweme = (detail: unknown): TikTokVideo | "not-a-video" | null => {
   const aweme = Aweme.safeParse(detail);
@@ -119,7 +138,7 @@ export const createScrapeCreatorsTikTok = ({
       if (video === null || video === "not-a-video") {
         return { status: "failed", reason: video ?? "unreadable", credits, vendorStatus: response.status };
       }
-      return { status: "found", video, vtt: body.data.transcript ?? null, credits };
+      return { status: "found", video, vtt: body.data.transcript ?? null, mediaUrl: mediaUrlOf(body.data.aweme_detail), credits };
     },
   };
 };
