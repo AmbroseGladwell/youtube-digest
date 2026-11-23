@@ -94,9 +94,10 @@ account (`runTikTokOverviewGeneration`), as a video's does. A link it can't read
 anything is spent on writing. Their words in `onboardingFailureCopy` follow the other kinds' until
 the Design round's failure frames.
 
-**It isn't offered yet.** `TIKTOK_AT_START` is false, so the entry recognises no link and a pasted
-TikTok still goes to the web entry, as before. It is switched on with the screens, in the PR that
-names ScrapeCreators in `/privacy`, once production has the vendor's key.
+**Switched on with the screens** (`TIKTOK_AT_START`, 23 Nov 2026), in the PR that names ScrapeCreators
+in `/privacy`: a TikTok link at Start, or in a shared page's promo, now goes to this entry, and
+`ACCEPTED_LINKS` names TikTok. A profile or photo-post address isn't taken. Production also needs
+the vendor's key (`task deploy:secrets`) before a read works there.
 
 ## From a link to a video
 

@@ -180,7 +180,7 @@ const episodeFacts = (source: Source): string =>
 
 const readMinutes = (source: Source): string | null => (source.kind === "web" ? `${articleReadMinutes(source.wordCount)} min read` : null);
 
-export const TIKTOK_AT_START = false;
+export const TIKTOK_AT_START = true;
 
 const clipLength = (source: Source): string | null =>
   source.kind === "tiktok" && source.durationMs !== null ? formatClock(source.durationMs / 1000) : null;
@@ -346,7 +346,7 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
           };
     },
   },
-  // Off until the screens, with /privacy naming the vendor (docs/features/tiktok-links.md, "Onboarding").
+  // docs/features/tiktok-links.md, "Onboarding".
   tiktok: {
     linkKind: (link) =>
       TIKTOK_AT_START && parseTikTokLink(link)?.kind !== undefined && parseTikTokLink(link)?.kind !== "not-a-video" ? "video" : null,
