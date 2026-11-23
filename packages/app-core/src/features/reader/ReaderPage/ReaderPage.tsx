@@ -1149,6 +1149,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
               }}
               onReRecord={() => player.reRecord()}
               onCookFromHere={cookFromHere}
+              onBack={() => player.backFromHold()}
             />
           )}
         </article>

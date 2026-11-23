@@ -4,6 +4,7 @@ import {
   apiLogLines,
   DEFAULT_NARRATION_VOICE,
   NARRATION_FILE_TYPE,
+  NARRATION_PLAYLIST_TYPE,
   NARRATION_SEGMENT_TYPE,
   NarrationVoice,
   SpokenScript,
@@ -84,7 +85,7 @@ export const playlistOf = (render: AudioRender): string => {
   const segments = render.segmentSeconds ?? [];
   return [
     "#EXTM3U",
-    "#EXT-X-VERSION:3",
+    "#EXT-X-VERSION:6",
     `#EXT-X-TARGETDURATION:${Math.max(1, Math.ceil(Math.max(0, ...segments)))}`,
     "#EXT-X-MEDIA-SEQUENCE:0",
     "#EXT-X-PLAYLIST-TYPE:EVENT",
@@ -210,7 +211,7 @@ export const audioRoutes = (app: FastifyInstance, audio: AudioServices | null, c
     if (render === null || render.segmentSeconds === null || render.segmentSeconds.length === 0) {
       throw new ApiError("not_found", "No narration is being streamed with this key");
     }
-    return reply.header(CONTENT_TYPE, "application/vnd.apple.mpegurl").header("cache-control", "no-store").send(playlistOf(render));
+    return reply.header(CONTENT_TYPE, NARRATION_PLAYLIST_TYPE).header("cache-control", "no-store").send(playlistOf(render));
   });
 
   app.get("/audio/:key/segments/:segment", { config: { public: true } }, async (request, reply) => {

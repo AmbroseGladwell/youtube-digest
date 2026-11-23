@@ -27,6 +27,7 @@
     "@overview/transcripts": "*",
     "@tanstack/react-query": "^5.103.0",
     "@tanstack/react-virtual": "3.14.24",
+    "hls.js": "1.5.20",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^8.4.0",

@@ -678,6 +678,7 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
           }
         }}
         onReRecord={() => undefined}
+        onBack={() => player.backFromHold()}
       />
       <CookingTimerDock />
       {willStop.dialog}

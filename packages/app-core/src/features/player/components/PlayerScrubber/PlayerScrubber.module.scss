@@ -17,6 +17,24 @@
   background: var(--surface);
 }
 
+// Design 42b: how much of the narration exists yet, behind what has been played.
+.made {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--track-made);
+}
+
+// Design 42d: the stretch not made yet between the rendered edge and a thumb that jumped past it.
+.gap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: repeating-linear-gradient(90deg, var(--brand) 0 4px, transparent 4px 8px);
+  opacity: 0.55;
+}
+
 .fill {
   position: absolute;
   inset: 0 auto 0 0;
@@ -55,6 +73,13 @@
   border-radius: 999px;
   background: var(--brand);
   box-shadow: 0 0 0 2px var(--card);
+}
+
+// Design 42d: a soft ring while the thumb waits on its line.
+.thumbWaiting {
+  box-shadow:
+    0 0 0 2px var(--card),
+    0 0 0 6px color-mix(in srgb, var(--brand) 25%, transparent);
 }
 
 // Design 2a: the thumb grows while it is held.

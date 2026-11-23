@@ -32,6 +32,7 @@ export interface ReaderPlayerBarProps {
   onAction: (action: Exclude<PlayerBarAction, "signIn">) => void;
   onReRecord: () => void;
   onCookFromHere: (() => void) | null;
+  onBack: () => void;
 }
 
 const ACTION_LABELS: Record<PlayerBarAction, string> = {
@@ -46,6 +47,7 @@ const ACTION_LABELS: Record<PlayerBarAction, string> = {
 const MainIcon = ({ kind }: { kind: PlayerBarView["main"]["kind"] }) => {
   switch (kind) {
     case "cancel":
+    case "starting":
     case "buffering":
       return (
         <span className={styles.spinner}>
@@ -76,6 +78,7 @@ export const ReaderPlayerBar = ({
   onAction,
   onReRecord,
   onCookFromHere,
+  onBack,
 }: ReaderPlayerBarProps) => {
   const actions = view.actions.filter((action) => action !== "signIn" || canSignIn);
   const analytics = useOverviewPageAnalytics();
@@ -147,7 +150,7 @@ export const ReaderPlayerBar = ({
               <strong className={view.label.tone === "warning" ? styles.leadWarning : styles.lead}>{view.label.lead}</strong>
             )}
             {view.label.rest !== null && (
-              <span className={styles.rest}>
+              <span className={styles.rest} aria-hidden={view.label.quietRest ? true : undefined}>
                 {" · "}
                 {view.label.voiceLink ? (
                   <PageLink
@@ -272,6 +275,13 @@ export const ReaderPlayerBar = ({
           data-testid={readerPlayerBarTestIds.favouriteButton}
         >
           <FavouriteIcon filled={favourite.on} />
+        </button>
+      )}
+
+      {view.back !== null && (
+        <button type="button" className={styles.back} onClick={onBack} data-testid={readerPlayerBarTestIds.backButton}>
+          <StrokeIcon name="undo2" size={14} />
+          {view.back}
         </button>
       )}
 
