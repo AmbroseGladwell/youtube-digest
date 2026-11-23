@@ -1,4 +1,6 @@
 import {
+  clipPlatformName,
+  isClipSource,
   openPodcastLabel,
   overviewMetaParts,
   SHARE_PAYLOAD_ELEMENT_ID,
@@ -54,8 +56,8 @@ const wayOut = ({ source, recipe }: SharedNote): string => {
   if (source.kind === "podcast") {
     return openPodcastLabel(source.sharedFrom);
   }
-  if (source.kind === "tiktok") {
-    return "Watch on TikTok";
+  if (isClipSource(source)) {
+    return `Watch on ${clipPlatformName(source)}`;
   }
   return `${recipe == null ? "Read the article" : "Open the recipe"} on ${sourceName(source)}`;
 };

@@ -1,4 +1,4 @@
-import { articleReadMinutes, formatClock, sourceName, type Source } from "@overview/domain";
+import { articleReadMinutes, clipPlatformName, formatClock, isClipSource, sourceName, type Source } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { ShowOnPage } from "../../useShowOnPage.js";
 import styles from "./RecipePageLink.module.scss";
@@ -10,10 +10,10 @@ export interface RecipePageLinkProps {
 }
 
 export const RecipePageLink = ({ source, onPage }: RecipePageLinkProps) => {
-  if (source.kind === "youtube" || source.kind === "tiktok") {
+  if (source.kind === "youtube" || isClipSource(source)) {
     return (
       <a className={styles.link} href={source.url} target="_blank" rel="noopener" data-testid={recipePageLinkTestIds.link}>
-        Open the video on {source.kind === "tiktok" ? "TikTok" : "YouTube"}
+        Open the video on {source.kind === "youtube" ? "YouTube" : clipPlatformName(source)}
         {source.durationMs ? ` · ${formatClock(source.durationMs / 1000)}` : ""}
         <StrokeIcon name="openOut" size={13} />
       </a>

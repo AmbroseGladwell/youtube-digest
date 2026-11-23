@@ -100,6 +100,29 @@ export const makeTikTokOverview = (overrides: Partial<Overview> = {}): Overview 
     ...overrides,
   });
 
+export const makeSocialOverview = (overrides: Partial<Overview> = {}): Overview =>
+  makeOverview({
+    source: {
+      kind: "instagram",
+      id: VideoId.parse("DAbCdEfGh12"),
+      url: "https://www.instagram.com/reel/DAbCdEfGh12/",
+      title: "Five ways to keep basil alive on a windowsill",
+      handle: "windowsillgarden",
+      authorName: "Windowsill Garden",
+      media: "video",
+      durationMs: 59_000,
+      publishedAt: "2026-11-21T23:29:40.000Z",
+      imageUrl: "https://scontent.cdninstagram.example/thumb.jpg",
+    },
+    keyPoints: [
+      { text: "Water from below, never over the leaves.", range: null },
+      { text: "Pinch the top leaves so it grows outwards.", range: null },
+      { text: "Turn the pot a quarter each morning.", range: null },
+    ],
+    chapters: [],
+    ...overrides,
+  });
+
 export const makeArticleOverview = (overrides: Partial<Overview> = {}): Overview =>
   makeOverview({
     source: {

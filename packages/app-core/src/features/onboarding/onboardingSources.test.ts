@@ -18,7 +18,7 @@ import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTrans
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import { EpisodeCannotBeMadeError } from "./EpisodeCannotBeMadeError.js";
 
-const kindsOfSource = Source.options.map((option) => option.shape.kind.value);
+const kindsOfSource = Source.options.flatMap(({ shape: { kind } }) => ("options" in kind ? kind.options : [kind.value]));
 
 describe("onboardingSources", () => {
   it("has an entry for every kind of source, so a new kind can't ship without its onboarding", () => {

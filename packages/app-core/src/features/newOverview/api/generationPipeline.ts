@@ -7,9 +7,11 @@ import {
   OverviewId,
   podcastSource,
   podcastSourceId,
+  socialSource,
   sourceKey,
   tagUsage,
   tiktokSource,
+  type SocialPost,
   type StoredTranscript,
   type TikTokVideo,
   type ArticleRead,
@@ -30,7 +32,9 @@ import {
 import {
   clipAsVideo,
   episodeAsVideo,
+  postAsVideo,
   type GenerationInput,
+  type SocialGenerationInput,
   type OverviewInput,
   type PodcastGenerationInput,
   type TikTokGenerationInput,
@@ -238,6 +242,44 @@ export const runTikTokOverviewGeneration = async (
   );
 };
 
+export interface SocialWords {
+  transcript: StoredTranscript;
+  source: Extract<CaptureTranscriptSource, "social-vendor" | "social-transcribed">;
+}
+
+// A video post, written from its words and its whole description (docs/features/social-posts.md, "The note").
+export const runSocialOverviewGeneration = async (
+  post: SocialPost,
+  findWords: (post: SocialPost) => Promise<SocialWords>,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
+  options: RunOverviewGenerationOptions = {},
+): Promise<Overview> => {
+  const social = socialSource(post);
+  const key = sourceKey(social)!;
+  if (options.overviewId === undefined) {
+    const held = await heldOverviewOf(deps.overviewStore, key);
+    if (held !== null) {
+      throw new ArticleAlreadyHeldError(held);
+    }
+  }
+  const { transcript, source: transcriptSource } = await findWords(post);
+  stopIfCancelled(options);
+  await deps.transcriptStore.saveTranscript({ ...transcript, videoId: key });
+  const video = postAsVideo(social, post.description);
+  const transcriptWords = transcript.segments.reduce((total, segment) => total + countWords(segment.text), 0);
+  const transcriptOpening = transcript.segments
+    .map((segment) => segment.text)
+    .join(" ")
+    .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+  options.onProgress?.({ video, transcriptWords, transcriptSource, transcriptOpening });
+  stopIfCancelled(options);
+  return writeOverview(
+    { social, video, transcript: transcript.segments, ...(options.noteKind === undefined ? {} : { noteKind: options.noteKind }) },
+    deps,
+    options,
+  );
+};
+
 const stopIfCancelled = (options: RunOverviewGenerationOptions): void => {
   if (options.isCancelled?.()) {
     throw new GenerationCancelledError();
@@ -258,6 +300,7 @@ type WhatToWrite =
   | Pick<GenerationInput, "video" | "transcript" | "noteKind">
   | Pick<PodcastGenerationInput, "podcast" | "video" | "transcript">
   | Pick<TikTokGenerationInput, "tiktok" | "video" | "transcript" | "noteKind">
+  | Pick<SocialGenerationInput, "social" | "video" | "transcript" | "noteKind">
   | { article: ExtractedArticle };
 
 const writeOverview = async (

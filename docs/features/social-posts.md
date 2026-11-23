@@ -98,8 +98,37 @@ Logged: the platform, the link's shape, the outcome, the media, how many caption
 credits and the vendor's status. Never the link, the account, the description or the words
 (`social post read`).
 
+## A post in the library
+
+`instagram` and `facebook` are two kinds sharing one shape, `SocialSource` (`Source.ts`),
+told apart by `kind`, with `media` saying video, photo or text. `isClipSource` groups them
+with TikTok wherever a short platform video differs from a YouTube video: named by its
+creator, a chip with the platform's name, a matted portrait cover, a length in seconds under
+a minute, no time in its address, and "Watch on Instagram/Facebook" for the way out.
+
+The title is the description's first line, without the hashtags after its words, cut at a
+word under 120 characters; with no description, who posted it ("An Instagram video by
+@windowsillgarden"). The rest of a long description is the post, so it stays out of the
+title and goes to the model.
+
+## The note
+
+A video post is written as a TikTok is: as a short video, from its words, then given back
+its own source (`SocialGenerationInput.ts`). Its description goes in as the video's
+description, and **the whole of it** as `fullDescription`, which a social post may fill to
+20,000 characters (`FULL_DESCRIPTION_MOST`), where a YouTube description stops at 5,000.
+Instagram's captions stop at 2,200 characters, so theirs always goes whole.
+
+Photo and text posts are written from the description alone, as a short written note (the
+next slice): every screen that tells a written note from a spoken one asks
+`source.kind === "web"` today.
+
 ## Not yet
 
-- The screens: pasting, the note, the player, onboarding, the shared page (the next slices).
+- Photo and text posts written from their description (the next slice).
+- The screens: pasting, the player, onboarding (they take no Instagram or Facebook link
+  yet), the shared page's player.
+- Timestamps: with no player that can seek, they will show as plain times, not "Watch from
+  … on YouTube" links (the screens' slice).
 - Videos inside a carousel: a carousel is read for its description only.
 - Comments, by decision (above).

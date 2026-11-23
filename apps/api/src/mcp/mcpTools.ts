@@ -41,6 +41,8 @@ const MACHINE_WORDS: Record<Exclude<Source["kind"], "web">, string> = {
   youtube: "Machine-transcribed: the video had no captions of its own",
   podcast: "Machine-transcribed",
   tiktok: "TikTok's machine captions",
+  instagram: "Machine-transcribed",
+  facebook: "Machine-transcribed or Facebook's machine captions",
 };
 
 export const LISTING_PAGE_SIZE = 50;

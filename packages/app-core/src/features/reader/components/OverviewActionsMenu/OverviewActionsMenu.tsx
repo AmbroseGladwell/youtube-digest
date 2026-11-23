@@ -1,5 +1,12 @@
 import { useRef, useState } from "react";
-import { openPodcastLabel, sourceUrl as linkOf, type OverviewMenuItem, type Source } from "@overview/domain";
+import {
+  clipPlatformName,
+  isClipSource,
+  openPodcastLabel,
+  sourceUrl as linkOf,
+  type OverviewMenuItem,
+  type Source,
+} from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
@@ -49,7 +56,7 @@ const wayOut = (source: Source, recipe: boolean): WayOut => {
       copyLabel: recipe ? COPY_RECIPE_LINK : "Copy article link",
     };
   }
-  const platform = source.kind === "tiktok" ? "TikTok" : "YouTube";
+  const platform = isClipSource(source) ? clipPlatformName(source) : "YouTube";
   return {
     open: "watchOnYouTube",
     openLabel: recipe ? OPEN_RECIPE : `Watch on ${platform}`,
