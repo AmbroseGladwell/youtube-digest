@@ -1202,9 +1202,12 @@ export class BackendSimulator {
     await this.#page.route("**/api/changes**", (route) =>
       this.#respond(route, EndpointKey.SYNC_CHANGES, {
         onDefault: () => {
-          const since = Number(new URL(route.request().url()).searchParams.get("since") ?? "0");
-          const changes = this.#feed.filter((change) => change.seq > since);
-          return { status: 200, body: { changes, next: changes.at(-1)?.seq ?? since, more: false } };
+          const params = new URL(route.request().url()).searchParams;
+          const since = Number(params.get("since") ?? "0");
+          const limit = Number(params.get("limit") ?? Infinity);
+          const after = this.#feed.filter((change) => change.seq > since);
+          const changes = after.slice(0, limit);
+          return { status: 200, body: { changes, next: changes.at(-1)?.seq ?? since, more: after.length > changes.length } };
         },
         onError: unauthenticated,
       }),
