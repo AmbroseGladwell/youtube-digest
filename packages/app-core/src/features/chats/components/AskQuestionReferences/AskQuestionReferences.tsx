@@ -11,7 +11,11 @@ import { askQuestionReferencesTestIds } from "./AskQuestionReferencesTestIds.js"
 
 export interface AskQuestionReferencesProps {
   overviews: readonly [AskQuestionOverview, AskQuestionOverview];
+  good: boolean;
   onOpened: () => void;
+  onToggleGood: () => void;
+  onNotUseful: () => void;
+  onHide: () => void;
 }
 
 const KIND_NAMES: Record<ChatSourceKind, string> = {
@@ -21,10 +25,10 @@ const KIND_NAMES: Record<ChatSourceKind, string> = {
   recipe: "Recipe",
 };
 
-const MENU_ITEM = "[role=menuitem]";
+const MENU_ITEM = "[role=menuitem], [role=menuitemcheckbox]";
 
 export const askQuestionReferencesName = ([first, second]: AskQuestionReferencesProps["overviews"]): string =>
-  `2 overviews this question draws on: ${first.title} and ${second.title}`;
+  `About this question: draws on ${first.title} and ${second.title}`;
 
 const Thumb = ({ overview }: { overview: AskQuestionOverview }) => {
   const [failed, setFailed] = useState(false);
@@ -36,7 +40,7 @@ const Thumb = ({ overview }: { overview: AskQuestionOverview }) => {
   );
 };
 
-export const AskQuestionReferences = ({ overviews, onOpened }: AskQuestionReferencesProps) => {
+export const AskQuestionReferences = ({ overviews, good, onOpened, onToggleGood, onNotUseful, onHide }: AskQuestionReferencesProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const button = useRef<HTMLButtonElement | null>(null);
@@ -48,6 +52,10 @@ export const AskQuestionReferences = ({ overviews, onOpened }: AskQuestionRefere
     button.current?.focus({ preventScroll: true });
   };
   useDismissOnOutside(open, close, root);
+  const closeAnd = (act: () => void) => () => {
+    close();
+    act();
+  };
 
   useEffect(() => {
     if (open) {
@@ -90,12 +98,11 @@ export const AskQuestionReferences = ({ overviews, onOpened }: AskQuestionRefere
             <Thumb key={overview.id} overview={overview} />
           ))}
         </span>
-        <span aria-hidden="true">{overviews.length}</span>
         <span className={styles.chevron}>
           <StrokeIcon name="chevronDown" size={13} />
         </span>
         <span className={styles.tip} aria-hidden="true" data-testid={askQuestionReferencesTestIds.tip}>
-          Overviews it draws on
+          About this question
         </span>
       </button>
       {open && (
@@ -103,28 +110,70 @@ export const AskQuestionReferences = ({ overviews, onOpened }: AskQuestionRefere
           ref={menu}
           className={styles.menu}
           role="menu"
-          aria-label="This question draws on"
+          aria-label="About this question"
           onKeyDown={moveFocus}
           data-testid={askQuestionReferencesTestIds.menu}
         >
-          <p className={styles.header} aria-hidden="true">
-            This question draws on
-          </p>
-          {overviews.map((overview) => (
-            <PageLink
-              key={overview.id}
-              className={styles.item}
-              role="menuitem"
-              to={Routes.overview(overview.id)}
-              aria-label={overview.title}
-              onClick={onOpened}
-              data-testid={askQuestionReferencesTestIds.item}
+          <div role="group" aria-label="This question draws on">
+            <p className={styles.header} aria-hidden="true">
+              This question draws on
+            </p>
+            {overviews.map((overview) => (
+              <PageLink
+                key={overview.id}
+                className={styles.item}
+                role="menuitem"
+                to={Routes.overview(overview.id)}
+                aria-label={overview.title}
+                onClick={onOpened}
+                data-testid={askQuestionReferencesTestIds.item}
+              >
+                <Thumb overview={overview} />
+                <span className={styles.title}>{overview.title}</span>
+                <small className={styles.kind}>{KIND_NAMES[overview.kind]}</small>
+              </PageLink>
+            ))}
+          </div>
+          <div role="separator" className={styles.separator} />
+          <div role="group" aria-label="Feedback on this question">
+            <button
+              type="button"
+              className={`${styles.item} ${styles.action} ${good ? styles.checked : ""}`}
+              role="menuitemcheckbox"
+              aria-checked={good}
+              onClick={onToggleGood}
+              data-testid={askQuestionReferencesTestIds.good}
             >
-              <Thumb overview={overview} />
-              <span className={styles.title}>{overview.title}</span>
-              <small className={styles.kind}>{KIND_NAMES[overview.kind]}</small>
-            </PageLink>
-          ))}
+              <span className={styles.icon}>
+                <StrokeIcon name="thumbsUp" size={15} />
+              </span>
+              Good question
+            </button>
+            <button
+              type="button"
+              className={`${styles.item} ${styles.action}`}
+              role="menuitem"
+              onClick={closeAnd(onNotUseful)}
+              data-testid={askQuestionReferencesTestIds.notUseful}
+            >
+              <span className={styles.icon}>
+                <StrokeIcon name="thumbsDown" size={15} />
+              </span>
+              Not useful
+            </button>
+            <button
+              type="button"
+              className={`${styles.item} ${styles.action}`}
+              role="menuitem"
+              onClick={closeAnd(onHide)}
+              data-testid={askQuestionReferencesTestIds.hide}
+            >
+              <span className={styles.icon}>
+                <StrokeIcon name="close" size={15} />
+              </span>
+              Hide
+            </button>
+          </div>
         </div>
       )}
     </div>

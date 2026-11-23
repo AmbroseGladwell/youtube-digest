@@ -421,8 +421,7 @@ export const AskPage = () => {
                         onClick={() => askSuggested(question)}
                         data-testid={askPageTestIds.starter}
                       >
-                        <StrokeIcon name="cornerDownRight" size={15} />
-                        <span>{question.text}</span>
+                        {question.text}
                       </button>
                     </li>
                   ))}

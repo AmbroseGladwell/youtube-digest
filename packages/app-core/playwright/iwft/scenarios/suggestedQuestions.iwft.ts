@@ -39,16 +39,15 @@ test.describe("Suggested questions on the Ask page", () => {
     const ask = await launcher.appShell.openAsk();
 
     await ask.verifyQuestionCardsRead([FIRST, SECOND, THIRD]);
-    await ask.verifyFeedbackRowCount(3);
-    await ask.verifyFeedbackNamed(0, FIRST);
+    await ask.verifyReferencesCount(3);
     const [one, two] = titlesOf(questions[0]!);
-    await ask.verifyReferencesNamed(0, `2 overviews this question draws on: ${one} and ${two}`);
+    await ask.verifyReferencesNamed(0, `About this question: draws on ${one} and ${two}`);
     await ask.verifyDifferentQuestions("1 of 3");
 
     await ask.pressDifferentQuestions();
 
     await ask.verifyQuestionCardsRead([FOURTH, TEMPLATES[0]!, TEMPLATES[1]!]);
-    await ask.verifyFeedbackRowCount(1);
+    await ask.verifyReferencesCount(1);
     await ask.verifyDifferentQuestions("2 of 3");
     await ask.verifyQuestionsSaid("Questions 4 to 6 of 7");
 
@@ -66,7 +65,22 @@ test.describe("Suggested questions on the Ask page", () => {
     expect(backendSimulator.getCallCount(EndpointKey.SUGGESTED_QUESTIONS_REFRESH)).toBe(1);
   });
 
-  test("on desktop the feedback shows on hover or keyboard focus, each with its tip; Good question toggles and writes at once", async ({
+  test("on desktop hovering a question tints the whole bubble with its tail, and the references sit beside its first line with a tip", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    seedSuggestedQuestions(backendSimulator);
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+    await ask.verifyQuestionCardsRead([FIRST, SECOND, THIRD]);
+
+    await ask.verifyQuestionCardHasNoIcon(0);
+    await ask.verifyReferencesBesideFirstLine(0, 28);
+    await ask.verifyBubbleTintsWithTailOnHover(0);
+    await ask.verifyReferencesTipReads(0, "About this question");
+  });
+
+  test("Good question in the question's menu toggles its check, keeps the menu open and writes at once", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -75,31 +89,23 @@ test.describe("Suggested questions on the Ask page", () => {
     const ask = await launcher.appShell.openAsk();
     await ask.verifyQuestionCardsRead([FIRST, SECOND, THIRD]);
 
-    await ask.verifyFeedbackShown(1, false);
-    await ask.focusQuestionCard(1);
-    await ask.verifyFeedbackShown(1, true);
-    await ask.hoverQuestionCard(0);
-    await ask.verifyFeedbackShown(0, true);
-    await ask.verifyFeedbackButtonSize(0, 28);
-    await ask.verifyFeedbackTipReads(0, "notUseful", "Not useful");
-
     await ask.pressGoodQuestion(0);
 
-    await ask.verifyGoodQuestionPressed(0, true);
+    await ask.verifyGoodQuestionChecked(0, true);
     await expect
       .poll(async () => writtenOf(await backendSimulator.suggestedQuestions.changes(), "feedback"))
       .toEqual([{ id: questions[0]!.id, change: { feedback: { verdict: "glad", at: expect.any(String) } } }]);
 
     await ask.pressGoodQuestion(0);
 
-    await ask.verifyGoodQuestionPressed(0, false);
+    await ask.verifyGoodQuestionChecked(0, false);
     await expect
       .poll(async () => writtenOf(await backendSimulator.suggestedQuestions.changes(), "feedback").at(-1)?.change)
       .toEqual({ feedback: { verdict: "none", at: expect.any(String) } });
     await ask.verifyQuestionCardsRead([FIRST, SECOND, THIRD]);
   });
 
-  test("Not useful and Hide take the card away with Undo, which writes nothing; left alone, the change is written after five seconds", async ({
+  test("Not useful and Hide in the question's menu take the card away with Undo, which writes nothing; left alone, the change is written after five seconds", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -135,7 +141,7 @@ test.describe("Suggested questions on the Ask page", () => {
     await ask.verifyQuestionCardsRead([FIRST, THIRD, FOURTH]);
   });
 
-  test("the references menu lists both overviews with their kinds, Escape returns to the button, and a row opens that overview", async ({
+  test("the question's menu lists both overviews with their kinds then its feedback, arrows reach every item, Escape returns to the button, and a row opens that overview", async ({
     launcher,
     backendSimulator,
     page,
@@ -154,6 +160,7 @@ test.describe("Suggested questions on the Ask page", () => {
       titles.map((title) => ({ title, kind: kindOf(title) })),
     );
 
+    await ask.verifyArrowKeysReachEveryItem(1, [...titles, "Good question", "Not useful", "Hide"]);
     await ask.closeReferencesWithEscape(1);
     await ask.openReferences(1);
     await ask.chooseReference(1, 1);
@@ -181,7 +188,7 @@ test.describe("Suggested questions on the Ask page", () => {
       .toEqual([questions[0]!.id]);
   });
 
-  test("on a free plan it's today's three starters, with no feedback and no Different questions", async ({
+  test("on a free plan it's today's three starters, with no references, no feedback and no Different questions", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -217,7 +224,7 @@ test.describe("Suggested questions on the Ask page", () => {
     await ask.verifyQuestionCardsWait(false);
   });
 
-  test("on a phone's touch screen the feedback always shows at 36px, and a long press on Hide names it", async ({
+  test("on a phone's touch screen the references sit beside the question's first line at 36px, and a long press names them", async ({
     launcher,
     backendSimulator,
     page,
@@ -229,10 +236,10 @@ test.describe("Suggested questions on the Ask page", () => {
     const ask = await launcher.appShell.openAsk();
     await ask.verifyQuestionCardsRead([FIRST, SECOND, THIRD]);
 
-    await ask.verifyFeedbackShown(0, true);
-    await ask.verifyFeedbackShown(2, true);
-    await ask.verifyFeedbackButtonSize(0, 36);
-    await ask.holdFeedbackButton(0, "hide", "Hide");
+    await ask.verifyQuestionCardHasNoIcon(0);
+    await ask.verifyReferencesBesideFirstLine(0, 36);
+    await ask.verifyReferencesBesideFirstLine(2, 36);
+    await ask.holdReferences(0, "About this question");
     await ask.verifyQuestionCardsRead([FIRST, SECOND, THIRD]);
   });
 });

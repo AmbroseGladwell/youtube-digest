@@ -326,37 +326,47 @@ CSS (`_gen/ov350.js`), as rendered.
     Rows fade and lift out, the next settle 40ms apart (none with reduced motion), focus stays on the
     button, and a polite region says "Questions 4 to 6 of 7" (`askQuestionSetAnnouncement`, from the
     hook's `total`).
-  - Not useful and Hide fade the card and lift it 4px first, then hand it to the hook, focus the
-    question now in its place, and say "Question removed."
 - **`AskQuestionCard`** is one card: chat's question bubble (surface, 18/18/4/18, the 12px tail at the
-  bottom right with a 7px margin), the turn arrow, the question at 14px (the frames render 14px: a
-  later rule in their CSS overrides the 14.5px the README gives). Only the question row is a button,
-  tints and shows the pointer.
-  - A reader's question has a top row: Good question (thumb up, `aria-pressed`, the thumb fills), Not
-    useful (thumb down) and Hide (×), a labelled group "Feedback on this question" with each button
-    named with the question, then the references button. The three are 28px, 36px on touch; on a
-    screen that hovers they show on hover or keyboard focus within the card, their space kept, and on
-    touch always.
-  - Their tips ("Good question", "Not useful", "Hide", "Overviews it draws on") sit above the button,
-    after 400ms on hover or keyboard focus, at once with reduced motion, and on a long press on touch
-    (`theme/tip.scss`'s `shows`, `label-above` and `label-shown`, with `useLongPressTip`).
+  bottom right with a 7px margin) and the question at 14px (the frames render 14px: a later rule in
+  their CSS overrides the 14.5px the README gives), with no icon before it (OV-397; the templates-only
+  starters lost theirs too). Only the question row is a button and shows the pointer.
+  - On a screen that hovers, hovering the question tints the whole bubble, tail included (OV-397): the
+    card holds its colour in `--bubble` and the tail's `::after` inherits the card's background, as the
+    questions under an overview do (`FollowUpQuestions`' `.bubble:has(.question:hover)` and its
+    `::after`).
+  - A reader's question has the references button on its right, centred on the question's first line
+    rather than the whole question (`--references-top`, from the row's padding and line height), the
+    question wrapping to its left. The two never overlap: the button sits beside the question row,
+    not over it, and is 28px tall, 36px on touch.
   - While offline the questions show and their buttons are `aria-disabled`, beside the "You're
     offline" wait.
-- **`AskQuestionReferences`** is the references button and its menu: both thumbnails at chat citation
-  size (20×14 a video, 14×14 otherwise, a blank tile if the image is missing or fails), "2" and a
-  chevron, in a 30px pill with a 1.5px outline; named "2 overviews this question draws on: {title} and
-  {title}" with `aria-haspopup="menu"`. The count leads the name so the visible "2" is in it (WCAG
-  2.5.3), a small change from the hand-off's wording.
-  - The menu (350b-3, 350h-4) opens under the button, aligned right: "This question draws on", then a
-    menuitem per overview named by its full title, with its thumbnail, the title cut with an ellipsis,
-    and its kind ("Video", "Podcast episode", "Article", "Recipe"). Arrow keys move, Escape or a press
-    outside closes it and returns focus, and a row opens that overview and calls `chipOpened`.
+- **`AskQuestionReferences`** is the button and its menu, "About this question" (OV-397). The button is
+  both thumbnails at chat citation size (20×14 a video, 14×14 otherwise, a blank tile if the image is
+  missing or fails), the first tucked 4px under the second with a 1.5px ring of the bubble's colour
+  between them, and a chevron, in a pill with a 1.5px outline. It has no visible text, so it is named
+  "About this question: draws on {title} and {title}" with `aria-haspopup="menu"`, and its tip reads
+  "About this question" (above it, after 400ms on hover or keyboard focus, at once with reduced motion,
+  on a long press on touch: `theme/tip.scss`'s `shows`, `label-above` and `label-shown`, with
+  `useLongPressTip`).
+  - The menu opens under the button, aligned right, in two groups with a separator between. "This
+    question draws on": a menuitem per overview named by its full title, with its thumbnail, the
+    title cut with an ellipsis, and its kind ("Video", "Podcast episode", "Article", "Recipe"); a row
+    opens that overview and calls `chipOpened`. "Feedback on this question": Good question, a
+    `menuitemcheckbox` whose thumb fills when checked, calls `toggleGood` and leaves the menu open;
+    Not useful (thumb down) and Hide (×) close it and call `notUseful` or `hide`.
+  - Arrow keys move through every item, both groups; Escape or a press outside closes it and returns
+    focus to the button.
+  - Not useful and Hide fade the card and lift it 4px first, then hand it to the hook, focus the
+    question now in its place, and say "Question removed." (`AskQuestionCards`).
+  - Until OV-397 the feedback was a row of three buttons above the question, shown on hover, and the
+    button showed a "2" that led its name.
 - **The toast** is the Ask page's own, with Undo for the hook's five seconds: "Thanks. We won't suggest
   it again." or "Hidden.", lower on the empty page than the conversation's toasts (26px, 30px on a
   phone), with no icon, as in 350e and 350h-3.
 
-`suggestedQuestions.iwft.ts` covers the order, cycling, feedback, Undo and the held write, asking with
-both pinned, the menu, the free plan, offline and touch; `reflow.iwft.ts` covers the state at 400%
+`suggestedQuestions.iwft.ts` covers the order, cycling, the tail tinting on hover, the button's place
+beside the first line, feedback through the menu, Undo and the held write, asking with both pinned,
+the menu and its arrow keys, the free plan, offline and touch; `reflow.iwft.ts` covers the state at 400%
 zoom, 200% text and on a phone. The simulator seeds questions through `seedSuggestedQuestions`.
 
 ## Privacy
