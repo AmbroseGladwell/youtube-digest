@@ -50,7 +50,7 @@ try {
 
   const projects = await query<{ kind: string; id: string; schema_version: number; body: unknown }>(
     `select kind, id, schema_version, body from records
-      where account_id = $1 and kind in ('project', 'projectMember', 'overviewState', 'topic') and not deleted`,
+      where account_id = $1 and kind in ('project', 'projectMember', 'overviewState', 'topic', 'settings') and not deleted`,
     [account.id],
   );
 
@@ -85,6 +85,7 @@ try {
       overviewStates: projects
         .filter((row) => row.kind === "overviewState")
         .map((row) => ({ id: row.id, schemaVersion: row.schema_version, body: row.body })),
+      settings: projects.filter((row) => row.kind === "settings").map((row) => ({ schemaVersion: row.schema_version, body: row.body }))[0],
       topics: projects
         .filter((row) => row.kind === "topic")
         .map((row) => ({ id: row.id, schemaVersion: row.schema_version, body: row.body })),

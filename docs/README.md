@@ -137,6 +137,10 @@ Five folders, five different questions.
   on-demand script, what counts as an article, and the failures it names.
 - `article-panel.md` — making an overview of an article from the panel: Create, Chrome's box,
   right-click, the failures, duplicates, regenerating, and links that move the page.
+- `connections.md` — connections between ideas, measured (OV-218, with OV-217 and OV-350): what
+  candidates by embedding and `similarTo` are worth, why a true but obvious link isn't worth
+  showing and no model could tell them apart, and the library and project questions that
+  replaced a list of connections, with their cost.
 - `search-by-meaning.md` — finding overviews by what they are about: the claim as the unit,
   why OpenAI's small embedding model won the spike against two self-hosted ones, embeddings kept
   beside the library and keyed to the record's rev, a worker that is woken rather than polled,
