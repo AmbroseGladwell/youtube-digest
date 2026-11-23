@@ -5,6 +5,7 @@ import {
   type NarrationRender,
   type NarrationVoice,
   type NoteLine,
+  type StreamingNarration,
   MAX_FIRST_SOUND_WAIT_MS,
 } from "@overview/domain";
 import { SyncRequestError, SyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
@@ -16,11 +17,14 @@ import {
   PlayerEngine,
   STALL_NUDGE_MS,
   STOP_AHEAD_SECONDS,
+  STREAM_LEAD_SECONDS,
+  streamingTimings,
   WATCH_GIVES_UP_AFTER_MS,
   WATCH_INTERVAL_MS,
   type FirstSoundReport,
   type ListenEndedReport,
   type ListenStartedReport,
+  type WaitedAheadReport,
   type PlayerEngineOptions,
   type PlayerMedia,
 } from "./PlayerEngine.js";
@@ -815,6 +819,175 @@ describe("PlayerEngine", () => {
       expect(engine.getSnapshot()).toMatchObject({ status: "playing", voice: "bf_emma", narratedVoice: "af_heart" });
     });
   });
+  describe("playing while it renders", () => {
+    const PLAYLIST = `https://api.test/api/audio/${KEY}/playlist.m3u8`;
+    const streaming = (renderedSeconds: number, lineStartsSeconds: number[]): StreamingNarration => ({
+      key: KEY,
+      status: "rendering",
+      lineStartsSeconds,
+      renderedSeconds,
+      playlistUrl: `/api/audio/${KEY}/playlist.m3u8`,
+    });
+    const FIRST_LINES = streaming(5.5, [0, 1.02, 4.8]);
+    const ALL_LINES = streaming(9.4, [0, 1.02, 4.8, 6.1]);
+
+    const pressedWith = async (statuses: NarrationRender[], options: Partial<PlayerEngineOptions> = {}) => {
+      const status = vi.fn<NarrationApi["status"]>();
+      for (const answer of statuses) {
+        status.mockResolvedValueOnce(answer);
+      }
+      status.mockResolvedValue(statuses.at(-1)!);
+      const engine = engineWith(scriptedApi({ status }), "af_heart", options);
+      engine.load(TRACK);
+      await settle();
+      engine.play("playerBar");
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+      return engine;
+    };
+
+    it("a first play starts on the playlist once a lead is rendered, without waiting for the file", async () => {
+      const engine = await pressedWith([FIRST_LINES]);
+
+      expect(media.src).toBe(PLAYLIST);
+      expect(engine.getSnapshot()).toMatchObject({
+        status: "playing",
+        source: "audio",
+        stream: { renderedSeconds: 5.5, holdingLine: null },
+      });
+      expect(engine.getSnapshot().timings.lineStarts.slice(0, 3)).toEqual([0, 1.02, 4.8]);
+    });
+
+    it("less than the lead keeps preparing", async () => {
+      const engine = await pressedWith([streaming(STREAM_LEAD_SECONDS - 1, [0, 1.02])]);
+
+      expect(engine.getSnapshot().status).toBe("preparing");
+      expect(media.src).not.toBe(PLAYLIST);
+    });
+
+    it("lines not yet rendered are placed after those that are, at their pace, and the length covers what is rendered", () => {
+      const timings = streamingTimings(FIRST_LINES, TRACK);
+
+      expect(timings.lineStarts.slice(0, 3)).toEqual([0, 1.02, 4.8]);
+      expect(timings.lineStarts[3]).toBeGreaterThan(4.8);
+      expect(timings.durationSeconds).toBeGreaterThanOrEqual(5.5);
+    });
+
+    it("the render finishing mid-listen brings the file's timings, and the playlist plays on to its end", async () => {
+      const engine = await pressedWith([FIRST_LINES, READY]);
+
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+      expect(engine.getSnapshot()).toMatchObject({
+        status: "playing",
+        stream: null,
+        timings: { lineStarts: [0, 1.02, 4.8, 6.1], durationSeconds: 9.4 },
+      });
+      expect(media.src).toBe(PLAYLIST);
+    });
+
+    it("playing again after the end plays the stored file", async () => {
+      const engine = await pressedWith([FIRST_LINES, READY]);
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+      media.reachTime(9.4);
+      media.end();
+      engine.play("playerBar");
+
+      expect(media.src).toBe(`https://api.test/api/audio/${KEY}/file`);
+    });
+
+    it("moving past what is rendered holds on that line, then plays from it once it is rendered", async () => {
+      const waited = vi.fn<(report: WaitedAheadReport) => void>();
+      const engine = await pressedWith([FIRST_LINES, FIRST_LINES, ALL_LINES], { onWaitedAhead: waited });
+
+      engine.seekLine(3);
+      const held = engine.getSnapshot();
+      const heldLine = engine.getLine();
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+      expect(engine.getSnapshot().status).toBe("buffering");
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+      expect(held).toMatchObject({ status: "buffering", stream: { holdingLine: 3 } });
+      expect(heldLine).toBe(3);
+      expect(media.seeks.at(-1)).toBe(6.1);
+      expect(engine.getSnapshot()).toMatchObject({ status: "playing", stream: { holdingLine: null } });
+      expect(waited).toHaveBeenCalledExactlyOnceWith({ overviewId: TRACK.overviewId, waitMs: POLL_INTERVAL_MS * 2, outcome: "played" });
+    });
+
+    it("moving back into what is rendered while held lets the hold go and plays from there", async () => {
+      const waited = vi.fn<(report: WaitedAheadReport) => void>();
+      const engine = await pressedWith([FIRST_LINES], { onWaitedAhead: waited });
+
+      engine.seekLine(3);
+      engine.seekLine(1);
+
+      expect(engine.getSnapshot()).toMatchObject({ status: "playing", stream: { holdingLine: null } });
+      expect(media.seeks.at(-1)).toBe(1.02);
+      expect(waited).toHaveBeenCalledExactlyOnceWith({ overviewId: TRACK.overviewId, waitMs: 0, outcome: "abandoned" });
+    });
+
+    it("the held line's position from the element is ignored while it waits", async () => {
+      const engine = await pressedWith([FIRST_LINES]);
+
+      engine.seekLine(3);
+      media.reachTime(2);
+
+      expect(engine.getLine()).toBe(3);
+    });
+
+    it("a playlist that reports its end while the render is still going is waited on, not ended", async () => {
+      const engine = await pressedWith([FIRST_LINES]);
+
+      media.reachTime(5.4);
+      media.end();
+
+      expect(engine.getSnapshot().status).toBe("buffering");
+      expect(media.paused).toBe(false);
+    });
+
+    it("a playlist that reports its end well short of the finished length is waited on, not ended", async () => {
+      const engine = await pressedWith([FIRST_LINES, READY]);
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+      media.reachTime(5.4);
+      media.end();
+
+      expect(engine.getSnapshot().status).toBe("buffering");
+    });
+
+    it("first sound from a playlist says it streamed", async () => {
+      const heard = vi.fn<(report: FirstSoundReport) => void>();
+      await pressedWith([FIRST_LINES], { onFirstSound: heard });
+
+      expect(heard).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ prepared: true, streamed: true, source: "audio" }));
+    });
+
+    it("a render that gives up while it streams is a failed render", async () => {
+      const engine = await pressedWith([FIRST_LINES, { key: KEY, status: "failed" }]);
+
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+      expect(engine.getSnapshot()).toMatchObject({ status: "failed", stream: null });
+    });
+
+    it("the playlist is handed to the loader given, which is released when the file takes over", async () => {
+      const released = vi.fn();
+      const loadStream = vi.fn((target: PlayerMedia, url: string) => {
+        target.src = `blob:${url}`;
+        return released;
+      });
+      const engine = await pressedWith([FIRST_LINES, READY], { loadStream });
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS);
+
+      media.reachTime(9.4);
+      media.end();
+      engine.play("playerBar");
+
+      expect(loadStream).toHaveBeenCalledWith(media, PLAYLIST, expect.any(Function));
+      expect(released).toHaveBeenCalledOnce();
+    });
+  });
+
   describe("time to first sound", () => {
     const timed = (api: NarrationApi | null, { holdSound = false } = {}) => {
       const heard = vi.fn<(report: FirstSoundReport) => void>();
@@ -843,6 +1016,7 @@ describe("PlayerEngine", () => {
         from: "playerBar",
         source: "audio",
         prepared: false,
+        streamed: false,
       });
     });
 
@@ -862,6 +1036,7 @@ describe("PlayerEngine", () => {
         from: "masthead",
         source: "audio",
         prepared: true,
+        streamed: false,
       });
     });
 
@@ -878,6 +1053,7 @@ describe("PlayerEngine", () => {
         from: "libraryRow",
         source: "pacer",
         prepared: false,
+        streamed: false,
       });
     });
 
@@ -901,6 +1077,7 @@ describe("PlayerEngine", () => {
         from: "playerBar",
         source: "pacer",
         prepared: true,
+        streamed: false,
       });
     });
 

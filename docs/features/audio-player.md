@@ -114,6 +114,49 @@ make.
   waiting background render rather than queueing a second one
   (`tts-pre-rendered-speech.md`, "The API side").
 
+## Playing while it renders
+
+OV-42. A first play used to wait for the whole note to render: in production a median of 73.5 s,
+two minutes at the 90th percentile, for the 43% of listens that waited at all. Now sound starts
+once the first few seconds exist, and the rest renders while it plays, about three times faster
+than speech (`tts-pre-rendered-speech.md`, "Streaming").
+
+- **It starts on a lead.** While a press polls a render, a `rendering` answer carrying a
+  `playlistUrl` and at least `STREAM_LEAD_SECONDS` (5 s) of `renderedSeconds` is played straight
+  from its HLS playlist. Less than that keeps preparing. The device test heard a stall every time
+  playback caught up with a stream started on its first line. A lead, plus segments that never
+  wait for the next line, keeps it rare.
+- **Timings fill in.** Lines already rendered have their real starts. The rest are placed after
+  the last of them, at the pace the rendered lines set (`streamingTimings`), so the highlight,
+  `[`/`]`, the notches and the length all work, as estimates, until the render is ready. The
+  snapshot's `stream` carries `renderedSeconds` for the bar.
+- **The file takes over from the next play.** When a poll finds the render ready, the real
+  timings replace the estimates and `stream` clears, but the element plays on from the
+  playlist, now closed, to its end. A swap mid-sentence would be heard. The next play loads the
+  stored M4A.
+- **A jump past the render waits on its line** (decided 23 Nov 2026, over playing from where the
+  render had got to). A seek, a line tap or a skip to anywhere less than `HELD_LEAD_SECONDS` (2 s)
+  before the render's edge pauses the element, puts the reading mark on that line, and shows the
+  bar as buffering, with `stream.holdingLine` set. Sound starts on that line once its real start
+  is known and two seconds past it exist. Moving back into what is rendered, pausing, or leaving
+  the note lets the hold go. Each hold ends in `player.playback.waitedAhead`, with how long it
+  waited and whether its sound came (`played`) or the reader moved on (`abandoned`). Rendering
+  from the tapped line first was left out: it would need its own playlist and a second timeline,
+  and the event says whether readers jump often enough to want it.
+- **An end that comes too soon is a stall.** A playlist that reports `ended` while the render is
+  still going, or more than a second short of the finished length, is nudged and waited on
+  rather than ended.
+- **Safari plays the playlist itself,** locked screen and lock-screen controls included, which is
+  what the device test showed. Everywhere else `loadStreamWithHls` fetches hls.js the first time a
+  stream plays (`enableWorker: false`, `startPosition: 0`), so it costs nothing until then. The
+  engine only knows `loadStream`, which the tests replace.
+- **`firstSound` gains `streamed`,** so a first play that started on the playlist can be told
+  from one that waited for the file. That is how OV-42's effect is read.
+
+The bar draws these with the states it already has: 1c while the lead fills, then playing, and
+buffering for a held jump. Its own frames for a rendered-so-far track, an estimated length and
+"preparing from here" are the Design round on OV-42.
+
 ## The day's new narration
 
 An account may start 30 new renders a UTC day (`MAX_NEW_RENDERS_PER_ACCOUNT_PER_DAY`), so no
@@ -375,4 +418,3 @@ player reports none of it, as with `firstSound`.
   the project's `DECISIONS.md`. On a narrow screen it keeps play and × and drops the skips.
 - **The voice is named, not chosen.** The ready state says "Heart voice". It becomes a link
   when the voice setting exists.
-- **Starting before the whole note is rendered** is OV-42.

@@ -10,6 +10,8 @@ import {
   type PlaybackFrom,
   type PlaybackSource,
   type ReadyNarration,
+  type StreamingNarration,
+  isStreaming,
 } from "@overview/domain";
 import { isSyncRequestError, isSyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
 import type { PacerReason, PlayerSnapshot, PlayerSource, PlayerStatus } from "./types/PlayerSnapshot.js";
@@ -31,6 +33,9 @@ const STOP_TIMER_SLACK_SECONDS = 0.005;
 // Why a stalled element is nudged: docs/features/audio-player.md, "The states".
 export const STALL_NUDGE_MS = 3_000;
 const POLL_FAILURES_BEFORE_GIVING_UP = 3;
+// How much audio a first play waits for, and a jump past the render then needs, before sound: docs/features/audio-player.md, "Playing while it renders".
+export const STREAM_LEAD_SECONDS = 5;
+export const HELD_LEAD_SECONDS = 2;
 
 export type PlayerMedia = Pick<
   HTMLMediaElement,
@@ -44,7 +49,22 @@ export interface FirstSoundReport {
   from: PlaybackFrom;
   source: PlaybackSource;
   prepared: boolean;
+  streamed: boolean;
 }
+
+export interface WaitedAheadReport {
+  overviewId: OverviewId;
+  waitMs: number;
+  outcome: "played" | "abandoned";
+}
+
+// Plays a playlist in the element, natively or through hls.js, and returns how to let it go.
+export type LoadStream = (media: PlayerMedia, url: string, shouldPlay: () => boolean) => () => void;
+
+const loadNatively: LoadStream = (media, url) => {
+  media.src = url;
+  return () => undefined;
+};
 
 export interface ListenStartedReport {
   overviewId: OverviewId;
@@ -68,6 +88,8 @@ export interface PlayerEngineOptions {
   onFirstSound?: (report: FirstSoundReport) => void;
   onListenStarted?: (report: ListenStartedReport) => void;
   onListenEnded?: (report: ListenEndedReport) => void;
+  onWaitedAhead?: (report: WaitedAheadReport) => void;
+  loadStream?: LoadStream;
   now?: () => number;
 }
 
@@ -75,6 +97,12 @@ interface Press {
   at: number;
   from: PlaybackFrom;
   prepared: boolean;
+  streamed: boolean;
+}
+
+interface Hold {
+  line: number;
+  at: number;
 }
 
 type Stretch = [start: number, end: number];
@@ -96,6 +124,7 @@ const IDLE: PlayerSnapshot = {
   voice: DEFAULT_NARRATION_VOICE,
   narratedVoice: null,
   docked: false,
+  stream: null,
 };
 
 const SOUNDING = new Set<PlayerStatus>(["preparing", "playing", "buffering"]);
@@ -120,6 +149,24 @@ const lineStartsOf = (render: ReadyNarration, track: PlayerTrack): number[] | nu
   return null;
 };
 
+const knownLineStartsOf = (render: StreamingNarration, track: PlayerTrack): number[] =>
+  (track.opening === null ? render.lineStartsSeconds : render.lineStartsSeconds.slice(1)).slice(0, track.lines.length);
+
+// Lines not yet rendered are placed after the last one that is, at the pace the rendered ones set.
+export const streamingTimings = (render: StreamingNarration, track: PlayerTrack): LineTimings => {
+  const estimate = estimatedLineStarts(track.lines);
+  const known = knownLineStartsOf(render, track);
+  if (known.length === 0) {
+    return { lineStarts: estimate.lineStarts, durationSeconds: Math.max(estimate.durationSeconds, render.renderedSeconds) };
+  }
+  const last = known.length - 1;
+  const estimatedSpan = estimate.lineStarts[last]! - estimate.lineStarts[0]!;
+  const pace = last > 0 && estimatedSpan > 0 ? (known[last]! - known[0]!) / estimatedSpan : 1;
+  const after = (estimated: number) => known[last]! + (estimated - estimate.lineStarts[last]!) * pace;
+  const lineStarts = track.lines.map((_, index) => (index <= last ? known[index]! : after(estimate.lineStarts[index]!)));
+  return { lineStarts, durationSeconds: Math.max(after(estimate.durationSeconds), render.renderedSeconds) };
+};
+
 const sameTrack = (a: PlayerTrack | null, b: PlayerTrack) => {
   if (a === null || a.overviewId !== b.overviewId || a.lines.length !== b.lines.length) {
     return false;
@@ -138,6 +185,12 @@ export class PlayerEngine {
   #snapshot: PlayerSnapshot;
   #time = 0;
   #render: ReadyNarration | null = null;
+  #stream: StreamingNarration | null = null;
+  #streamUrl: string | null = null;
+  #releaseStream: () => void = () => undefined;
+  #loadStream: LoadStream;
+  #hold: Hold | null = null;
+  #onWaitedAhead: (report: WaitedAheadReport) => void;
   #replacing: string | null = null;
   #generation = 0;
   #pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -167,8 +220,12 @@ export class PlayerEngine {
     onFirstSound = () => undefined,
     onListenStarted = () => undefined,
     onListenEnded = () => undefined,
+    onWaitedAhead = () => undefined,
+    loadStream = loadNatively,
     now = () => performance.now(),
   }: PlayerEngineOptions) {
+    this.#onWaitedAhead = onWaitedAhead;
+    this.#loadStream = loadStream;
     this.#api = api;
     this.#warn = warn;
     this.#onFirstSound = onFirstSound;
@@ -297,8 +354,13 @@ export class PlayerEngine {
     }
     if (status === "ended") {
       this.#time = 0;
+      this.#letStreamGo();
     }
-    this.#press = status === "paused" ? null : { at: this.#clock(), from, prepared: false };
+    this.#press = status === "paused" ? null : { at: this.#clock(), from, prepared: false, streamed: false };
+    if (status === "paused" && this.#isAheadOfRender(this.#time)) {
+      this.#holdAt(this.#time);
+      return;
+    }
     if (status === "failed" || status === "busy") {
       this.#requestRender();
       return;
@@ -307,7 +369,7 @@ export class PlayerEngine {
       this.#startPacer();
       return;
     }
-    if (this.#render !== null) {
+    if (this.#render !== null || this.#streamUrl !== null) {
       this.#playMedia();
       return;
     }
@@ -319,6 +381,7 @@ export class PlayerEngine {
     if (status !== "playing" && status !== "buffering") {
       return;
     }
+    this.#endHold("abandoned");
     if (source === "pacer") {
       this.#stopPacer();
     } else {
@@ -369,9 +432,20 @@ export class PlayerEngine {
       return;
     }
     this.#cutRun();
-    this.#time = Math.min(Math.max(seconds, 0), timings.durationSeconds);
+    const target = Math.min(Math.max(seconds, 0), timings.durationSeconds);
+    const sounding = status === "playing" || status === "buffering";
+    if (sounding && this.#isAheadOfRender(target)) {
+      this.#holdAt(target);
+      return;
+    }
+    const wasHeld = this.#hold !== null;
+    this.#endHold("abandoned");
+    this.#time = target;
     if (this.#mediaIsCurrent()) {
       this.#media!.currentTime = this.#time;
+    }
+    if (wasHeld) {
+      this.#playMedia();
     }
     if (status === "ended") {
       this.#set({ status: "paused" });
@@ -428,6 +502,7 @@ export class PlayerEngine {
   #begin(track: PlayerTrack, startLine: number): void {
     const timings = estimatedLineStarts(track.lines);
     this.#render = null;
+    this.#letStreamGo();
     this.#cutRun();
     this.#time = timings.lineStarts[startLine] ?? 0;
     const signedIn = this.#api !== null;
@@ -440,6 +515,7 @@ export class PlayerEngine {
       preparing: null,
       timings,
       narratedVoice: null,
+      stream: null,
     });
     this.#emitTime();
     if (signedIn) {
@@ -578,6 +654,10 @@ export class PlayerEngine {
       if (this.#press !== null) {
         this.#press.prepared = true;
       }
+      if (isStreaming(render) && this.#canStream(render)) {
+        this.#playStream(render, generation, voice);
+        return;
+      }
       const { preparing } = this.#snapshot;
       this.#set({ preparing: { step: render.status, long: preparing?.long ?? false } });
       this.#pollTimer = setTimeout(() => this.#poll(render.key, generation, voice), POLL_INTERVAL_MS);
@@ -631,6 +711,173 @@ export class PlayerEngine {
         }
         this.#pollTimer = setTimeout(() => this.#poll(key, generation, voice), POLL_INTERVAL_MS * 2);
       });
+  }
+
+  #canStream(render: StreamingNarration): boolean {
+    const { source, status, track } = this.#snapshot;
+    return (
+      source === "audio" &&
+      status === "preparing" &&
+      track !== null &&
+      render.renderedSeconds >= STREAM_LEAD_SECONDS &&
+      render.lineStartsSeconds.length <= track.lines.length + (track.opening === null ? 0 : 1)
+    );
+  }
+
+  // Why and how: docs/features/audio-player.md, "Playing while it renders".
+  #playStream(render: StreamingNarration, generation: number, voice: NarrationVoice): void {
+    const line = this.getLine();
+    if (this.#longTimer !== null) {
+      clearTimeout(this.#longTimer);
+      this.#longTimer = null;
+    }
+    if (this.#press !== null) {
+      this.#press.streamed = true;
+    }
+    this.#stream = render;
+    this.#streamUrl = this.#api!.fileUrl({ fileUrl: render.playlistUrl });
+    const timings = streamingTimings(render, this.#snapshot.track!);
+    this.#retime(timings);
+    this.#time = line <= 0 ? 0 : (timings.lineStarts[line] ?? 0);
+    this.#set({
+      source: "audio",
+      pacerReason: null,
+      preparing: null,
+      narratedVoice: voice,
+      stream: { renderedSeconds: render.renderedSeconds, holdingLine: null },
+    });
+    this.#emitTime();
+    if (this.#isAheadOfRender(this.#time)) {
+      this.#loadMedia();
+      this.#holdAt(this.#time);
+    } else {
+      this.#playMedia();
+    }
+    this.#pollTimer = setTimeout(() => this.#pollStream(render.key, generation, voice), POLL_INTERVAL_MS);
+  }
+
+  #pollStream(key: string, generation: number, voice: NarrationVoice): void {
+    if (generation !== this.#generation || this.#api === null) {
+      return;
+    }
+    this.#api
+      .status(key)
+      .then((render) => {
+        if (generation !== this.#generation) {
+          return;
+        }
+        this.#pollFailures = 0;
+        if (render.status === "ready") {
+          this.#streamFinished(render, voice);
+          return;
+        }
+        if (render.status === "failed") {
+          this.#letStreamGo();
+          this.#renderGaveUp();
+          return;
+        }
+        if (isStreaming(render)) {
+          this.#streamGrew(render);
+        }
+        this.#pollTimer = setTimeout(() => this.#pollStream(key, generation, voice), POLL_INTERVAL_MS);
+      })
+      .catch(() => {
+        if (generation !== this.#generation) {
+          return;
+        }
+        this.#pollFailures += 1;
+        this.#pollTimer = setTimeout(() => this.#pollStream(key, generation, voice), POLL_INTERVAL_MS * 2);
+      });
+  }
+
+  #streamGrew(render: StreamingNarration): void {
+    this.#stream = render;
+    const timings = streamingTimings(render, this.#snapshot.track!);
+    this.#retime(timings);
+    const holdingLine = this.#hold?.line ?? null;
+    this.#set({ stream: { renderedSeconds: render.renderedSeconds, holdingLine } });
+    this.#resumeHoldIfRendered();
+  }
+
+  // The playlist keeps playing to its end; the stored file takes over from the next play.
+  #streamFinished(render: ReadyNarration, voice: NarrationVoice): void {
+    const track = this.#snapshot.track!;
+    const lineStarts = lineStartsOf(render, track);
+    if (lineStarts === null) {
+      this.#warn({ name: "narrationFellBack", reason: "renderFailed" });
+      this.#letStreamGo();
+      this.#fallBackToPacer("unavailable", this.#snapshot.status === "playing");
+      return;
+    }
+    this.#render = render;
+    this.#stream = null;
+    this.#retime({ lineStarts, durationSeconds: render.durationSeconds });
+    this.#set({ availability: "ready", narratedVoice: voice, stream: null });
+    this.#resumeHoldIfRendered();
+    this.#emitTime();
+  }
+
+  #isAheadOfRender(seconds: number): boolean {
+    const stream = this.#stream;
+    return this.#streamUrl !== null && stream !== null && seconds > stream.renderedSeconds - HELD_LEAD_SECONDS;
+  }
+
+  #holdAt(seconds: number): void {
+    const { timings } = this.#snapshot;
+    const line = lineAtTime(timings.lineStarts, seconds);
+    this.#hold = { line, at: this.#hold?.at ?? this.#clock() };
+    this.#time = timings.lineStarts[line] ?? seconds;
+    this.#media?.pause();
+    this.#set({ status: "buffering", stream: { renderedSeconds: this.#stream?.renderedSeconds ?? 0, holdingLine: line } });
+    this.#armStop();
+    this.#emitTime();
+  }
+
+  #resumeHoldIfRendered(): void {
+    const hold = this.#hold;
+    if (hold === null) {
+      return;
+    }
+    const stream = this.#stream;
+    const track = this.#snapshot.track!;
+    const rendered =
+      stream === null ||
+      (knownLineStartsOf(stream, track).length > hold.line &&
+        stream.renderedSeconds >= this.#snapshot.timings.lineStarts[hold.line]! + HELD_LEAD_SECONDS);
+    if (!rendered) {
+      return;
+    }
+    this.#time = this.#snapshot.timings.lineStarts[hold.line] ?? 0;
+    this.#endHold("played");
+    this.#playMedia();
+    this.#emitTime();
+  }
+
+  #endHold(outcome: WaitedAheadReport["outcome"]): void {
+    const hold = this.#hold;
+    const { track, stream } = this.#snapshot;
+    if (hold === null) {
+      return;
+    }
+    this.#hold = null;
+    if (stream !== null) {
+      this.#set({ stream: { ...stream, holdingLine: null } });
+    }
+    if (track !== null) {
+      const waitMs = Math.min(Math.max(Math.round(this.#clock() - hold.at), 0), MAX_FIRST_SOUND_WAIT_MS);
+      this.#onWaitedAhead({ overviewId: track.overviewId, waitMs, outcome });
+    }
+  }
+
+  #letStreamGo(): void {
+    this.#endHold("abandoned");
+    this.#releaseStream();
+    this.#releaseStream = () => undefined;
+    this.#stream = null;
+    this.#streamUrl = null;
+    if (this.#snapshot.stream !== null) {
+      this.#set({ stream: null });
+    }
   }
 
   #discardReplaced(key: string): void {
@@ -797,19 +1044,22 @@ export class PlayerEngine {
       media.preload = "auto";
       media.addEventListener("playing", () => this.#fromMedia("playing"));
       media.addEventListener("pause", () => {
+        if (this.#hold !== null) {
+          return;
+        }
         if (this.#snapshot.status === "playing" || this.#snapshot.status === "buffering") {
           this.#fromMedia("paused");
         }
       });
       media.addEventListener("waiting", () => {
-        if (!media.paused) {
+        if (!media.paused && this.#hold === null) {
           this.#fromMedia("buffering");
         }
       });
       media.addEventListener("ended", () => this.#fromMedia("ended"));
       media.addEventListener("error", () => this.#fromMedia("failed"));
       media.addEventListener("timeupdate", () => {
-        if (!this.#mediaIsCurrent()) {
+        if (!this.#mediaIsCurrent() || this.#hold !== null) {
           return;
         }
         const before = this.#time;
@@ -840,6 +1090,9 @@ export class PlayerEngine {
   }
 
   #mediaUrl(): string | null {
+    if (this.#streamUrl !== null) {
+      return this.#streamUrl;
+    }
     return this.#render === null || this.#api === null ? null : this.#api.fileUrl(this.#render);
   }
 
@@ -852,7 +1105,13 @@ export class PlayerEngine {
     const media = this.#ensureMedia();
     const url = this.#mediaUrl()!;
     if (this.#mediaSrc !== url) {
-      media.src = url;
+      this.#releaseStream();
+      this.#releaseStream = () => undefined;
+      if (url === this.#streamUrl) {
+        this.#releaseStream = this.#loadStream(media, url, () => this.#snapshot.status === "playing");
+      } else {
+        media.src = url;
+      }
       this.#mediaSrc = url;
     }
     // A second seek to where a pending one is going can leave Chromium waiting for good (OV-278).
@@ -879,6 +1138,15 @@ export class PlayerEngine {
     if (!this.#mediaIsCurrent()) {
       return;
     }
+    if (status === "ended" && this.#endedTooSoon()) {
+      const media = this.#media!;
+      const here = media.currentTime;
+      media.currentTime = here;
+      media.play().catch(() => undefined);
+      this.#set({ status: "buffering" });
+      this.#watchForStall();
+      return;
+    }
     if (status === "ended") {
       const { durationSeconds } = this.#snapshot.timings;
       this.#heard(this.#time, durationSeconds);
@@ -890,10 +1158,18 @@ export class PlayerEngine {
     }
     if (status === "ended") {
       this.#endListen("finished");
+      if (this.#streamUrl !== null && this.#stream === null) {
+        this.#letStreamGo();
+      }
     }
     this.#watchForStall();
     this.#armStop();
     this.#emitTime();
+  }
+
+  // A playlist can report its end at the last point it had buffered while the render was still going.
+  #endedTooSoon(): boolean {
+    return this.#streamUrl !== null && (this.#stream !== null || this.#media!.currentTime < this.#snapshot.timings.durationSeconds - 1);
   }
 
   #watchForStall(): void {
@@ -991,7 +1267,14 @@ export class PlayerEngine {
     }
     this.#press = null;
     const waitMs = Math.min(Math.max(Math.round(this.#clock() - press.at), 0), MAX_FIRST_SOUND_WAIT_MS);
-    this.#onFirstSound({ overviewId: track.overviewId, waitMs, from: press.from, source, prepared: press.prepared });
+    this.#onFirstSound({
+      overviewId: track.overviewId,
+      waitMs,
+      from: press.from,
+      source,
+      prepared: press.prepared,
+      streamed: press.streamed,
+    });
   }
 
   #clearPreparing(): void {
@@ -1016,6 +1299,7 @@ export class PlayerEngine {
     this.#generation += 1;
     this.#clearPreparing();
     this.#stopPacer();
+    this.#letStreamGo();
     this.#media?.pause();
     this.#render = null;
   }

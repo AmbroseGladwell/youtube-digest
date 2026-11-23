@@ -27,4 +27,11 @@ export interface PlayerSnapshot {
   narratedVoice: NarrationVoice | null;
   // When it is set and cleared: docs/features/audio-player.md, "Which note the bar is about".
   docked: boolean;
+  // Narration playing while it is still made: docs/features/audio-player.md, "Playing while it renders".
+  stream: StreamProgress | null;
+}
+
+export interface StreamProgress {
+  renderedSeconds: number;
+  holdingLine: number | null;
 }
