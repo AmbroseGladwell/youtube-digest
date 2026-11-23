@@ -29,6 +29,7 @@ import { InMemoryFollowedPlaylistStore } from "../src/features/playlists/types/I
 import { InMemoryCaptureQueueStore } from "../src/features/captureQueue/types/InMemoryCaptureQueueStore.testHelper.js";
 import { InMemoryProjectStore } from "../src/features/projects/types/InMemoryProjectStore.testHelper.js";
 import { InMemoryChatStore } from "../src/features/chats/types/InMemoryChatStore.testHelper.js";
+import { InMemorySuggestedQuestionStore } from "../src/features/chats/types/InMemorySuggestedQuestionStore.testHelper.js";
 import { deleteLocalLibrary, openLocalLibrary } from "@overview/store-local";
 import type {} from "./network/iwftWindow.testHelper.js";
 
@@ -40,10 +41,21 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const captureQueueStore = new InMemoryCaptureQueueStore();
   const projectStore = new InMemoryProjectStore();
   const chatStore = new InMemoryChatStore();
+  const suggestedQuestionStore = new InMemorySuggestedQuestionStore();
   const syncStorage = syncAvailable
     ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore, chatStore)
     : null;
-  return { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore, chatStore, syncStorage };
+  return {
+    overviewStore,
+    settingsStore,
+    transcriptStore,
+    followedPlaylistStore,
+    captureQueueStore,
+    projectStore,
+    chatStore,
+    suggestedQuestionStore,
+    syncStorage,
+  };
 };
 
 // Measures the real store (playwright/perf): the app opens libraries as apps/web/src/main.tsx does.

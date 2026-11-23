@@ -112,3 +112,5 @@ export type SuggestedQuestionRefreshStatus = z.infer<typeof SuggestedQuestionRef
 
 export const SuggestedQuestionRefreshResponse = z.object({ status: SuggestedQuestionRefreshStatus }).strict();
 export type SuggestedQuestionRefreshResponse = z.infer<typeof SuggestedQuestionRefreshResponse>;
+
+export const SUGGESTED_QUESTIONS_REFRESH_PATH = "/suggested-questions/refresh";

@@ -57,7 +57,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
     void navigate(Routes.ask(at));
   };
 
-  const ask = (question: string, from: AskOverFrom) => {
+  const ask = (question: string, from: AskOverFrom, alsoPinned: readonly OverviewId[] = []) => {
     const text = question.trim();
     if (text === "") {
       return;
@@ -67,7 +67,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
     }
     void asking.ask(conversationId, text, from, {
       pins: {
-        overviews: pinned.flatMap((item) => (item.kind === "overview" ? [item.id] : [])),
+        overviews: [...new Set([...pinned.flatMap((item) => (item.kind === "overview" ? [item.id] : [])), ...alsoPinned])],
         projects: pinned.flatMap((item) => (item.kind === "project" ? [item.id] : [])),
       },
       setAside: removed,
