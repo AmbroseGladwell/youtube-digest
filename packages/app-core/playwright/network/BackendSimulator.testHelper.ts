@@ -30,6 +30,7 @@ import {
   type QueuedCapture,
   type Project,
   type ProjectMember,
+  type SuggestedQuestion,
   type ProjectId,
   TRIAL_TOKEN_HEADER,
   type AuthSurface,
@@ -363,6 +364,7 @@ export class BackendSimulator {
   #seedQueue: QueuedCapture[] = [];
   #seedProjects: Project[] = [];
   #seedProjectMembers: ProjectMember[] = [];
+  #seedSuggestedQuestions: SuggestedQuestion[] = [];
 
   constructor(page: Page) {
     this.#page = page;
@@ -410,6 +412,7 @@ export class BackendSimulator {
     seedQueue: this.#seedQueue,
     seedProjects: this.#seedProjects,
     seedProjectMembers: this.#seedProjectMembers,
+    seedSuggestedQuestions: this.#seedSuggestedQuestions,
   });
 
   handleNetworking = async (): Promise<void> => {
@@ -2069,6 +2072,13 @@ export class BackendSimulator {
     },
     list: () => this.#page.evaluate(() => window.__iwftStores__.projectStore.listProjects()),
     members: () => this.#page.evaluate(() => window.__iwftStores__.projectStore.listMembers()),
+  };
+
+  suggestedQuestions = {
+    seed: (question: SuggestedQuestion): void => {
+      this.#seedSuggestedQuestions.push(question);
+    },
+    changes: () => this.#page.evaluate(() => window.__iwftStores__.suggestedQuestionStore.changes),
   };
 
   overviewStore = {

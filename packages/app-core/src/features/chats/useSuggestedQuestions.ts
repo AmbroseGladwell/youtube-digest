@@ -272,6 +272,7 @@ export const useSuggestedQuestionsWith = ({
     questions: shown.questions,
     page: shown.page,
     pages: shown.pages,
+    total: set.length,
     canCycle: shown.canCycle,
     held: held === null ? null : { question: held.question, action: held.action },
     next,

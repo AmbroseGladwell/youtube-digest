@@ -22,8 +22,11 @@ import { ChatComposer } from "../components/ChatComposer/ChatComposer.js";
 import { ChatDrewOn } from "../components/ChatDrewOn/ChatDrewOn.js";
 import { ChatStreamedText } from "../components/ChatStreamedText/ChatStreamedText.js";
 import { ChatWaitBlock } from "../components/ChatWaitBlock/ChatWaitBlock.js";
+import { AskQuestionCards } from "../components/AskQuestionCards/AskQuestionCards.js";
 import { useChatUsageQuery } from "../queries/chatUsageQuery.js";
 import { useAskPage } from "../useAskPage.js";
+import { useSuggestedQuestions, type QuestionRemoval } from "../useSuggestedQuestions.js";
+import type { AskQuestion } from "../types/AskQuestion.js";
 import type { PickedOverview } from "../useAskOver.js";
 import { askStarters } from "../util/askStarters.js";
 import { chatWaitCopy, type ShownWait } from "../util/chatWaitCopy.js";
@@ -73,6 +76,11 @@ const drawerMotionOf = (open: boolean, arrives: boolean): "arriving" | "still" |
     return "leaving";
   }
   return arrives ? "arriving" : "still";
+};
+
+const REMOVAL_TOAST: Record<QuestionRemoval, string> = {
+  notUseful: "Thanks. We won’t suggest it again.",
+  hidden: "Hidden.",
 };
 
 const pickingPhaseOf = (picking: "choosing" | "reading", text: string, sectionCount: number): "choosing" | "reading" | "read" => {
@@ -154,6 +162,10 @@ export const AskPage = () => {
   const empty = messages.length === 0 && pending === null;
   const latestAnswerAt = messages.map((message) => message.from).lastIndexOf("answer");
   const starters = empty ? askStarters({ overviews: entries, projects, members, topics }, project) : [];
+  const offline = wait?.kind === "offline";
+  const questionsShowing = empty && (wait === null || offline);
+  const suggestions = useSuggestedQuestions({ projectId, templates: starters, showing: questionsShowing });
+  const templatesOnly = !suggestions.canCycle && suggestions.questions.every((question) => question.kind === "template");
 
   useEffect(() => {
     if (opened.current) {
@@ -223,11 +235,16 @@ export const AskPage = () => {
   }
 
   const say = (text: string, done: boolean) => setSaid({ text, done, key: Date.now() });
-  const send = (question: string, from: "typed" | "starter") => {
-    page.ask(question, from);
-    if (from === "typed") {
-      setDraft("");
+  const send = (question: string) => {
+    page.ask(question, "typed");
+    setDraft("");
+  };
+  const askSuggested = (question: AskQuestion) => {
+    if (offline) {
+      return;
     }
+    const asked = suggestions.ask(question);
+    page.ask(asked.text, "starter", asked.pinnedOverviews);
   };
 
   const toastFor = (): ReactNode => {
@@ -237,6 +254,21 @@ export const AskPage = () => {
           <StrokeIcon name="check" size={17} />
           Conversation deleted
           <button type="button" className={styles.undo} onClick={page.undoDelete} data-testid={askPageTestIds.undo}>
+            Undo
+          </button>
+        </div>
+      );
+    }
+    if (suggestions.held !== null) {
+      return (
+        <div
+          key={suggestions.held.question.id}
+          className={`${styles.toast} ${styles.questionToast}`}
+          role="status"
+          data-testid={askPageTestIds.toast}
+        >
+          {REMOVAL_TOAST[suggestions.held.action]}
+          <button type="button" className={styles.questionUndo} onClick={suggestions.undo} data-testid={askPageTestIds.undo}>
             Undo
           </button>
         </div>
@@ -275,7 +307,7 @@ export const AskPage = () => {
         answering={answering}
         large={empty}
         onChange={setDraft}
-        onSend={() => send(draft, "typed")}
+        onSend={() => send(draft)}
         onStop={page.stop}
       />
     );
@@ -378,22 +410,39 @@ export const AskPage = () => {
                 {scope === "project" ? "Ask about this project." : "Ask across everything you’ve saved."}
               </h1>
               {composer}
-              {starters.length > 0 && wait === null && (
-                <ul className={styles.starters} data-testid={askPageTestIds.starters}>
-                  {starters.map((question) => (
-                    <li key={question}>
+              {questionsShowing && suggestions.questions.length > 0 && templatesOnly && (
+                <ul className={styles.starters} aria-label="Questions to start with" data-testid={askPageTestIds.starters}>
+                  {suggestions.questions.map((question) => (
+                    <li key={question.id}>
                       <button
                         type="button"
                         className={styles.starter}
-                        onClick={() => send(question, "starter")}
+                        aria-disabled={offline || undefined}
+                        onClick={() => askSuggested(question)}
                         data-testid={askPageTestIds.starter}
                       >
                         <StrokeIcon name="cornerDownRight" size={15} />
-                        <span>{question}</span>
+                        <span>{question.text}</span>
                       </button>
                     </li>
                   ))}
                 </ul>
+              )}
+              {questionsShowing && !templatesOnly && (
+                <AskQuestionCards
+                  questions={suggestions.questions}
+                  page={suggestions.page}
+                  pages={suggestions.pages}
+                  total={suggestions.total}
+                  canCycle={suggestions.canCycle}
+                  waiting={offline}
+                  onNext={suggestions.next}
+                  onAsk={askSuggested}
+                  onToggleGood={suggestions.toggleGood}
+                  onNotUseful={suggestions.notUseful}
+                  onHide={suggestions.hide}
+                  onChipOpened={suggestions.chipOpened}
+                />
               )}
             </div>
           ) : (
@@ -499,7 +548,11 @@ export const AskPage = () => {
         </div>
       </div>
 
-      {toast !== null && <div className={styles.toastSpot}>{toast}</div>}
+      {toast !== null && (
+        <div className={`${styles.toastSpot} ${page.deleting === null && suggestions.held !== null ? styles.questionToastSpot : ""}`}>
+          {toast}
+        </div>
+      )}
       <p className={styles.live} aria-live="polite" data-testid={askPageTestIds.announcement}>
         {announcement}
       </p>

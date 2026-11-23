@@ -15,3 +15,33 @@
     @content;
   }
 }
+
+// Design 350b: an icon button's name above it, after a short wait (none with reduced motion, theme/global.scss).
+@mixin label-above {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 7;
+  display: none;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: var(--ink);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  color: var(--ground);
+  font: 600 0.75rem/1.35 var(--font-body);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+@mixin label-shown {
+  display: block;
+  animation: tip-label-in 120ms 400ms both;
+}
+
+@keyframes tip-label-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 2px);
+  }
+}

@@ -13,6 +13,9 @@ import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewO
 import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChipRow/ChatChipRowTestIds.js";
 import { chatFieldTestIds } from "../../src/features/chats/components/ChatField/ChatFieldTestIds.js";
 import { cutTextTestIds } from "../../src/components/shared/CutText/CutTextTestIds.js";
+import { askQuestionCardTestIds } from "../../src/features/chats/components/AskQuestionCard/AskQuestionCardTestIds.js";
+import { askQuestionCardsTestIds } from "../../src/features/chats/components/AskQuestionCards/AskQuestionCardsTestIds.js";
+import { askQuestionReferencesTestIds } from "../../src/features/chats/components/AskQuestionReferences/AskQuestionReferencesTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 
@@ -21,6 +24,8 @@ export class AskPagePageObject extends PageObject {
   private field = () => this.root().getByTestId(chatFieldTestIds.input);
   private answers = () => this.root().getByTestId(askAnswerTestIds.root);
   private drawer = () => this.page.getByTestId(askDrawerTestIds.root);
+  private cards = () => this.root().getByTestId(askQuestionCardTestIds.card);
+  private card = (index: number) => this.cards().nth(index);
 
   verifyIsShown = (): Promise<AskPagePageObject> =>
     this.step("verifyIsShown", async () => {
@@ -406,4 +411,168 @@ export class AskPagePageObject extends PageObject {
     );
 
   undo = () => this.step("undo", () => this.click(this.root().getByTestId(askPageTestIds.undo)));
+
+  verifyQuestionCardsRead = (questions: string[]) =>
+    this.step(`verifyQuestionCardsRead ${questions.join(" | ")}`, async () => {
+      await expect(this.root().getByRole("list", { name: "Questions to start with" })).toBeVisible();
+      await expect(this.root().getByTestId(askQuestionCardTestIds.question)).toHaveText(questions);
+    });
+
+  verifyNoQuestionCards = () =>
+    this.step("verifyNoQuestionCards", async () => {
+      await expect(this.cards()).toHaveCount(0);
+      await expect(this.root().getByTestId(askQuestionCardsTestIds.different)).toHaveCount(0);
+    });
+
+  verifyFeedbackRowCount = (count: number) =>
+    this.step(`verifyFeedbackRowCount ${count}`, () => expect(this.root().getByTestId(askQuestionCardTestIds.feedback)).toHaveCount(count));
+
+  verifyQuestionCardsWait = (waiting: boolean) =>
+    this.step(`verifyQuestionCardsWait ${waiting}`, async () => {
+      for (const question of await this.root().getByTestId(askQuestionCardTestIds.question).all()) {
+        await (waiting ? expect(question).toBeDisabled() : expect(question).toBeEnabled());
+      }
+    });
+
+  chooseQuestionCard = (index: number) =>
+    this.step(`chooseQuestionCard ${index}`, () => this.click(this.card(index).getByTestId(askQuestionCardTestIds.question)));
+
+  focusQuestionCard = (index: number) =>
+    this.step(`focusQuestionCard ${index}`, async () => {
+      await this.field().focus();
+      for (let card = 0; card <= index; card += 1) {
+        const target = this.card(card).getByTestId(askQuestionCardTestIds.question);
+        while (!(await target.evaluate((element) => element === document.activeElement))) {
+          await this.page.keyboard.press("Tab");
+        }
+      }
+    });
+
+  hoverQuestionCard = (index: number) => this.step(`hoverQuestionCard ${index}`, () => this.card(index).hover());
+
+  verifyFeedbackShown = (index: number, shown: boolean) =>
+    this.step(`verifyFeedbackShown ${index} ${shown}`, () =>
+      expect(this.card(index).getByTestId(askQuestionCardTestIds.feedback)).toHaveCSS("opacity", shown ? "1" : "0"),
+    );
+
+  verifyFeedbackButtonSize = (index: number, size: number) =>
+    this.step(`verifyFeedbackButtonSize ${index} ${size}`, async () => {
+      for (const button of await this.card(index).getByTestId(askQuestionCardTestIds.feedback).getByRole("button").all()) {
+        const box = (await button.boundingBox())!;
+        expect(box.width).toBe(size);
+        expect(box.height).toBe(size);
+      }
+    });
+
+  verifyFeedbackNamed = (index: number, question: string) =>
+    this.step(`verifyFeedbackNamed ${index}`, async () => {
+      const group = this.card(index).getByRole("group", { name: "Feedback on this question" });
+      const names = [`Good question: ${question}`, `Not useful: ${question}`, `Hide: ${question}`];
+      await expect(group.getByRole("button")).toHaveCount(names.length);
+      for (const [index, name] of names.entries()) {
+        await expect(group.getByRole("button").nth(index)).toHaveAccessibleName(name);
+      }
+    });
+
+  pressGoodQuestion = (index: number) =>
+    this.step(`pressGoodQuestion ${index}`, async () => {
+      await this.card(index).hover();
+      await this.click(this.card(index).getByTestId(askQuestionCardTestIds.good));
+    });
+
+  verifyGoodQuestionPressed = (index: number, pressed: boolean) =>
+    this.step(`verifyGoodQuestionPressed ${index} ${pressed}`, () =>
+      expect(this.card(index).getByTestId(askQuestionCardTestIds.good)).toHaveAttribute("aria-pressed", String(pressed)),
+    );
+
+  pressNotUseful = (index: number) =>
+    this.step(`pressNotUseful ${index}`, async () => {
+      await this.card(index).hover();
+      await this.click(this.card(index).getByTestId(askQuestionCardTestIds.notUseful));
+    });
+
+  pressHide = (index: number) =>
+    this.step(`pressHide ${index}`, async () => {
+      await this.card(index).hover();
+      await this.click(this.card(index).getByTestId(askQuestionCardTestIds.hide));
+    });
+
+  verifyQuestionCardFocused = (index: number) =>
+    this.step(`verifyQuestionCardFocused ${index}`, () =>
+      expect(this.card(index).getByTestId(askQuestionCardTestIds.question)).toBeFocused(),
+    );
+
+  verifyFeedbackTipReads = (index: number, button: "good" | "notUseful" | "hide", text: string) =>
+    this.step(`verifyFeedbackTipReads ${index} ${button} ${text}`, async () => {
+      const target = this.card(index).getByTestId(askQuestionCardTestIds[button]);
+      await target.hover();
+      const tip = target.getByTestId(askQuestionCardTestIds.tip);
+      await expect(tip).toBeVisible();
+      await expect(tip).toHaveText(text);
+    });
+
+  holdFeedbackButton = (index: number, button: "good" | "notUseful" | "hide", text: string) =>
+    this.step(`holdFeedbackButton ${index} ${button}`, async () => {
+      const target = this.card(index).getByTestId(askQuestionCardTestIds[button]);
+      await target.dispatchEvent("touchstart");
+      await expect(target).toHaveAttribute("data-held", "");
+      await expect(target.getByTestId(askQuestionCardTestIds.tip)).toHaveText(text);
+      await expect(target.getByTestId(askQuestionCardTestIds.tip)).toBeVisible();
+      await target.dispatchEvent("touchend");
+    });
+
+  verifyDifferentQuestions = (count: string | null) =>
+    this.step(`verifyDifferentQuestions ${count}`, async () => {
+      const different = this.root().getByTestId(askQuestionCardsTestIds.different);
+      if (count === null) {
+        await expect(different).toHaveCount(0);
+        return;
+      }
+      await expect(different).toHaveAccessibleName(`Different questions, ${count}`);
+      await expect(this.root().getByTestId(askQuestionCardsTestIds.count)).toHaveText(count);
+    });
+
+  pressDifferentQuestions = () =>
+    this.step("pressDifferentQuestions", async () => {
+      const different = this.root().getByTestId(askQuestionCardsTestIds.different);
+      await different.focus();
+      await this.page.keyboard.press("Enter");
+      await expect(different).toBeFocused();
+    });
+
+  verifyQuestionsSaid = (text: string) =>
+    this.step(`verifyQuestionsSaid ${text}`, () => expect(this.root().getByTestId(askQuestionCardsTestIds.said)).toHaveText(text));
+
+  verifyReferencesNamed = (index: number, name: string) =>
+    this.step(`verifyReferencesNamed ${index}`, async () => {
+      const button = this.card(index).getByTestId(askQuestionReferencesTestIds.button);
+      await expect(button).toHaveAccessibleName(name);
+      await expect(button).toHaveAttribute("aria-haspopup", "menu");
+    });
+
+  openReferences = (index: number) =>
+    this.step(`openReferences ${index}`, () => this.click(this.card(index).getByTestId(askQuestionReferencesTestIds.button)));
+
+  verifyReferencesMenuReads = (index: number, rows: Array<{ title: string; kind: string }>) =>
+    this.step(`verifyReferencesMenuReads ${index}`, async () => {
+      const menu = this.card(index).getByRole("menu", { name: "This question draws on" });
+      await expect(menu).toBeVisible();
+      for (const [row, { title }] of rows.entries()) {
+        await expect(menu.getByRole("menuitem").nth(row)).toHaveAccessibleName(title);
+      }
+      await expect(menu.getByRole("menuitem")).toHaveText(rows.map((row) => `${row.title}${row.kind}`));
+      await expect(menu.getByRole("menuitem").first()).toBeFocused();
+    });
+
+  closeReferencesWithEscape = (index: number) =>
+    this.step(`closeReferencesWithEscape ${index}`, async () => {
+      await this.page.keyboard.press("Escape");
+      await expect(this.card(index).getByTestId(askQuestionReferencesTestIds.menu)).toHaveCount(0);
+      await expect(this.card(index).getByTestId(askQuestionReferencesTestIds.button)).toBeFocused();
+    });
+
+  chooseReference = (index: number, row: number) =>
+    this.step(`chooseReference ${index} ${row}`, () =>
+      this.click(this.card(index).getByTestId(askQuestionReferencesTestIds.item).nth(row)),
+    );
 }
