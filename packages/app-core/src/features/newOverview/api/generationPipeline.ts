@@ -193,6 +193,11 @@ export const runPodcastOverviewGeneration = async (
   return writeOverview({ podcast, video: episodeAsVideo(podcast, episode.notes), transcript: transcript.segments }, deps, options);
 };
 
+export interface TikTokRunRequest {
+  video: TikTokVideo;
+  words: TikTokWords;
+}
+
 export interface TikTokWords {
   transcript: StoredTranscript;
   source: Extract<CaptureTranscriptSource, "tiktok-tab" | "tiktok-vendor">;

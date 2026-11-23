@@ -28,7 +28,7 @@ import { runErrorOf } from "./util/runErrorOf.js";
 import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
 import type { ArticleRun, NewOverviewRun } from "./types/NewOverviewRun.js";
-import type { PodcastRunRequest } from "./api/generationPipeline.js";
+import type { PodcastRunRequest, TikTokRunRequest } from "./api/generationPipeline.js";
 
 export interface StartOverviewRunOptions {
   from: CaptureEntry;
@@ -61,6 +61,7 @@ export interface NewOverviewRunController {
   startArticle: (request: ArticleRunRequest) => void;
   startPodcast: (request: PodcastRunRequest & StartOverviewRunOptions) => void;
   transcribePodcast: () => void;
+  startTikTok: (request: TikTokRunRequest & StartOverviewRunOptions) => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
@@ -127,6 +128,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       runId: number,
       articleRequest: ArticleRunRequest | null = null,
       podcastRequest: PodcastRunRequest | null = null,
+      tiktokRequest: TikTokRunRequest | null = null,
     ) => {
       const isCurrent = () => runIdRef.current === runId;
       const { from } = options;
@@ -182,6 +184,17 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
                 words: null,
                 transcription: podcastRequest.transcribe !== undefined ? { state: "starting" } : null,
               },
+        tiktok:
+          tiktokRequest === null
+            ? null
+            : {
+                handle: tiktokRequest.video.handle,
+                caption: tiktokRequest.video.description,
+                durationSeconds: tiktokRequest.video.durationSeconds,
+                postedAt: tiktokRequest.video.postedAt,
+                coverUrl: tiktokRequest.video.coverUrl,
+                words: null,
+              },
         transcriptWords: null,
         overview: null,
         error: null,
@@ -189,6 +202,9 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       });
 
       const whatToRead = () => {
+        if (tiktokRequest !== null) {
+          return { tiktok: tiktokRequest };
+        }
         if (podcastRequest !== null) {
           return { podcast: podcastRequest };
         }
@@ -417,6 +433,15 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     startPodcast({ ...lastPodcast.current, transcribe: asked ? "asked" : "retried" });
   }, [startPodcast]);
 
+  const startTikTok = useCallback(
+    (request: TikTokRunRequest & StartOverviewRunOptions) => {
+      const runId = (runIdRef.current += 1);
+      setHeld(null);
+      generate(request.video.url, request, runId, null, null, { video: request.video, words: request.words });
+    },
+    [generate],
+  );
+
   const setCaptureReason = useCallback((captureReason: string) => {
     draftRef.current = captureReason;
     setRun((current) => (current === null ? null : { ...current, captureReason }));
@@ -464,6 +489,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     startArticle,
     startPodcast,
     transcribePodcast,
+    startTikTok,
     dismiss,
     setCaptureReason,
     commitCaptureReason,

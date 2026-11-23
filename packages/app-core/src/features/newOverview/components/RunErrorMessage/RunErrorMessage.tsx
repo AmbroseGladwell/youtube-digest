@@ -1,4 +1,5 @@
 import { modelLabel, PROVIDER_SHORT_LABEL } from "@overview/domain";
+import type { NoSpeechReason } from "@overview/generation";
 import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { ArticleFailureNotice } from "../../../capture/components/ArticleFailureNotice/ArticleFailureNotice.js";
@@ -37,6 +38,9 @@ export const RunErrorMessage = ({
   }
   if (error.kind === "podcastNoTranscript") {
     return <PodcastNoTranscript testId={testId} />;
+  }
+  if (error.kind === "noSpeech") {
+    return <NoSpeech reason={error.reason} testId={testId} />;
   }
   if (error.kind === "podcastNeedsTranscribing" || error.kind === "transcriptionFailed" || error.kind === "transcriptionRefused") {
     return (
@@ -130,6 +134,28 @@ const TranscriptionStop = ({ error, episodeSeconds, onTranscribe, onNotNow, onFo
 };
 
 // Drawn as an everyday outcome: docs/features/podcast-screens.md, "Making one".
+const NO_SPEECH_COPY: Record<NoSpeechReason, { heading: string; body: string }> = {
+  "too-few-words": { heading: "There’s no speech in this to make an overview from", body: "Nothing was used." },
+  "nothing-to-summarise": {
+    heading: "This one is music or sound rather than talk",
+    body: "So there’s nothing to make an overview from. Nothing was used.",
+  },
+};
+
+interface NoSpeechProps {
+  reason: NoSpeechReason;
+  testId: string;
+}
+
+// Designs 130f, 130f-2: an honest stop, never counted, for any kind of source.
+const NoSpeech = ({ reason, testId }: NoSpeechProps) => (
+  <div className={styles.noTranscript} role="alert" data-testid={testId}>
+    <span className={styles.rule} aria-hidden="true" />
+    <h3 className={styles.noTranscriptHeading}>{NO_SPEECH_COPY[reason].heading}</h3>
+    <p className={styles.noTranscriptBody}>{NO_SPEECH_COPY[reason].body}</p>
+  </div>
+);
+
 const PodcastNoTranscript = ({ testId }: { testId: string }) => {
   return (
     <div className={styles.noTranscript} role="alert" data-testid={testId}>

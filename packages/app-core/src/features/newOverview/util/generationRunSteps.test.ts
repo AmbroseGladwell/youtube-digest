@@ -126,3 +126,19 @@ describe("an episode's steps", () => {
     expect(nearlyThere[2]!.detail).toBe("Almost done");
   });
 });
+
+describe("a TikTok's steps", () => {
+  const tiktok = { handle: "bbcnews", caption: "Why stockpile? #news", durationSeconds: 58, postedAt: null, coverUrl: null, words: null };
+
+  it("says the video was found, then the captions, then writing (130d, 130d-2)", () => {
+    const looking = generationRunSteps(makeNewOverviewRun({ tiktok }));
+    expect(looking.map(({ label, detail, state }) => [label, detail, state])).toEqual([
+      ["Found the video", "TikTok · 0:58", "done"],
+      ["Looking for captions", "TikTok’s own captions", "running"],
+      ["Writing the overview", "Queued", "waiting"],
+    ]);
+    const found = generationRunSteps(makeNewOverviewRun({ tiktok, transcriptWords: 228 }));
+    expect(found[1]).toMatchObject({ label: "Captions found", detail: "228 words", state: "done" });
+    expect(found[2]?.state).toBe("running");
+  });
+});

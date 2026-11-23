@@ -22,6 +22,7 @@ tab) and speech-to-text for videos without captions are the next slices, in the 
 | The extension's own read, and the access it asks for | `chromeTikTokPages.ts` in `apps/extension` |
 | The player, speaking TikTok's embed messages | `TikTokEngine`, `useTikTokEngine` in `app-core/src/features/reader/tiktok` |
 | Where it sits, and the bar that stands in for it | `TikTokPlayer`, `TikTokMiniBar`; `ReaderPage` places them |
+| A pasted link read, its card, its stops and failures | `useTikTokLink`, `TikTokLinkStatus`, `tiktokLinkFailureCopy` in `newOverview` |
 
 ## Who reads TikTok
 
@@ -159,6 +160,30 @@ say "Watch on TikTok" and "Copy TikTok link".
 **No time links.** TikTok's address takes no start time, so Markdown and chat answers give a
 TikTok's times as plain text, as an episode's are. The embed player can seek, and that is for the
 screens.
+
+### Pasting a link
+
+Designs 130a to 130f and 130l to 130n. In the New dialog and the home field, a TikTok link is read as
+it settles (`useTikTokLink`), through `readTikTokLink`: the reader's own browser first in the
+extension, our server's vendor read elsewhere. It needs an account, as an episode's read does.
+**A TikTok link is never read as an article or an episode**: both of those readers fetch the page
+on our server, and our server never reads TikTok's pages.
+
+The card shows the 9:16 cover with the length on it, "@handle · TikTok", the caption as written
+with the hashtags after its words muted (an empty caption reads "A TikTok by @handle" in muted
+italics), and "0:58 · Posted 18 Nov 2026". Create starts the run with the video and the words the
+read came with, so making only writes: "Found the video · TikTok · 0:58", "Captions found · 228
+words", then writing.
+
+**Stops, found before Create and never counted:** no captions ("This TikTok has no captions", with
+the two steps it got through) and fewer than 30 caption words ("There's no speech in this to make an
+overview from"), both counted in code. Music or sound is the kind check's answer, after Create:
+"This one is music or sound rather than talk". That run stop (`RunError` `noSpeech`) serves every
+kind, so a YouTube Short with no speech says so too.
+
+**Failures**, each ending "Nothing was used." and never naming the vendor: private or removed;
+TikTok refused (Try again); a photo post or a profile, known from the address without a read; and
+our server not reading TikTok at all ("TikTok links aren't working right now").
 
 ### The player
 

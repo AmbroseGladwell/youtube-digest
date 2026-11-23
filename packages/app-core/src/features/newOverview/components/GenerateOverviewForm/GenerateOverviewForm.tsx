@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
-import { DEFAULT_PLAN, domainOf } from "@overview/domain";
+import { DEFAULT_PLAN, domainOf, tiktokTitle } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { keyPromptDetail } from "../../../transcripts/transcriptSourceNote.js";
 import { KeyPromptNote } from "../../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
@@ -23,6 +23,7 @@ import { isArticleLink, useArticleLink } from "../../useArticleLink.js";
 import { useStartArticleFromLink } from "../../useStartArticleFromLink.js";
 import { PastedLinkStatus } from "../PastedLinkStatus/PastedLinkStatus.js";
 import { isPlatformPodcastLink, usePodcastLink } from "../../usePodcastLink.js";
+import { isTikTokLink, useTikTokLink } from "../../useTikTokLink.js";
 import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { pastedLinkState } from "../../util/pastedLinkState.js";
 import { resetDate } from "../../util/usageLine.js";
@@ -102,11 +103,12 @@ export const GenerateOverviewForm = ({
   const article = useArticleLink(url, "dialog");
   const startArticle = useStartArticleFromLink();
   const podcast = usePodcastLink(url);
-  const { startPodcast, transcribePodcast, run } = useNewOverviewRunController();
-  const { podcastShown, reading, generateOffered, episodeAction } = pastedLinkState(article.link, podcast);
+  const tiktok = useTikTokLink(url);
+  const { startPodcast, transcribePodcast, startTikTok, run } = useNewOverviewRunController();
+  const { podcastShown, tiktokShown, reading, generateOffered, episodeAction } = pastedLinkState(article.link, podcast, tiktok.link);
   const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
-      recognised: isYouTubeUrl(url) || (article.available && (isArticleLink(url) || isPlatformPodcastLink(url))),
+      recognised: isYouTubeUrl(url) || (article.available && (isArticleLink(url) || isPlatformPodcastLink(url) || isTikTokLink(url))),
       from: "dialog",
     }),
   );
@@ -126,6 +128,13 @@ export const GenerateOverviewForm = ({
       return;
     }
     if (choosing !== null || limit !== null) {
+      return;
+    }
+    if (tiktokShown) {
+      if (tiktok.link.status === "found" && tiktok.link.words !== null && tiktok.link.stop === null) {
+        setValidationError(null);
+        startTikTok({ video: tiktok.link.video, words: tiktok.link.words, from: "dialog" });
+      }
       return;
     }
     if (podcastShown) {
@@ -165,6 +174,12 @@ export const GenerateOverviewForm = ({
   const watchedCaptionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 
   const pastedLink = () => {
+    if (tiktok.link.status === "found") {
+      return {
+        kicker: `@${tiktok.link.video.handle} · TikTok`,
+        title: tiktokTitle(tiktok.link.video.description, tiktok.link.video.handle),
+      };
+    }
     if (podcast.link.status === "found") {
       return { kicker: `${podcast.link.episode.showName} · Podcast`, title: podcast.link.episode.title };
     }
@@ -178,6 +193,9 @@ export const GenerateOverviewForm = ({
   };
 
   const readsWhat = () => {
+    if (tiktokShown) {
+      return "Reads the TikTok’s captions";
+    }
     if (podcastShown) {
       return "Finds the episode’s transcript";
     }
@@ -262,7 +280,14 @@ export const GenerateOverviewForm = ({
         />
       </label>
 
-      <PastedLinkStatus article={article} podcast={podcast} url={url.trim()} onClear={() => onUrlChange("")} onOpened={onCancel} />
+      <PastedLinkStatus
+        article={article}
+        podcast={podcast}
+        tiktok={tiktok}
+        url={url.trim()}
+        onClear={() => onUrlChange("")}
+        onOpened={onCancel}
+      />
 
       {isWatchedVideo && (
         <p className={styles.provenance} data-testid={generateOverviewFormTestIds.watchingNote}>

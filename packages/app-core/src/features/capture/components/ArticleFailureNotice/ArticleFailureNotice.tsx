@@ -7,11 +7,13 @@ export interface ArticleFailureNoticeProps {
   onWay: () => void;
   href?: string | null;
   after?: string | null;
+  // Designs 130l to 130n: Try another link as the main way on, where it is the only one.
+  prominent?: boolean;
 }
 
 // Trying again has to be a press, because asking Chrome again needs one.
-export const ArticleFailureNotice = ({ copy, onWay, href = null, after = null }: ArticleFailureNoticeProps) => {
-  const quiet = copy.way === "tryAgain" || copy.way === "tryAnother";
+export const ArticleFailureNotice = ({ copy, onWay, href = null, after = null, prominent = false }: ArticleFailureNoticeProps) => {
+  const quiet = !prominent && (copy.way === "tryAgain" || copy.way === "tryAnother");
   return (
     <div className={styles.root} role="alert" data-testid={articleFailureNoticeTestIds.root}>
       <h2 className={styles.title} data-testid={articleFailureNoticeTestIds.title}>

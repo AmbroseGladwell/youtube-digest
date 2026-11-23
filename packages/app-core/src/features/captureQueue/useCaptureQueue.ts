@@ -342,6 +342,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
         video: null,
         article: null,
         podcast: null,
+        tiktok: null,
         transcriptWords: null,
         overview: null,
         error: null,

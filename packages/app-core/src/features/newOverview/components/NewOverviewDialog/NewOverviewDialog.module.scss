@@ -231,3 +231,20 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
     min-height: 2.75rem;
   }
 }
+
+// Design 130d: the 9:16 cover beside the caption while it is made.
+.tiktokCover {
+  flex: none;
+  width: 3.375rem;
+  height: 6rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: linear-gradient(160deg, #3b4d5c, #1d2530);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}

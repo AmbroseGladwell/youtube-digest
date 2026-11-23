@@ -4,6 +4,7 @@ import { TranscriptionFailedError } from "../../podcasts/api/TranscriptionFailed
 import { TranscriptionRefusedError } from "../../podcasts/api/TranscriptionRefusedError.js";
 import { ArticleReadError } from "../api/ArticleReadError.js";
 import { ChosenModelFailedError } from "../api/ChosenModelFailedError.js";
+import { NoSpeechError } from "@overview/generation";
 import type { RunError } from "../types/RunError.js";
 
 export interface FetchedArticle {
@@ -23,6 +24,9 @@ export const runErrorOf = (error: Error, fetched: FetchedArticle | null = null, 
   }
   if (episode && error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {
     return { kind: "podcastNoTranscript" };
+  }
+  if (error instanceof NoSpeechError) {
+    return { kind: "noSpeech", reason: error.reason };
   }
   if (error instanceof ChosenModelFailedError) {
     return { kind: "chosenModel", provider: error.provider, model: error.model };

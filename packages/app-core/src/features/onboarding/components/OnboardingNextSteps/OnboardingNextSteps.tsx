@@ -88,7 +88,7 @@ export const OnboardingNextSteps = ({ overviewId }: { overviewId: OverviewId }) 
 // The shell's own run, as the empty library's field starts, so it hides when there's no way to make one.
 const TryYourOwn = ({ onDismiss }: { onDismiss: () => void }) => {
   const analytics = useAnalytics();
-  const { ready, limit, url, setUrl, validationError, generate, article, podcast, pasted } = useStartFromLink();
+  const { ready, limit, url, setUrl, validationError, generate, article, podcast, tiktok, pasted } = useStartFromLink();
   const headingId = useId();
   const fieldId = useId();
   if (!ready || limit !== null) {
@@ -138,7 +138,7 @@ const TryYourOwn = ({ onDismiss }: { onDismiss: () => void }) => {
           {pasted.episodeAction === null ? "Make an overview" : createLabelOf(pasted.episodeAction, "Make an overview")}
         </button>
       </form>
-      <PastedLinkStatus article={article} podcast={podcast} url={url.trim()} onClear={() => setUrl("")} />
+      <PastedLinkStatus article={article} podcast={podcast} tiktok={tiktok} url={url.trim()} onClear={() => setUrl("")} />
       {validationError !== null && (
         <p className={styles.ownError} role="alert">
           {validationError}

@@ -9,6 +9,7 @@ import { usePlaylistApi } from "../playlists/usePlaylistApi.js";
 import { isArticleLink, useArticleLink } from "./useArticleLink.js";
 import { useStartArticleFromLink } from "./useStartArticleFromLink.js";
 import { isPlatformPodcastLink, usePodcastLink } from "./usePodcastLink.js";
+import { isTikTokLink, useTikTokLink } from "./useTikTokLink.js";
 import { pastedLinkState } from "./util/pastedLinkState.js";
 import { transcribeChoiceOf } from "../podcasts/util/episodeActionOf.js";
 
@@ -24,10 +25,11 @@ export const useStartFromLink = () => {
   const article = useArticleLink(url, "home");
   const startArticle = useStartArticleFromLink();
   const podcast = usePodcastLink(url);
-  const pasted = pastedLinkState(article.link, podcast);
+  const tiktok = useTikTokLink(url);
+  const pasted = pastedLinkState(article.link, podcast, tiktok.link);
   const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
-      recognised: isYouTubeUrl(url) || (article.available && (isArticleLink(url) || isPlatformPodcastLink(url))),
+      recognised: isYouTubeUrl(url) || (article.available && (isArticleLink(url) || isPlatformPodcastLink(url) || isTikTokLink(url))),
       from: "home",
     }),
   );
@@ -43,6 +45,15 @@ export const useStartFromLink = () => {
       return;
     }
     if (limit !== null) {
+      return;
+    }
+    if (pasted.tiktokShown) {
+      if (tiktok.link.status === "found" && tiktok.link.words !== null && tiktok.link.stop === null) {
+        setValidationError(null);
+        controller.startTikTok({ video: tiktok.link.video, words: tiktok.link.words, from: "home" });
+        controller.open();
+        setUrl("");
+      }
       return;
     }
     if (pasted.podcastShown) {
@@ -83,5 +94,5 @@ export const useStartFromLink = () => {
     setUrl("");
   };
 
-  return { readiness, ready: readiness.ready, limit, url, setUrl, validationError, generate, article, podcast, pasted };
+  return { readiness, ready: readiness.ready, limit, url, setUrl, validationError, generate, article, podcast, tiktok, pasted };
 };
