@@ -11,6 +11,9 @@ dependencies = [
 ]
 
 [dependency-groups]
+benchmark = [
+    "modal>=1.0",
+]
 dev = [
     "httpx2>=2.13.1",
     "pytest>=9.1",
