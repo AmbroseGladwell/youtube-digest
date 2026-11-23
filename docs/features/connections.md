@@ -104,8 +104,6 @@ $0.034 an overview with Sonnet writing, roughly doubling an overview's own cost
 cost about $0.21 per paid reader a month at three refreshes a week, and nothing to fill in an
 existing library, whatever its size.
 
-All the paid runs came to about $5.75 on the evals key.
-
 ## Running it again
 
 From the repo root, with the export from `docs/architecture/in-app-chat.md` ("Running it again";
