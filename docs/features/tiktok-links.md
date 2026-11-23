@@ -135,8 +135,34 @@ The captions are parsed by the podcast transcript parser (`parsePodcastTranscrip
 `StoredTranscript` segments, keyed `tiktok:<id>`. `generated` is true unless the caption track is one
 the creator wrote (`is_auto_generated: false`), so the reader is told when the words are
 machine-heard. No captions, or empty ones, is a read with `transcript: null`: the video is still
-found, and the client decides what to say. The vendor's AI transcript endpoint, and our own
-speech-to-text, are slice 5's question.
+found, and with speech-to-text on, the read also says whether it can be transcribed
+(`transcription`, the podcast `TranscriptionOffer`: needed, not enough hours left, free because it
+already was, too long, or no file). See "Transcribing a TikTok with no captions".
+
+## Transcribing a TikTok with no captions
+
+Slice 5, 23 Nov 2026. **The owner chose our own Whisper on Modal (OV-305) over the vendor's AI
+transcript** (`/v1/tiktok/video/transcript` with `use_ai_as_fallback`: 1 credit up to 2 minutes,
+then 10 credits a started minute). That gives the same model and quality as episodes, at fractions
+of a cent. It also means Modal downloads the video file from TikTok's CDN: the one place our
+infrastructure fetches from TikTok, and only when the reader asks.
+
+**The file's address never comes from the caller.** `POST /api/tiktok/transcription { url }` (an
+account only, the transcription rate limit) reads the TikTok afresh through the vendor, without the
+captions (one credit), and takes the file's address from that answer: the smallest of
+`video.bit_rate`'s renditions, else `video.play_addr`, HTTPS only (`mediaUrl`, which stays on the
+server and is never in a read's answer). That is the podcast rule (a caller can't name what our GPU
+host downloads), and it also gets a fresh address, since TikTok's are signed and expire. Checked
+on 23 Nov 2026: every address the vendor gave (play, download, and the "original sound" MP3) answered
+206 to a plain request with no cookies and an honest user agent.
+
+**Then it is an episode's transcription.** `startAudio` (split out of `createPodcastTranscriptions`)
+queues it under `tiktok:<id>` on the same jobs table, queue, host, allowance (hours per month, held
+from the TikTok's length, settled to what was heard), cost tally entry and failures.
+`GET /api/tiktok/transcription/:id` answers its progress, the podcast `PodcastTranscription`. A
+TikTok over four hours, or with no file, is refused as an episode is, and a TikTok that no longer
+reads answers `transcript_unavailable` with `{ tiktok: <reason> }`. The words reach the reader as an
+episode's do: collected from the ready answer within a day, then kept as the account's own copy.
 
 A trial's read signed out gets the words too, as a YouTube read does: onboarding shows the card
 from the read and writes the note once there is an account.
@@ -227,7 +253,7 @@ play in place there too.
 
 **The link preview stays the text card** every shared page has (`shareCard.ts`). 130k draws the
 portrait cover in the preview's image slot, but the card is drawn from the snapshot alone, and
-putting the cover in would mean our server fetching from TikTok's CDN, which it never does. The
+putting the cover in would mean our server fetching from TikTok's CDN, which it doesn't. The
 preview's description already says "58 s video".
 
 **A cover that won't load leaves the stone tint** (`TikTokCover`), never a broken picture, since
@@ -256,7 +282,8 @@ fetching them again means a read, and a read costs a credit. Which route found t
 
 Every call is one ScrapeCreators credit, priced at `SCRAPECREATORS_PRICE` ($47 for 25,000 on the
 Freelance plan, from its homepage on 22 Nov 2026, since its pricing page was missing). A read,
-words included, is one credit. Each one is recorded in the cost tally under `transcripts` /
+words included, is one credit, and asking to transcribe a TikTok spends one more for the fresh
+read, plus the GPU time recorded under `transcripts` / `speech-to-text`. Each one is recorded in the cost tally under `transcripts` /
 `tiktok-vendor`, on the account, or on no one yet for a trial's read. Credits only ever come from
 what the vendor's answer says it charged.
 

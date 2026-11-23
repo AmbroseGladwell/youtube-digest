@@ -1,6 +1,8 @@
 export const VIDEO_ID = "7700000000000000001";
 export const VIDEO_URL = `https://www.tiktok.com/@anewsroom/video/${VIDEO_ID}`;
 
+export const SMALLEST_MEDIA_URL = "https://v16m.tiktokcdn.example/540.mp4";
+
 export const CAPTIONS_VTT = `WEBVTT
 
 
@@ -25,6 +27,11 @@ export const makeAwemeDetail = (overrides: AwemeDetail = {}, videoOverrides: Awe
   video: {
     duration: 80_120,
     cover: { url_list: ["https://covers.tiktok.example/cover.jpeg"] },
+    play_addr: { url_list: ["https://v16m.tiktokcdn.example/play.mp4"] },
+    bit_rate: [
+      { gear_name: "adapt_lower_720_2", play_addr: { data_size: 3_151_281, url_list: ["https://v16m.tiktokcdn.example/720.mp4"] } },
+      { gear_name: "lowest_540_1", play_addr: { data_size: 1_510_139, url_list: ["https://v16m.tiktokcdn.example/540.mp4"] } },
+    ],
     cla_info: {
       caption_infos: [
         { caption_format: "webvtt", language_code: "en", lang: "eng-US", is_auto_generated: true, url: "https://x.example/c" },

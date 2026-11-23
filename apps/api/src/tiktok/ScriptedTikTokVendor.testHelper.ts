@@ -1,6 +1,6 @@
 import type { TikTokVideo } from "@overview/domain";
 import type { TikTokVendor, VendorVideo } from "./createScrapeCreatorsTikTok.js";
-import { CAPTIONS_VTT, VIDEO_ID, VIDEO_URL } from "./ScrapeCreatorsAnswerFactory.testHelper.js";
+import { CAPTIONS_VTT, SMALLEST_MEDIA_URL, VIDEO_ID, VIDEO_URL } from "./ScrapeCreatorsAnswerFactory.testHelper.js";
 
 export const TIKTOK_VIDEO: TikTokVideo = {
   id: VIDEO_ID,
@@ -14,10 +14,15 @@ export const TIKTOK_VIDEO: TikTokVideo = {
   captions: [{ language: "eng-US", source: "ASR" }],
 };
 
-export const found = (video: TikTokVideo = TIKTOK_VIDEO, vtt: string | null = CAPTIONS_VTT): VendorVideo => ({
+export const found = (
+  video: TikTokVideo = TIKTOK_VIDEO,
+  vtt: string | null = CAPTIONS_VTT,
+  mediaUrl: string | null = SMALLEST_MEDIA_URL,
+): VendorVideo => ({
   status: "found",
   video,
   vtt,
+  mediaUrl,
   credits: 1,
 });
 

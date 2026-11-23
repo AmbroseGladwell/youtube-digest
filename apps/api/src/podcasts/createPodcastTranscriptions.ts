@@ -18,13 +18,13 @@ export const LONGEST_EPISODE_SECONDS = 4 * HOUR;
 const MEASURED_SLACK_SECONDS = 10 * 60;
 const HELD_SECONDS_WITHOUT_FEED_LENGTH = HOUR;
 
-export type TranscriptionStart =
+export type AudioStart =
   | { status: "started"; transcription: PodcastTranscription }
   | { status: "over-allowance"; usedSeconds: number; limitSeconds: number; retryAfterSeconds: number }
   | { status: "too-long"; episodeSeconds: number }
-  | { status: "no-audio" }
-  | { status: "feed-unreadable" }
-  | { status: "not-in-feed" };
+  | { status: "no-audio" };
+
+export type TranscriptionStart = AudioStart | { status: "feed-unreadable" } | { status: "not-in-feed" };
 
 export interface EpisodeAudio {
   sourceKey: string;
@@ -76,17 +76,10 @@ export const createPodcastTranscriptions = ({ fetchPublicWeb, jobs, queue, clock
     return { status: month.usedSeconds + needs <= month.limitSeconds ? "needed" : "not-enough", episodeSeconds, usage: month };
   };
 
-  const start = async (feedUrl: string, guid: string, caller: ServiceCaller, log: FastifyBaseLogger): Promise<TranscriptionStart> => {
-    const read = await fetchFeedEpisode(fetchPublicWeb, feedUrl, (item) => feedItemGuid(item) === guid);
-    if (read.status === "failed") {
-      return { status: "feed-unreadable" };
-    }
-    const { item } = read.feed;
-    if (item === null) {
-      return { status: "not-in-feed" };
-    }
-    const episodeSeconds = item.durationSeconds;
-    if (item.audioUrl === null) {
+  // Any source's audio, once our server has found it itself: never an address a caller sent.
+  const startAudio = async (audio: EpisodeAudio, caller: ServiceCaller, log: FastifyBaseLogger): Promise<AudioStart> => {
+    const episodeSeconds = audio.durationSeconds;
+    if (audio.audioUrl === null) {
       log.info(apiLogLines.transcription.refused({ reason: "no-audio" }));
       return { status: "no-audio" };
     }
@@ -102,8 +95,8 @@ export const createPodcastTranscriptions = ({ fetchPublicWeb, jobs, queue, clock
       id: randomUUID(),
       caller: key,
       accountId: "accountId" in caller ? caller.accountId : null,
-      sourceKey: await podcastSourceKey({ feedUrl, guid }),
-      audioUrl: item.audioUrl,
+      sourceKey: audio.sourceKey,
+      audioUrl: audio.audioUrl,
       maxSeconds: LONGEST_EPISODE_SECONDS + MEASURED_SLACK_SECONDS,
       reserveSeconds,
       limitSeconds,
@@ -127,10 +120,23 @@ export const createPodcastTranscriptions = ({ fetchPublicWeb, jobs, queue, clock
     return { status: "started", transcription: shown(asked.job, episodeSeconds) };
   };
 
+  const start = async (feedUrl: string, guid: string, caller: ServiceCaller, log: FastifyBaseLogger): Promise<TranscriptionStart> => {
+    const read = await fetchFeedEpisode(fetchPublicWeb, feedUrl, (item) => feedItemGuid(item) === guid);
+    if (read.status === "failed") {
+      return { status: "feed-unreadable" };
+    }
+    const { item } = read.feed;
+    if (item === null) {
+      return { status: "not-in-feed" };
+    }
+    const sourceKey = await podcastSourceKey({ feedUrl, guid });
+    return startAudio({ sourceKey, durationSeconds: item.durationSeconds, audioUrl: item.audioUrl }, caller, log);
+  };
+
   const status = async (id: string, caller: ServiceCaller): Promise<PodcastTranscription | null> => {
     const job = await jobs.get(id, callerKey(caller));
     return job === null ? null : shown(job, null);
   };
 
-  return { start, status, offer, usage };
+  return { start, startAudio, status, offer, usage };
 };
