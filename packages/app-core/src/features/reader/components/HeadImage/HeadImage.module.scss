@@ -39,6 +39,16 @@
   object-fit: cover;
 }
 
+.matte {
+  background: var(--stone-tint);
+
+  .image {
+    width: auto;
+    margin: 0 auto;
+    aspect-ratio: 9 / 16;
+  }
+}
+
 // Design 151p: the sharper picture shows over the tile's once it arrives, without a fade.
 .sharp {
   position: absolute;

@@ -29,6 +29,8 @@ export const HeadImage = ({ source, full, className, onToggle, ref, carriesFrom 
   const [failed, setFailed] = useState(false);
   const [sharpLoaded, setSharpLoaded] = useState(false);
   const imageUrl = sourceImage(source);
+  // Design 130g: a TikTok's portrait cover is matted on the stone tint in the 16:9 slot, never cropped.
+  const portrait = source.kind === "tiktok";
   const morph = useOverviewImageMorph<HTMLButtonElement>(carriesFrom ?? "", carriesFrom !== undefined);
   // Stable, as a fresh callback ref would re-attach every render; merged with useHeadImageMotion's ref.
   const setButton = useCallback(
@@ -53,7 +55,7 @@ export const HeadImage = ({ source, full, className, onToggle, ref, carriesFrom 
     <button
       type="button"
       ref={setButton}
-      className={`${styles.root} ${full ? styles.full : ""} ${className ?? ""}`}
+      className={`${styles.root} ${full ? styles.full : ""} ${portrait ? styles.matte : ""} ${className ?? ""}`}
       aria-pressed={full}
       aria-label={full ? "Show the image small" : "Show the image full width"}
       onClick={onToggle}

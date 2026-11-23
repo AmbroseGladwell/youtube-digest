@@ -15,9 +15,14 @@ export interface OverviewThumbnailProps {
   carriesIntoHead?: boolean | undefined;
 }
 
+const MATTED = new Set(["podcast", "tiktok"]);
+
 const pictureClass = (kind: string, to: string | undefined, className: string | undefined) => {
   if (kind === "podcast") {
     return styles.art;
+  }
+  if (kind === "tiktok") {
+    return styles.portrait;
   }
   return to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`;
 };
@@ -66,13 +71,12 @@ export const OverviewThumbnail = ({ video, className, to, state, onOpen, carries
       data-testid={overviewThumbnailTestIds.image}
     />
   );
-  // A show's square art is matted in the same 16:9 slot, so rows stay one height.
-  const image =
-    kind === "podcast" ? (
-      <span className={to ? styles.matte : `${styles.thumbnail} ${styles.matte} ${className ?? ""}`}>{picture}</span>
-    ) : (
-      picture
-    );
+  // A show's square art and a TikTok's portrait cover are matted in the same 16:9 slot (106l, 130j).
+  const image = MATTED.has(kind) ? (
+    <span className={to ? styles.matte : `${styles.thumbnail} ${styles.matte} ${className ?? ""}`}>{picture}</span>
+  ) : (
+    picture
+  );
 
   if (!to) {
     return image;

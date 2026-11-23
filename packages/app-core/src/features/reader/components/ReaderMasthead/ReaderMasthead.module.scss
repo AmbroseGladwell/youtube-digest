@@ -98,6 +98,12 @@
   color: var(--muted);
 }
 
+// Design 130g: the handle after the display name, quieter still.
+.handle {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
 .verdict {
   @include controls.chip;
 }

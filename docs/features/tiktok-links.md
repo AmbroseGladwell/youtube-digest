@@ -135,18 +135,23 @@ the rule since OV-295.
 ## A TikTok in the library
 
 Step 4 of the card, 22 Nov 2026. `TikTokSource` joins `Source` with the key `tiktok:<id>`, the
-video's own digits (`source-identity.md`, "Adding a kind"). It keeps the video's address, the caption
-as its title (or `@handle` when there is none, which is common), the handle and display name, the
-length, the posting date and the cover.
+video's own digits (`source-identity.md`, "Adding a kind"). It keeps the video's address, a title
+made from the caption (`tiktokTitle`, design 130g: the caption without the hashtags after its words;
+one that is only hashtags as written; none, "A TikTok by @handle"), the handle and display name,
+the length, the posting date and the cover.
 
 **The cover's address expires.** TikTok signs its cover links and they stop working after about a
 day, so a library row falls back to the name tile, as an article's dead image does
 (`OverviewThumbnail`). Keeping a copy, or asking oEmbed for a fresh one, is a question for the
 screens.
 
+**How it looks** (design 130g, 130j): the portrait cover is matted on the stone tint in the 16:9
+slot of the library row and the note's head, never cropped, as a podcast's square art is. The
+note's byline is the display name with the handle after it.
+
 **What every card says of it:** the creator's name (or `@handle`), a quiet "TikTok" kind chip (the
 owner's call, 22 Nov 2026: a TikTok is its own kind, not a "video" with no chip, OV-232), and
-its length as a clock: "0:42 TikTok". In the library's filter it counts as a video. Its ways out
+its length, in seconds under a minute: "58 s video" (design 130g, 130j). In the library's filter it counts as a video. Its ways out
 say "Watch on TikTok" and "Copy TikTok link".
 
 **No time links.** TikTok's address takes no start time, so Markdown and chat answers give a

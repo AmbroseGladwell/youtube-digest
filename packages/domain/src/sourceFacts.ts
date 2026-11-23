@@ -65,7 +65,7 @@ export const recipeFrom = (source: Source): string => {
 export const sourceImage = (source: Source): string | null => (source.kind === "youtube" ? (source.thumbnailUrl ?? null) : source.imageUrl);
 
 // Matches the library's filter: "Podcast" on its chip, "1 hr 56 min episode" by length (design 106l).
-const SOURCE_KIND: Record<Source["kind"], string> = { youtube: "video", web: "article", podcast: "episode", tiktok: "TikTok" };
+const SOURCE_KIND: Record<Source["kind"], string> = { youtube: "video", web: "article", podcast: "episode", tiktok: "video" };
 const KIND_CHIP: Record<Exclude<Source["kind"], "youtube">, string> = { web: "Article", podcast: "Podcast", tiktok: "TikTok" };
 
 const knownLength = (source: Source): string | null => {
@@ -74,6 +74,10 @@ const knownLength = (source: Source): string | null => {
   }
   if (source.kind === "podcast") {
     return source.durationMs ? recipeMinutes(Math.round(source.durationMs / 60_000)) : null;
+  }
+  // Design 130g: a clip under a minute in seconds, "58 s video".
+  if (source.kind === "tiktok" && source.durationMs !== null && source.durationMs < 59_500) {
+    return `${Math.round(source.durationMs / 1000)} s`;
   }
   return source.durationMs ? formatClock(source.durationMs / 1000) : null;
 };

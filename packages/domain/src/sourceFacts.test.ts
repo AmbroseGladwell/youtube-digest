@@ -2,7 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.js";
 import { SourceKey } from "./Brands.js";
-import { Source, articleSourceId, keptSharedLink, tiktokSource, type PodcastSource, type TikTokSource, type WebSource } from "./Source.js";
+import {
+  Source,
+  articleSourceId,
+  keptSharedLink,
+  tiktokSource,
+  tiktokTitle,
+  type PodcastSource,
+  type TikTokSource,
+  type WebSource,
+} from "./Source.js";
 import {
   articleReadMinutes,
   kindChip,
@@ -128,12 +137,13 @@ const clip: TikTokSource = {
   imageUrl: "https://p16-sign.tiktokcdn.example/cover.jpeg",
 };
 
-test("a TikTok is named by its creator, a TikTok chip and its length as a clock", () => {
+test("a TikTok is named by its creator, a TikTok chip and its length in seconds under a minute", () => {
   assert.equal(sourceName(clip), "Kitchen with Ada");
   assert.equal(sourceName({ ...clip, authorName: " " }), "@kitchenwithada");
   assert.equal(kindChip({ source: clip, recipe: null }), "TikTok");
-  assert.equal(sourceLength(clip), "0:42 TikTok");
-  assert.equal(sourceLength({ ...clip, durationMs: null }), "TikTok");
+  assert.equal(sourceLength(clip), "42 s video");
+  assert.equal(sourceLength({ ...clip, durationMs: 72_000 }), "1:12 video");
+  assert.equal(sourceLength({ ...clip, durationMs: null }), "Video");
   assert.equal(sourceImage(clip), "https://p16-sign.tiktokcdn.example/cover.jpeg");
   assert.equal(sourceUrl(clip), clip.url);
   assert.equal(recipeFrom(clip), "Kitchen with Ada on TikTok");
@@ -151,12 +161,21 @@ const read: TikTokVideo = {
   captions: [],
 };
 
-test("a TikTok read becomes a source keyed by its id, its caption the title, and the creator when there's none", () => {
+test("a TikTok read becomes a source keyed by its id, its caption without hashtags the title", () => {
   const source = tiktokSource(read);
   assert.equal(sourceKey(source), "tiktok:7301234567890123456");
-  assert.equal(source.title, "The one-pan jollof I make every Sunday #jollof");
+  assert.equal(source.title, "The one-pan jollof I make every Sunday");
   assert.equal(source.durationMs, 42_000);
   assert.equal(source.publishedAt, "2026-11-12T18:30:00.000Z");
-  assert.equal(tiktokSource({ ...read, description: "" }).title, "@kitchenwithada");
   assert.ok(Source.safeParse(source).success);
+});
+
+test("a TikTok's title drops the hashtags after its words, keeps any within them, and names the creator for none", () => {
+  assert.equal(tiktokTitle("Crispy #smashed potatoes #food #fyp", "nytcooking"), "Crispy #smashed potatoes");
+  assert.equal(
+    tiktokTitle("Why is the UK telling people to stockpile? #news #uk", "bbcnews"),
+    "Why is the UK telling people to stockpile?",
+  );
+  assert.equal(tiktokTitle("  #fyp #news ", "bbcnews"), "#fyp #news");
+  assert.equal(tiktokTitle("", "bbcnews"), "A TikTok by @bbcnews");
 });

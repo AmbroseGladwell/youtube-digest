@@ -429,7 +429,7 @@ describe("onboarding's run, before and after the account", () => {
       await settle();
 
       expect(order).toEqual(["read"]);
-      expect(found).toEqual(["tiktok | Sunday jollof #jollof | Sunday jollof #jollof\n\nFry the base until the oil floats."]);
+      expect(found).toEqual(["tiktok | Sunday jollof | Sunday jollof #jollof\n\nFry the base until the oil floats."]);
       open();
       await run;
       expect(order).toEqual(["read", "written 7301234567890123456 tiktok-vendor"]);

@@ -231,6 +231,9 @@ export const ReaderMasthead = ({
               {!isArticle && overview.recipe === null && (
                 <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
                   {sourceName(overview.source)}
+                  {overview.source.kind === "tiktok" && overview.source.authorName.trim() !== "" && (
+                    <small className={styles.handle}> @{overview.source.handle}</small>
+                  )}
                 </span>
               )}
               {(overview.source.kind === "podcast" || overview.source.kind === "tiktok") && <KindChip overview={overview} />}
