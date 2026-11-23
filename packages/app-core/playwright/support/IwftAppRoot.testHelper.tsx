@@ -20,6 +20,7 @@ export const IwftAppRoot = () => {
       layout={window.__iwftLayout__}
       activeVideo={window.__iwftActiveVideo__}
       articlePages={window.__iwftArticlePages__}
+      tiktokPages={window.__iwftTikTokPages__}
       playback={window.__iwftPlayback__}
       runBridge={window.__iwftRunBridge__}
       youTubeFetch={window.__iwftYouTubeFetch__}

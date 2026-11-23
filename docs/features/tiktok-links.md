@@ -23,6 +23,7 @@ tab) and speech-to-text for videos without captions are the next slices, in the 
 | The player, speaking TikTok's embed messages | `TikTokEngine`, `useTikTokEngine` in `app-core/src/features/reader/tiktok` |
 | Where it sits, and the bar that stands in for it | `TikTokPlayer`, `TikTokMiniBar`; `ReaderPage` places them |
 | A pasted link read, its card, its stops and failures | `useTikTokLink`, `TikTokLinkStatus`, `tiktokLinkFailureCopy` in `newOverview` |
+| The panel's offer on a TikTok tab | `useTikTokTab`, `TikTokOffer` in `capture` |
 
 ## Who reads TikTok
 
@@ -69,6 +70,13 @@ links) and `*.tiktokcdn.com`, `*.tiktokcdn-eu.com`, `*.tiktokcdn-us.com` and `*.
 the caption files are (a read from the UK on 22 Nov 2026 got them from `tiktokcdn-eu.com`). They sit
 inside the manifest's existing optional `https://*/*`, so the manifest doesn't change, and Chrome
 asks the reader only when the screens call `requestAccess` from a click.
+
+**The panel's offer** (designs 130i, 130i-2). On a TikTok video's tab the panel shows "On this tab"
+and "Make an overview of this TikTok". Looking at a tab spends nothing: with TikTok's access already
+granted the browser reads it for the whole card, and without it the card is the tab's own title. The
+press asks Chrome for TikTok (it must be inside the click), then reads it, the browser first and the
+vendor silently after. Only when both fail does it say "This TikTok can't be read right now … Nothing
+was used." with Try again. A TikTok tab is never offered as an article.
 
 **When it falls back** (`readTikTokLink`): without that access, or on the web, the vendor reads it.
 With access, a read that comes back with words is used and the vendor is never asked

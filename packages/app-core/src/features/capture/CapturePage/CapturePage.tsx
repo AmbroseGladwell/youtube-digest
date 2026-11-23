@@ -44,6 +44,9 @@ import { EpisodeWordsNote } from "../../newOverview/components/PodcastLinkStatus
 import { createLabelOf, episodeActionOf, transcribeChoiceOf } from "../../podcasts/util/episodeActionOf.js";
 import { isPlatformPodcastLink } from "../../newOverview/usePodcastLink.js";
 import { useEpisodeTab, type EpisodeTabState } from "../useEpisodeTab.js";
+import { useTikTokTab } from "../useTikTokTab.js";
+import { TikTokOffer } from "../components/TikTokOffer/TikTokOffer.js";
+import { isTikTokLink } from "../../newOverview/useTikTokLink.js";
 import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
@@ -94,9 +97,13 @@ export const CapturePage = () => {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
   const pages = useArticlePages();
-  // A Spotify or Apple tab is an episode or a show, never an article (design 106k).
-  const offeredPage = activeVideoUrl === null && isOfferedPage(activePage) && !isPlatformPodcastLink(activePage.url) ? activePage : null;
+  // Never an article: a Spotify or Apple tab is an episode or a show (106k), and our server doesn't read TikTok (130i).
+  const offeredPage =
+    activeVideoUrl === null && isOfferedPage(activePage) && !isPlatformPodcastLink(activePage.url) && !isTikTokLink(activePage.url)
+      ? activePage
+      : null;
   const episodeTab = useEpisodeTab();
+  const tiktokTab = useTikTokTab();
   const pageAccess = usePageAccess(offeredPage?.url ?? null);
   const startArticleRun = useStartArticleRun();
   const controller = useNewOverviewRunController();
@@ -253,8 +260,11 @@ export const CapturePage = () => {
     offeredPage === null
       ? overviewForVideoUrl(overviewsQuery.data ?? [], activeVideoUrl)
       : overviewForPageUrl(overviewsQuery.data ?? [], offeredPage.url);
-  const heldId = episodeTab?.status === "held" ? episodeTab.overviewId : (alreadyHeld?.id ?? null);
-  const nothingToTake = activeVideoUrl === null && offeredPage === null && episodeTab === null;
+  const tiktokHeldId = tiktokTab?.state.status === "held" ? tiktokTab.state.overviewId : null;
+  const heldId = episodeTab?.status === "held" ? episodeTab.overviewId : (tiktokHeldId ?? alreadyHeld?.id ?? null);
+  const nothingToTake = activeVideoUrl === null && offeredPage === null && episodeTab === null && tiktokTab === null;
+  // The offer carries its own button, inside the click that asks Chrome for TikTok (130i).
+  const tiktokOffered = tiktokTab !== null && heldId === null;
   const episodeStopped =
     episodeTab !== null &&
     (episodeWithoutWords || episodeTab.status === "show" || episodeTab.status === "failed" || episodeTab.status === "unreachable");
@@ -279,7 +289,15 @@ export const CapturePage = () => {
     return libraryMoved ? <LibraryMoveNotice panel /> : null;
   };
 
+  const makeTikTok = () => {
+    analytics.capture.panel.createChosen({ again: false });
+    tiktokTab?.make((video, words) => controller.startTikTok({ video, words, from: "panel" }));
+  };
+
   const openingOffer = () => {
+    if (tiktokOffered) {
+      return <TikTokOffer tab={tiktokTab} ready={keysReady && limit === null} onMake={makeTikTok} />;
+    }
     if (episodeTab !== null) {
       if (episodeTab.status === "failed") {
         return <ArticleFailureNotice copy={episodeTab.copy} onWay={episodeTab.retry} />;
@@ -367,7 +385,8 @@ export const CapturePage = () => {
       return <LimitMessageNote message={limit} from="panel" testIds={capturePageTestIds.limitMessage} />;
     }
     return (
-      !nothingToTake && (
+      !nothingToTake &&
+      !tiktokOffered && (
         <button
           type="button"
           className={styles.primary}

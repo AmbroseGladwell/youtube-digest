@@ -1,3 +1,4 @@
+import type { IwftTikTokPages } from "./IwftTikTokPages.testHelper.js";
 import type { AccentColour } from "@overview/domain";
 import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { ErrorDestination } from "../../src/app/ErrorDestinationMirrorContext.js";
@@ -51,6 +52,7 @@ declare global {
     __iwftBuild__: AppBuild | null;
     __iwftActiveVideo__: IwftActiveVideoSource | null;
     __iwftArticlePages__: IwftArticlePages | null;
+    __iwftTikTokPages__: IwftTikTokPages | null;
     __iwftPlayback__: IwftPlaybackSource | null;
     __iwftRunBridge__: IwftRunBridge | null;
     __iwftYouTubeFetch__: YouTubeFetch | null;
