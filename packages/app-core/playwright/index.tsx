@@ -29,6 +29,7 @@ import { InMemoryFollowedPlaylistStore } from "../src/features/playlists/types/I
 import { InMemoryCaptureQueueStore } from "../src/features/captureQueue/types/InMemoryCaptureQueueStore.testHelper.js";
 import { InMemoryProjectStore } from "../src/features/projects/types/InMemoryProjectStore.testHelper.js";
 import { InMemoryChatStore } from "../src/features/chats/types/InMemoryChatStore.testHelper.js";
+import { deleteLocalLibrary, openLocalLibrary } from "@overview/store-local";
 import type {} from "./network/iwftWindow.testHelper.js";
 
 const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
@@ -43,6 +44,20 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
     ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore, chatStore)
     : null;
   return { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore, chatStore, syncStorage };
+};
+
+// Measures the real store (playwright/perf): the app opens libraries as apps/web/src/main.tsx does.
+const openIndexedDbLibrary = async (accountId: string | null, start: "fresh" | "kept") => {
+  if (start === "fresh" && accountId !== null) {
+    await deleteLocalLibrary({ accountId });
+  }
+  const openLibrary: Window["__iwftOpenLibrary__"] = async (id) => {
+    const { close, ...stores } = await openLocalLibrary({ accountId: id });
+    return { accountId: id, stores, close };
+  };
+  window.__iwftLibrary__ = await openLibrary(accountId);
+  window.__iwftOpenLibrary__ = openLibrary;
+  window.__iwftDeleteLibrary__ = (id) => deleteLocalLibrary({ accountId: id });
 };
 
 beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
@@ -111,6 +126,9 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftDeleteLibrary__ = async (accountId) => {
     libraries.delete(accountId);
   };
+  if (hooksConfig?.indexedDbLibrary !== undefined) {
+    await openIndexedDbLibrary(libraryAccountIdOf(connection), hooksConfig.indexedDbLibrary);
+  }
   let heldRun: BroadcastChannel | null = null;
   const otherTabWrote = (key: string) => window.dispatchEvent(new StorageEvent("storage", { key, storageArea: localStorage }));
   window.__iwftAnotherTab__ = {

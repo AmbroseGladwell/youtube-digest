@@ -147,8 +147,9 @@ How it keeps what a full list gave:
 - **Find in page (Cmd+F) finds only the rows near the screen.** Accepted: the library's own search
   covers every overview.
 
-The first row at 5,000 is still 5.6 s. That is the data, not the list: the harness syncs every
-overview, and the library reads each one's state separately. OV-383 has it.
+The first row at 5,000 was still 5.6 s. Most of that was the harness, not the app: it hands every
+seeded overview to the page on each launch and keeps them in memory. "The first load from
+IndexedDB" below measures the real store.
 
 ### Reading the library from the device's store
 
@@ -171,7 +172,34 @@ What the read still pays for, every time it runs:
 
 - `listUnreadable` reads every overview and state again, to find the ones it can't read.
 - Every record is checked against its schema and migrated on every read.
-- Every sync that applies anything re-reads the whole library.
+- Every sync that applies anything re-reads the whole library, at most once a second (below).
 
-Not measured here: the load from IndexedDB (the harness uses the in-memory store) and the
-extension panel at 400 px.
+### The first load from IndexedDB
+
+`playwright/perf/libraryFirstLoad.perf.tsx` (also run by `npm run perf:library`) launches the real
+app on the real IndexedDB store (the harness's `indexedDbLibrary` option), with a simulated server
+that pages the sync feed by 200 as the real one does. It times a new device's first sync, then
+reloads and times the reader coming back to it. `PANEL=1` runs the extension panel at 400 × 600,
+where the first row is Recent's. `PROFILE=1` saves a CPU profile and logs each IndexedDB
+transaction and request. Phone width, 4× CPU, a quiet machine, 22–23 Nov 2026 (OV-390):
+
+| Overviews | Coming back: first row (web / panel) | New device, whole library (web / panel) |
+|---|---|---|
+| 500 | 0.35 / 0.28 s | 1.1 / 0.6 s |
+| 2,000 | 0.50 / 0.44 s | 1.1 / 0.7 s |
+| 5,000 | 1.1 / 0.74 s | 2.6 / 1.9 s |
+
+Coming back with 5,000 overviews shows the first row within the ~2 s the card asked for, and needed
+no change: the store's read and React's work at startup are each a few hundred milliseconds.
+
+#### A new device's first sync
+
+Before, the new device's whole library took 3.5 s at 2,000 overviews and 14.9 s at 5,000 (panel
+2.6 s and 12.0 s), and after signing in the reader watches "Opening library" for all of it. Each
+pulled page invalidated every query, so the whole library was read again after each of the 38
+pages, and IndexedDB made the next page's write wait behind that read: the cost grew with the
+square of the library.
+
+So `SyncRuntime` re-reads at most once a second during a pull (`throttled`): at once for the first
+page, then once per second with whatever landed meanwhile, and at once when the cycle ends. A
+sync of one page is re-read as soon as it lands, as before.

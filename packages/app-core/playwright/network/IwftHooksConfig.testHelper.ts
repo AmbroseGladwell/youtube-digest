@@ -40,6 +40,7 @@ export interface IwftHooksConfig {
   failingReads?: InMemoryStoreRead[];
   apiKeys?: ApiKeys;
   syncAvailable?: boolean;
+  indexedDbLibrary?: "fresh" | "kept";
   syncConnection?: SyncConnectionInput;
   pendingSignIn?: PendingSignIn;
   signedOutTrial?: SignedOutTrial;
