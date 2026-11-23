@@ -1,10 +1,16 @@
 import { NARRATION_PLAYLIST_TYPE } from "@overview/domain";
 import type { LoadStream } from "../PlayerEngine.js";
 
+// Chromium now says it plays HLS too, but only Safari's own player is proven on these segments and a locked screen.
+const isChromium = (): boolean =>
+  (navigator as Navigator & { userAgentData?: { brands: { brand: string }[] } }).userAgentData?.brands.some(
+    ({ brand }) => brand === "Chromium",
+  ) ?? false;
+
 // Safari plays HLS itself, locked screen included; elsewhere hls.js is fetched on the first stream.
 export const loadStreamWithHls: LoadStream = (media, url, shouldPlay) => {
   const element = media as HTMLMediaElement;
-  if (element.canPlayType(NARRATION_PLAYLIST_TYPE) !== "") {
+  if (element.canPlayType(NARRATION_PLAYLIST_TYPE) !== "" && !isChromium()) {
     element.src = url;
     return () => undefined;
   }
