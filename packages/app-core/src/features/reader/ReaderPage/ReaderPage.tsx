@@ -29,6 +29,9 @@ import { CONVERSATION_STATE, conversationFromLocation } from "../util/conversati
 import { timedSource } from "../util/timedSource.js";
 import { useEpisodeEngine } from "../episode/useEpisodeEngine.js";
 import { EpisodePlayer } from "../components/EpisodePlayer/EpisodePlayer.js";
+import { TikTokMiniBar, TikTokPlayer } from "../components/TikTokPlayer/TikTokPlayer.js";
+import { useTikTokEngine, useTikTokSnapshot } from "../tiktok/useTikTokEngine.js";
+import { useStageInView } from "../tiktok/useStageInView.js";
 import { PlaybackProvider, useSeekPlayback } from "../../../app/PlaybackContext.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
@@ -307,6 +310,9 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
   const episode = useEpisodeEngine(overview?.source ?? null);
+  const tiktok = useTikTokEngine(overview?.source ?? null);
+  const tiktokStatus = useTikTokSnapshot(tiktok).status;
+  const tiktokStage = useStageInView();
   useEffect(() => {
     if (!recipeCopied) {
       return;
@@ -675,6 +681,11 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
 
   const chatBeside = chatAvailable && !isPanel && !isPhone;
   const chatSheet = chatAvailable && (isPanel || isPhone);
+  // Docked beside the note on web; above the title with chat open, or in the head's place on phone and panel (130h, 130p).
+  const tiktokSource = overview.source.kind === "tiktok" ? overview.source : null;
+  const tiktokDocked = tiktok !== null && !isPanel && !isPhone && !(chatBeside && (chat.open || chatLeaving));
+  const tiktokMiniBar =
+    tiktok !== null && !tiktokDocked && !tiktokStage.inView && (tiktokStatus === "playing" || tiktokStatus === "paused");
   const askFrom = (question: string, from: "question" | "typed", element: HTMLElement | null) => {
     if (question === "") {
       return;
@@ -726,13 +737,14 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
 
   const withPlaybackAndCitedPart = (page: ReactNode) => {
     const cited = <CitedOverviewPartContext.Provider value={citedPart}>{page}</CitedOverviewPartContext.Provider>;
-    return episode === null ? cited : <PlaybackProvider value={episode.playback}>{cited}</PlaybackProvider>;
+    const playback = episode?.playback ?? tiktok?.playback ?? null;
+    return playback === null ? cited : <PlaybackProvider value={playback}>{cited}</PlaybackProvider>;
   };
 
   return withPlaybackAndCitedPart(
     <OverviewAnalyticsProvider value={overviewAnalytics}>
       <div
-        className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""}`}
+        className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""} ${tiktokDocked ? styles.layoutWithDock : ""}`}
         style={chatSheet && chat.open ? ({ "--chat-sheet-clearance": `${LOWERED_SHOWS_PX}px` } as CSSProperties) : undefined}
       >
         <article
@@ -775,7 +787,25 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
             onDelete={() => setConfirmingDelete(true)}
             onChat={chatAvailable ? chat.openLatest : null}
             projects={accountNeeded ? null : projects}
+            headMedia={
+              tiktok !== null && tiktokSource !== null && !tiktokDocked ? (
+                <div className={styles.tiktokStage}>
+                  <TikTokPlayer
+                    engine={tiktok}
+                    source={tiktokSource}
+                    place={isPanel || isPhone ? "head" : "stage"}
+                    ref={tiktokStage.stageRef}
+                  />
+                </div>
+              ) : undefined
+            }
           />
+
+          {tiktokMiniBar && tiktokSource !== null && (
+            <div className={styles.tiktokMini}>
+              <TikTokMiniBar engine={tiktok!} source={tiktokSource} onBack={tiktokStage.scrollTo} />
+            </div>
+          )}
 
           {episode !== null && overview.source.kind === "podcast" && (
             <div className={styles.episode}>
@@ -843,7 +873,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
                           asSheet={isPhone && !isPanel}
                           canReadTranscript={true}
                           onOpenTranscriptAt={openTranscriptAt}
-                          direct={episode !== null}
+                          direct={episode !== null || tiktok !== null}
                         />
                       )
                     );
@@ -1122,6 +1152,11 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
             />
           )}
         </article>
+        {tiktokDocked && tiktokSource !== null && (
+          <aside className={styles.dockColumn} aria-label="The TikTok">
+            <TikTokPlayer engine={tiktok!} source={tiktokSource} place="dock" />
+          </aside>
+        )}
         {chatBeside && (chat.open || chatLeaving) && (
           <div ref={chatColumn} className={`${styles.chatColumn} ${chat.open ? "" : styles.chatColumnLeaving}`}>
             <ChatPanel

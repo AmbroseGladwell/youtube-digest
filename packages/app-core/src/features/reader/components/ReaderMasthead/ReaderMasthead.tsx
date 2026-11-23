@@ -50,6 +50,8 @@ export interface ReaderMastheadProps {
   onChat?: (() => void) | null;
   // Null when signed out, with no library to keep projects in.
   projects: { line: ReactNode; count: number; openPicker: (from: "menu") => void } | null;
+  // A TikTok's player, above the title, in the head image's place (130g-p, 130p); null when it docks beside the note.
+  headMedia?: ReactNode | undefined;
   ref?: Ref<HTMLElement> | undefined;
 }
 
@@ -93,6 +95,7 @@ export const ReaderMasthead = ({
   onDelete,
   onChat = null,
   projects,
+  headMedia,
   ref,
 }: ReaderMastheadProps) => {
   const analytics = useReaderAnalytics();
@@ -207,10 +210,12 @@ export const ReaderMasthead = ({
       </div>
 
       <div className={styles.head}>
+        {headMedia}
         <div className={`${styles.lead} ${full ? styles.leadFull : ""}`}>
-          {overview.source.kind === "podcast" ? (
+          {overview.source.kind === "podcast" && (
             <EpisodeArt source={overview.source} className={`${styles.art} ${compact ? styles.artCompact : ""}`} />
-          ) : (
+          )}
+          {overview.source.kind !== "podcast" && overview.source.kind !== "tiktok" && (
             <HeadImage
               key={overview.id}
               ref={image}
