@@ -202,7 +202,7 @@ const sections: readonly LegalSection[] = [
           photo or text post is written from its description alone. Showing a post's cover loads the picture from Instagram's or Facebook's
           servers in your browser, which see your network address and your browser's details. We record what each read cost in the cost
           tally, and our logs say only what kind of link it was and how the read went, never the link, the account, the description or the
-          words.
+          words. Before you have an account, a read is counted against the device's trial reads, as an article's is.
         </p>
         <p>
           <strong>Transcribing an episode.</strong> When an episode has no transcript and isn't on YouTube, you can ask us to transcribe it;
