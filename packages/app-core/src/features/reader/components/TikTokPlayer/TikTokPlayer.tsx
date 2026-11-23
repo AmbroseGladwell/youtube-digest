@@ -1,4 +1,4 @@
-import { useEffect, useRef, type Ref } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import { formatTimestamp, type TikTokSource } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { TIKTOK_PLAYER_ORIGIN, tiktokPlayerUrl, type TikTokEngine } from "../../tiktok/TikTokEngine.js";
@@ -17,6 +17,17 @@ export interface TikTokPlayerProps {
 }
 
 const WATCH_ON_TIKTOK = "Watch on TikTok";
+
+interface TikTokCoverProps {
+  className: string | undefined;
+  url: string | null;
+}
+
+// TikTok's cover links expire after about a day, so one that won't load leaves the tint, never a broken picture.
+export const TikTokCover = ({ className, url }: TikTokCoverProps) => {
+  const [failed, setFailed] = useState(false);
+  return url === null || failed ? null : <img className={className} src={url} alt="" onError={() => setFailed(true)} />;
+};
 
 const WatchOnTikTok = ({ url }: { url: string }) => (
   <a className={styles.watch} href={url} target="_blank" rel="noopener" data-testid={tiktokPlayerTestIds.watchOnTikTok}>
@@ -72,7 +83,7 @@ export const TikTokPlayer = ({ engine, source, place, ref }: TikTokPlayerProps) 
           aria-label="Play the TikTok"
           data-testid={tiktokPlayerTestIds.cover}
         >
-          {source.imageUrl !== null && <img className={styles.coverImage} src={source.imageUrl} alt="" />}
+          <TikTokCover className={styles.coverImage} url={source.imageUrl} />
           <span className={styles.coverPlay} aria-hidden="true">
             <StrokeIcon name="play" size={14} />
           </span>
@@ -110,7 +121,9 @@ export const TikTokMiniBar = ({ engine, source, onBack }: TikTokMiniBarProps) =>
   const lengthMs = durationMs ?? source.durationMs;
   return (
     <div className={styles.mini} data-testid={tiktokPlayerTestIds.miniBar}>
-      {source.imageUrl === null ? <i className={styles.miniCover} /> : <img className={styles.miniCover} src={source.imageUrl} alt="" />}
+      <span className={styles.miniCover}>
+        <TikTokCover className={styles.miniCoverImage} url={source.imageUrl} />
+      </span>
       <button
         type="button"
         className={styles.miniToggle}

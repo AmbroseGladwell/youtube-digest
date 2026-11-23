@@ -4,5 +4,6 @@ export const makeYourOwnAsideTestIds = {
   refused: "MakeYourOwnAside.refused",
   makeButton: "MakeYourOwnAside.makeButton",
   signInLink: "MakeYourOwnAside.signInLink",
-  plusList: "MakeYourOwnAside.plusList",
+  accepted: "MakeYourOwnAside.accepted",
+  whatYouGet: "MakeYourOwnAside.whatYouGet",
 };

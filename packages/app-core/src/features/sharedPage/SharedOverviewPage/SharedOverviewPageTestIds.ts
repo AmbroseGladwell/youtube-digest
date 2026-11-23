@@ -1,5 +1,6 @@
 export const sharedOverviewPageTestIds = {
   root: "SharedOverviewPage.root",
+  kindChip: "SharedOverviewPage.kindChip",
   channel: "SharedOverviewPage.channel",
   title: "SharedOverviewPage.title",
   meta: "SharedOverviewPage.meta",

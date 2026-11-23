@@ -27,6 +27,9 @@ import { HeadImage } from "../../reader/components/HeadImage/HeadImage.js";
 import { EpisodeArt } from "../../reader/components/EpisodeArt/EpisodeArt.js";
 import { timedSource } from "../../reader/util/timedSource.js";
 import { useEpisodeEngine } from "../../reader/episode/useEpisodeEngine.js";
+import { TikTokPlayer } from "../../reader/components/TikTokPlayer/TikTokPlayer.js";
+import { useTikTokEngine } from "../../reader/tiktok/useTikTokEngine.js";
+import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import { EpisodePlayer } from "../../reader/components/EpisodePlayer/EpisodePlayer.js";
 import { PlaybackProvider } from "../../../app/PlaybackContext.js";
 import { useHeadImageMotion } from "../../reader/components/ReaderMasthead/useHeadImageMotion.js";
@@ -106,6 +109,8 @@ interface SaveAction {
   label: string;
   onChoose: () => void;
 }
+
+const WIDE_QUERY = "(min-width: 64rem)";
 
 const tabsShownFor = (
   recipePage: boolean,
@@ -200,6 +205,8 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
   );
   const player = usePlayer();
   const episode = useEpisodeEngine(note.source);
+  const tiktok = useTikTokEngine(note.source);
+  const wide = useMediaQuery(WIDE_QUERY);
   const { signedIn } = useSharedPageReader();
   // Whose narration plays once a recipe is adjusted: docs/features/recipe-notes.md, "Sharing".
   const narration = payload.snapshot.narration;
@@ -382,20 +389,28 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
       ? noteBarView
       : { ...noteBarView, label: { lead: "Now reading", rest: recipeVoice.nowReading, tone: "ink" as const, pacerTag: false } };
 
-  const withEpisode = (page: ReactNode) => (episode === null ? page : <PlaybackProvider value={episode.playback}>{page}</PlaybackProvider>);
+  const playback = episode?.playback ?? tiktok?.playback ?? null;
+  const withEpisode = (page: ReactNode) => (playback === null ? page : <PlaybackProvider value={playback}>{page}</PlaybackProvider>);
+  // Design 130q: docked beside the note only where no promo takes that column; above the title otherwise.
+  const tiktokSource = note.source.kind === "tiktok" ? note.source : null;
+  const tiktokDocked = tiktok !== null && signedIn && wide;
+  const tiktokStage =
+    tiktok !== null && tiktokSource !== null && !tiktokDocked ? (
+      <TikTokPlayer engine={tiktok} source={tiktokSource} place={isPhone ? "head" : "stage"} />
+    ) : null;
 
   return withEpisode(
     <div className={styles.page} ref={publishHeightsOn} data-testid={sharedOverviewPageTestIds.root}>
       <PageScrolledSentinel />
       <SharedPageHeader ref={mastheadHeight.measured} />
 
-      <div className={`${styles.body} ${signedIn ? styles.bodyAlone : ""}`}>
+      <div className={`${styles.body} ${signedIn ? styles.bodyAlone : ""} ${tiktokDocked ? styles.bodyWithDock : ""}`}>
         <main className={styles.main}>
           <div className={styles.head} ref={head}>
+            {tiktokStage}
             <div className={`${styles.lead} ${headImageFull ? styles.leadFull : ""}`}>
-              {note.source.kind === "podcast" ? (
-                <EpisodeArt source={note.source} className={styles.art} />
-              ) : (
+              {note.source.kind === "podcast" && <EpisodeArt source={note.source} className={styles.art} />}
+              {note.source.kind !== "podcast" && note.source.kind !== "tiktok" && (
                 <HeadImage
                   key={note.id}
                   ref={image}
@@ -406,6 +421,11 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
                 />
               )}
               <div className={styles.chips} ref={chips}>
+                {note.source.kind === "tiktok" && (
+                  <span className={styles.chip} data-testid={sharedOverviewPageTestIds.kindChip}>
+                    TikTok
+                  </span>
+                )}
                 <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
                   {channelLine(note.source, recipeNote !== null, recipePage !== null)}
                 </span>
@@ -485,7 +505,7 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
                         asSheet={isPhone}
                         canReadTranscript={payload.snapshot.transcript !== null}
                         onOpenTranscriptAt={openTranscriptAt}
-                        direct={episode !== null}
+                        direct={episode !== null || tiktok !== null}
                       />
                     )
                   }
@@ -592,6 +612,11 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
           </div>
         </main>
 
+        {tiktokDocked && tiktokSource !== null && (
+          <aside className={styles.dock} aria-label="The TikTok">
+            <TikTokPlayer engine={tiktok!} source={tiktokSource} place="dock" />
+          </aside>
+        )}
         {!signedIn && <MakeYourOwnAside />}
       </div>
 

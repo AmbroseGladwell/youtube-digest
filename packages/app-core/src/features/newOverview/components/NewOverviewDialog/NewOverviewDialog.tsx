@@ -1,4 +1,5 @@
 import { episodeFacts } from "../PodcastLinkStatus/PodcastLinkStatus.js";
+import { TikTokCover } from "../../../reader/components/TikTokPlayer/TikTokPlayer.js";
 import { formatClock, tiktokTitle } from "@overview/domain";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Overview } from "@overview/domain";
@@ -281,7 +282,9 @@ const RunSource = ({ run, headingId }: RunSourceProps) => {
     const length = run.tiktok.durationSeconds === null ? null : formatClock(run.tiktok.durationSeconds);
     return (
       <>
-        <span className={styles.tiktokCover}>{run.tiktok.coverUrl !== null && <img src={run.tiktok.coverUrl} alt="" />}</span>
+        <span className={styles.tiktokCover}>
+          <TikTokCover className={styles.tiktokCoverImage} url={run.tiktok.coverUrl} />
+        </span>
         <div className={styles.sourceText}>
           <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
             {tiktokTitle(run.tiktok.caption, run.tiktok.handle)}

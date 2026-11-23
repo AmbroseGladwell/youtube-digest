@@ -375,6 +375,16 @@ same questions and picks a plan like anyone else.
   refuses one that isn't a video or playlist in place.
 - **Make an overview** in the head, and on the page for a stopped link, go to Start.
 
+**What the aside says** (OV-130, design 130q, for every shared page): Start's own words from OV-327.
+"Watch Less, with The Overview"; "Save what you care about, get an overview plus personalised
+actions, and build a knowledge base you and your AI can use."; the field labelled "Link to a video,
+page or episode", with what it takes under it (`ACCEPTED_LINKS`, naming TikTok only once onboarding
+takes it); Make my overview; "No card needed. Free includes 5 overviews a month. Have an account?
+Sign in"; and "What you get" (save the things you want to come back to; get the good bits in
+moments, to read or listen to; ask your AI about anything you've saved). The Plus box it replaced
+is gone: audio, the MCP connection and sync come with every account, so the aside sells the free
+account rather than a plan. It is an `aside` labelled "Make your own overviews".
+
 They used to go straight to Create account, with what the visitor was doing kept beside it
 and finished on sign-in. That skipped every question and the plan, so it was taken out.
 
@@ -394,8 +404,9 @@ a server, with the account's own library the one open (`useSharedPageReader`). T
 - **The head offers Your overviews**, in place of both Sign in and Make an overview. Both
   of those led to the same place for a signed-in reader, and neither named it.
 - **The aside is not drawn**, and the note takes the column on its own. Its link field
-  started onboarding, which is not how a signed-in reader makes an overview, and its Plus
-  list and Sign in link were for someone else.
+  started onboarding, which is not how a signed-in reader makes an overview, and its
+  What you get list and Sign in link were for someone else. A TikTok's player docks in that
+  column instead (design 130q-2).
 - **Save to my overviews saves at once** through the same `useSaveFromShare` onboarding
   uses, so the share's token still goes to the server first and the push is let in
   uncounted, and the reader lands on their copy. No questions: the answers they would have

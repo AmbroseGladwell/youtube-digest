@@ -28,6 +28,17 @@
   grid-template-columns: minmax(0, var(--measure));
 }
 
+// Design 130q-2: signed in without a copy, the player docks where the promo would be.
+.bodyWithDock {
+  grid-template-columns: minmax(0, var(--measure)) 17.5rem;
+}
+
+.dock {
+  position: sticky;
+  top: var(--masthead-height, 0px);
+  padding-top: 0.5rem;
+}
+
 .main {
   display: flex;
   flex-direction: column;
