@@ -497,7 +497,7 @@ test("the wait from pressing play to the first sound is counted, with narration 
 
   await expect
     .poll(() => firstSounds(backendSimulator))
-    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: false, waitMs: expect.any(Number) }]);
+    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: false, streamed: false, waitMs: expect.any(Number) }]);
   const { waitMs } = firstSounds(backendSimulator)[0]!;
   expect(Number.isInteger(waitMs)).toBe(true);
   expect(waitMs).toBeGreaterThanOrEqual(0);
@@ -515,7 +515,7 @@ test("narration made on the press counts its wait as prepared", async ({ launche
 
   await expect
     .poll(() => firstSounds(backendSimulator))
-    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: true, waitMs: expect.any(Number) }]);
+    .toEqual([{ overviewId: NOTE.id, from: "playerBar", source: "audio", prepared: true, streamed: false, waitMs: expect.any(Number) }]);
 });
 
 test("Listen in the library counts its first sound as from the row, and pausing then playing again does not count twice", async ({
@@ -530,7 +530,7 @@ test("Listen in the library counts its first sound as from the row, and pausing 
   await card.clickListen();
   await expect
     .poll(() => firstSounds(backendSimulator))
-    .toEqual([{ overviewId: NOTE.id, from: "libraryRow", source: "audio", prepared: false, waitMs: expect.any(Number) }]);
+    .toEqual([{ overviewId: NOTE.id, from: "libraryRow", source: "audio", prepared: false, streamed: false, waitMs: expect.any(Number) }]);
 
   await launcher.miniPlayer.clickPlayPause();
   await launcher.miniPlayer.verifyPlayButtonReads("Play");
