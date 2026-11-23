@@ -27,6 +27,15 @@ export interface PodcastRun {
   transcription: EpisodeTranscription | null;
 }
 
+export interface TikTokRun {
+  handle: string;
+  caption: string;
+  durationSeconds: number | null;
+  postedAt: string | null;
+  coverUrl: string | null;
+  words: number | null;
+}
+
 // It outlives the dialog: docs/features/overview-redesign.md, "Generating in the background".
 export interface NewOverviewRun {
   url: string;
@@ -35,6 +44,7 @@ export interface NewOverviewRun {
   video: VideoSource | null;
   article: ArticleRun | null;
   podcast: PodcastRun | null;
+  tiktok: TikTokRun | null;
   transcriptWords: number | null;
   overview: Overview | null;
   error: RunError | null;

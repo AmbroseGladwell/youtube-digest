@@ -1,4 +1,4 @@
-import { recipeMinutes } from "@overview/domain";
+import { formatClock, recipeMinutes } from "@overview/domain";
 import { transcriptionCopy } from "../../podcasts/util/transcriptionCopy.js";
 import type { ArticleRun, NewOverviewRun } from "../types/NewOverviewRun.js";
 import { overviewReadMinutes } from "./overviewReadMinutes.js";
@@ -6,6 +6,7 @@ import { recipeCounts } from "./recipeCounts.js";
 
 const SUMMARISING = "Summarising, scoring and filing";
 const QUEUED = "Queued";
+const WRITING = "Writing the overview";
 
 export type GenerationStepState = "waiting" | "running" | "done";
 
@@ -102,9 +103,34 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
       ...looking,
       {
         number: transcription === null ? "03" : "04",
-        label: "Writing the overview",
+        label: WRITING,
         detail: writingDetail(run, wordsFound),
         state: writingState(overviewDone, wordsFound),
+      },
+    ];
+  }
+
+  // Designs 130d, 130d-2: the words came with the read, so finding them is quick but still said.
+  if (run.tiktok !== null) {
+    const { durationSeconds } = run.tiktok;
+    return [
+      {
+        number: "01",
+        label: "Found the video",
+        detail: durationSeconds === null ? "TikTok" : `TikTok · ${formatClock(durationSeconds)}`,
+        state: "done",
+      },
+      {
+        number: "02",
+        label: transcriptDone ? "Captions found" : "Looking for captions",
+        detail: transcriptDone ? `${run.transcriptWords!.toLocaleString("en-GB")} words` : "TikTok’s own captions",
+        state: transcriptDone ? "done" : "running",
+      },
+      {
+        number: "03",
+        label: WRITING,
+        detail: writingDetail(run, transcriptDone),
+        state: writingState(overviewDone, transcriptDone),
       },
     ];
   }
@@ -122,7 +148,7 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
       },
       {
         number: "02",
-        label: "Writing the overview",
+        label: WRITING,
         detail: writingDetail(run, transcriptDone),
         state: writingState(overviewDone, transcriptDone),
       },

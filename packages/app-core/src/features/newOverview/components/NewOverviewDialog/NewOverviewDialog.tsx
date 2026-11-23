@@ -1,5 +1,5 @@
 import { episodeFacts } from "../PodcastLinkStatus/PodcastLinkStatus.js";
-import { formatClock } from "@overview/domain";
+import { formatClock, tiktokTitle } from "@overview/domain";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Overview } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
@@ -276,6 +276,21 @@ interface RunSourceProps {
 }
 
 const RunSource = ({ run, headingId }: RunSourceProps) => {
+  // Designs 130d, 130d-2: the portrait cover and the caption, never a landscape crop.
+  if (run.tiktok !== null) {
+    const length = run.tiktok.durationSeconds === null ? null : formatClock(run.tiktok.durationSeconds);
+    return (
+      <>
+        <span className={styles.tiktokCover}>{run.tiktok.coverUrl !== null && <img src={run.tiktok.coverUrl} alt="" />}</span>
+        <div className={styles.sourceText}>
+          <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
+            {tiktokTitle(run.tiktok.caption, run.tiktok.handle)}
+          </h2>
+          <p className={styles.sourceMeta}>{[`@${run.tiktok.handle}`, "TikTok", length].filter(Boolean).join(" · ")}</p>
+        </div>
+      </>
+    );
+  }
   if (run.video) {
     return (
       <>

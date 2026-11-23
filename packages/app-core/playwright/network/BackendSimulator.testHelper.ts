@@ -40,6 +40,7 @@ import {
   type ArticleRead,
   type VideoRead,
   type PodcastRead,
+  type TikTokRead,
   type PodcastTranscription,
   type TranscriptCheck,
   type TranscriptionUsage,
@@ -268,6 +269,8 @@ export class BackendSimulator {
   #articleReadsSpent: "trial-reads" | "trial-reads-address" | null = null;
   #articleAnswer: ArticleRead = { status: "failed", reason: "nothing-readable" };
   #podcastAnswer: PodcastRead = { status: "failed", reason: "not-an-episode" };
+  #tiktokAnswer: TikTokRead | "unavailable" = "unavailable";
+  #tiktokReads: string[] = [];
   #podcastWords: StoredTranscript | null = null;
   #podcastReads: string[] = [];
   #videoReads: string[] = [];
@@ -1006,6 +1009,17 @@ export class BackendSimulator {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(answer) });
     });
 
+    await this.#page.route("**/api/tiktok/read", (route) => {
+      this.#tiktokReads.push((route.request().postDataJSON() as { url: string }).url);
+      return this.#tiktokAnswer === "unavailable"
+        ? route.fulfill({
+            status: 503,
+            contentType: "application/json",
+            body: JSON.stringify({ error: { code: "unavailable", message: "This server does not read TikTok links" } }),
+          })
+        : route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#tiktokAnswer) });
+    });
+
     await this.#page.route("**/api/podcasts/read", async (route) => {
       this.#podcastReads.push((route.request().postDataJSON() as { url: string }).url);
       const held = this.#podcastReadsHeld;
@@ -1714,6 +1728,13 @@ export class BackendSimulator {
     trialReadsSpent: (quota: "trial-reads" | "trial-reads-address"): void => {
       this.#articleReadsSpent = quota;
     },
+  };
+
+  tiktok = {
+    answerWith: (read: TikTokRead): void => {
+      this.#tiktokAnswer = read;
+    },
+    reads: (): string[] => [...this.#tiktokReads],
   };
 
   podcasts = {

@@ -8,6 +8,7 @@ describe("pastedLinkState", () => {
   it("shows a Spotify or Apple link as an episode from the moment it's read", () => {
     expect(pastedLinkState({ status: "none" }, { link: { status: "reading" }, platformLink: true })).toEqual({
       podcastShown: true,
+      tiktokShown: false,
       reading: true,
       generateOffered: true,
       episodeAction: null,
