@@ -42,6 +42,35 @@ $chat-width-narrow: 22.5rem;
   }
 }
 
+// Design 130h: a TikTok's player docked beside the note, 280px and sticky, while chat is closed.
+.layoutWithDock {
+  grid-template-columns: minmax(0, 1fr) 20rem;
+}
+
+.dockColumn {
+  position: sticky;
+  top: var(--masthead-height, 0px);
+  align-self: start;
+  padding: 1.5rem 2rem 0 0.5rem;
+  min-width: 0;
+}
+
+.tiktokStage {
+  width: 100%;
+  padding: 0 0 0.75rem;
+}
+
+.tiktokMini {
+  position: sticky;
+  top: var(--masthead-height, 0px);
+  z-index: 3;
+  width: 100%;
+  max-width: calc(var(--reader-column) + 2 * var(--reader-gutter));
+  margin: 0 auto;
+  padding: 0.5rem var(--reader-gutter) 0;
+  box-sizing: border-box;
+}
+
 .chatColumn {
   position: sticky;
   top: var(--masthead-height, 0px);

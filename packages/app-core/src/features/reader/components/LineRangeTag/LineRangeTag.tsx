@@ -38,6 +38,7 @@ export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): 
   };
 };
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
+import { timedNoun } from "../../util/timedSource.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
@@ -151,7 +152,7 @@ export const LineRangeTag = ({
               seek(range.startMs);
             }
           }}
-          aria-label={watchAnyway ? `Play ${stretch}` : `Play the episode from ${start}`}
+          aria-label={watchAnyway ? `Play ${stretch}` : `Play the ${timedNoun(video)} from ${start}`}
           data-testid={lineRangeTagTestIds.playChip}
         >
           <StrokeIcon name="play" size={11} />

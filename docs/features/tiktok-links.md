@@ -20,6 +20,8 @@ tab) and speech-to-text for videos without captions are the next slices, in the 
 | From a read and its words to a saved note | `runTikTokOverviewGeneration` in `app-core`'s `generationPipeline.ts` |
 | The reader's own browser first, the vendor when it can't answer | `readTikTokLink` in `app-core/src/features/tiktok/api` |
 | The extension's own read, and the access it asks for | `chromeTikTokPages.ts` in `apps/extension` |
+| The player, speaking TikTok's embed messages | `TikTokEngine`, `useTikTokEngine` in `app-core/src/features/reader/tiktok` |
+| Where it sits, and the bar that stands in for it | `TikTokPlayer`, `TikTokMiniBar`; `ReaderPage` places them |
 
 ## Who reads TikTok
 
@@ -157,6 +159,29 @@ say "Watch on TikTok" and "Copy TikTok link".
 **No time links.** TikTok's address takes no start time, so Markdown and chat answers give a
 TikTok's times as plain text, as an episode's are. The embed player can seek, and that is for the
 screens.
+
+### The player
+
+Designs 130g, 130h, 130h-3, 130p and 130p-3. TikTok's v1 embed (`/player/v1/<id>`) is driven by
+`postMessage`: the page sends `{ "x-tiktok-player": true, type, value }` with `play`, `pause` and
+`seekTo` (seconds), and the player answers `onPlayerReady`, `onStateChange` (1 playing, 2 paused,
+0 ended), `onCurrentTime` (`currentTime` and `duration` in seconds) and `onPlayerError`. Only
+messages from `https://www.tiktok.com` and that iframe are heard. `TikTokEngine` turns them into
+the same `PlaybackSource` an episode gives, so the note follows playback and its times play in
+place without anything new in the note itself: a time is a play chip, as an episode's is.
+
+**The embed is made only when pressed** (the cover's play button or a time), since TikTok limits
+embeds per site. A time pressed before then opens the player and seeks there once it says it is
+ready. **A player that won't load** says "TikTok didn't load the video here" with Watch on TikTok:
+an `onPlayerError`, or no `onPlayerReady` within 12 seconds. After that a time opens the clip on
+TikTok. A browser refusing autoplay (error 3002) only leaves the player waiting for a press inside
+it. The note's narration and the clip never play together.
+
+**Where it sits:** docked beside the note on the web (280px, sticky, the column chat uses) while
+chat is closed; above the title, centred, with chat open (200px at 1440, 170px at 1024); in the
+head's place on a phone and in the panel. Watch on TikTok is always under it. Scrolled away from it
+while it plays, a slim bar (cover, pause, time, progress, Back to the video) sticks to the top of
+the note.
 
 ### The note
 
