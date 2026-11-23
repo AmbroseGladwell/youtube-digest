@@ -244,13 +244,7 @@
   min-height: 0;
   overflow: hidden;
   padding: var(--fade-top) 0 var(--fade-bottom);
-  mask-image: linear-gradient(
-    to bottom,
-    transparent,
-    #000 var(--fade-top),
-    #000 calc(100% - var(--fade-bottom)),
-    transparent
-  );
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent);
 
   .panel & {
     --fade-top: 1.125rem;

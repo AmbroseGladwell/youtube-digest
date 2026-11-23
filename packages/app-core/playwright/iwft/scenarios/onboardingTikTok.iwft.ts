@@ -63,3 +63,34 @@ test("a TikTok link at Start is read on the device's trial, shown back as the Ti
   expect(backendSimulator.tiktok.reads()).toEqual([LINK]);
   expect(backendSimulator.articles.reads()).toEqual([]);
 });
+
+test("a TikTok with no captions says on Your link that it will be transcribed, and is, once the account exists", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const id = "0b6f1a4e-6a43-4c39-9a3e-1d2f0f6d2a14";
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.tiktok.answerWith({
+    status: "read",
+    video: { ...VIDEO, captions: [] },
+    transcript: null,
+    transcription: { status: "needed", episodeSeconds: 58, usage: { usedSeconds: 0, limitSeconds: 5 * 3600, episodes: 0 } },
+  });
+  backendSimulator.podcasts.transcribesAs({ status: "waiting", id, episodeSeconds: 58 }, { status: "ready", id, transcript: WORDS });
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(LINK);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.verifyNoticeReads(
+    "There are no captions, so we’ll make a transcript from its sound: 58 s of your 5 free hours this month.",
+  );
+  await skipToAccount(onboarding);
+  expect(backendSimulator.tiktok.transcriptionAsks()).toEqual([]);
+
+  await onboarding.createAccount(ADA);
+
+  await onboarding.verifyOnScreen("wait");
+  await onboarding.verifyCanOpenOverview(true);
+  expect(backendSimulator.tiktok.transcriptionAsks()).toEqual([VIDEO.url]);
+  expect(backendSimulator.ourKey.generations()[0]?.input).toHaveProperty("tiktok.handle", "bbcnews");
+});

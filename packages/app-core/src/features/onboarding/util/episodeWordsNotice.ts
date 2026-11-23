@@ -1,4 +1,5 @@
 import { recipeMinutes, type TranscriptCheck } from "@overview/domain";
+import { audioLength } from "../../podcasts/util/transcriptionCopy.js";
 
 // Free's hours, as the check answers signed out: the episode is transcribed once there's an account.
 const FREE_HOURS = 5;
@@ -9,6 +10,18 @@ export interface EpisodeWordsNotice {
 }
 
 const NOTHING: EpisodeWordsNotice = { notice: null, stop: null };
+
+// A TikTok with no captions, said as an episode's is, in its own words and seconds.
+export const tiktokWordsNotice = (check: TranscriptCheck | null | undefined): EpisodeWordsNotice => {
+  if (check?.words !== "none" || (check.transcription.status !== "needed" && check.transcription.status !== "not-enough")) {
+    return NOTHING;
+  }
+  const { episodeSeconds, usage } = check.transcription;
+  const hours = Math.round(usage.limitSeconds / 3600);
+  const allowance = `your ${hours}${hours === FREE_HOURS ? " free" : ""} hours this month`;
+  const use = episodeSeconds === null ? `, from ${allowance}` : `: ${audioLength(episodeSeconds)} of ${allowance}`;
+  return { notice: `There are no captions, so we’ll make a transcript from its sound${use}.`, stop: null };
+};
 
 // Said before anything is used, so Looks right carries the consent to transcribe (327v–327w-4).
 export const episodeWordsNotice = (check: TranscriptCheck | null | undefined, durationMs: number | null): EpisodeWordsNotice => {

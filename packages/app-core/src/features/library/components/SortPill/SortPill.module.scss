@@ -33,7 +33,10 @@ $circle-size: 2.75rem;
   overflow: hidden;
   font-size: 0.84375rem;
 
-  transition: max-width 200ms var(--motion-ease) 80ms, padding 200ms var(--motion-ease) 80ms, background var(--motion-ink) var(--motion-ease);
+  transition:
+    max-width 200ms var(--motion-ease) 80ms,
+    padding 200ms var(--motion-ease) 80ms,
+    background var(--motion-ink) var(--motion-ease);
 }
 
 .iconTriggerWide {
@@ -42,7 +45,10 @@ $circle-size: 2.75rem;
   background: var(--stone-tint);
   color: var(--on-stone-tint);
 
-  transition: max-width 200ms var(--motion-ease), padding 200ms var(--motion-ease), background var(--motion-ink) var(--motion-ease);
+  transition:
+    max-width 200ms var(--motion-ease),
+    padding 200ms var(--motion-ease),
+    background var(--motion-ink) var(--motion-ease);
 }
 
 .shortLabel {

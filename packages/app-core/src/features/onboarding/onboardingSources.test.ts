@@ -12,7 +12,7 @@ import {
 import { makeArticleOverview, makeOverview, makeTikTokOverview } from "../overviews/types/OverviewFactory.testHelper.js";
 import { TikTokNoCaptionsError, TikTokReadError } from "../newOverview/api/TikTokReadError.js";
 import type { TikTokWords } from "../newOverview/api/generationPipeline.js";
-import { foundIn, onboardingSourceOf, onboardingSources, type OnboardingMakers } from "./onboardingSources.js";
+import { foundIn, onboardingSourceOf, onboardingSources, type OnboardingFound, type OnboardingMakers } from "./onboardingSources.js";
 import type { TranscriptionProgress } from "../podcasts/api/transcribeAudio.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
@@ -415,8 +415,8 @@ describe("onboarding's run, before and after the account", () => {
           order.push("read");
           return { status: "read", video: clip, words, transcription: null };
         },
-        tiktok: async (video, given) => {
-          order.push(`written ${video.id} ${given.source}`);
+        tiktok: async ({ video, words: given }) => {
+          order.push(`written ${video.id} ${given?.source}`);
           return makeTikTokOverview();
         },
       } as Pick<OnboardingMakers, "readTikTok" | "tiktok"> as OnboardingMakers;
@@ -439,7 +439,12 @@ describe("onboarding's run, before and after the account", () => {
 
     it.each([
       ["a TikTok it couldn't read", { status: "failed", reason: "unavailable" }, TikTokReadError],
-      ["a TikTok with no captions", { status: "read", video: clip, words: null }, TikTokNoCaptionsError],
+      ["a TikTok with no captions", { status: "read", video: clip, words: null, transcription: null }, TikTokNoCaptionsError],
+      [
+        "a TikTok with no captions that can't be transcribed",
+        { status: "read", video: clip, words: null, transcription: { status: "no-audio" } },
+        TikTokNoCaptionsError,
+      ],
     ] as const)("stops at %s, having spent nothing", async (_, read, failure) => {
       const makers = {
         readTikTok: async () => read,
@@ -451,6 +456,30 @@ describe("onboarding's run, before and after the account", () => {
       await expect(
         onboardingSources.tiktok.make(TIKTOK, makers, { onFound: () => {}, isCancelled: () => false, waitToSpend: async () => {} }),
       ).rejects.toBeInstanceOf(failure);
+    });
+
+    it("with no captions, says before Looks right that it will be transcribed, then transcribes it once there's an account", async () => {
+      const asked: string[] = [];
+      const transcription = { status: "needed" as const, episodeSeconds: 42, usage: { usedSeconds: 0, limitSeconds: 18_000, episodes: 0 } };
+      const makers = {
+        readTikTok: async () => ({ status: "read" as const, video: clip, words: null, transcription }),
+        tiktok: async ({ words: given, transcribe }) => {
+          asked.push(`${given === null ? "no words" : "words"} ${transcribe}`);
+          return makeTikTokOverview();
+        },
+      } as Pick<OnboardingMakers, "readTikTok" | "tiktok"> as OnboardingMakers;
+      const found: OnboardingFound[] = [];
+
+      await onboardingSources.tiktok.make(TIKTOK, makers, {
+        onFound: (it) => found.push(it),
+        isCancelled: () => false,
+        waitToSpend: async () => {},
+      });
+
+      expect(asked).toEqual(["no words chosen"]);
+      expect(onboardingSources.tiktok.yourLink(found[0]!, null).notice).toBe(
+        "There are no captions, so we’ll make a transcript from its sound: 42 s of your 5 free hours this month.",
+      );
     });
 
     it("gives its card the creator and the length, and says a clip in seconds", () => {
