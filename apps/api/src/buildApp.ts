@@ -56,9 +56,11 @@ import { articleRoutes } from "./routes/articleRoutes.js";
 import { videoRoutes } from "./routes/videoRoutes.js";
 import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
 import { podcastRoutes } from "./routes/podcastRoutes.js";
+import { socialRoutes } from "./routes/socialRoutes.js";
 import { tiktokRoutes } from "./routes/tiktokRoutes.js";
 import { accountPlan } from "./auth/accountPlan.js";
 import { createPodcastReader } from "./podcasts/createPodcastReader.js";
+import type { SocialPostReader } from "./social/createSocialPostReader.js";
 import type { TikTokReader } from "./tiktok/createTikTokReader.js";
 import { createPodcastTranscripts } from "./podcasts/createPodcastTranscripts.js";
 import { APPLE_BUDGET } from "./podcasts/callBudget.js";
@@ -161,6 +163,8 @@ export interface BuildAppOptions {
   podcastIndex?: ShowDirectory | null;
   // Reads TikTok links and their captions through the vendor; absent, /api/tiktok says it is unavailable.
   tiktokReader?: TikTokReader | null;
+  // Reads Instagram and Facebook posts through the vendor; absent, /api/social says it is unavailable.
+  socialReader?: SocialPostReader | null;
   youTubeEpisodes?: YouTubeEpisodes | null;
   playlistReader?: PlaylistReader | null;
   videoReader?: VideoReader | null;
@@ -209,6 +213,7 @@ export const buildApp = async ({
   youTubeEpisodes = null,
   readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb, appleBudget: APPLE_BUDGET, podcastIndex }),
   tiktokReader = null,
+  socialReader = null,
 }: BuildAppOptions): Promise<FastifyInstance> => {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
@@ -424,6 +429,7 @@ export const buildApp = async ({
         clock,
       });
       tiktokRoutes(api, { reader: tiktokReader, transcriptions, planOf, costs, trials, clock });
+      socialRoutes(api, { reader: socialReader, transcriptions, planOf, costs, trials, clock });
       shareRoutes(api, shares, config.appUrl);
       sampleRoutes(api, shares, config.sampleShareTokens);
       eventRoutes(api, { sink: eventSink, records, clock });

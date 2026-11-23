@@ -24,6 +24,8 @@ import { callBudget, PODCAST_INDEX_BUDGET } from "./podcasts/callBudget.js";
 import { fetchPodcastIndexJson, podcastIndexDirectory } from "./podcasts/podcastIndexDirectory.js";
 import { createScrapeCreatorsTikTok } from "./tiktok/createScrapeCreatorsTikTok.js";
 import { createTikTokReader } from "./tiktok/createTikTokReader.js";
+import { createScrapeCreatorsSocial } from "./social/createScrapeCreatorsSocial.js";
+import { createSocialPostReader } from "./social/createSocialPostReader.js";
 import { youTubeDataApiEpisodes } from "./podcasts/youTubeDataApiEpisodes.js";
 
 let config;
@@ -34,6 +36,7 @@ try {
   process.exit(1);
 }
 
+const SCRAPECREATORS_UNSET = "SCRAPECREATORS_API_KEY is not set";
 const audio = config.audio === null ? null : createAudioSetup(config.audio, true);
 const { postHog, environment, erasure } = config.analytics;
 const eventSink = postHog === null ? null : createPostHogEventSink({ ...postHog, environment });
@@ -109,6 +112,10 @@ const app = await buildApp({
     config.scrapeCreatorsApiKey === null
       ? null
       : createTikTokReader({ vendor: createScrapeCreatorsTikTok({ apiKey: config.scrapeCreatorsApiKey }) }),
+  socialReader:
+    config.scrapeCreatorsApiKey === null
+      ? null
+      : createSocialPostReader({ vendor: createScrapeCreatorsSocial({ apiKey: config.scrapeCreatorsApiKey }) }),
   eventSink,
   errorSink,
   personEraser,
@@ -170,9 +177,12 @@ app.log.info(
 );
 app.log.info(
   apiLogLines.startup.tiktok(
-    config.scrapeCreatorsApiKey === null
-      ? { enabled: false, why: "SCRAPECREATORS_API_KEY is not set" }
-      : { enabled: true, source: "ScrapeCreators" },
+    config.scrapeCreatorsApiKey === null ? { enabled: false, why: SCRAPECREATORS_UNSET } : { enabled: true, source: "ScrapeCreators" },
+  ),
+);
+app.log.info(
+  apiLogLines.startup.social(
+    config.scrapeCreatorsApiKey === null ? { enabled: false, why: SCRAPECREATORS_UNSET } : { enabled: true, source: "ScrapeCreators" },
   ),
 );
 app.log.info(

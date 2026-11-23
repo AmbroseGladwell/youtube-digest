@@ -14,6 +14,7 @@ export interface TrialDevice {
   readVideo(videoId: string): Promise<LightMyRequestResponse>;
   readPodcast(url: string): Promise<LightMyRequestResponse>;
   readTikTok(url: string): Promise<LightMyRequestResponse>;
+  readSocial(url: string): Promise<LightMyRequestResponse>;
   podcastTranscript(episode: { feedUrl: string; guid: string }): Promise<LightMyRequestResponse>;
   transcribe(episode: { feedUrl: string; guid: string }): Promise<LightMyRequestResponse>;
   transcription(id: string): Promise<LightMyRequestResponse>;
@@ -39,6 +40,7 @@ export const makeTrialDevice = async ({ app }: TestApp, address = TRIAL_ADDRESS)
     readVideo: (videoId) => app.inject({ method: "POST", url: "/api/videos/read", headers, payload: { videoId }, remoteAddress: address }),
     readPodcast: (url) => app.inject({ method: "POST", url: "/api/podcasts/read", headers, payload: { url }, remoteAddress: address }),
     readTikTok: (url) => app.inject({ method: "POST", url: "/api/tiktok/read", headers, payload: { url }, remoteAddress: address }),
+    readSocial: (url) => app.inject({ method: "POST", url: "/api/social/read", headers, payload: { url }, remoteAddress: address }),
     podcastTranscript: (episode) =>
       app.inject({ method: "POST", url: "/api/podcasts/transcript", headers, payload: episode, remoteAddress: address }),
     transcribe: (episode) =>
