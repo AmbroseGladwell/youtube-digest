@@ -12,7 +12,8 @@ export const SuggestedQuestionScope = z.discriminatedUnion("kind", [
 ]);
 export type SuggestedQuestionScope = z.infer<typeof SuggestedQuestionScope>;
 
-export const SuggestedQuestionVerdict = z.enum(["glad", "obvious"]);
+// none clears a mark, as Good question toggles off; it is dated like the others, so the merge still commutes.
+export const SuggestedQuestionVerdict = z.enum(["none", "glad", "obvious"]);
 export type SuggestedQuestionVerdict = z.infer<typeof SuggestedQuestionVerdict>;
 
 export const SuggestedQuestionFeedback = z.object({ verdict: SuggestedQuestionVerdict, at: z.iso.datetime() }).strict();
@@ -78,7 +79,7 @@ const earlierOf = (base: unknown, change: unknown): unknown => {
   return Number.isNaN(b) || c < b ? change : base;
 };
 
-const VERDICT_RANK: Record<string, number> = { glad: 0, obvious: 1 };
+const VERDICT_RANK: Record<string, number> = { none: 0, glad: 1, obvious: 2 };
 
 const rankOf = (feedback: unknown): [number, number] => {
   const { verdict, at } = (feedback ?? {}) as { verdict?: unknown; at?: unknown };

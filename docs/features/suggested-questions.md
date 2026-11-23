@@ -27,7 +27,7 @@ was built before"). Each record is one question:
   - `shownAt`, the first time any device showed it;
   - `askedAt`, when the reader asked it;
   - `dismissedAt`, when the reader dismissed it;
-  - `feedback`, `{ verdict: "glad" | "obvious", at }`.
+  - `feedback`, `{ verdict: "none" | "glad" | "obvious", at }`. `none` clears a mark: Good question toggles (design 350, 23 Nov).
 
 **Reader state, apart from the overviews.** A question is never a field of an overview, which is
 replaced wholesale when it is made again (`CLAUDE.md`, the read and favourite lesson). A
@@ -70,7 +70,7 @@ change one question while apart settle the same whichever change arrives first:
 - `shownAt`, `askedAt` and `dismissedAt` keep the **earliest** time seen. Once shown, asked or
   dismissed, a question stays so.
 - `feedback` keeps the one with the **later** `at`, so a reader can change glad to obvious, or
-  back. A tie goes to obvious.
+  back, or clear it with `none`. A tie goes to obvious, then glad.
 - Text, scope, overviews and `madeAt` are never touched.
 
 ## Deleting

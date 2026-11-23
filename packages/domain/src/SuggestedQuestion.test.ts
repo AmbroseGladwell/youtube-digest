@@ -61,7 +61,8 @@ test("its text is one short sentence: never empty, never past the follow-up ques
   assert.ok(!SuggestedQuestion.safeParse(question({ text: "x".repeat(301) })).success);
 });
 
-test("feedback is glad or obvious, with when it was given", () => {
+test("feedback is glad, obvious or none, with when it was given", () => {
+  assert.ok(SuggestedQuestion.safeParse(question({ feedback: { verdict: "none", at: AT } })).success);
   assert.ok(SuggestedQuestion.safeParse(question({ feedback: { verdict: "glad", at: AT } })).success);
   assert.ok(!SuggestedQuestion.safeParse(question({ feedback: { verdict: "meh", at: AT } })).success);
   assert.ok(!SuggestedQuestion.safeParse(question({ feedback: { verdict: "glad" } })).success);
@@ -139,4 +140,14 @@ test("a question dismissed or marked obvious is no longer live; one asked or mar
   assert.equal(live({ feedback: { verdict: "glad", at: AT } }), true);
   assert.equal(live({ dismissedAt: AT }), false);
   assert.equal(live({ feedback: { verdict: "obvious", at: AT } }), false);
+});
+
+test("Good question toggles off with a later none, which still loses to a later mark", () => {
+  const glad = { feedback: { verdict: "glad", at: AT } };
+  const cleared = { feedback: { verdict: "none", at: LATER } };
+  assert.deepEqual(applyAll([glad, cleared]).feedback, cleared.feedback);
+  assert.deepEqual(applyAll([cleared, glad]).feedback, cleared.feedback);
+  const gladAgain = { feedback: { verdict: "glad", at: LATEST } };
+  assert.deepEqual(applyAll([gladAgain, cleared, glad]).feedback, gladAgain.feedback);
+  assert.equal(isSuggestedQuestionLive({ dismissedAt: null, feedback: cleared.feedback }), true);
 });
