@@ -402,8 +402,10 @@ describe("onboarding's run, before and after the account", () => {
       source: "tiktok-vendor",
     };
 
-    it("isn't taken at Start until the screens switch it on, so the web entry keeps its links", () => {
-      expect(onboardingSources.tiktok.linkKind(TIKTOK)).toBeNull();
+    it("is taken at Start as a video, short links too, before the web entry can claim it, and a profile is refused", () => {
+      expect(onboardingSourceOf(TIKTOK)).toMatchObject({ source: onboardingSources.tiktok, linkKind: "video" });
+      expect(onboardingSourceOf("https://vm.tiktok.com/ZMhAbCdEf/")?.source).toBe(onboardingSources.tiktok);
+      expect(onboardingSourceOf("https://www.tiktok.com/@bbcnews")).toBeNull();
     });
 
     it("reads a TikTok and shows it, and writes it with the words it came with only once there's an account", async () => {
