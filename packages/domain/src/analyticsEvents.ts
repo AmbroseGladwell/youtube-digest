@@ -154,8 +154,12 @@ export const CaptureTranscriptSource = z.enum([
   "podcast",
   "tiktok-tab",
   "tiktok-vendor",
+  "tiktok-transcribed",
 ]);
 export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
+// Left out for an episode, which every transcription was before TikToks.
+export const TranscribedSource = z.enum(["podcast", "tiktok"]);
+export type TranscribedSource = z.infer<typeof TranscribedSource>;
 // A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
 export const CaptureFailure = z.enum([
   "no-captions",
@@ -945,15 +949,22 @@ export const analyticsEvents = {
       }),
       chosen: event(
         "A transcription starts: chosen on the card before Create, after Create's question, as a try again, or free because the reader transcribed it in the last day or it's on its way",
-        { from: CaptureEntry, when: TranscribeChoice, episodeMinutes: z.number().optional() },
+        { from: CaptureEntry, when: TranscribeChoice, episodeMinutes: z.number().optional(), source: TranscribedSource.optional() },
       ),
       finished: event(
         "An episode's words came back from transcribing; how long the reader waited for a transcriber to start and then for the words, measured by the app",
-        { from: CaptureEntry, waitedMs: z.number(), transcribingMs: z.number(), episodeMinutes: z.number().optional() },
+        {
+          from: CaptureEntry,
+          waitedMs: z.number(),
+          transcribingMs: z.number(),
+          episodeMinutes: z.number().optional(),
+          source: TranscribedSource.optional(),
+        },
       ),
       failed: event("A transcription ended without words, or our server wouldn't start it, and why; nothing was counted", {
         from: CaptureEntry,
         reason: TranscriptionStop,
+        source: TranscribedSource.optional(),
       }),
     },
     newOverview: {

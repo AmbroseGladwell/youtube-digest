@@ -128,7 +128,38 @@ describe("an episode's steps", () => {
 });
 
 describe("a TikTok's steps", () => {
-  const tiktok = { handle: "bbcnews", caption: "Why stockpile? #news", durationSeconds: 58, postedAt: null, coverUrl: null, words: null };
+  const tiktok = {
+    handle: "bbcnews",
+    caption: "Why stockpile? #news",
+    durationSeconds: 58,
+    postedAt: null,
+    coverUrl: null,
+    words: null,
+    transcription: null,
+  };
+
+  it("with no captions, transcribing is its own step, counting down, then the words it made", () => {
+    const now = 1_000_000;
+    const starting = generationRunSteps(makeNewOverviewRun({ tiktok: { ...tiktok, transcription: { state: "starting" } } }), now);
+    const transcribing = generationRunSteps(
+      makeNewOverviewRun({ tiktok: { ...tiktok, transcription: { state: "transcribing", since: now - 5_000 } } }),
+      now,
+    );
+    const done = generationRunSteps(
+      makeNewOverviewRun({ tiktok: { ...tiktok, transcription: { state: "transcribing", since: 0 } }, transcriptWords: 140 }),
+      now,
+    );
+
+    expect(starting.map(({ label, detail, state }) => [label, detail, state])).toEqual([
+      ["Found the video", "TikTok · 0:58", "done"],
+      ["Looked for captions", "None, so we’re making a transcript", "done"],
+      ["Transcribing the TikTok…", "Starting…", "running"],
+      ["Writing the overview", "Queued", "waiting"],
+    ]);
+    expect(transcribing[2]?.detail).toBe("Almost done");
+    expect(done[2]).toMatchObject({ label: "Transcribing the TikTok", detail: "Transcribed · 140 words", state: "done" });
+    expect(done[3]?.number).toBe("04");
+  });
 
   it("says the video was found, then the captions, then writing (130d, 130d-2)", () => {
     const looking = generationRunSteps(makeNewOverviewRun({ tiktok }));

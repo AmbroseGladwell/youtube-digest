@@ -5,6 +5,16 @@ import type { TikTokVendor } from "./createScrapeCreatorsTikTok.js";
 // What a call spent at the vendor, and what it answered, for the cost tally and the log.
 export type Spend = (credits: number, vendorStatus: number | null) => Promise<void>;
 
+interface LookOptions {
+  withTranscript: boolean;
+}
+
+// The video file's address stays on our server, for speech-to-text only (docs/features/tiktok-links.md).
+export interface TikTokLook {
+  read: TikTokRead;
+  mediaUrl: string | null;
+}
+
 export interface TikTokReaderOptions {
   vendor: TikTokVendor;
   clock?: () => Date;
@@ -41,19 +51,21 @@ export const createTikTokReader = ({ vendor, clock = () => new Date() }: TikTokR
     };
   };
 
-  const read = async (link: string, spend: Spend): Promise<TikTokRead> => {
+  const look = async (link: string, spend: Spend, { withTranscript }: LookOptions): Promise<TikTokLook> => {
     const vendorLink = vendorLinkOf(link);
     if (vendorLink === null) {
-      return { status: "failed", reason: "not-a-video" };
+      return { read: { status: "failed", reason: "not-a-video" }, mediaUrl: null };
     }
-    const answer = await vendor.video(vendorLink, { withTranscript: true });
+    const answer = await vendor.video(vendorLink, { withTranscript });
     await spend(answer.credits, answer.status === "failed" ? answer.vendorStatus : null);
     return answer.status === "found"
-      ? { status: "read", video: answer.video, transcript: wordsOf(answer.video, answer.vtt) }
-      : { status: "failed", reason: answer.reason };
+      ? { read: { status: "read", video: answer.video, transcript: wordsOf(answer.video, answer.vtt) }, mediaUrl: answer.mediaUrl }
+      : { read: { status: "failed", reason: answer.reason }, mediaUrl: null };
   };
 
-  return { read };
+  const read = async (link: string, spend: Spend): Promise<TikTokRead> => (await look(link, spend, { withTranscript: true })).read;
+
+  return { read, look };
 };
 
 export type TikTokReader = ReturnType<typeof createTikTokReader>;

@@ -58,6 +58,12 @@
   overflow-wrap: anywhere;
 }
 
+.needs {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
 .make {
   @include controls.action-pill;
   @include controls.pill-md;

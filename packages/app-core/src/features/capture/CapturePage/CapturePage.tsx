@@ -1,7 +1,7 @@
 import { DEFAULT_PLAN, domainOf, formatClock, timeSavedSummary } from "@overview/domain";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import type { Overview } from "@overview/domain";
+import type { Overview, TranscribeChoice } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { useActiveVideoUrl } from "../../../app/ActiveVideoContext.js";
 import { useActivePage, useArticlePages } from "../../../app/ArticlePagesContext.js";
@@ -242,7 +242,7 @@ export const CapturePage = () => {
           onDismiss={dismiss}
           onCaptureReasonChange={controller.setCaptureReason}
           onCaptureReasonCommit={controller.commitCaptureReason}
-          onTranscribe={controller.transcribePodcast}
+          onTranscribe={controller.transcribeAgain}
         />
       </div>
     );
@@ -291,12 +291,23 @@ export const CapturePage = () => {
 
   const makeTikTok = () => {
     analytics.capture.panel.createChosen({ again: false });
-    tiktokTab?.make((video, words) => controller.startTikTok({ video, words, from: "panel" }));
+    tiktokTab?.make((video, words) => {
+      if (words !== null) {
+        controller.startTikTok({ video, words, from: "panel" });
+      }
+    });
+  };
+
+  const transcribeTikTok = (transcribe: TranscribeChoice) => {
+    if (tiktokTab?.state.status === "transcribable") {
+      analytics.capture.panel.createChosen({ again: false });
+      controller.startTikTok({ video: tiktokTab.state.video, words: null, transcribe, from: "panel" });
+    }
   };
 
   const openingOffer = () => {
     if (tiktokOffered) {
-      return <TikTokOffer tab={tiktokTab} ready={keysReady && limit === null} onMake={makeTikTok} />;
+      return <TikTokOffer tab={tiktokTab} ready={keysReady && limit === null} onMake={makeTikTok} onTranscribe={transcribeTikTok} />;
     }
     if (episodeTab !== null) {
       if (episodeTab.status === "failed") {
@@ -494,7 +505,7 @@ const RunInProgress = ({ run, onDismiss, onCaptureReasonChange, onCaptureReasonC
           className={styles.error}
           testId={capturePageTestIds.error}
           testIds={capturePageTestIds.runError}
-          episodeSeconds={run.podcast?.durationSeconds ?? null}
+          episodeSeconds={run.podcast?.durationSeconds ?? run.tiktok?.durationSeconds ?? null}
           onTranscribe={onTranscribe}
           onNotNow={onDismiss}
         />

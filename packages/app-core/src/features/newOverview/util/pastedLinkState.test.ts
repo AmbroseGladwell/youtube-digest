@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { pastedLinkState } from "./pastedLinkState.js";
-import type { PodcastEpisode } from "@overview/domain";
+import type { PodcastEpisode, TikTokVideo, TranscriptionOffer } from "@overview/domain";
+import type { TikTokLink } from "../useTikTokLink.js";
 
 const episode = { title: "An episode" } as PodcastEpisode;
+const video = { id: "7700000000000000001", durationSeconds: 40 } as TikTokVideo;
+const noPodcast = { link: { status: "none" as const }, platformLink: false };
+const uncaptioned = (transcription: TranscriptionOffer | null, stop: "no-captions" | null = null): TikTokLink => ({
+  status: "found",
+  video,
+  words: null,
+  transcription,
+  stop,
+});
 
 describe("pastedLinkState", () => {
   it("shows a Spotify or Apple link as an episode from the moment it's read", () => {
@@ -57,5 +67,16 @@ describe("pastedLinkState", () => {
     expect(checking).toMatchObject({ reading: true, generateOffered: true, episodeAction: { kind: "waiting" } });
     expect(stopped).toMatchObject({ reading: false, generateOffered: false, episodeAction: { kind: "stop" } });
     expect(transcribes).toMatchObject({ reading: false, generateOffered: true, episodeAction: { kind: "transcribe" } });
+  });
+
+  it("offers to transcribe a TikTok with no captions, as an episode, and stops where it can't be", () => {
+    const usage = { usedSeconds: 0, limitSeconds: 18_000, episodes: 0 };
+    const transcribes = pastedLinkState({ status: "none" }, noPodcast, uncaptioned({ status: "needed", episodeSeconds: 40, usage }));
+    const outOfHours = pastedLinkState({ status: "none" }, noPodcast, uncaptioned({ status: "not-enough", episodeSeconds: 40, usage }));
+    const noCaptions = pastedLinkState({ status: "none" }, noPodcast, uncaptioned(null, "no-captions"));
+
+    expect(transcribes).toMatchObject({ tiktokShown: true, generateOffered: true, episodeAction: { kind: "transcribe" } });
+    expect(outOfHours).toMatchObject({ generateOffered: false, episodeAction: { kind: "stop" } });
+    expect(noCaptions).toMatchObject({ generateOffered: false, episodeAction: null });
   });
 });

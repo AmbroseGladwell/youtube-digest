@@ -9,7 +9,6 @@ import {
   parsePodcastLink,
   parseTikTokLink,
   tiktokSource,
-  type TikTokVideo,
   recipeMinutes,
   sourceName,
   webSource,
@@ -28,20 +27,21 @@ import {
   type SourceKey,
 } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
-import type { PodcastRunRequest, RunOverviewGenerationOptions, TikTokWords } from "../newOverview/api/generationPipeline.js";
+import type { PodcastRunRequest, RunOverviewGenerationOptions, TikTokRunRequest } from "../newOverview/api/generationPipeline.js";
+import { isTranscribable } from "../newOverview/useTikTokLink.js";
 import { TikTokNoCaptionsError, TikTokReadError } from "../newOverview/api/TikTokReadError.js";
 import type { TikTokLinkRead } from "../tiktok/api/readTikTokLink.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
 import { PodcastNoTranscriptError, PodcastReadError } from "../newOverview/api/PodcastReadError.js";
 import { VideoReadError } from "../newOverview/api/VideoReadError.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
-import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
+import type { TranscriptionProgress } from "../podcasts/api/transcribeAudio.js";
 import { isPlatformPodcastLink } from "../newOverview/usePodcastLink.js";
 import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
 import { formatPublishedDate } from "../../util/formatPublishedDate.js";
 import type { ExpectedMinutes } from "./util/expectedOverviewMinutes.js";
-import { episodeWordsNotice } from "./util/episodeWordsNotice.js";
+import { episodeWordsNotice, tiktokWordsNotice } from "./util/episodeWordsNotice.js";
 import { EpisodeCannotBeMadeError } from "./EpisodeCannotBeMadeError.js";
 
 export type OnboardingLinkKind = "video" | "playlist" | "article" | "episode";
@@ -68,7 +68,7 @@ export interface OnboardingMakers {
   readArticle: (url: string) => Promise<ArticleRead>;
   podcast: (request: PodcastRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readTikTok: (url: string) => Promise<TikTokLinkRead>;
-  tiktok: (video: TikTokVideo, words: TikTokWords, options: RunOverviewGenerationOptions) => Promise<Overview>;
+  tiktok: (request: TikTokRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readPodcast: (url: string) => Promise<PodcastRead>;
   // Free, and fetches no words (design 305c).
   checkEpisode: (episode: PodcastEpisode) => Promise<TranscriptCheck>;
@@ -352,15 +352,17 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       TIKTOK_AT_START && parseTikTokLink(link)?.kind !== undefined && parseTikTokLink(link)?.kind !== "not-a-video" ? "video" : null,
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: async (target, makers, { onFound, isCancelled, waitToSpend, onSourceWords, onWriting }) => {
+    // With no captions it is transcribed, as an episode is, once Looks right has said so.
+    make: async (target, makers, { onFound, onTranscription, isCancelled, waitToSpend, transcribe, onSourceWords, onWriting }) => {
       const read = await makers.readTikTok(target);
       if (read.status === "failed") {
         throw new TikTokReadError(read.reason);
       }
-      if (read.words === null) {
+      const { words, transcription } = read;
+      if (words === null && (!isTranscribable(transcription) || transcription.status === "too-long")) {
         throw new TikTokNoCaptionsError();
       }
-      const opening = read.words.transcript.segments
+      const opening = (words?.transcript.segments ?? [])
         .map((segment) => segment.text)
         .join(" ")
         .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
@@ -368,16 +370,22 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         source: tiktokSource(read.video),
         recipe: null,
         about: [read.video.description.trim(), opening].filter((part) => part !== "").join("\n\n"),
+        ...(words === null && transcription !== null ? { episodeWords: { words: "none", transcription } } : {}),
       });
       await waitToSpend();
       if (isCancelled()) {
         throw new GenerationCancelledError();
       }
-      return makers.tiktok(read.video, read.words, {
-        isCancelled,
-        onProgress: ({ transcriptWords }) => onSourceWords?.(transcriptWords),
-        onWriting,
-      });
+      const choice = transcribe ?? (transcription?.status === "free" ? "free" : "chosen");
+      return makers.tiktok(
+        { video: read.video, words, transcribe: words === null ? choice : undefined },
+        {
+          isCancelled,
+          onTranscription,
+          onProgress: ({ transcriptWords }) => onSourceWords?.(transcriptWords),
+          onWriting,
+        },
+      );
     },
     noun: () => "video",
     pending: () => null,
@@ -387,11 +395,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       kicker: `${sourceName(source)} · TikTok`,
       facts: { line: [clipLength(source), "TikTok"].filter(Boolean).join(" · ") },
     }),
-    yourLink: ({ source }, minutes) => ({
+    yourLink: ({ source, episodeWords }, minutes) => ({
       heading: "Here’s what’s in the TikTok you saved.",
       line: `${fromWhom(spokenClipLength(source), sourceName(source))}, ${turnedInto(minutes)}`,
       pills: "readListen",
       inside: INSIDE,
+      notice: tiktokWordsNotice(episodeWords).notice,
     }),
   },
   web: {

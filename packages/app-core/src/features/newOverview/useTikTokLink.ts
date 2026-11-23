@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { heldOverviewOf, OverviewId, parseTikTokLink, sourceKey, type TikTokReadFailure, type TikTokVideo } from "@overview/domain";
+import {
+  heldOverviewOf,
+  OverviewId,
+  parseTikTokLink,
+  sourceKey,
+  type TikTokReadFailure,
+  type TikTokVideo,
+  type TranscriptionOffer,
+} from "@overview/domain";
 import { NO_SPEECH_WORDS } from "@overview/generation";
 import { createFetchTikTokApi } from "@overview/sync";
 import { useTikTokPages } from "../../app/TikTokPagesContext.js";
@@ -21,7 +29,7 @@ export type TikTokLinkFailure = TikTokReadFailure | "profile" | "photo";
 export type TikTokLink =
   | { status: "none" }
   | { status: "reading" }
-  | { status: "found"; video: TikTokVideo; words: TikTokWords | null; stop: TikTokStop | null }
+  | { status: "found"; video: TikTokVideo; words: TikTokWords | null; transcription: TranscriptionOffer | null; stop: TikTokStop | null }
   | { status: "held"; video: TikTokVideo; overviewId: OverviewId; savedAt: string | null }
   | { status: "failed"; reason: TikTokLinkFailure }
   | { status: "unreachable" };
@@ -34,9 +42,15 @@ export const isTikTokLink = (link: string): boolean => parseTikTokLink(link) !==
 // A photo post's address says so; any other TikTok address that isn't a video is a profile, a sound or a tag (130m, 130m-2).
 const notAVideo = (link: string): TikTokLinkFailure => (/\/photo\//.test(link) ? "photo" : "profile");
 
-const stopOf = (words: TikTokWords | null): TikTokStop | null => {
+// With no captions, transcribing is offered whenever our server can say how it would go.
+const TRANSCRIBABLE = new Set<TranscriptionOffer["status"]>(["needed", "free", "not-enough", "too-long"]);
+
+export const isTranscribable = (transcription: TranscriptionOffer | null): transcription is TranscriptionOffer =>
+  transcription !== null && TRANSCRIBABLE.has(transcription.status);
+
+const stopOf = (words: TikTokWords | null, transcription: TranscriptionOffer | null): TikTokStop | null => {
   if (words === null) {
-    return "no-captions";
+    return isTranscribable(transcription) ? null : "no-captions";
   }
   const said = words.transcript.segments.reduce((total, segment) => total + countWords(segment.text), 0);
   return said < NO_SPEECH_WORDS ? "no-speech" : null;
@@ -73,7 +87,13 @@ export const useTikTokLink = (url: string) => {
       }
       const held = await heldOverviewOf(overviewStore, sourceKey({ kind: "tiktok", id: read.video.id })!);
       if (held === null) {
-        return { status: "found", video: read.video, words: read.words, stop: stopOf(read.words) };
+        return {
+          status: "found",
+          video: read.video,
+          words: read.words,
+          transcription: read.transcription,
+          stop: stopOf(read.words, read.transcription),
+        };
       }
       const overviews = await overviewStore.listOverviews();
       return {

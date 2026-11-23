@@ -30,7 +30,7 @@ export const useGenerateOverviewMutation = (apiKeys: ApiKeys) => {
     mutationFn: (variables) => {
       if ("tiktok" in variables) {
         const { tiktok, ...options } = variables;
-        return generateTikTok(tiktok.video, tiktok.words, options);
+        return generateTikTok(tiktok, options);
       }
       if ("podcast" in variables) {
         const { podcast, ...options } = variables;

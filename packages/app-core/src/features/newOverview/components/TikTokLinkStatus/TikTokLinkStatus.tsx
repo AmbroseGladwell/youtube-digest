@@ -5,6 +5,8 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { ArticleFailureNotice } from "../../../capture/components/ArticleFailureNotice/ArticleFailureNotice.js";
+import { transcriptionCopy } from "../../../podcasts/util/transcriptionCopy.js";
+import { EpisodeWordsNote } from "../PodcastLinkStatus/PodcastLinkStatus.js";
 import type { TikTokLink } from "../../useTikTokLink.js";
 import { tiktokLinkFailureCopy, tiktokStopCopy } from "../../util/tiktokLinkFailureCopy.js";
 import styles from "./TikTokLinkStatus.module.scss";
@@ -46,7 +48,7 @@ export const TikTokLinkStatus = ({ link, onRetry, onClear, onOpened }: TikTokLin
       return (
         <>
           <TikTokCard video={link.video} />
-          {link.stop === "no-captions" && (
+          {link.words === null && (
             <ul className={styles.looked} data-testid={tiktokLinkStatusTestIds.looked}>
               <li>
                 <StrokeIcon name="check" size={13} />
@@ -56,7 +58,21 @@ export const TikTokLinkStatus = ({ link, onRetry, onClear, onOpened }: TikTokLin
                 <StrokeIcon name="check" size={13} />
                 Looked for captions <small>· none</small>
               </li>
+              {link.transcription?.status === "needed" && (
+                <li data-testid={tiktokLinkStatusTestIds.needs}>
+                  <StrokeIcon name="mic" size={13} />
+                  {transcriptionCopy.needs(link.video.durationSeconds)}
+                </li>
+              )}
             </ul>
+          )}
+          {link.words === null && link.stop === null && link.transcription !== null && (
+            <EpisodeWordsNote
+              words={{ state: "none", transcription: link.transcription }}
+              episodeSeconds={link.video.durationSeconds}
+              onFollowed={onOpened}
+              source="tiktok"
+            />
           )}
           {link.stop !== null && <ArticleFailureNotice copy={tiktokStopCopy(link.stop)} onWay={onClear} prominent />}
         </>

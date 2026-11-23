@@ -45,6 +45,10 @@
   }
 }
 
+.cut .face {
+  -webkit-touch-callout: none;
+}
+
 button.face {
   border: 0;
   background: none;

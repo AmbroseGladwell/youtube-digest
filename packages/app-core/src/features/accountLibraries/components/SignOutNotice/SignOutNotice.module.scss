@@ -10,7 +10,9 @@
   box-sizing: border-box;
   background: var(--dialog);
   border-radius: var(--radius-tile);
-  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--divider);
+  box-shadow:
+    var(--shadow-float),
+    inset 0 0 0 1px var(--divider);
   padding: 0.875rem 0.5rem 0.875rem 1rem;
   display: flex;
   align-items: flex-start;

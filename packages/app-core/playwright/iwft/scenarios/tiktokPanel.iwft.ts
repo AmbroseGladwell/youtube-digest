@@ -138,3 +138,39 @@ test("a TikTok already in the library offers to read it", async ({ page, launche
   await expect(page.getByTestId(capturePageTestIds.readOverviewButton)).toBeVisible();
   await expect(page.getByTestId(tiktokOfferTestIds.card)).toHaveCount(0);
 });
+
+test("a TikTok with no captions anywhere is offered to transcribe after the press, and Transcribe and create makes it", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  const id = "0b6f1a4e-6a43-4c39-9a3e-1d2f0f6d2a13";
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.tiktok.answerWith({
+    status: "read",
+    video: { ...VIDEO, captions: [] },
+    transcript: null,
+    transcription: { status: "needed", episodeSeconds: 58, usage: { usedSeconds: 0, limitSeconds: 5 * 3600, episodes: 0 } },
+  });
+  backendSimulator.podcasts.transcribesAs({ status: "transcribing", id, episodeSeconds: 58 }, { status: "ready", id, transcript: WORDS });
+  await launcher.launchPanel({
+    ...SIGNED_IN,
+    activeVideoUrl: null,
+    articlePages: onTikTok,
+    tiktokPages: tiktokPages({ read: { status: "read", video: { ...VIDEO, captions: [] }, transcript: null } }),
+  });
+
+  await page.getByTestId(tiktokOfferTestIds.makeButton).click();
+
+  await expect(page.getByTestId(tiktokOfferTestIds.needs)).toHaveText("No captions · Needs transcribing · about 1 min");
+  await expect(page.getByTestId(tiktokOfferTestIds.transcribeButton)).toHaveText("Transcribe and create");
+  if (SHOTS) {
+    await page.screenshot({ path: `${SHOTS}/130i-transcribe.png` });
+  }
+  expect(backendSimulator.tiktok.transcriptionAsks()).toEqual([]);
+  await page.getByTestId(tiktokOfferTestIds.transcribeButton).click();
+
+  await launcher.readerPage.verifyIsShown();
+  expect(backendSimulator.tiktok.transcriptionAsks()).toEqual([URL]);
+  expect(backendSimulator.ourKey.generations()[0]?.input).toHaveProperty("tiktok.handle", "bbcnews");
+});

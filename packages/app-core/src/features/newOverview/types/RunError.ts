@@ -1,4 +1,4 @@
-import type { Provider, TranscriptionFailure } from "@overview/domain";
+import type { Provider, TranscribedSource, TranscriptionFailure } from "@overview/domain";
 import type { NoSpeechReason } from "@overview/generation";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
 
@@ -12,5 +12,5 @@ export type RunError =
   | { kind: "noSpeech"; reason: NoSpeechReason }
   // Asked before anything is spent.
   | { kind: "podcastNeedsTranscribing" }
-  | { kind: "transcriptionFailed"; reason: TranscriptionFailure | "no-audio" }
+  | { kind: "transcriptionFailed"; reason: TranscriptionFailure | "no-audio"; source: TranscribedSource }
   | { kind: "transcriptionRefused"; refusal: "not-enough" | "too-long"; episodeSeconds: number | null };

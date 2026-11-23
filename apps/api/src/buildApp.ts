@@ -1,5 +1,6 @@
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from "fastify";
-import { REQUEST_ID_HEADER, type PodcastRead, type ShareToken } from "@overview/domain";
+import { REQUEST_ID_HEADER, type Plan, type PodcastRead, type ShareToken } from "@overview/domain";
+import type { AccountId } from "./auth/AccountId.js";
 import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
 import type { AudioStore } from "./audio/AudioStore.js";
@@ -391,16 +392,17 @@ export const buildApp = async ({
                 .catch(() => null),
       });
       serviceTranscriptRoutes(api, { usage: overviewUsage, service: youTubeService, sql, clock });
+      const planOf = (accountId: AccountId): Promise<Plan> => accountPlan(sql, accountId);
       podcastRoutes(api, {
         readEpisode: readPodcastEpisode,
         resolveTranscript: podcastTranscripts.resolve,
         checkTranscript: podcastTranscripts.check,
-        planOf: (accountId) => accountPlan(sql, accountId),
+        planOf,
         trials,
         transcriptions,
         clock,
       });
-      tiktokRoutes(api, { reader: tiktokReader, costs, trials, clock });
+      tiktokRoutes(api, { reader: tiktokReader, transcriptions, planOf, costs, trials, clock });
       shareRoutes(api, shares, config.appUrl);
       sampleRoutes(api, shares, config.sampleShareTokens);
       eventRoutes(api, { sink: eventSink, records, clock });

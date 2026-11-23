@@ -176,11 +176,14 @@ const sections: readonly LegalSection[] = [
           you have allowed it to: your browser fetches the video's public page and its captions from TikTok, without your TikTok cookies,
           and our server never sees them. Otherwise, or when that doesn't work, our server sends the link to ScrapeCreators, which reads the
           video and its captions from TikTok and sends them back; it is sent the link and nothing about you. ScrapeCreators may keep the
-          links it is sent and what it sends back, under its own privacy policy. Our server never reads TikTok's pages itself. The words are
-          fetched for you and kept as your own copy, as above, never shown to anyone else. We record what each read cost in the cost tally,
-          and our logs say only what kind of link it was and how the read went, never the link, the creator or the video. In the side panel,
-          nothing is read until you press, except that a TikTok you have already allowed is read in your own browser to show it. Before you
-          have an account, a read is counted against the device's trial reads, as an article's is.
+          links it is sent and what it sends back, under its own privacy policy. Our server never reads TikTok's pages itself. If a TikTok
+          has no captions, you can ask us to transcribe it, and nothing is transcribed unless you ask: our server asks ScrapeCreators again
+          for the video and the address of its video file, and sends Modal that address and nothing about you. Modal downloads the file from
+          TikTok and transcribes it as it does an episode (below), against the same allowance. The words are fetched for you and kept as
+          your own copy, as above, never shown to anyone else. We record what each read cost in the cost tally, and our logs say only what
+          kind of link it was and how the read went, never the link, the creator or the video. In the side panel, nothing is read until you
+          press, except that a TikTok you have already allowed is read in your own browser to show it. Before you have an account, a read is
+          counted against the device's trial reads, as an article's is.
         </p>
         <p>
           <strong>Transcribing an episode.</strong> When an episode has no transcript and isn't on YouTube, you can ask us to transcribe it;
@@ -540,7 +543,7 @@ const sections: readonly LegalSection[] = [
             ],
             [
               "Modal",
-              "runs our speech-to-text model when you ask for a podcast episode to be transcribed; sent only the address of the episode's audio",
+              "runs our speech-to-text model when you ask for a podcast episode or a TikTok to be transcribed; sent only the address of the episode's audio or the TikTok's video file",
               UNITED_STATES,
             ],
             [

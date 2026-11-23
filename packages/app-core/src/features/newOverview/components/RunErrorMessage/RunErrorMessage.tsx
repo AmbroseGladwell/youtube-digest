@@ -110,7 +110,7 @@ const TranscriptionStop = ({ error, episodeSeconds, onTranscribe, onNotNow, onFo
     );
   }
   if (error.kind === "transcriptionFailed") {
-    const failed = transcriptionCopy.failed(error.reason);
+    const failed = transcriptionCopy.failed(error.reason, error.source);
     const differentLink = onNotNow === undefined ? null : { label: "Use a different link", onPress: onNotNow };
     return (
       <TranscriptionNotice

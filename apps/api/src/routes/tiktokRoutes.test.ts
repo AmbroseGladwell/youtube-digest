@@ -6,8 +6,11 @@ import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import type { VendorVideo } from "../tiktok/createScrapeCreatorsTikTok.js";
+import { makeScriptedTranscriber, transcribedAudio } from "../podcasts/ScriptedTranscriber.testHelper.js";
+import type { Transcriber } from "../podcasts/Transcriber.js";
+import { usageMonth } from "../usage/usageMonth.js";
 import { createTikTokReader } from "../tiktok/createTikTokReader.js";
-import { VIDEO_ID, VIDEO_URL } from "../tiktok/ScrapeCreatorsAnswerFactory.testHelper.js";
+import { SMALLEST_MEDIA_URL, VIDEO_ID, VIDEO_URL } from "../tiktok/ScrapeCreatorsAnswerFactory.testHelper.js";
 import { found, scriptedTikTokVendor, TIKTOK_VIDEO } from "../tiktok/ScriptedTikTokVendor.testHelper.js";
 
 const LINK = `${VIDEO_URL}?is_from_webapp=1`;
@@ -125,5 +128,116 @@ test("the log says the link's shape, how it went and what it cost, and never the
   assert.equal(read?.credits, 1);
   const logged = JSON.stringify(lines);
   assert.ok(!logged.includes(VIDEO_ID) && !logged.includes("anewsroom") && !logged.includes("real chance"));
+  await testApp.close();
+});
+
+const NO_CAPTIONS = found({ ...TIKTOK_VIDEO, captions: [] }, null);
+const TRANSCRIPTION_PATH = "/api/tiktok/transcription";
+
+const transcribingApp = (answer: VendorVideo = NO_CAPTIONS, transcriber: Transcriber = makeScriptedTranscriber()) => {
+  const scripted = scriptedTikTokVendor(answer);
+  return createTestApp({}, { tiktokReader: createTikTokReader({ vendor: scripted.vendor }), transcriber }).then((testApp) => ({
+    testApp,
+    asked: scripted.asked,
+  }));
+};
+
+test("a TikTok with no captions is offered to transcribe, on the month's hours, only when we can", async () => {
+  const { testApp } = await transcribingApp();
+  const account = await makeAccount(testApp);
+  const withoutStt = await appOver(NO_CAPTIONS);
+  const elsewhere = await makeAccount(withoutStt);
+  const captioned = await transcribingApp(found());
+  const captionedAccount = await makeAccount(captioned.testApp);
+
+  const offered = await account.inject({ method: "POST", url: "/api/tiktok/read", body: { url: LINK } });
+  const notOffered = await elsewhere.inject({ method: "POST", url: "/api/tiktok/read", body: { url: LINK } });
+  const withWords = await captionedAccount.inject({ method: "POST", url: "/api/tiktok/read", body: { url: LINK } });
+
+  assert.deepEqual(offered.json().transcription, {
+    status: "needed",
+    episodeSeconds: 80,
+    usage: { usedSeconds: 0, limitSeconds: 5 * 3600, episodes: 0 },
+  });
+  assert.equal(notOffered.json().transcription, undefined);
+  assert.equal(withWords.json().transcription, undefined);
+  await Promise.all([testApp.close(), withoutStt.close(), captioned.testApp.close()]);
+});
+
+test("asked to, our server reads the TikTok afresh and transcribes its smallest file, then hands back the words", async () => {
+  const transcriber = makeScriptedTranscriber([{ state: "running" }, { state: "done", result: transcribedAudio({ audioSeconds: 79.6 }) }]);
+  const { testApp, asked } = await transcribingApp(NO_CAPTIONS, transcriber);
+  const account = await makeAccount(testApp);
+
+  const started = await account.inject({ method: "POST", url: TRANSCRIPTION_PATH, body: { url: LINK } });
+  await testApp.drainTranscriptions();
+  const ready = await account.inject({ method: "GET", url: `${TRANSCRIPTION_PATH}/${started.json().id}` });
+  const again = await account.inject({ method: "POST", url: "/api/tiktok/read", body: { url: LINK } });
+
+  assert.equal(started.statusCode, 200);
+  assert.equal(started.json().status, "waiting");
+  assert.equal(started.json().episodeSeconds, 80);
+  assert.deepEqual(asked.at(0), { url: VIDEO_URL, withTranscript: false });
+  assert.equal(transcriber.submitted[0]?.audioUrl, SMALLEST_MEDIA_URL);
+  assert.equal(ready.json().status, "ready");
+  assert.equal(ready.json().transcript.videoId, `tiktok:${VIDEO_ID}`);
+  assert.equal(ready.json().transcript.segments.length, 2);
+  assert.deepEqual(again.json().transcription, { status: "free", why: "transcribed" });
+  assert.equal(
+    (await vendorCosts(testApp, "account_costs")).reduce((sum, row) => sum + row.quantity, 0),
+    2,
+  );
+  await testApp.close();
+});
+
+test("transcribing a TikTok needs an account, the host, a video that reads, and hours left", async () => {
+  const { testApp } = await transcribingApp();
+  const account = await makeAccount(testApp);
+  const withoutStt = await appOver(NO_CAPTIONS);
+  const elsewhere = await makeAccount(withoutStt);
+  const gone = await transcribingApp({ status: "failed", reason: "unavailable", credits: 0, vendorStatus: 404 });
+  const goneAccount = await makeAccount(gone.testApp);
+  const silent = await transcribingApp(found({ ...TIKTOK_VIDEO, captions: [] }, null, null));
+  const silentAccount = await makeAccount(silent.testApp);
+  const long = await transcribingApp(found({ ...TIKTOK_VIDEO, captions: [], durationSeconds: 6 * 3600 }, null));
+  const longAccount = await makeAccount(long.testApp);
+
+  const signedOut = await testApp.app.inject({
+    method: "POST",
+    url: TRANSCRIPTION_PATH,
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+    payload: { url: LINK },
+  });
+  const noHost = await elsewhere.inject({ method: "POST", url: TRANSCRIPTION_PATH, body: { url: LINK } });
+  const unread = await goneAccount.inject({ method: "POST", url: TRANSCRIPTION_PATH, body: { url: LINK } });
+  const noSound = await silentAccount.inject({ method: "POST", url: TRANSCRIPTION_PATH, body: { url: LINK } });
+  const tooLong = await longAccount.inject({ method: "POST", url: TRANSCRIPTION_PATH, body: { url: LINK } });
+  await testApp.sql.query("insert into transcription_usage (month, caller, account_id, seconds) values ($1::date, $2, $3, $4)", [
+    usageMonth(testApp.clock.now),
+    `account:${account.accountId}`,
+    account.accountId,
+    5 * 3600 - 10,
+  ]);
+  const spent = await account.inject({ method: "POST", url: TRANSCRIPTION_PATH, body: { url: LINK } });
+
+  assert.equal(signedOut.json().error.code, "unauthenticated");
+  assert.equal(noHost.json().error.code, "unavailable");
+  assert.deepEqual([unread.json().error.code, unread.json().error.details], ["transcript_unavailable", { tiktok: "unavailable" }]);
+  assert.deepEqual(noSound.json().error.details, { transcription: "no-audio" });
+  assert.deepEqual(tooLong.json().error.details, { transcription: "too-long", episodeSeconds: 6 * 3600 });
+  assert.equal(spent.statusCode, 429);
+  assert.equal(spent.json().error.details.quota, "transcription");
+  await Promise.all([testApp.close(), withoutStt.close(), gone.testApp.close(), silent.testApp.close(), long.testApp.close()]);
+});
+
+test("one account can't see another's TikTok transcription", async () => {
+  const { testApp } = await transcribingApp();
+  const owner = await makeAccount(testApp);
+  const other = await makeAccount(testApp);
+
+  const started = await owner.inject({ method: "POST", url: TRANSCRIPTION_PATH, body: { url: LINK } });
+  const peek = await other.inject({ method: "GET", url: `${TRANSCRIPTION_PATH}/${started.json().id}` });
+
+  assert.equal(peek.json().error.code, "not_found");
   await testApp.close();
 });

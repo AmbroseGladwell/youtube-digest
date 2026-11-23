@@ -1,10 +1,21 @@
-import { recipeMinutes, type Plan, type TranscriptionFailure, type TranscriptionOffer, type TranscriptionUsage } from "@overview/domain";
+import {
+  recipeMinutes,
+  type Plan,
+  type TranscribedSource,
+  type TranscriptionFailure,
+  type TranscriptionOffer,
+  type TranscriptionUsage,
+} from "@overview/domain";
 import { resetDate } from "../../newOverview/util/usageLine.js";
 
 const HOUR = 3600;
 const A_FEW_MINUTES = "a few minutes";
 
-export const audioLength = (seconds: number): string => recipeMinutes(Math.max(0, Math.round(seconds / 60)));
+// A TikTok's seconds as the note says them (130g), an episode's in minutes.
+export const audioLength = (seconds: number): string =>
+  seconds < 60 ? `${Math.max(1, Math.round(seconds))} s` : recipeMinutes(Math.round(seconds / 60));
+
+const NOUN: Record<TranscribedSource, string> = { podcast: "episode", tiktok: "TikTok" };
 
 // About a minute of waiting for each hour of audio, measured on 16 Nov 2026.
 export const transcribeMinutes = (episodeSeconds: number | null): number | null =>
@@ -62,10 +73,10 @@ export const transcriptionCopy = {
       : `Uses ${audioLength(episodeSeconds)} of ${left}, and one overview`;
   },
 
-  free: (why: Extract<TranscriptionOffer, { status: "free" }>["why"]): string =>
+  free: (why: Extract<TranscriptionOffer, { status: "free" }>["why"], source: TranscribedSource = "podcast"): string =>
     why === "transcribed"
-      ? "You transcribed this episode before, so it uses no transcribing time."
-      : "You’re already transcribing this episode, so this joins it and uses no more time.",
+      ? `You transcribed this ${NOUN[source]} before, so it uses no transcribing time.`
+      : `You’re already transcribing this ${NOUN[source]}, so this joins it and uses no more time.`,
 
   // Asked after Create, when the check couldn't tell.
   ask: (episodeSeconds: number | null): TranscriptionNotice => {
@@ -107,12 +118,19 @@ export const transcriptionCopy = {
     };
   },
 
-  failed: (reason: TranscriptionFailure | "no-audio"): TranscriptionNotice & { retry: boolean } => {
+  failed: (reason: TranscriptionFailure | "no-audio", source: TranscribedSource = "podcast"): TranscriptionNotice & { retry: boolean } => {
     const counted = "Nothing was counted: no transcribing time and no overview.";
     if (reason === "no-transcriber") {
       return {
         heading: "Transcribing couldn’t start",
         body: `Every transcriber was busy for two minutes, so we stopped rather than keep you waiting. Try again in a minute. ${counted}`,
+        retry: true,
+      };
+    }
+    if (source === "tiktok" && (reason === "audio-unreachable" || reason === "no-audio")) {
+      return {
+        heading: "We couldn’t get the TikTok’s sound",
+        body: `TikTok didn’t let us download the video just now. Try again in a while. ${counted}`,
         retry: true,
       };
     }
@@ -126,7 +144,7 @@ export const transcriptionCopy = {
     if (reason === "no-speech") {
       return {
         heading: "We couldn’t hear any words in it",
-        body: `The episode’s audio has no speech we could transcribe. ${counted}`,
+        body: `The ${NOUN[source]}’s ${source === "tiktok" ? "sound" : "audio"} has no speech we could transcribe. ${counted}`,
         retry: false,
       };
     }

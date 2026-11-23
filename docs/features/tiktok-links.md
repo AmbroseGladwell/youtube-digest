@@ -90,7 +90,7 @@ Step 5 of the card, 22 Nov 2026. `onboardingSources.tiktok` is a full entry: it 
 through `readTikTokLink` (the extension's own read, then the vendor, a trial's read signed out),
 shows the card from the read, and writes the note with the words it came with once there is an
 account (`runTikTokOverviewGeneration`), as a video's does. A link it can't read stops with
-`TikTokReadError`, and a video with no captions with `TikTokNoCaptionsError`, each before
+`TikTokReadError`, and a video with no captions that can't be transcribed with `TikTokNoCaptionsError`, each before
 anything is spent on writing. Their words in `onboardingFailureCopy` follow the other kinds' until
 the Design round's failure frames.
 
@@ -135,8 +135,34 @@ The captions are parsed by the podcast transcript parser (`parsePodcastTranscrip
 `StoredTranscript` segments, keyed `tiktok:<id>`. `generated` is true unless the caption track is one
 the creator wrote (`is_auto_generated: false`), so the reader is told when the words are
 machine-heard. No captions, or empty ones, is a read with `transcript: null`: the video is still
-found, and the client decides what to say. The vendor's AI transcript endpoint, and our own
-speech-to-text, are slice 5's question.
+found, and with speech-to-text on, the read also says whether it can be transcribed
+(`transcription`, the podcast `TranscriptionOffer`: needed, not enough hours left, free because it
+already was, too long, or no file). See "Transcribing a TikTok with no captions".
+
+## Transcribing a TikTok with no captions
+
+Slice 5, 23 Nov 2026. **The owner chose our own Whisper on Modal (OV-305) over the vendor's AI
+transcript** (`/v1/tiktok/video/transcript` with `use_ai_as_fallback`: 1 credit up to 2 minutes,
+then 10 credits a started minute). That gives the same model and quality as episodes, at fractions
+of a cent. It also means Modal downloads the video file from TikTok's CDN: the one place our
+infrastructure fetches from TikTok, and only when the reader asks.
+
+**The file's address never comes from the caller.** `POST /api/tiktok/transcription { url }` (an
+account only, the transcription rate limit) reads the TikTok afresh through the vendor, without the
+captions (one credit), and takes the file's address from that answer: the smallest of
+`video.bit_rate`'s renditions, else `video.play_addr`, HTTPS only (`mediaUrl`, which stays on the
+server and is never in a read's answer). That is the podcast rule (a caller can't name what our GPU
+host downloads), and it also gets a fresh address, since TikTok's are signed and expire. Checked
+on 23 Nov 2026: every address the vendor gave (play, download, and the "original sound" MP3) answered
+206 to a plain request with no cookies and an honest user agent.
+
+**Then it is an episode's transcription.** `startAudio` (split out of `createPodcastTranscriptions`)
+queues it under `tiktok:<id>` on the same jobs table, queue, host, allowance (hours per month, held
+from the TikTok's length, settled to what was heard), cost tally entry and failures.
+`GET /api/tiktok/transcription/:id` answers its progress, the podcast `PodcastTranscription`. A
+TikTok over four hours, or with no file, is refused as an episode is, and a TikTok that no longer
+reads answers `transcript_unavailable` with `{ tiktok: <reason> }`. The words reach the reader as an
+episode's do: collected from the ready answer within a day, then kept as the account's own copy.
 
 A trial's read signed out gets the words too, as a YouTube read does: onboarding shows the card
 from the read and writes the note once there is an account.
@@ -190,6 +216,26 @@ overview from"), both counted in code. Music or sound is the kind check's answer
 "This one is music or sound rather than talk". That run stop (`RunError` `noSpeech`) serves every
 kind, so a YouTube Short with no speech says so too.
 
+**No captions, but it can be transcribed** (slice 5, 23 Nov 2026): when the read says our server
+can transcribe it, the no-captions stop gives way to an episode's offer, in the same words and
+components: the steps it got through, "Needs transcribing · about 1 min", "Uses 38 s of your 5 hr
+transcribing left, and one overview" (lengths under a minute in seconds), and Create becomes
+"Transcribe and create". Not enough hours left is the episode's stop in Create's place. The run
+gets its own step, "Transcribing the TikTok", counting down as an episode's does, and the words
+are saved as `tiktok-transcribed`. A failure says it of the TikTok ("We couldn't get the TikTok's
+sound", with Try again, which `transcribeAgain` reruns for an episode or a TikTok alike). The
+transcription loop is `transcribeAudio`, shared with episodes (`transcribeTikTok`,
+`transcribeEpisode`). Analytics are the episodes' `capture.episodeTranscription` events, with
+`source: "tiktok"`.
+
+**In the panel** the press reads it as before; if neither read found captions and our server can
+transcribe it, the offer turns into the episode's question in place: "No captions · Needs
+transcribing · about 1 min", the hours it uses, and "Transcribe and create" (or the stop when there
+aren't enough hours). Nothing is transcribed until that second press. **In onboarding**, as with an
+episode, Your link says so before Looks right ("There are no captions, so we'll make a transcript
+from its sound: 58 s of your 5 free hours this month."), and it is transcribed once the account
+exists. Its wait keeps the video's stages ("Fetching transcript", then writing).
+
 **Failures**, each ending "Nothing was used." and never naming the vendor: private or removed;
 TikTok refused (Try again); a photo post or a profile, known from the address without a read; and
 our server not reading TikTok at all ("TikTok links aren't working right now").
@@ -227,7 +273,7 @@ play in place there too.
 
 **The link preview stays the text card** every shared page has (`shareCard.ts`). 130k draws the
 portrait cover in the preview's image slot, but the card is drawn from the snapshot alone, and
-putting the cover in would mean our server fetching from TikTok's CDN, which it never does. The
+putting the cover in would mean our server fetching from TikTok's CDN, which it doesn't. The
 preview's description already says "58 s video".
 
 **A cover that won't load leaves the stone tint** (`TikTokCover`), never a broken picture, since
@@ -256,7 +302,8 @@ fetching them again means a read, and a read costs a credit. Which route found t
 
 Every call is one ScrapeCreators credit, priced at `SCRAPECREATORS_PRICE` ($47 for 25,000 on the
 Freelance plan, from its homepage on 22 Nov 2026, since its pricing page was missing). A read,
-words included, is one credit. Each one is recorded in the cost tally under `transcripts` /
+words included, is one credit, and asking to transcribe a TikTok spends one more for the fresh
+read, plus the GPU time recorded under `transcripts` / `speech-to-text`. Each one is recorded in the cost tally under `transcripts` /
 `tiktok-vendor`, on the account, or on no one yet for a trial's read. Credits only ever come from
 what the vendor's answer says it charged.
 
