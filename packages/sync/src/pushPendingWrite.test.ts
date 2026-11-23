@@ -395,3 +395,28 @@ test("deleting a chat deletes that conversation, by its overview and its own id"
   assert.deepEqual(outcome, { result: "gone" });
   assert.deepEqual(api.calls, [{ method: "deleteChat", args: [`${OVERVIEW}:${conversation}`] }]);
 });
+
+test("what became of a suggested question goes to that question by its whole id, and one the server no longer has is done with", async () => {
+  const api = new ScriptedSyncApi();
+  const id = `library:${OVERVIEW}:5c2f7a1e-0d3b-4e8a-9b61-2f4d8c7e1a90:7d3e8b2f-1e4c-4f9a-8c72-3e5d9f8a2b01`;
+  const change = { dismissedAt: AT, feedback: { verdict: "obvious", at: AT } };
+
+  const outcome = await pushPendingWrite(
+    api,
+    entry({ kind: "suggestedQuestion", id, change: { op: "suggestedQuestion", change } }),
+    1,
+    storage,
+  );
+
+  assert.deepEqual(outcome, { result: "written", rev: 1 });
+  assert.deepEqual(api.calls, [{ method: "changeSuggestedQuestion", args: [id, change, AT] }]);
+
+  api.failOnce("changeSuggestedQuestion", { code: "not_found" });
+  const gone = await pushPendingWrite(
+    api,
+    entry({ kind: "suggestedQuestion", id, change: { op: "suggestedQuestion", change } }),
+    1,
+    storage,
+  );
+  assert.deepEqual(gone, { result: "gone" });
+});

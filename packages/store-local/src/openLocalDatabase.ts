@@ -12,6 +12,9 @@ import {
   PROJECTS_STORE,
   PROJECT_MEMBERS_STORE,
   OUTBOX_STORE,
+  QUESTIONS_BY_OVERVIEW_INDEX,
+  QUESTIONS_BY_PROJECT_INDEX,
+  SUGGESTED_QUESTIONS_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   PLAYLIST_CHECKS_STORE,
@@ -94,6 +97,11 @@ export const openLocalDatabase = (options: OpenLocalDatabaseOptions = {}): Promi
       const chats = request.transaction!.objectStore(CHATS_STORE);
       if (!chats.indexNames.contains(CHATS_BY_PROJECT_INDEX)) {
         chats.createIndex(CHATS_BY_PROJECT_INDEX, "projectId");
+      }
+      if (!db.objectStoreNames.contains(SUGGESTED_QUESTIONS_STORE)) {
+        const questions = db.createObjectStore(SUGGESTED_QUESTIONS_STORE, { keyPath: "id" });
+        questions.createIndex(QUESTIONS_BY_OVERVIEW_INDEX, "overviewIds", { multiEntry: true });
+        questions.createIndex(QUESTIONS_BY_PROJECT_INDEX, "scope.projectId");
       }
     };
 

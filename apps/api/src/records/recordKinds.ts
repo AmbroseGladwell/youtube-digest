@@ -14,6 +14,8 @@ import {
   ProjectMember,
   SETTINGS_MIGRATIONS,
   Settings,
+  SUGGESTED_QUESTION_MIGRATIONS,
+  SuggestedQuestion,
   TOPIC_MIGRATIONS,
   Topic,
   type RecordMigration,
@@ -34,4 +36,5 @@ export const RECORD_KINDS: Record<RecordKind, RecordKindConfig> = {
   project: { schema: Project, migrations: PROJECT_MIGRATIONS },
   projectMember: { schema: ProjectMember, migrations: PROJECT_MEMBER_MIGRATIONS },
   chat: { schema: Chat, migrations: CHAT_MIGRATIONS },
+  suggestedQuestion: { schema: SuggestedQuestion, migrations: SUGGESTED_QUESTION_MIGRATIONS },
 };

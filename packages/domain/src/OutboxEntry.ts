@@ -10,6 +10,7 @@ export type OutboxChange =
   | { op: "settings"; patch: Record<string, unknown> }
   | { op: "project"; patch: Record<string, unknown> }
   | { op: "member"; change: Record<string, unknown> }
+  | { op: "suggestedQuestion"; change: Record<string, unknown> }
   | { op: "delete" }
   // No body: read from the store when pushed, behind its note (docs/features/transcript-storage.md).
   | { op: "transcript"; overviewId: string };

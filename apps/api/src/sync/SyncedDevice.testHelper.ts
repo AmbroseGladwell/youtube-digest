@@ -7,6 +7,7 @@ import {
   IndexedDbOverviewStore,
   IndexedDbProjectStore,
   IndexedDbSettingsStore,
+  IndexedDbSuggestedQuestionStore,
   IndexedDbSyncStorage,
   IndexedDbTranscriptStore,
   openLocalDatabase,
@@ -48,6 +49,7 @@ export interface SyncedDevice {
   transcripts: IndexedDbTranscriptStore;
   projects: IndexedDbProjectStore;
   chats: IndexedDbChatStore;
+  questions: IndexedDbSuggestedQuestionStore;
   storage: IndexedDbSyncStorage;
   engine: SyncEngine;
   sync(): Promise<SyncStatus>;
@@ -79,6 +81,7 @@ export const makeDevice = async (
   const transcripts = new IndexedDbTranscriptStore(db);
   const projects = new IndexedDbProjectStore(db, { onJournaled: storage.notifyJournaled });
   const chats = new IndexedDbChatStore(db, { onJournaled: storage.notifyJournaled });
+  const questions = new IndexedDbSuggestedQuestionStore(db, { onJournaled: storage.notifyJournaled });
   await before?.({ overviews, settings, transcripts });
   const engine = new SyncEngine({
     api: createFetchSyncApi({ baseUrl: "http://api.test", token, clientVersion, fetch: injectingFetch(testApp.app) }),
@@ -88,5 +91,5 @@ export const makeDevice = async (
     now: () => testApp.clock.now,
     onFolded,
   });
-  return { overviews, settings, transcripts, projects, chats, storage, engine, sync: () => engine.sync() };
+  return { overviews, settings, transcripts, projects, chats, questions, storage, engine, sync: () => engine.sync() };
 };
