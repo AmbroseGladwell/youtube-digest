@@ -1,4 +1,4 @@
-import { recipeFigures, sourceName, type Recipe, type Source } from "@overview/domain";
+import { isClipSource, recipeFigures, sourceName, type Recipe, type Source } from "@overview/domain";
 import styles from "./RecipeTimes.module.scss";
 import { recipeTimesTestIds } from "./RecipeTimesTestIds.js";
 
@@ -24,7 +24,7 @@ export const RecipeTimes = ({ recipe, source }: RecipeTimesProps) => {
         ))}
       </dl>
       <p className={styles.caption}>
-        {source.kind === "youtube" || source.kind === "tiktok"
+        {source.kind === "youtube" || isClipSource(source)
           ? "As the video’s description gives them."
           : `As the recipe gives them on ${sourceName(source)}.`}
       </p>

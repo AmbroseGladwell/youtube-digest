@@ -12,7 +12,7 @@ import { TagAliases } from "./TagAliases.js";
 import { Topic } from "./Topic.js";
 import { TranscriptSegment } from "./TranscriptSegment.js";
 import { VideoSource } from "./VideoSource.js";
-import { PodcastSource, TikTokSource } from "./Source.js";
+import { PodcastSource, SocialSource, TikTokSource } from "./Source.js";
 
 const readerContext = {
   captureReason: z.string().nullable(),
@@ -32,6 +32,13 @@ export const OurKeyGenerationRequest = z.object({
   // An episode first: read as a video it would lose the episode (docs/features/podcast-screens.md).
   input: z.union([
     z.object({ podcast: PodcastSource, video: VideoSource, transcript: z.array(TranscriptSegment).min(1), ...readerContext }),
+    z.object({
+      social: SocialSource,
+      video: VideoSource,
+      transcript: z.array(TranscriptSegment).min(1),
+      noteKind: NoteKind.optional(),
+      ...readerContext,
+    }),
     z.object({
       tiktok: TikTokSource,
       video: VideoSource,

@@ -15,13 +15,14 @@ export interface OverviewThumbnailProps {
   carriesIntoHead?: boolean | undefined;
 }
 
-const MATTED = new Set(["podcast", "tiktok"]);
+const MATTED = new Set(["podcast", "tiktok", "instagram", "facebook"]);
+const PORTRAIT = new Set(["tiktok", "instagram", "facebook"]);
 
 const pictureClass = (kind: string, to: string | undefined, className: string | undefined) => {
   if (kind === "podcast") {
     return styles.art;
   }
-  if (kind === "tiktok") {
+  if (PORTRAIT.has(kind)) {
     return styles.portrait;
   }
   return to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`;

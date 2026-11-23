@@ -1,4 +1,4 @@
-import { noteTiming, overviewNoteLines, type Overview } from "@overview/domain";
+import { isClipSource, noteTiming, overviewNoteLines, type Overview } from "@overview/domain";
 import type { OnboardingFound, OnboardingSource } from "../../onboardingSources.js";
 import type { OnboardingRun } from "../../useOnboardingRun.js";
 import { useKeepTabWhileRunning } from "../../useKeepTabWhileRunning.js";
@@ -90,7 +90,10 @@ export const OnboardingWaitScreen = ({
       ingredients: overview?.recipe?.ingredients.length ?? null,
       steps: overview?.recipe?.steps.length ?? null,
       episodeMinutes,
-      clipSeconds: found?.source.kind === "tiktok" && found.source.durationMs !== null ? Math.round(found.source.durationMs / 1000) : null,
+      clipSeconds:
+        found !== null && isClipSource(found.source) && found.source.durationMs !== null
+          ? Math.round(found.source.durationMs / 1000)
+          : null,
     }),
   );
 

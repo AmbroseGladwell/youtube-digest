@@ -1,4 +1,4 @@
-import { articleReadMinutes, formatClock, recipeMinutes, sourceName, type SharedNote } from "@overview/domain";
+import { articleReadMinutes, formatClock, isClipSource, recipeMinutes, sourceName, type SharedNote } from "@overview/domain";
 
 export type SampleKind = "video" | "article" | "recipe" | "podcast";
 
@@ -11,7 +11,7 @@ export const START_VERB: Record<SampleKind, string> = {
 };
 
 export const sampleKindOf = (note: SharedNote): SampleKind => {
-  if (note.source.kind === "youtube" || note.source.kind === "tiktok") {
+  if (note.source.kind === "youtube" || isClipSource(note.source)) {
     return "video";
   }
   if (note.source.kind === "podcast") {
@@ -22,7 +22,7 @@ export const sampleKindOf = (note: SharedNote): SampleKind => {
 
 const lengthOf = (note: SharedNote): string | null => {
   const { source } = note;
-  if (source.kind === "youtube" || source.kind === "tiktok") {
+  if (source.kind === "youtube" || isClipSource(source)) {
     return source.durationMs === null ? null : formatClock(source.durationMs / 1000);
   }
   if (source.kind === "podcast") {

@@ -1,5 +1,5 @@
 import { useCallback, useState, type Ref } from "react";
-import { sourceImage, type Source } from "@overview/domain";
+import { isClipSource, sourceImage, type Source } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useOverviewImageMorph } from "../../../../util/useOverviewImageMorph.js";
 import styles from "./HeadImage.module.scss";
@@ -29,8 +29,8 @@ export const HeadImage = ({ source, full, className, onToggle, ref, carriesFrom 
   const [failed, setFailed] = useState(false);
   const [sharpLoaded, setSharpLoaded] = useState(false);
   const imageUrl = sourceImage(source);
-  // Design 130g: a TikTok's portrait cover is matted on the stone tint in the 16:9 slot, never cropped.
-  const portrait = source.kind === "tiktok";
+  // Design 130g: a TikTok's portrait cover is matted on the stone tint in the 16:9 slot, never cropped; a reel's too.
+  const portrait = isClipSource(source);
   const morph = useOverviewImageMorph<HTMLButtonElement>(carriesFrom ?? "", carriesFrom !== undefined);
   // Stable, as a fresh callback ref would re-attach every render; merged with useHeadImageMotion's ref.
   const setButton = useCallback(

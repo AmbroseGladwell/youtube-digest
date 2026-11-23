@@ -8,7 +8,10 @@ import {
   formatClock,
   parsePodcastLink,
   parseTikTokLink,
+  isClipSource,
+  SOCIAL_PLATFORM_NAME,
   tiktokSource,
+  type SocialPlatform,
   recipeMinutes,
   sourceName,
   webSource,
@@ -183,15 +186,40 @@ const readMinutes = (source: Source): string | null => (source.kind === "web" ? 
 export const TIKTOK_AT_START = true;
 
 const clipLength = (source: Source): string | null =>
-  source.kind === "tiktok" && source.durationMs !== null ? formatClock(source.durationMs / 1000) : null;
+  isClipSource(source) && source.durationMs !== null ? formatClock(source.durationMs / 1000) : null;
 
 // "42 seconds from …": a clip is said in seconds, where spokenLength would round it to a minute or none.
 const spokenClipLength = (source: Source): string | null => {
-  if (source.kind !== "tiktok" || source.durationMs === null) {
+  if (!isClipSource(source) || source.durationMs === null) {
     return null;
   }
   const seconds = Math.round(source.durationMs / 1000);
   return seconds < 60 ? `${seconds} seconds` : spokenLength(source.durationMs);
+};
+
+// Takes no link until onboarding reads posts (docs/features/social-posts.md), so web still takes them.
+const socialNotYet = (platform: SocialPlatform): OnboardingSource => {
+  const name = SOCIAL_PLATFORM_NAME[platform];
+  return {
+    linkKind: () => null,
+    keyFromLink: () => null,
+    target: ({ link }) => link,
+    make: () => Promise.reject(new Error(`Onboarding doesn't read ${name} links yet.`)),
+    noun: () => "video",
+    pending: () => null,
+    finding: `Finding the ${name} post…`,
+    notFound: `We couldn't find that ${name} post.`,
+    card: ({ source }) => ({
+      kicker: `${sourceName(source)} · ${name}`,
+      facts: { line: [clipLength(source), name].filter(Boolean).join(" · ") },
+    }),
+    yourLink: ({ source }, minutes) => ({
+      heading: `Here’s what’s in the ${name} post you saved.`,
+      line: `${fromWhom(spokenClipLength(source), sourceName(source))}, ${turnedInto(minutes)}`,
+      pills: "readListen",
+      inside: INSIDE,
+    }),
+  };
 };
 
 // Web stays last: it takes any address no other kind claims.
@@ -403,6 +431,8 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       notice: tiktokWordsNotice(episodeWords).notice,
     }),
   },
+  instagram: socialNotYet("instagram"),
+  facebook: socialNotYet("facebook"),
   web: {
     linkKind: (link) => (isArticleLink(link) ? "article" : null),
     keyFromLink: () => null,

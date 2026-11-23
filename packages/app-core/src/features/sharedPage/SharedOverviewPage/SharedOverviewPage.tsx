@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useBlocker, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
+  sourceKindWord,
+  clipPlatformName,
+  isClipSource,
+  isSocialSource,
   adjustedText,
   DEFAULT_HEAD_IMAGE_SIZE,
   DEFAULT_NARRATION_VOICE,
@@ -137,6 +141,9 @@ const channelLine = (source: Source, recipeVideo: boolean, recipePage: boolean):
   if (source.kind === "tiktok") {
     return `An overview of a ${recipeVideo ? "recipe " : ""}TikTok from ${sourceName(source)}`;
   }
+  if (isSocialSource(source)) {
+    return `An overview of ${source.kind === "instagram" ? "an" : "a"} ${recipeVideo ? "recipe " : ""}${clipPlatformName(source)} ${sourceKindWord(source)} from ${sourceName(source)}`;
+  }
   return `An overview of ${recipePage ? "a recipe" : "an article"} from ${sourceName(source)}`;
 };
 
@@ -147,8 +154,8 @@ const sourceLinkLabel = (source: Source, recipeVideo: boolean, recipePage: boole
   if (source.kind === "podcast") {
     return openPodcastLabel(source.sharedFrom);
   }
-  if (source.kind === "tiktok") {
-    return recipeVideo ? "Open the video on TikTok" : "Watch on TikTok";
+  if (isClipSource(source)) {
+    return recipeVideo ? `Open the video on ${clipPlatformName(source)}` : `Watch on ${clipPlatformName(source)}`;
   }
   return `${recipePage ? "Open the recipe" : "Read the article"} on ${sourceName(source)}`;
 };
@@ -421,9 +428,9 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
                 />
               )}
               <div className={styles.chips} ref={chips}>
-                {note.source.kind === "tiktok" && (
+                {isClipSource(note.source) && (
                   <span className={styles.chip} data-testid={sharedOverviewPageTestIds.kindChip}>
-                    TikTok
+                    {clipPlatformName(note.source)}
                   </span>
                 )}
                 <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>

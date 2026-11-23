@@ -1,4 +1,4 @@
-import type { Source } from "./Source.js";
+import { sourceKindWord } from "./sourceFacts.js";
 import type { NoteLine } from "./NoteLine.js";
 import { NOVELTY_LABEL, REASONING_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
 import type { SharedNote } from "./SharedNote.js";
@@ -12,8 +12,6 @@ import { spokenMeasures } from "./spokenMeasures.js";
 import type { ReadAnyway } from "./ArticleDetails.js";
 import type { TimeRange, WatchAnswer, WatchAnyway } from "./WatchAnyway.js";
 import { LISTEN_ANYWAY_LABEL, WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
-
-const SOURCE_WORD: Record<Source["kind"], string> = { youtube: "video", web: "article", podcast: "episode", tiktok: "video" };
 
 export const SUMMARY_SECTION = "Summary";
 export const BIG_PICTURE_SECTION = "Big picture";
@@ -221,7 +219,7 @@ export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts 
     ),
     true,
   );
-  const sourceWord = SOURCE_WORD[overview.source.kind];
+  const sourceWord = sourceKindWord(overview.source);
   const steps = shown.steps === false ? [] : (overview.sourceSteps?.items ?? []);
   section(
     SOURCE_STEPS_SECTION,

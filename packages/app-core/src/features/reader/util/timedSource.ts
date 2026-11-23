@@ -1,4 +1,4 @@
-import { sourceKey, sourceName, type Source, type VideoSource } from "@overview/domain";
+import { SOCIAL_PLATFORM_NAME, SocialPlatform, sourceKey, sourceName, type Source, type VideoSource } from "@overview/domain";
 
 export const timedSource = (source: Source): VideoSource | null => {
   if (source.kind === "youtube") {
@@ -27,6 +27,10 @@ type TimedNoun = ReturnType<typeof timedNoun>;
 export const playingLabel = (video: Pick<VideoSource, "id">): string => {
   if (timedNoun(video) === "episode") {
     return "Playing";
+  }
+  const platform = SocialPlatform.safeParse(video.id?.split(":")[0]);
+  if (platform.success) {
+    return `Playing on ${SOCIAL_PLATFORM_NAME[platform.data]}`;
   }
   return video.id?.startsWith("tiktok:") ? "Playing on TikTok" : "Playing on YouTube";
 };

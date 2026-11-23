@@ -6,6 +6,8 @@ import {
   Source,
   articleSourceId,
   keptSharedLink,
+  socialSource,
+  socialTitle,
   tiktokSource,
   tiktokTitle,
   type PodcastSource,
@@ -24,6 +26,7 @@ import {
 } from "./sourceFacts.js";
 import { sourceKey } from "./sourceKey.js";
 import type { TikTokVideo } from "./TikTokVideo.js";
+import type { SocialPost } from "./SocialPost.js";
 
 const article: WebSource = {
   kind: "web",
@@ -178,4 +181,57 @@ test("a TikTok's title drops the hashtags after its words, keeps any within them
   );
   assert.equal(tiktokTitle("  #fyp #news ", "bbcnews"), "#fyp #news");
   assert.equal(tiktokTitle("", "bbcnews"), "A TikTok by @bbcnews");
+});
+
+const reel: SocialPost = {
+  platform: "instagram",
+  id: "DAbCdEfGh12",
+  url: "https://www.instagram.com/reel/DAbCdEfGh12/",
+  handle: "windowsillgarden",
+  authorName: "Windowsill Garden",
+  description: "Five ways to keep basil alive on a windowsill #basil #herbs\n\nWater from below, never over the leaves.",
+  media: "video",
+  durationSeconds: 59,
+  coverUrl: "https://scontent.cdninstagram.example/thumb.jpg",
+  postedAt: "2026-11-21T23:29:40.000Z",
+};
+
+test("an Instagram reel becomes a source keyed by its shortcode, the description's first line its title", () => {
+  const source = socialSource(reel);
+  assert.equal(sourceKey(source), "instagram:DAbCdEfGh12");
+  assert.equal(source.title, "Five ways to keep basil alive on a windowsill");
+  assert.equal(source.durationMs, 59_000);
+  assert.equal(source.media, "video");
+  assert.ok(Source.safeParse(source).success);
+});
+
+test("a social post is named by its author, its platform's chip, and a post rather than a video when it shows none", () => {
+  const instagram = socialSource(reel);
+  const facebook = socialSource({ ...reel, platform: "facebook", id: "1535600000000001", handle: null, durationSeconds: 83 });
+  assert.equal(sourceName(instagram), "Windowsill Garden");
+  assert.equal(sourceName({ ...instagram, authorName: "" }), "@windowsillgarden");
+  assert.equal(sourceName({ ...facebook, authorName: "" }), "Facebook");
+  assert.equal(kindChip({ source: instagram, recipe: null }), "Instagram");
+  assert.equal(kindChip({ source: facebook, recipe: null }), "Facebook");
+  assert.equal(sourceLength(instagram), "59 s video");
+  assert.equal(sourceLength(facebook), "1:23 video");
+  assert.equal(sourceLength({ ...instagram, media: "photo", durationMs: null }), "Post");
+  assert.equal(recipeFrom(facebook), "Windowsill Garden on Facebook");
+  assert.equal(sourceUrl(instagram), reel.url);
+});
+
+test("a social title cuts a long first line at a word, and names who posted it when there's no description", () => {
+  const long = `${"A sentence that runs on and on about basil ".repeat(5)}end`;
+  const title = socialTitle({ ...reel, description: long });
+  assert.ok(title.length <= 121 && title.endsWith("…") && !title.includes("  "), title);
+  assert.equal(socialTitle({ ...reel, description: "  #basil #herbs " }), "#basil #herbs");
+  assert.equal(socialTitle({ ...reel, description: "" }), "An Instagram video by @windowsillgarden");
+  assert.equal(
+    socialTitle({ ...reel, platform: "facebook", handle: null, media: "photo", description: "" }),
+    "A Facebook post by Windowsill Garden",
+  );
+  assert.equal(
+    socialTitle({ ...reel, platform: "facebook", handle: null, authorName: "", media: "text", description: "" }),
+    "A Facebook post",
+  );
 });
