@@ -50,6 +50,13 @@ describe("waitStageIds", () => {
   it("swaps fetching for transcribing on an episode with no transcript", () => {
     expect(waitStageIds("podcast", { transcribing: true })).toEqual(["findEpisode", "transcribe", "write"]);
   });
+
+  it("swaps fetching for transcribing on a TikTok with no captions, its done line in seconds", () => {
+    expect(waitStageIds("video", { transcribing: true })).toEqual(["transcribeClip", "write"]);
+    expect(waitStage("transcribeClip", "running").name).toBe("Transcribing the TikTok");
+    expect(waitStage("transcribeClip", "done", { clipSeconds: 58 }).doneLine).toBe("TikTok transcribed · 58 s");
+    expect(waitStage("transcribeClip", "done", { clipSeconds: 72 }).doneLine).toBe("TikTok transcribed · 1 min");
+  });
 });
 
 describe("waitStage", () => {

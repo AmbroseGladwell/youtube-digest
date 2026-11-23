@@ -234,7 +234,8 @@ transcribing · about 1 min", the hours it uses, and "Transcribe and create" (or
 aren't enough hours). Nothing is transcribed until that second press. **In onboarding**, as with an
 episode, Your link says so before Looks right ("There are no captions, so we'll make a transcript
 from its sound: 58 s of your 5 free hours this month."), and it is transcribed once the account
-exists. Its wait keeps the video's stages ("Fetching transcript", then writing).
+exists. Its wait swaps "Fetching transcript" for "Transcribing the TikTok" ("TikTok transcribed · 58 s"
+once done), as an episode's does.
 
 **Failures**, each ending "Nothing was used." and never naming the vendor: private or removed;
 TikTok refused (Try again); a photo post or a profile, known from the address without a read; and

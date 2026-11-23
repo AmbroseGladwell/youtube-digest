@@ -1,8 +1,17 @@
 import { recipeMinutes } from "@overview/domain";
+import { audioLength } from "../podcasts/util/transcriptionCopy.js";
 
 export type WaitKind = "video" | "article" | "recipe" | "podcast";
 
-export type WaitStageId = "findEpisode" | "fetchTranscript" | "transcribe" | "fetchPage" | "fetchRecipe" | "write" | "prepareRecipe";
+export type WaitStageId =
+  | "findEpisode"
+  | "fetchTranscript"
+  | "transcribe"
+  | "transcribeClip"
+  | "fetchPage"
+  | "fetchRecipe"
+  | "write"
+  | "prepareRecipe";
 
 export type WaitStageState = "waiting" | "running" | "done";
 
@@ -20,6 +29,7 @@ export interface WaitFacts {
   ingredients?: number | null;
   steps?: number | null;
   episodeMinutes?: number | null;
+  clipSeconds?: number | null;
 }
 
 export interface WaitCopy {
@@ -61,10 +71,14 @@ export const episodeFoundLine = (minutes?: number | null): string =>
 export const episodeTranscribedLine = (minutes?: number | null): string =>
   withDetail("Episode transcribed", known(minutes) ? recipeMinutes(minutes) : null);
 
+export const clipTranscribedLine = (seconds?: number | null): string =>
+  withDetail("TikTok transcribed", known(seconds) ? audioLength(seconds) : null);
+
 const STAGES: Record<WaitStageId, { name: string; doneLine: (facts: WaitFacts) => string }> = {
   findEpisode: { name: "Finding the episode", doneLine: (facts) => episodeFoundLine(facts.episodeMinutes) },
   fetchTranscript: { name: "Fetching transcript", doneLine: (facts) => transcriptFetchedLine(facts.transcriptWords) },
   transcribe: { name: "Transcribing the episode", doneLine: (facts) => episodeTranscribedLine(facts.episodeMinutes) },
+  transcribeClip: { name: "Transcribing the TikTok", doneLine: (facts) => clipTranscribedLine(facts.clipSeconds) },
   fetchPage: { name: "Fetching the page", doneLine: (facts) => pageFetchedLine(facts.pageWords) },
   fetchRecipe: { name: "Fetching the recipe", doneLine: (facts) => recipeFetchedLine(facts.ingredients, facts.steps) },
   write: { name: "Creating overview", doneLine: (facts) => overviewWrittenLine(facts.readMinutes) },
@@ -74,7 +88,8 @@ const STAGES: Record<WaitStageId, { name: string; doneLine: (facts: WaitFacts) =
 export const waitStageIds = (kind: WaitKind, { transcribing = false }: { transcribing?: boolean } = {}): readonly WaitStageId[] => {
   switch (kind) {
     case "video":
-      return ["fetchTranscript", "write"];
+      // Only a TikTok with no captions is transcribed among videos.
+      return [transcribing ? "transcribeClip" : "fetchTranscript", "write"];
     case "article":
       return ["fetchPage", "write"];
     case "recipe":
