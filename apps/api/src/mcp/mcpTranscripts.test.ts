@@ -108,7 +108,7 @@ test("search_transcripts refuses an article's id, which keeps no transcript", as
   const result = await client.callTool("search_transcripts", { query: "bridge", id: article.id });
 
   assert.equal(result.isError, true);
-  assert.match(result.text, /Articles and recipes keep no transcript/);
+  assert.match(result.text, /Articles, recipes and photo posts keep no transcript/);
 });
 
 test("get_transcript reads a source over two hours in parts that fit, each saying where it runs and how to carry on", async (t) => {

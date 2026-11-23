@@ -7,6 +7,8 @@ import {
   OverviewId,
   podcastSource,
   podcastSourceId,
+  hasTooFewWords,
+  isWrittenPost,
   socialSource,
   sourceKey,
   tagUsage,
@@ -32,9 +34,11 @@ import {
 import {
   clipAsVideo,
   episodeAsVideo,
+  postAsArticle,
   postAsVideo,
   type GenerationInput,
   type SocialGenerationInput,
+  type WrittenPostGenerationInput,
   type OverviewInput,
   type PodcastGenerationInput,
   type TikTokGenerationInput,
@@ -48,6 +52,7 @@ import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
 import { CaptureStopwatch } from "./CaptureStopwatch.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
+import { SocialPostTooShortError } from "./SocialPostTooShortError.js";
 import type { OverviewMeta } from "./makeOverviewOnKeys.js";
 import type { TranscriptionProgress } from "../../podcasts/api/transcribeAudio.js";
 
@@ -247,7 +252,7 @@ export interface SocialWords {
   source: Extract<CaptureTranscriptSource, "social-vendor" | "social-transcribed">;
 }
 
-// A video post, written from its words and its whole description (docs/features/social-posts.md, "The note").
+// A video from its words and whole description; a photo or text post from the description alone (social-posts.md).
 export const runSocialOverviewGeneration = async (
   post: SocialPost,
   findWords: (post: SocialPost) => Promise<SocialWords>,
@@ -261,6 +266,14 @@ export const runSocialOverviewGeneration = async (
     if (held !== null) {
       throw new ArticleAlreadyHeldError(held);
     }
+  }
+  if (isWrittenPost(social)) {
+    const article = postAsArticle(social, post.description);
+    if (article === null || hasTooFewWords(social)) {
+      throw new SocialPostTooShortError(social.wordCount);
+    }
+    stopIfCancelled(options);
+    return writeOverview({ social, article }, deps, options);
   }
   const { transcript, source: transcriptSource } = await findWords(post);
   stopIfCancelled(options);
@@ -301,6 +314,7 @@ type WhatToWrite =
   | Pick<PodcastGenerationInput, "podcast" | "video" | "transcript">
   | Pick<TikTokGenerationInput, "tiktok" | "video" | "transcript" | "noteKind">
   | Pick<SocialGenerationInput, "social" | "video" | "transcript" | "noteKind">
+  | Pick<WrittenPostGenerationInput, "social" | "article">
   | { article: ExtractedArticle };
 
 const writeOverview = async (

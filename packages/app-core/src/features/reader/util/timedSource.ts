@@ -1,10 +1,18 @@
-import { SOCIAL_PLATFORM_NAME, SocialPlatform, sourceKey, sourceName, type Source, type VideoSource } from "@overview/domain";
+import {
+  isWrittenSource,
+  SOCIAL_PLATFORM_NAME,
+  SocialPlatform,
+  sourceKey,
+  sourceName,
+  type Source,
+  type VideoSource,
+} from "@overview/domain";
 
 export const timedSource = (source: Source): VideoSource | null => {
   if (source.kind === "youtube") {
     return source;
   }
-  if (source.kind === "web") {
+  if (isWrittenSource(source)) {
     return null;
   }
   return {

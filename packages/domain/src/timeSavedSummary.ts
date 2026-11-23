@@ -1,4 +1,5 @@
 import type { SharedNote } from "./SharedNote.js";
+import { isWrittenSource } from "./Source.js";
 import { noteTiming } from "./noteTiming.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
 import { articleReadMs } from "./sourceFacts.js";
@@ -41,7 +42,7 @@ export const overviewTimeSaved = (overview: SharedNote): OverviewTimeSaved => {
   if (overview.recipe != null) {
     return { kind: "recipe" };
   }
-  if (overview.source.kind === "web") {
+  if (isWrittenSource(overview.source)) {
     return articleTimeSaved(overview, overview.source.wordCount);
   }
   const watchAnyway = overview.watchAnyway;

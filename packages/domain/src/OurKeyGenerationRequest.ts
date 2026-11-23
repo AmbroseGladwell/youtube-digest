@@ -32,6 +32,8 @@ export const OurKeyGenerationRequest = z.object({
   // An episode first: read as a video it would lose the episode (docs/features/podcast-screens.md).
   input: z.union([
     z.object({ podcast: PodcastSource, video: VideoSource, transcript: z.array(TranscriptSegment).min(1), ...readerContext }),
+    // A photo or text post, written from its description as an article is (docs/features/social-posts.md).
+    z.object({ social: SocialSource, article: ExtractedArticle, ...readerContext }),
     z.object({
       social: SocialSource,
       video: VideoSource,

@@ -115,12 +115,12 @@ const spokenWatchAnswer = ({ answer, range }: WatchAnyway, episode: boolean) => 
 
 const READ_ANYWAY_LABEL: Record<WatchAnswer, string> = { no: "No", yes: "Yes", partial: "Just part of it" };
 
-const spokenReadAnswer = ({ answer }: ReadAnyway, chapters: readonly string[]) => {
+const spokenReadAnswer = ({ answer }: ReadAnyway, chapters: readonly string[], sourceWord: string) => {
   if (answer === "yes") {
     return "Yes, it's worth reading.";
   }
   if (answer === "no") {
-    return "No, you can probably skip the article, the overview covers it.";
+    return `No, you can probably skip the ${sourceWord}, the overview covers it.`;
   }
   return chapters.length === 0 ? "Yes, it's worth reading one part." : `Yes, it's worth reading part of it: ${chapters.join(", and ")}.`;
 };
@@ -276,7 +276,10 @@ export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts 
     const titles = readAnyway.chapterIndexes.flatMap((index) => overview.article?.chapters[index]?.title ?? []);
     const body = `${readAnyway.reason} ${readAnyway.leftOut}`.trim();
     section(READ_ANYWAY_SECTION, { text: READ_ANYWAY_SECTION, spoken: "Should you read it anyway?" }, [
-      { text: `${READ_ANYWAY_LABEL[readAnyway.answer]}. ${body}`, spoken: `${spokenReadAnswer(readAnyway, titles)} ${body}` },
+      {
+        text: `${READ_ANYWAY_LABEL[readAnyway.answer]}. ${body}`,
+        spoken: `${spokenReadAnswer(readAnyway, titles, sourceKindWord(overview.source))} ${body}`,
+      },
     ]);
   }
 

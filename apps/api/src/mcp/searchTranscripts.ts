@@ -8,6 +8,7 @@ import {
   youtubeTimestampUrl,
   type Overview,
   type TranscriptMoment,
+  isWrittenSource,
 } from "@overview/domain";
 import { TranscriptPassagesRepository } from "../transcripts/TranscriptPassagesRepository.js";
 import { TRANSCRIPT_RESULTS, transcriptMatches, type TranscriptMatch } from "../transcripts/transcriptMatches.js";
@@ -47,9 +48,9 @@ export const searchTranscripts = mcpTool({
       if (entry === undefined) {
         return toolError(`There is no overview with id ${id} in this library.`);
       }
-      const key = entry.overview.source.kind === "web" ? null : sourceKey(entry.overview.source);
+      const key = isWrittenSource(entry.overview.source) ? null : sourceKey(entry.overview.source);
       if (key === null) {
-        return toolError("Articles and recipes keep no transcript to search. Read the overview with get_overview.");
+        return toolError("Articles, recipes and photo posts keep no transcript to search. Read the overview with get_overview.");
       }
       withinSources = [key];
     }

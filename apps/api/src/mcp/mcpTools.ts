@@ -15,6 +15,7 @@ import {
   sourceName,
   sourceUrl,
   type Source,
+  isWrittenPost,
 } from "@overview/domain";
 import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
@@ -291,6 +292,9 @@ const getTranscript = mcpTool({
       return toolError(`There is no overview with id ${id} in this library.`);
     }
     const { source } = entry.overview;
+    if (isWrittenPost(source)) {
+      return toolError("Photo and text posts have no transcript: the overview was written from the post's description.");
+    }
     if (source.kind === "web") {
       return toolError(
         entry.overview.recipe === null

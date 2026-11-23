@@ -8,6 +8,7 @@ import {
   type SharedNote,
   sourceName,
   sourceUrl,
+  isWrittenPost,
 } from "@overview/domain";
 import { escapeHtml } from "./escapeHtml.js";
 
@@ -57,7 +58,7 @@ const wayOut = ({ source, recipe }: SharedNote): string => {
     return openPodcastLabel(source.sharedFrom);
   }
   if (isClipSource(source)) {
-    return `Watch on ${clipPlatformName(source)}`;
+    return `${isWrittenPost(source) ? "Open" : "Watch"} on ${clipPlatformName(source)}`;
   }
   return `${recipe == null ? "Read the article" : "Open the recipe"} on ${sourceName(source)}`;
 };
