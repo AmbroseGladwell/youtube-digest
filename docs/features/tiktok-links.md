@@ -216,6 +216,22 @@ head's place on a phone and in the panel. Watch on TikTok is always under it. Sc
 while it plays, a slim bar (cover, pause, time, progress, Back to the video) sticks to the top of
 the note.
 
+### The shared page and the link preview
+
+Designs 130q, 130q-2 and 130q-3. The shared page keeps its own layout, with a "TikTok" chip before
+the channel line and Watch on TikTok. Signed out, the promo has the column beside the note, so the
+player sits centred above the title; signed in without a copy, there is no promo and the player
+docks in that column; on a phone it takes the head's place and the promo follows the note. Its times
+play in place there too.
+
+**The link preview stays the text card** every shared page has (`shareCard.ts`). 130k draws the
+portrait cover in the preview's image slot, but the card is drawn from the snapshot alone, and
+putting the cover in would mean our server fetching from TikTok's CDN, which it never does. The
+preview's description already says "58 s video".
+
+**A cover that won't load leaves the stone tint** (`TikTokCover`), never a broken picture, since
+TikTok's cover links expire after about a day.
+
 ### The note
 
 A TikTok is written by the video note (`generateOverview`, the kind check included, so a recipe

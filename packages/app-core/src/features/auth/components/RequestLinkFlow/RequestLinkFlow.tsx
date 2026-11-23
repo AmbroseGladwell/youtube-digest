@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { NO_CARD } from "../../../../util/noCardLine.js";
 import { Navigate, useLocation, useNavigate } from "react-router";
 import { MAGIC_LINK_TTL_MINUTES, type AuthIntent } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
@@ -45,8 +46,6 @@ export interface RequestLinkFlowProps {
   // Onboarding's account step: its own heading, switching intent in place, and the code first on the web.
   onboarding?: { onSwitchIntent: (intent: AuthIntent) => void } | undefined;
 }
-
-const NO_CARD = "No card needed. Free includes 5 overviews a month.";
 
 // Why only a reader who said yes sends it: docs/features/analytics-consent.md, "Creating an account".
 const sharedAnonymousId = (): { anonymousId?: string } => {

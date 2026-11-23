@@ -1,4 +1,5 @@
 import { useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { ACCEPTED_LINKS } from "../../onboarding/util/acceptedLinks.js";
 import { Navigate, useLocation } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
@@ -339,7 +340,7 @@ const StartHero = () => {
             </p>
           ) : (
             <p className={styles.accepted} data-testid={homePageTestIds.accepted}>
-              YouTube, any web page, Apple Podcasts or Spotify.
+              {ACCEPTED_LINKS}
             </p>
           )}
         </>
