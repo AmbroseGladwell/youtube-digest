@@ -123,3 +123,18 @@ test("the panel's note ends with them too", async ({ launcher, backendSimulator 
   await reader.verifyNoteEndReadButtonReads("Read");
   await reader.verifySavedChipIsCentredBelowNoteEndButtons();
 });
+
+test("the buttons come before the questions and the ask field, so the note ends on what to do next", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seedSynced(
+    makeOverview({
+      followUpQuestions: [{ question: "Why does intuition matter most where there is no rapid feedback?", forReader: false }],
+    }),
+  );
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.verifyNoteEndActionsComeBeforeTheQuestionsAndAskField();
+});
