@@ -95,8 +95,21 @@ its Fly figures are in "Measured on Fly.io" above.
   `NarrationVoice` offers. Anything more means voice design from a text description, or cloning.
 - **Memory:** about 2.9 GB of GPU memory for Ming and 4.2 GB for Qwen 1.7B; model load was 6–14 s once the image was on the card.
 
-The blind listen pairs each GPU voice with the closest Kokoro voice (Heart, George, Emma, Michael). At the time of
-writing the owner had judged none of the pairs, having decided on cost and time first.
+The owner listened blind afterwards, 23 Nov 2026: 30 pairs, each GPU voice against the closest Kokoro voice on
+the five notes and the probe.
+
+| Pair | GPU voice | Kokoro | No real difference |
+|---|---|---|---|
+| Ming `UK_Charlotte` vs `bf_emma` | 6 | 0 | 0 |
+| Ming `UK_George` vs `bm_george` | 3 | 1 | 2 |
+| Ming `US_Emma` vs `af_heart` | 1 | 5 | 0 |
+| Qwen 1.7B `Ryan` vs `am_michael` | 0 | 5 | 1 |
+| Qwen 0.6B `Aiden` vs `am_michael` | 0 | 3 | 3 |
+
+Qwen never won. The owner found Ryan "way too emotive for the content", heard laughter mid-sentence on the probe,
+and said Aiden sounded like Chinese English. Ming's British voices beat Kokoro's, Charlotte on every pair, although
+both Georges sounded "tinny". Heart, the default, beat Ming's American voice 5 to 1. So one Ming voice is clearly
+better, and it is also the slowest (0.47x, $0.11 a note). That isn't enough to move the fifteen voices.
 
 Run it again from `services/tts/` (`uv sync --group benchmark`). Kokoro needs the dev shell and `models/`.
 The GPU engines need the Modal token from `overview-dev` through `scripts/secrets.sh run`:
