@@ -188,6 +188,10 @@ or an unknown voice is still refused with a status before anything streams.
   because the gap is written with the line rather than before the next. So a line can be played
   as soon as it is spoken, and no segment ever waits for the next line (the ~3.5 s stalls the
   device test heard from a segmenter that held each line's tail).
+- **The encoder is told not to analyse its input** (`-probesize 32 -analyzeduration 0 -fflags
+  nobuffer`). ffmpeg 6, which Ubuntu's CI and older images ship, otherwise reads about five
+  seconds of input before encoding any, so no line went out until the stream closed. Newer
+  ffmpeg doesn't, which is why it passed on a Mac and failed on CI.
 - **Segments are HLS packed audio:** an ID3 tag carrying the segment's start on the timeline in
   90 kHz units, then the frames as they are. The encoder's 1,024 samples of priming put every
   line 43 ms later on the segments' timeline than in `lineStartsSeconds`, a constant too small to

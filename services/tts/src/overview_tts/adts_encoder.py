@@ -12,6 +12,7 @@ class AdtsEncoder:
         self._process = subprocess.Popen(
             [
                 "ffmpeg", "-loglevel", "error", "-y",
+                "-fflags", "nobuffer", "-probesize", "32", "-analyzeduration", "0",
                 "-f", "f32le", "-ar", str(sample_rate), "-ac", "1", "-i", "-",
                 "-c:a", "aac", "-b:a", AAC_BITRATE, "-flush_packets", "1", "-f", "adts", "-",
             ],
