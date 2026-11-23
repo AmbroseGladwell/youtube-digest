@@ -51,6 +51,7 @@ export interface TestAppOptions {
   readPodcastEpisode?: BuildAppOptions["readPodcastEpisode"];
   podcastWeb?: BuildAppOptions["podcastWeb"];
   tiktokReader?: BuildAppOptions["tiktokReader"];
+  socialReader?: BuildAppOptions["socialReader"];
   narration?: boolean;
   logger?: FastifyBaseLogger;
   slowQueryMs?: number;
@@ -83,6 +84,7 @@ export const createTestApp = async (
     readPodcastEpisode,
     podcastWeb,
     tiktokReader,
+    socialReader,
   }: TestAppOptions = {},
 ): Promise<TestApp> => {
   const sql = createPgliteSqlClient(migrationsUpTo === undefined ? await createMigratedTestPglite() : createTestPglite());
@@ -125,6 +127,7 @@ export const createTestApp = async (
     ...(readPodcastEpisode === undefined ? {} : { readPodcastEpisode }),
     ...(podcastWeb === undefined ? {} : { podcastWeb }),
     ...(tiktokReader === undefined ? {} : { tiktokReader }),
+    ...(socialReader === undefined ? {} : { socialReader }),
     playlistReader: playlistReader ?? null,
     videoReader: videoReader ?? null,
     eventSink,

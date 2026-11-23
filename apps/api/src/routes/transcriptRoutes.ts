@@ -13,6 +13,7 @@ const Params = z.object({ videoId: VideoId });
 
 // Another kind's key holds a colon: docs/features/source-identity.md, "Why YouTube's key is unprefixed".
 const isYouTubeKey = (key: string): boolean => !key.includes(":");
+const VENDOR_READ_KEYS = /^(tiktok|instagram|facebook):/;
 
 // docs/features/podcast-transcripts.md, "Each reader's own copy".
 export type EpisodeWords = (key: SourceKey, accountId: AccountId, log: FastifyBaseLogger) => Promise<StoredTranscript | null>;
@@ -27,12 +28,12 @@ export interface TranscriptRoutesOptions {
 }
 
 export const transcriptRoutes = (app: FastifyInstance, { transcripts, episodeWords, videoWords }: TranscriptRoutesOptions): void => {
-  // A TikTok's words come only with a read, which costs a credit, so another device has the kept copy or none.
+  // A TikTok's or a post's words come only with a read, which costs a credit, so another device has the kept copy or none.
   const wordsFetchedAfresh = (key: VideoId, accountId: AccountId, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {
     if (isYouTubeKey(key)) {
       return videoWords(key, accountId, log);
     }
-    return key.startsWith("tiktok:") ? Promise.resolve(null) : episodeWords(key, accountId, log);
+    return VENDOR_READ_KEYS.test(key) ? Promise.resolve(null) : episodeWords(key, accountId, log);
   };
 
   const fetchedFor = async (accountId: AccountId, videoId: VideoId, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {

@@ -253,6 +253,9 @@ Five folders, five different questions.
 - `tiktok-links.md` — a TikTok link turned into one video and its words: the extension reading the
   reader's own tab, ScrapeCreators everywhere else, TikTok's auto-captions as the transcript,
   failures by name, cost, and the terms question (OV-130).
+- `social-posts.md` — an Instagram or Facebook link turned into a post through ScrapeCreators: the
+  whole description for video, photo and text posts, a Facebook video's captions, transcribing a video, and
+  never the comments.
 - `appearance.md` — Settings › Appearance: the theme and the eight accent colours on the
   account, what each role must clear and the test that holds it, why failure is a fixed
   `--alert`, the script that stops a flash, the signed-out rule, and where the logo follows
