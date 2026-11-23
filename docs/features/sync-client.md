@@ -19,7 +19,7 @@ this document is written against all three. Where it departs from one of them, i
 | Each entry onto its route, and the retry rule for a whole-record write | `packages/sync/src/pushPendingWrite.ts` |
 | Which failures stop the cycle and which park one write | `packages/sync/src/stopReasonFor.ts` |
 | The API client over `fetch`, parsing every answer with the shared schemas | `packages/sync/src/fetchSyncApi.ts` |
-| The runtime that owns one engine per tab, and re-reads every page after a pull | `packages/app-core/src/features/sync/SyncRuntime.tsx` |
+| The runtime that owns one engine per tab, and re-reads every page after a pull (at most once a second while it lasts: library-view.md, "A new device's first sync") | `packages/app-core/src/features/sync/SyncRuntime.tsx` |
 | Server, session and who, device-local like the API keys; the web app's session is a cookie and stores no token | `syncConnectionStorage.ts`, `useSyncConnection.ts`, `types/SyncConnection.ts` |
 | The settings panel, the stale-client banner, the write-floor wall | `features/sync/components/` |
 | Two real devices through the real API in process | `apps/api/src/sync/twoDevices.test.ts` |

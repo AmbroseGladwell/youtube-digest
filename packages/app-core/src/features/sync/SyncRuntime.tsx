@@ -21,8 +21,10 @@ import { captureQueueKeys } from "../captureQueue/captureQueueKeys.js";
 import { chatKeys } from "../chats/chatKeys.js";
 import { projectKeys } from "../projects/projectKeys.js";
 import { useOverviewUsageQuery } from "../newOverview/queries/overviewUsageQuery.js";
+import { throttled } from "../../util/throttled.js";
 
 const SIGN_OUT_SYNC_LIMIT_MS = 10_000;
+const REREAD_AFTER_PULL_MS = 1000;
 
 // Above the router so a cycle outlives navigation; inside the query client so a pull re-reads every page.
 export const SyncRuntime = ({ children }: { children: ReactNode }) => {
@@ -62,18 +64,20 @@ export const SyncRuntime = ({ children }: { children: ReactNode }) => {
       setOpening(false);
       return;
     }
+    // Why at most once a second: docs/features/library-view.md, "A new device's first sync".
+    const rereadAfterPull = throttled(() => {
+      void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
+      void queryClient.invalidateQueries({ queryKey: topicKeys.all });
+      void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
+      void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.all });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.all });
+    }, REREAD_AFTER_PULL_MS);
     const started = new SyncEngine({
       api: createFetchSyncApi({ baseUrl: apiUrl, token, surface }),
       storage: syncStorage,
-      onApplied: () => {
-        void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
-        void queryClient.invalidateQueries({ queryKey: topicKeys.all });
-        void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
-        void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
-        void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
-        void queryClient.invalidateQueries({ queryKey: projectKeys.all });
-        void queryClient.invalidateQueries({ queryKey: chatKeys.all });
-      },
+      onApplied: rereadAfterPull.call,
       onFolded: (fold) => {
         setFolds((current) => [...current, fold]);
         setFoldNotice(fold);
@@ -82,13 +86,19 @@ export const SyncRuntime = ({ children }: { children: ReactNode }) => {
         void queryClient.invalidateQueries({ queryKey: projectKeys.all });
       },
     });
-    const unsubscribe = started.subscribe(setStatus);
+    const unsubscribe = started.subscribe((next) => {
+      setStatus(next);
+      if (next.phase !== "syncing") {
+        rereadAfterPull.flush();
+      }
+    });
     const stop = started.start();
     engine.current = { engine: started, stop };
     void started.whenIdle().then(() => setOpening(false));
     return () => {
       stop();
       unsubscribe();
+      rereadAfterPull.cancel();
       engine.current = null;
     };
   }, [syncStorage, apiUrl, token, surface, queryClient]);
