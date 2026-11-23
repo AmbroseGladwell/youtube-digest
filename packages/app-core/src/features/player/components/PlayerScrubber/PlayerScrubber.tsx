@@ -149,7 +149,7 @@ export const PlayerScrubber = ({ view, time, lines, lineStarts, durationSeconds,
         {fill === "progress" && (
           <span
             className={`${styles.fill} ${tone === "stone" ? styles.fillStone : ""}`}
-            style={{ width: `${percent}%` }}
+            style={{ width: `${view.track.gap === undefined ? percent : view.track.gap[0]}%` }}
             data-testid={playerScrubberTestIds.fill}
           />
         )}
