@@ -104,6 +104,29 @@ test("a blank or over-long question is dropped rather than failing the note", ()
   );
 });
 
+test("a question written in both lists is shown once, as the reader question", () => {
+  const resolved = resolvedFollowUpQuestions(
+    ["Source 1?", "As a solo developer, how small can a harness be?", "Source 2?", "Source 3?"],
+    ["As a solo developer, how small can a harness be?"],
+  );
+
+  assert.deepEqual(resolved, [
+    { question: "Source 1?", forReader: false },
+    { question: "As a solo developer, how small can a harness be?", forReader: true },
+    { question: "Source 2?", forReader: false },
+    { question: "Source 3?", forReader: false },
+  ]);
+});
+
+test("a question repeated within a list, even in other case or punctuation, is shown once", () => {
+  assert.deepEqual(
+    resolvedFollowUpQuestions(["Why does the keeper test work?", "why does the keeper test work", "Source 2?"], []).map(
+      ({ question }) => question,
+    ),
+    ["Why does the keeper test work?", "Source 2?"],
+  );
+});
+
 test("the record refuses two reader questions in one three", () => {
   const twoInOne = [
     { question: "A?", forReader: true },
