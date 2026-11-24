@@ -52,6 +52,7 @@ import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js"
 import { useOverviewWithStateQuery } from "../../overviews/queries/overviewWithStateQuery.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { libraryViewFromState } from "../../library/util/libraryViewState.js";
+import { useLibraryActivity } from "../../library/useLibraryActivity.js";
 import { CaptureReasonLine } from "../components/CaptureReasonLine/CaptureReasonLine.js";
 import { ChaptersPanel } from "../components/ChaptersPanel/ChaptersPanel.js";
 import { DeleteOverviewDialog } from "../components/DeleteOverviewDialog/DeleteOverviewDialog.js";
@@ -165,6 +166,9 @@ const MAX_FRAMES_TO_FIND = 20;
 const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const overviewQuery = useOverviewWithStateQuery(overviewId);
   const libraryQuery = useOverviewsWithStateQuery();
+  const location = useLocation();
+  const steppedView = libraryViewFromState(location.state);
+  const activity = useLibraryActivity(steppedView?.view.sort.field === "updated");
   const setOverviewState = useSetOverviewStateMutation();
   const deleteOverview = useDeleteOverviewMutation();
   const navigate = useNavigate();
@@ -185,7 +189,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const isPhone = useIsPhone();
 
   const [playerDocked, setPlayerDocked] = useState(false);
-  const location = useLocation();
   const savedLocallyNote = useSavedLocallyNote(wasJustGenerated(location.state));
   const onetimeHost = oneTimeAccessHost(location.state);
   const savedPhase = useSavedOnRead(overviewId, overviewQuery.data?.state.read);
@@ -623,8 +626,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     reader.overview.readSwitched({ read: !state.read, from });
     setOverviewState.mutate({ overviewId, patch: { read: !state.read } });
   };
-  const steppedView = libraryViewFromState(location.state);
-  const neighbours = overviewNeighbours(libraryQuery.data ?? [], overviewId, steppedView);
+  const neighbours = overviewNeighbours(libraryQuery.data ?? [], overviewId, steppedView, activity);
   const steppingState = steppedView?.stepOn(overviewId);
   const timeSaved = overviewTimeSaved(overview);
   const savedChip =

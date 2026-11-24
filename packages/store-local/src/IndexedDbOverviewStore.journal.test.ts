@@ -52,7 +52,7 @@ test("filing an overview journals the topic ids and nothing else about it", asyn
 
   const entries = await readRecordOutbox(db);
   assert.equal(entries.length, 2);
-  assert.deepEqual(entries[1]?.change, { op: "topics", topicIds: [topicId] });
+  assert.deepEqual(entries[1]?.change, { op: "topics", topicIds: [topicId], edited: true });
   assert.equal(entries[1]?.updatedAt, (await readRaw(db, OVERVIEWS_STORE, overview.id)).updatedAt);
 });
 
@@ -64,7 +64,7 @@ test("a capture reason journals as its own field write", async () => {
 
   await store.setOverviewCaptureReason(overview.id, "Because");
 
-  assert.deepEqual((await readRecordOutbox(db))[1]?.change, { op: "captureReason", captureReason: "Because" });
+  assert.deepEqual((await readRecordOutbox(db))[1]?.change, { op: "captureReason", captureReason: "Because", edited: true });
 });
 
 test("retagging journals the tags as their own field write", async () => {
@@ -75,7 +75,7 @@ test("retagging journals the tags as their own field write", async () => {
 
   await store.setOverviewTags(overview.id, ["saas"]);
 
-  assert.deepEqual((await readRecordOutbox(db))[1]?.change, { op: "tags", tags: ["saas"] });
+  assert.deepEqual((await readRecordOutbox(db))[1]?.change, { op: "tags", tags: ["saas"], edited: true });
 });
 
 test("marking read journals only the fields the patch named", async () => {

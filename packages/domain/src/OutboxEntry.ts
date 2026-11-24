@@ -3,9 +3,9 @@ import type { SyncedRecordKind } from "./SchemaVersions.js";
 // The exact change, so edits to different fields commute on the server (docs/features/sync-client.md).
 export type OutboxChange =
   | { op: "replace"; record: Record<string, unknown> }
-  | { op: "topics"; topicIds: string[] }
-  | { op: "captureReason"; captureReason: string | null }
-  | { op: "tags"; tags: string[] }
+  | { op: "topics"; topicIds: string[]; edited?: true }
+  | { op: "captureReason"; captureReason: string | null; edited?: true }
+  | { op: "tags"; tags: string[]; edited?: true }
   | { op: "state"; patch: Record<string, unknown> }
   | { op: "settings"; patch: Record<string, unknown> }
   | { op: "project"; patch: Record<string, unknown> }

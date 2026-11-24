@@ -42,6 +42,7 @@ import { useTranscriptMatchesQuery } from "../queries/transcriptMatchesQuery.js"
 import { transcriptEntries } from "../util/transcriptEntries.js";
 import { useSettledText } from "../../../util/useSettledText.js";
 import { orderLibraryEntries } from "../util/orderLibraryEntries.js";
+import { useLibraryActivity } from "../useLibraryActivity.js";
 import { NO_LIBRARY_FILTERS, NO_LIBRARY_FILTERS as EVERY_OVERVIEW } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 import { libraryViewState } from "../util/libraryViewState.js";
@@ -71,7 +72,7 @@ import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
 import { useLibraryProjects } from "../../projects/useLibraryProjects.js";
 import { WHOLE_LIBRARY, type LibraryPlace } from "../types/LibraryPlace.js";
-import { DEFAULT_LIBRARY_SORT } from "../types/LibrarySort.js";
+import { DEFAULT_LIBRARY_SORT, isDefaultLibrarySort } from "../types/LibrarySort.js";
 import { useSetOverviewTopicsMutation } from "../../overviews/mutations/useSetOverviewTopicsMutation.js";
 import { useDeleteOverviewMutation } from "../../overviews/mutations/useDeleteOverviewMutation.js";
 import { filedUnderTopic, unfiledFromTopic } from "../../overviews/util/filedUnderTopic.js";
@@ -109,6 +110,7 @@ const searchPlaceholderFor = (filtered: boolean, sortedOnSheet: boolean): string
 export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) => {
   const topicsQuery = useTopicsQuery();
   const { searchParams, view, change } = useLibraryView(topicsQuery.data, { remember: place.kind === "library" });
+  const activity = useLibraryActivity(view.sort.field === "updated");
   // Why the URL follows the field: docs/features/library-view.md, "Search".
   const [query, setQuery] = useState(view.filters.query);
   const [searchText, setSearchText] = useState<LibrarySearchText>({ text: query, revision: 0 });
@@ -287,6 +289,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const visible = orderLibraryEntries(
     entries.filter((entry) => matchesLibraryFilters(entry, filters) || keptIds.has(libraryEntryId(entry))),
     sort,
+    activity,
   );
   searchSettled.current = () => analytics.library.search.searched({ results: visible.length });
   const settledIsCurrent = settledQuery !== "" && settledQuery === filters.query.trim();
@@ -484,12 +487,12 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       sort={sort}
       compact={railIsSheet}
       onChange={(next) => {
-        analytics.library.sortPill.orderChosen({ sort: next });
+        analytics.library.sortPill.orderChosen({ field: next.field, direction: next.direction, group: next.group });
         changeView(applyLibrarySort(viewParams, next));
       }}
     />
   );
-  const searchPlaceholder = searchPlaceholderFor(chips.length > 0, railIsSheet && sort !== DEFAULT_LIBRARY_VIEW.sort);
+  const searchPlaceholder = searchPlaceholderFor(chips.length > 0, railIsSheet && !isDefaultLibrarySort(sort));
   const listShown = place.kind !== "projects" && !projects.missing && !(place.kind === "project" && projects.current === null);
   const notListed = (): ReactNode => {
     if (place.kind === "projects") {

@@ -143,7 +143,6 @@ const BackSource = z.enum(["head", "bar"]);
 const TabOffer = z.enum(["make", "read"]);
 // The rail or its sheet, an applied chip's ×, Show all, Reset, or the caught-up list's way out.
 const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
-const LibrarySort = z.enum(["newest", "oldest", "title"]);
 export const CaptureEntry = z.enum(["dialog", "home", "panel", "pageMenu", "injectedButton", "sharedPage", "regenerate", "onboarding"]);
 export type CaptureEntry = z.infer<typeof CaptureEntry>;
 // The reader's own, ours signed in, or ours through a signed-out device's trial.
@@ -1352,7 +1351,11 @@ export const analyticsEvents = {
     },
     sortPill: {
       opened: event("The reader opens the library's sort menu"),
-      orderChosen: event("The reader picks an order for the library", { sort: LibrarySort }),
+      orderChosen: event("The reader picks an order for the library: what it sorts by, which way, and how it is grouped", {
+        field: z.enum(["added", "published", "updated", "title"]),
+        direction: z.enum(["desc", "asc"]),
+        group: z.enum(["none", "day", "week", "month", "letter"]),
+      }),
     },
     overviewCard: {
       opened: event("The reader opens an overview from its library row; `said` is the moment a transcript match showed", {

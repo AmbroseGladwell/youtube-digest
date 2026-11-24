@@ -41,10 +41,13 @@ test("what one device writes, another device on the same account reads back exac
   assert.equal(pushed.phase, "idle");
   assert.equal(pushed.pending, 0);
   assert.equal(pulled.phase, "idle");
+  const editedAt = (await laptop.overviews.getOverview(overview.id))?.editedAt;
+  assert.equal(typeof editedAt, "string");
   assert.deepEqual(await phone.overviews.getOverview(overview.id), {
     ...overview,
     topicIds: [topic.id],
     captureReason: "Because",
+    editedAt,
   });
   assert.deepEqual(await phone.overviews.getOverviewState(overview.id), {
     overviewId: overview.id,

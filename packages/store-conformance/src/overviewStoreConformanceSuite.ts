@@ -7,11 +7,20 @@ import {
   OverviewId,
   TopicId,
   UnreadableRecordError,
+  type Overview,
   type OverviewStore,
 } from "@overview/domain";
 import { makeOverview } from "./makeOverview.js";
 
 // Left out by a store that can't be handed a record it didn't write, such as an API client.
+const withoutEditedAt = (overview: Overview | null): Overview | null => {
+  if (overview === null) {
+    return null;
+  }
+  const { editedAt: _edited, ...rest } = overview;
+  return rest;
+};
+
 export interface OverviewStoreUnderTest {
   store: OverviewStore;
   seedRawOverview?: ((raw: unknown) => Promise<void>) | undefined;
@@ -205,7 +214,8 @@ export const defineOverviewStoreConformanceSuite = (
 
     await store.setOverviewTopics(overview.id, [topicId]);
 
-    assert.deepEqual(await store.getOverview(overview.id), { ...overview, topicIds: [topicId] });
+    assert.deepEqual(withoutEditedAt(await store.getOverview(overview.id)), { ...overview, topicIds: [topicId] });
+    assert.ok((await store.getOverview(overview.id))?.editedAt, "the reader's edit dates editedAt");
   });
 
   test(behaviour("setOverviewTopics on an id nobody has saved does not create one"), async () => {
@@ -222,7 +232,7 @@ export const defineOverviewStoreConformanceSuite = (
 
     await store.setOverviewCaptureReason(overview.id, "Does the capacity argument hold for the UK?");
 
-    assert.deepEqual(await store.getOverview(overview.id), {
+    assert.deepEqual(withoutEditedAt(await store.getOverview(overview.id)), {
       ...overview,
       captureReason: "Does the capacity argument hold for the UK?",
     });
@@ -235,7 +245,7 @@ export const defineOverviewStoreConformanceSuite = (
 
     await store.setOverviewCaptureReason(overview.id, null);
 
-    assert.deepEqual(await store.getOverview(overview.id), { ...overview, captureReason: null });
+    assert.deepEqual(withoutEditedAt(await store.getOverview(overview.id)), { ...overview, captureReason: null });
   });
 
   test(behaviour("setOverviewCaptureReason on an id nobody has saved does not create one"), async () => {
@@ -252,7 +262,7 @@ export const defineOverviewStoreConformanceSuite = (
 
     await store.setOverviewTags(overview.id, ["saas"]);
 
-    assert.deepEqual(await store.getOverview(overview.id), { ...overview, tags: ["saas"] });
+    assert.deepEqual(withoutEditedAt(await store.getOverview(overview.id)), { ...overview, tags: ["saas"] });
   });
 
   test(behaviour("setOverviewTags on an id nobody has saved does not create one"), async () => {

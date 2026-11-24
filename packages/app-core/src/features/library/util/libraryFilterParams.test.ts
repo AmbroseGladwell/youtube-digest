@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { TopicId } from "@overview/domain";
 import { NO_LIBRARY_FILTERS, type LibrarySourceId } from "../types/LibraryFilters.js";
+import { DEFAULT_LIBRARY_SORT, LIBRARY_SORT_PRESET } from "../types/LibrarySort.js";
 import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 import {
   applyLibraryFilterPatch,
@@ -125,27 +126,43 @@ describe("applyLibraryFilterPatch", () => {
 });
 
 describe("parseLibrarySort", () => {
-  it("defaults to newest first with no param, and for a value it does not know", () => {
-    expect(parseLibrarySort(new URLSearchParams())).toBe("newest");
-    expect(parseLibrarySort(new URLSearchParams({ sort: "made-up" }))).toBe("newest");
+  it("defaults to Added, newest first and not grouped, with no param and for a value it does not know", () => {
+    expect(parseLibrarySort(new URLSearchParams())).toEqual(DEFAULT_LIBRARY_SORT);
+    expect(parseLibrarySort(new URLSearchParams({ sort: "made-up" }))).toEqual(DEFAULT_LIBRARY_SORT);
   });
 
-  it("reads a known sort", () => {
-    expect(parseLibrarySort(new URLSearchParams({ sort: "oldest" }))).toBe("oldest");
-    expect(parseLibrarySort(new URLSearchParams({ sort: "title" }))).toBe("title");
+  it("reads an old link's ?sort=oldest and ?sort=title as the same order", () => {
+    expect(parseLibrarySort(new URLSearchParams({ sort: "oldest" }))).toEqual(LIBRARY_SORT_PRESET.oldest);
+    expect(parseLibrarySort(new URLSearchParams({ sort: "title" }))).toEqual(LIBRARY_SORT_PRESET.title);
+  });
+
+  it("reads the field, the direction and the grouping, each field taking its own default direction", () => {
+    expect(parseLibrarySort(new URLSearchParams({ sort: "published", dir: "asc", group: "month" }))).toEqual({
+      field: "published",
+      direction: "asc",
+      group: "month",
+    });
+    expect(parseLibrarySort(new URLSearchParams({ sort: "updated" }))).toEqual({ field: "updated", direction: "desc", group: "none" });
+  });
+
+  it("drops a grouping that doesn't fit the field", () => {
+    expect(parseLibrarySort(new URLSearchParams({ sort: "title", group: "month" })).group).toBe("none");
+    expect(parseLibrarySort(new URLSearchParams({ group: "letter" })).group).toBe("none");
   });
 });
 
 describe("applyLibrarySort", () => {
   it("writes a non-default sort and leaves the filters alone", () => {
-    const next = applyLibrarySort(new URLSearchParams({ verdict: "original" }), "title");
+    const next = applyLibrarySort(new URLSearchParams({ verdict: "original" }), LIBRARY_SORT_PRESET.title);
     expect(next.get("sort")).toBe("title");
+    expect(next.has("dir")).toBe(false);
     expect(next.get("verdict")).toBe("original");
   });
 
-  it("drops the param for the default order, rather than writing it", () => {
-    const next = applyLibrarySort(new URLSearchParams({ sort: "oldest" }), "newest");
-    expect(next.has("sort")).toBe(false);
+  it("writes only what differs from the default, and nothing for the default order", () => {
+    const next = applyLibrarySort(new URLSearchParams({ sort: "oldest" }), { field: "added", direction: "asc", group: "week" });
+    expect(next.toString()).toBe("dir=asc&group=week");
+    expect(applyLibrarySort(next, DEFAULT_LIBRARY_SORT).toString()).toBe("");
   });
 });
 
@@ -171,7 +188,7 @@ describe("applyLibraryView", () => {
 describe("isSameLibraryView", () => {
   it("compares every filter and the order", () => {
     expect(isSameLibraryView(DEFAULT_LIBRARY_VIEW, { ...DEFAULT_LIBRARY_VIEW })).toBe(true);
-    expect(isSameLibraryView(DEFAULT_LIBRARY_VIEW, { ...DEFAULT_LIBRARY_VIEW, sort: "oldest" })).toBe(false);
+    expect(isSameLibraryView(DEFAULT_LIBRARY_VIEW, { ...DEFAULT_LIBRARY_VIEW, sort: LIBRARY_SORT_PRESET.oldest })).toBe(false);
     expect(
       isSameLibraryView(DEFAULT_LIBRARY_VIEW, {
         ...DEFAULT_LIBRARY_VIEW,

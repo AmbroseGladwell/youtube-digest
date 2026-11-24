@@ -45,21 +45,21 @@ class InMemoryOverviewStore implements OverviewStore {
   async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {
     const overview = this.#overviews.get(overviewId);
     if (overview) {
-      this.#overviews.set(overviewId, { ...overview, topicIds });
+      this.#overviews.set(overviewId, { ...overview, topicIds, editedAt: new Date().toISOString() });
     }
   }
 
   async setOverviewCaptureReason(overviewId: OverviewId, captureReason: string | null) {
     const overview = this.#overviews.get(overviewId);
     if (overview) {
-      this.#overviews.set(overviewId, { ...overview, captureReason });
+      this.#overviews.set(overviewId, { ...overview, captureReason, editedAt: new Date().toISOString() });
     }
   }
 
   async setOverviewTags(overviewId: OverviewId, tags: string[]) {
     const overview = this.#overviews.get(overviewId);
     if (overview) {
-      this.#overviews.set(overviewId, { ...overview, tags });
+      this.#overviews.set(overviewId, { ...overview, tags, editedAt: new Date().toISOString() });
     }
   }
 

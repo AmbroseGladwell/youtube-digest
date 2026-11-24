@@ -96,17 +96,18 @@ const sections: readonly LegalSection[] = [
           is a video, a photo or text. When this month's overviews are made, you can save a link without its overview: it keeps the same
           title, link and picture, and the transcript, as an overview would, until you make its overview or remove it, and removing it
           deletes the transcript. Beside it you may add a reason you saved it, file it under topics, put it in projects of your own, and
-          mark it read or favourite. When you take one of its questions to ask next to an assistant, it notes which question, which
-          assistant and when, so the overview can show it. When you ask questions about it, each conversation keeps your questions and the
-          answers, with the moments in the video or episode, or in another of your conversations about it, that each answer drew on. A
-          project holds its name, a line on what it is for, and for each overview in it whether you, a connected assistant or filing as the
-          overview was made put it there, and when, and which overviews were taken out of it or that you said aren't for it, so they aren't
-          offered to it again. Your settings travel with the account too: the narration voice, whether cooking step by step reads the steps
-          aloud, the cooking timer sound, theme and accent colour, which sections an overview shows, whether new overviews are put in your
-          projects, whether questions to ask next are answered here or open in an assistant and which one, the About you sentence that
-          personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, the
-          videos from them waiting to be made and whether you paused that queue, the links you kept to be made when our server can fetch
-          them again, and the running total of time saved with its milestones.
+          mark it read or favourite; it notes when you last changed its topics, tags or reason, so the library can sort by what you updated.
+          When you take one of its questions to ask next to an assistant, it notes which question, which assistant and when, so the overview
+          can show it. When you ask questions about it, each conversation keeps your questions and the answers, with the moments in the
+          video or episode, or in another of your conversations about it, that each answer drew on. A project holds its name, a line on what
+          it is for, and for each overview in it whether you, a connected assistant or filing as the overview was made put it there, and
+          when, and which overviews were taken out of it or that you said aren't for it, so they aren't offered to it again. Your settings
+          travel with the account too: the narration voice, whether cooking step by step reads the steps aloud, the cooking timer sound,
+          theme and accent colour, which sections an overview shows, whether new overviews are put in your projects, whether questions to
+          ask next are answered here or open in an assistant and which one, the About you sentence that personalises overviews and what we
+          have learned from your overviews, the tags you have merged, the playlists you follow, the videos from them waiting to be made and
+          whether you paused that queue, the links you kept to be made when our server can fetch them again, and the running total of time
+          saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
