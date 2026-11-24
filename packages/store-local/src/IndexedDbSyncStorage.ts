@@ -597,6 +597,14 @@ const settingsWrite = (raw: unknown, now: Date): PendingWrite[] => {
 // What needs attention stays until dismissed: docs/features/playlists.md, "Unfollowing".
 const forgetFollowing = async (transaction: IDBTransaction, playlistId: string): Promise<void> => {
   transaction.objectStore(PLAYLIST_CHECKS_STORE).delete(playlistId);
+  const captures = transaction.objectStore(CAPTURES_STORE);
+  for (const raw of await promisifyRequest<unknown[]>(captures.getAll())) {
+    const capture = readable("capture", raw);
+    const fromPlaylist = capture?.fromPlaylist as { id?: unknown } | null | undefined;
+    if (capture?.stage === "kept" && capture.queueStatus === "waiting" && fromPlaylist?.id === playlistId) {
+      captures.delete(capture.id as string);
+    }
+  }
   const queue = transaction.objectStore(CAPTURE_QUEUE_STORE);
   for (const raw of await promisifyRequest<unknown[]>(queue.getAll())) {
     const parsed = QueuedCapture.safeParse(raw);

@@ -1,6 +1,14 @@
 import type { FastifyBaseLogger, FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, CAPTURES_PATH, OverviewId, SourceKey } from "@overview/domain";
+import {
+  apiLogLines,
+  CAPTURE_CLAIMS_PATH,
+  CAPTURES_PATH,
+  CaptureClaimRequest,
+  OverviewId,
+  SourceKey,
+  type CaptureClaim,
+} from "@overview/domain";
 import type { AccountId } from "../auth/AccountId.js";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -14,17 +22,23 @@ import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
 import type { WriteDecision } from "../records/WriteDecision.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
+import type { CaptureClaimsRepository } from "../usage/CaptureClaimsRepository.js";
 import type { CaptureSavesRepository } from "../usage/CaptureSavesRepository.js";
 import { saveQuotas } from "../usage/saveQuotas.js";
 import { nextUsageMonth } from "../usage/usageMonth.js";
 
 const Params = z.object({ id: OverviewId });
+const ClaimParams = z.object({ sourceKey: SourceKey });
+const CLAIM_LEASE_MS = 10 * 60 * 1000;
+const CLAIMED_SOURCE = "The claimed source";
+const THE_CLAIM = "The claim";
 const CAPTURE_ID = "The capture's id";
 
 export interface CaptureRoutesOptions {
   records: RecordsRepository;
   transcripts: TranscriptsRepository;
   saves: CaptureSavesRepository;
+  claims: CaptureClaimsRepository;
   sql: SqlClient;
   clock: () => Date;
 }
@@ -50,7 +64,7 @@ const refuseHeld = (held: StoredRecord | null, overviewOfId: StoredRecord | null
 };
 
 // docs/features/kept-links.md, "The record" and "The save limit".
-export const captureRoutes = (app: FastifyInstance, { records, transcripts, saves, sql, clock }: CaptureRoutesOptions): void => {
+export const captureRoutes = (app: FastifyInstance, { records, transcripts, saves, claims, sql, clock }: CaptureRoutesOptions): void => {
   const reserveSave = async (accountId: AccountId, log: FastifyBaseLogger) => {
     const now = clock();
     const plan = await accountPlan(sql, accountId);
@@ -112,5 +126,24 @@ export const captureRoutes = (app: FastifyInstance, { records, transcripts, save
       return reply.status(204).send();
     }
     return sendWritten(reply, written);
+  });
+
+  app.post(`${CAPTURE_CLAIMS_PATH}/:sourceKey`, async (request): Promise<CaptureClaim> => {
+    const { sourceKey } = parseOrThrow(ClaimParams, request.params, CLAIMED_SOURCE);
+    const { holder } = parseOrThrow(CaptureClaimRequest, request.body, THE_CLAIM);
+    const now = clock();
+    const outcome = await claims.claim(request.session!.accountId, sourceKey, holder, now, new Date(now.getTime() + CLAIM_LEASE_MS));
+    if (!outcome.claimed) {
+      request.log.info(apiLogLines.captures.claimedElsewhere());
+      throw new ApiError("claimed_elsewhere", "Another device is making this source", { until: outcome.until.toISOString() });
+    }
+    return { until: outcome.until.toISOString() };
+  });
+
+  app.delete(`${CAPTURE_CLAIMS_PATH}/:sourceKey`, async (request, reply) => {
+    const { sourceKey } = parseOrThrow(ClaimParams, request.params, CLAIMED_SOURCE);
+    const { holder } = parseOrThrow(CaptureClaimRequest, request.body, THE_CLAIM);
+    await claims.release(request.session!.accountId, sourceKey, holder);
+    return reply.status(204).send();
   });
 };

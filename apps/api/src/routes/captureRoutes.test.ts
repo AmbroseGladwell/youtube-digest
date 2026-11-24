@@ -211,3 +211,61 @@ test("a client built before captures is never sent one", async () => {
   );
   await testApp.close();
 });
+
+const claim = (account: TestAccount, sourceKey: string, holder: string) =>
+  account.inject({ method: "POST", url: `/api/capture-claims/${sourceKey}`, body: { holder } });
+
+test("one device claims a queued source; another is told when the claim runs out, and the first may claim again", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+
+  const laptop = await claim(account, "dQw4w9WgXcQ", "laptop-tab-1");
+  const phone = await claim(account, "dQw4w9WgXcQ", "phone-tab-1");
+  const laptopAgain = await claim(account, "dQw4w9WgXcQ", "laptop-tab-1");
+
+  assert.equal(laptop.statusCode, 200);
+  assert.equal(phone.statusCode, 409);
+  assert.equal(phone.json().error.code, "claimed_elsewhere");
+  assert.equal(phone.json().error.details.until, laptop.json().until);
+  assert.equal(laptopAgain.statusCode, 200);
+  await testApp.close();
+});
+
+test("a claim left by a closed tab runs out, and another device takes it", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  await claim(account, "dQw4w9WgXcQ", "laptop-tab-1");
+
+  testApp.clock.advance(10 * 60 * 1000);
+  const phone = await claim(account, "dQw4w9WgXcQ", "phone-tab-1");
+
+  assert.equal(phone.statusCode, 200);
+  await testApp.close();
+});
+
+test("a released claim frees the source at once, and only its holder can release it", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  await claim(account, "dQw4w9WgXcQ", "laptop-tab-1");
+
+  await account.inject({ method: "DELETE", url: "/api/capture-claims/dQw4w9WgXcQ", body: { holder: "phone-tab-1" } });
+  const stillHeld = await claim(account, "dQw4w9WgXcQ", "phone-tab-1");
+  await account.inject({ method: "DELETE", url: "/api/capture-claims/dQw4w9WgXcQ", body: { holder: "laptop-tab-1" } });
+  const freed = await claim(account, "dQw4w9WgXcQ", "phone-tab-1");
+
+  assert.equal(stillHeld.statusCode, 409);
+  assert.equal(freed.statusCode, 200);
+  await testApp.close();
+});
+
+test("claims are each account's own", async () => {
+  const testApp = await createTestApp();
+  const first = await makeAccount(testApp);
+  const second = await makeAccount(testApp);
+  await claim(first, "dQw4w9WgXcQ", "laptop-tab-1");
+
+  const other = await claim(second, "dQw4w9WgXcQ", "phone-tab-1");
+
+  assert.equal(other.statusCode, 200);
+  await testApp.close();
+});

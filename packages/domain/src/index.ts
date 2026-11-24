@@ -98,6 +98,7 @@ export * from "./SuggestedQuestionStore.js";
 export * from "./Capture.js";
 export * from "./captureMigrations.js";
 export * from "./CaptureStore.js";
+export * from "./CaptureClaim.js";
 export * from "./PlaylistLookup.js";
 export * from "./QueuedCapture.js";
 export * from "./CaptureQueueStore.js";

@@ -34,16 +34,17 @@ export interface OpenLocalLibraryOptions {
 export const openLocalLibrary = async ({ accountId, ...options }: OpenLocalLibraryOptions): Promise<LocalLibrary> => {
   const db = await openLocalDatabase({ ...options, name: localDatabaseName(accountId) });
   const syncStorage = new IndexedDbSyncStorage(db);
+  const captureStore = new IndexedDbCaptureStore(db, { onJournaled: syncStorage.notifyJournaled });
   return {
     overviewStore: new IndexedDbOverviewStore(db, { onJournaled: syncStorage.notifyJournaled }),
     settingsStore: new IndexedDbSettingsStore(db, { onJournaled: syncStorage.notifyJournaled }),
     transcriptStore: new IndexedDbTranscriptStore(db),
     followedPlaylistStore: new IndexedDbFollowedPlaylistStore(db, { onJournaled: syncStorage.notifyJournaled }),
-    captureQueueStore: new IndexedDbCaptureQueueStore(db),
+    captureQueueStore: new IndexedDbCaptureQueueStore(db, captureStore),
     projectStore: new IndexedDbProjectStore(db, { onJournaled: syncStorage.notifyJournaled }),
     chatStore: new IndexedDbChatStore(db, { onJournaled: syncStorage.notifyJournaled }),
     suggestedQuestionStore: new IndexedDbSuggestedQuestionStore(db, { onJournaled: syncStorage.notifyJournaled }),
-    captureStore: new IndexedDbCaptureStore(db, { onJournaled: syncStorage.notifyJournaled }),
+    captureStore,
     syncStorage,
     close: () => db.close(),
   };

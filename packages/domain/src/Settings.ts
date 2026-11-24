@@ -76,6 +76,8 @@ export const Settings = z.object({
   tagAliases: TagAliases.catch({}),
   // On, a failing own key fails rather than sending the transcript via ours (docs/architecture/tiers.md).
   onlyMyKey: z.boolean().catch(false),
+  // On the account, so pausing on one device pauses every one (docs/features/capture-queue.md).
+  queuePaused: z.boolean().catch(false),
   // Followed playlists keep their own: docs/features/playlists.md, "A pace for each playlist".
   defaultPlaylistPace: PlaylistPace.catch(DEFAULT_PLAYLIST_PACE),
   // Followed playlists keep their own: docs/features/playlists.md, "An order for each playlist".
@@ -114,6 +116,7 @@ export const DEFAULT_SETTINGS: Settings = {
   analyticsOptOutChangedAt: null,
   tagAliases: {},
   onlyMyKey: false,
+  queuePaused: false,
   defaultPlaylistPace: DEFAULT_PLAYLIST_PACE,
   defaultPlaylistOrder: DEFAULT_PLAYLIST_ORDER,
   theme: DEFAULT_THEME_MODE,

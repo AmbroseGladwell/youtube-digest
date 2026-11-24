@@ -19,10 +19,18 @@ const kept = (overrides: Partial<Capture> = {}): Capture =>
     keptAt: "2026-11-23T09:00:00.000Z",
     keptFrom: "phone",
     captureReason: null,
+    title: null,
+    thumbnailUrl: null,
+    fromPlaylist: null,
+    addedAt: null,
+    playlistIndex: null,
+    chosenAt: null,
     stage: "kept",
     source: null,
     waitingFor: "server",
     resumesAt: "2026-11-24T00:00:00.000Z",
+    queueStatus: "waiting",
+    problem: null,
     ...overrides,
   }) as Capture;
 
@@ -34,6 +42,8 @@ const saved = (source: ReturnType<typeof youTubeSource>, overrides: Partial<Capt
     savedAt: "2026-11-23T09:30:00.000Z",
     waitingFor: undefined,
     resumesAt: undefined,
+    queueStatus: undefined,
+    problem: undefined,
     ...overrides,
   }) as Capture;
 

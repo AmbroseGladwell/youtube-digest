@@ -250,6 +250,8 @@ const chatChange = ({ id, ...body }: Chat & { rev?: number }, rev: number, seq: 
   };
 };
 
+const CAPTURE_CLAIM_LEASE_MS = 10 * 60 * 1000;
+
 export class BackendSimulator {
   #page: Page;
   #seedOverviews: Overview[] = [];
@@ -853,6 +855,20 @@ export class BackendSimulator {
         onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: transcript search failed" } } }),
       }),
     );
+
+    await this.#page.route("**/api/capture-claims/*", (route) => {
+      if (route.request().method() === "DELETE") {
+        return fulfil(route, { status: 204, body: null });
+      }
+      const until = new Date(Date.now() + CAPTURE_CLAIM_LEASE_MS).toISOString();
+      return this.#respond(route, EndpointKey.CAPTURE_CLAIM, {
+        onDefault: () => ({ status: 200, body: { until } }),
+        onError: () => ({
+          status: 409,
+          body: { error: { code: "claimed_elsewhere", message: "Simulated: another device is making this", details: { until } } },
+        }),
+      });
+    });
 
     await this.#page.route("**/api/playlists/*", (route) =>
       this.#respond(route, EndpointKey.PLAYLIST_LOOKUP, {

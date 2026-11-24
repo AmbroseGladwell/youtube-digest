@@ -11,7 +11,7 @@ import {
   VideoId,
   youTubeSource,
 } from "@overview/domain";
-import { makeOverview, makeProject, makeStoredTranscript } from "@overview/store-conformance";
+import { makeOverview, makeProject, makeQueuedCapture, makeStoredTranscript } from "@overview/store-conformance";
 import { appendChatMessages } from "../chats/appendChatMessages.js";
 import { migrationSteps } from "../db/migrationSteps.js";
 import { writeSuggestedQuestions } from "../questions/writeSuggestedQuestions.js";
@@ -719,5 +719,49 @@ test("questions the server writes reach both devices; dismissed or found obvious
   assert.deepEqual(await laptop.questions.listSuggestedQuestions(library), []);
   assert.equal((await account.change("suggestedQuestion", kept!)).deleted, true);
   assert.equal((await laptop.sync()).pending, 0);
+  await testApp.close();
+});
+
+test("a playlist video queued on two devices ends up queued once on both, and making it takes it off both", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  await laptop.storage.enrol();
+  await phone.storage.enrol();
+  const queued = makeQueuedCapture({ videoId: VideoId.parse("playlistVid") });
+  await laptop.queue.enqueue([queued]);
+  await phone.queue.enqueue([{ ...queued, queuedAt: "2026-10-05T10:00:00.000Z" }]);
+
+  await laptop.sync();
+  await phone.sync();
+  await laptop.sync();
+  const both = [await laptop.queue.listQueue(), await phone.queue.listQueue()];
+  const overview = makeOverview({ source: { ...makeOverview().source, id: VideoId.parse("playlistVid") } });
+  await phone.overviews.saveOverview(overview);
+  await phone.queue.removeQueued(queued.videoId);
+  await phone.sync();
+  await laptop.sync();
+
+  assert.deepEqual(
+    both.map((queue) => queue.map((entry) => entry.queuedAt)),
+    [[queued.queuedAt], [queued.queuedAt]],
+  );
+  assert.deepEqual(await laptop.queue.listQueue(), []);
+  assert.deepEqual(await laptop.captures.listCaptures(), []);
+  await testApp.close();
+});
+
+test("pausing the queue on one device pauses it on the other", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  await laptop.settings.update({ queuePaused: true });
+
+  await laptop.sync();
+  await phone.sync();
+
+  assert.equal((await phone.settings.get()).queuePaused, true);
   await testApp.close();
 });

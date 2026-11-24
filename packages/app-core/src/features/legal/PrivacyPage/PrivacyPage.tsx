@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-23";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-24";
 
 const UNITED_STATES = "United States";
 
@@ -102,8 +102,8 @@ const sections: readonly LegalSection[] = [
           offered to it again. Your settings travel with the account too: the narration voice, whether cooking step by step reads the steps
           aloud, the cooking timer sound, theme and accent colour, which sections an overview shows, whether new overviews are put in your
           projects, whether questions to ask next are answered here or open in an assistant and which one, the About you sentence that
-          personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, and the
-          running total of time saved with its milestones.
+          personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, the
+          videos from them waiting to be made and whether you paused that queue, and the running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,

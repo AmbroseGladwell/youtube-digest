@@ -5,7 +5,6 @@ import { localDayKey } from "./util/madeTodayByPlaylist.js";
 const NO_ACCOUNT = "noAccount";
 
 export const CaptureQueuePreferences = z.object({
-  paused: z.boolean().catch(false),
   folded: z.boolean().catch(false),
   hold: QueueHold.nullable().catch(null),
   // Why chosen videos stay off the pace: docs/features/capture-queue.md, "Making waiting videos now".
@@ -16,7 +15,7 @@ export const CaptureQueuePreferences = z.object({
 });
 export type CaptureQueuePreferences = z.infer<typeof CaptureQueuePreferences>;
 
-export const DEFAULT_CAPTURE_QUEUE_PREFERENCES: CaptureQueuePreferences = { paused: false, folded: false, hold: null, chosenToday: null };
+export const DEFAULT_CAPTURE_QUEUE_PREFERENCES: CaptureQueuePreferences = { folded: false, hold: null, chosenToday: null };
 
 const storageKey = (accountId: string | null) => `overview.captureQueue.${accountId ?? NO_ACCOUNT}`;
 

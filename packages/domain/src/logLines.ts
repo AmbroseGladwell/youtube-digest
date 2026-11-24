@@ -237,6 +237,11 @@ export const apiLogLines = coded("api", {
       "capture save limit reached",
       "A save without an overview was refused: the month's saves are used. `plan` and `limit`.",
     ),
+    claimedElsewhere: line(
+      "info",
+      "capture claimed elsewhere",
+      "A device asked to make a queued source another device of the account is already making.",
+    ),
     superseded: line("info", "captures superseded", "An overview took its source's capture with it; `count` says how many went."),
   },
   serviceTranscripts: {

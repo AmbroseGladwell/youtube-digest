@@ -260,6 +260,7 @@ sends:
 | `not_found` | 404 | no such route, or no such live record in this account |
 | `already_exists` | 409 | a create-only write onto a live record |
 | `video_already_held` | 409 | a second overview of a video the account holds; `details.overviewId` names the first (`docs/features/one-overview-per-video.md`). Also a capture of a source the account holds an overview of (`docs/features/kept-links.md`) |
+| `claimed_elsewhere` | 409 | another device of the account is making that queued source; `details.until` says when its claim runs out (`docs/features/kept-links.md`, "Made once") |
 | `capture_already_held` | 409 | a second capture of a source the account already keeps; `details.captureId` names the first (`docs/features/kept-links.md`) |
 | `link_invalid` | 410 | a magic link or link code that is spent, expired, or was never issued; one answer for all three |
 | `record_newer_than_client` | 409 | the stored record's version exceeds the caller's for its kind |

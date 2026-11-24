@@ -209,8 +209,9 @@ Five folders, five different questions.
   as a link while our server or the extension is in the way, or saved with its transcript
   once the month's overviews are made; one live item per source, becoming an overview under
   the same id, its transcript kept on the server, and the monthly save limit counted there.
-- `capture-queue.md` — the videos waiting on this device to become overviews: made one at a
-  time, oldest first, while the app is open; the library's queue group, the queue page and
+- `capture-queue.md` — the videos waiting to become overviews, one queue synced to every
+  device (OV-358) and claimed so each is made once: made one at a time, oldest first, while
+  the app is open; the library's queue group, the queue page and
   the strip's seven states; what needs attention and why; waiting without a key; and
   waiting at a limit, with the reason and resume time and no dead Try again.
 - `one-overview-per-video.md` — an account holds one overview per video, everywhere: the
