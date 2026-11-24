@@ -139,3 +139,14 @@ export const noteSourceLength = (note: SourcedNote): string => {
   }
   return sourceLength(note.source);
 };
+
+// The length alone, for the corner of a library row's image (OV-407); null when it isn't known.
+export const noteLengthBadge = (note: SourcedNote): string | null => {
+  if (note.recipe != null && (note.source.kind === "youtube" || isClipSource(note.source))) {
+    return note.source.durationMs ? formatClock(note.source.durationMs / 1000) : null;
+  }
+  if (note.recipe != null) {
+    return note.recipe.totalMinutes === null ? null : recipeMinutes(note.recipe.totalMinutes);
+  }
+  return knownLength(note.source);
+};

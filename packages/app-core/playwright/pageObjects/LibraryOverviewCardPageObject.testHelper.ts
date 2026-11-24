@@ -73,29 +73,51 @@ export class LibraryOverviewCardPageObject extends PageObject {
       expect(this.get(libraryOverviewCardTestIds.readButton)).toHaveAttribute("aria-pressed", String(isRead)),
     );
 
-  // The widths that must add up are set in three places, so nothing else would notice them drift.
-  verifyActionsLineUpWithTheTitle = () =>
-    this.step("verifyActionsLineUpWithTheTitle", async () => {
-      const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
-      const favourite = (await this.get(libraryOverviewCardTestIds.favouriteButton).boundingBox())!;
-      const listen = (await this.get(libraryOverviewCardTestIds.listenButton).boundingBox())!;
-
-      expect(Math.round(favourite.x)).toBe(Math.round(title.x));
-      expect(favourite.y).toBeGreaterThan(title.y);
-      expect(Math.round(listen.y)).toBe(Math.round(favourite.y));
-    });
-
-  verifyActionsAreTouchSized = () =>
-    this.step("verifyActionsAreTouchSized", async () => {
-      for (const testId of [
-        libraryOverviewCardTestIds.favouriteButton,
-        libraryOverviewCardTestIds.readButton,
-        libraryOverviewCardTestIds.listenButton,
-      ]) {
+  verifyActionsAreIconsOnTheTimingLine = () =>
+    this.step("verifyActionsAreIconsOnTheTimingLine", async () => {
+      const timing = (await this.get(libraryOverviewCardTestIds.meta).boundingBox())!;
+      const timingMiddle = timing.y + timing.height / 2;
+      for (const testId of this.actionTestIds) {
         const box = (await this.get(testId).boundingBox())!;
-        expect(Math.round(box.height)).toBe(38);
+        expect([Math.round(box.width), Math.round(box.height)]).toEqual([40, 40]);
+        expect(box.x).toBeGreaterThan(timing.x + timing.width);
+        expect(Math.abs(box.y + box.height / 2 - timingMiddle)).toBeLessThanOrEqual(2);
       }
     });
+
+  verifyActionsAreNamed = (favourite: string, read: string, listen: string) =>
+    this.step(`verifyActionsAreNamed ${favourite} / ${read} / ${listen}`, async () => {
+      await expect(this.get(libraryOverviewCardTestIds.favouriteButton)).toHaveAccessibleName(favourite);
+      await expect(this.get(libraryOverviewCardTestIds.readButton)).toHaveAccessibleName(read);
+      await expect(this.get(libraryOverviewCardTestIds.listenButton)).toHaveAccessibleName(listen);
+    });
+
+  verifyReadButtonShowsItsNameOnFocus = (name: string) =>
+    this.step(`verifyReadButtonShowsItsNameOnFocus ${name}`, async () => {
+      const button = this.get(libraryOverviewCardTestIds.readButton);
+      await button.focus();
+      await expect(button.locator("[aria-hidden='true']", { hasText: name }).last()).toBeVisible();
+    });
+
+  height = async (): Promise<number> => Math.round((await this.card.boundingBox())!.height);
+
+  verifySavedChipHoldsTheTimingLinesPlace = (heightBefore: number) =>
+    this.step("verifySavedChipHoldsTheTimingLinesPlace", async () => {
+      await expect(this.get(savedChipTestIds.root)).toBeVisible();
+      await expect(this.get(libraryOverviewCardTestIds.meta)).toBeHidden();
+      await expect(async () => {
+        const chip = (await this.get(savedChipTestIds.root).boundingBox())!;
+        const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
+        expect(Math.round(chip.x)).toBe(Math.round(title.x));
+      }).toPass();
+      expect(await this.height()).toBe(heightBefore);
+    });
+
+  private readonly actionTestIds = [
+    libraryOverviewCardTestIds.favouriteButton,
+    libraryOverviewCardTestIds.readButton,
+    libraryOverviewCardTestIds.listenButton,
+  ];
 
   // Read off the laid-out element: what matters is what is painted, not which rule painted it.
   private chrome = () =>
@@ -178,6 +200,34 @@ export class LibraryOverviewCardPageObject extends PageObject {
     });
 
   verifyHasThumbnail = () => this.expectToBeVisible(overviewThumbnailTestIds.image);
+
+  verifyImageSpansTheTile = () =>
+    this.step("verifyImageSpansTheTile", async () => {
+      const image = (await this.get(overviewThumbnailTestIds.link).boundingBox())!;
+      const tile = (await this.card.boundingBox())!;
+      expect(Math.round(image.width)).toBe(Math.round(tile.width));
+      expect(Math.round(image.x)).toBe(Math.round(tile.x));
+      expect(Math.abs(image.height - image.width / 2)).toBeLessThanOrEqual(1);
+    });
+
+  verifyImageWidth = (width: number) =>
+    this.step(`verifyImageWidth ${width}`, async () => {
+      const image = (await this.get(overviewThumbnailTestIds.link).boundingBox())!;
+      expect(Math.round(image.width)).toBe(width);
+    });
+
+  verifyLengthBadgeReads = (text: string | null) =>
+    this.step(`verifyLengthBadgeReads ${text}`, () =>
+      text === null
+        ? expect(this.get(overviewThumbnailTestIds.badge)).toHaveCount(0)
+        : expect(this.get(overviewThumbnailTestIds.badge)).toHaveText(text),
+    );
+
+  verifyLengthShownInTheMeta = (shown: boolean) =>
+    this.step(`verifyLengthShownInTheMeta ${shown}`, async () => {
+      const length = (await this.get(libraryOverviewCardTestIds.metaLength).boundingBox())!;
+      expect(length.width > 1).toBe(shown);
+    });
   verifyHasNoThumbnail = () => this.expectNotToBeVisible(overviewThumbnailTestIds.image);
 
   verifyAddedByReads = (text: string | null) =>

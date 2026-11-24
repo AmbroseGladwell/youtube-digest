@@ -1,6 +1,15 @@
 @use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/tip.scss";
 
 $control-height: 2.125rem;
+// Design 407v–x: 128px at 480 wide, 176px by 640, so the text keeps about 280px.
+$row-thumbnail-width: clamp(8rem, 30vw - 1rem, 11rem);
+$banner-query: "(max-width: 29.9375rem)";
+$icon-action-size: 40px;
+$icon-action-gap: 4px;
+$icon-action-press: 0.92;
+$orb-in: 260ms;
+$orb-out: 160ms;
 
 // Design 11c/12c: docs/features/stone-theme.md, "The tile".
 .root {
@@ -218,14 +227,9 @@ $control-height: 2.125rem;
     padding: 0.875rem;
   }
 
-  // Too small on a phone to tell one video from another, and it costs the title its column.
-  .thumbnail {
-    display: none;
-  }
-
-  .row,
-  .row:has(> .body:first-child) {
-    grid-template-columns: minmax(0, 1fr);
+  .row {
+    grid-template-columns: $row-thumbnail-width minmax(0, 1fr);
+    gap: 1rem;
   }
 
   .title {
@@ -233,25 +237,56 @@ $control-height: 2.125rem;
   }
 
   .foot {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.625rem;
+    margin-top: 0;
   }
 
   .actions {
-    flex-wrap: wrap;
+    flex: none;
+    gap: $icon-action-gap;
   }
 
-  .action,
-  .actionPlaying {
-    min-height: 2.375rem;
+  // Design 407p: the saved chip takes the timing line's place, which holds its height.
+  .reading {
+    display: grid;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
-  .favouriteAction {
-    width: 2.375rem;
-    height: 2.375rem;
-    font-size: 1rem;
+  .reading > * {
+    grid-area: 1 / 1;
+    align-self: center;
+    justify-self: start;
   }
+
+  .reading:has(.savedSlot) .timing {
+    visibility: hidden;
+  }
+}
+
+// Design 407l, 407u: below 30rem the image runs across the top of the tile.
+@media #{$banner-query} {
+  .row,
+  .row:has(> .body:first-child) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3125rem;
+  }
+
+  .row > .thumbnail {
+    width: auto;
+    max-width: none;
+    margin: -0.875rem -0.875rem 0;
+    aspect-ratio: 2 / 1;
+    border-radius: var(--radius-tile) var(--radius-tile) 0 0;
+  }
+}
+
+.root:has([data-length-badge]) .lengthPart {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 // Under the summary, never in the kicker, so it can't be read as a judgement (168f).
@@ -376,7 +411,7 @@ $control-height: 2.125rem;
   transition: opacity 120ms var(--motion-ease);
 }
 
-@media (max-width: 47.9375rem) {
+@media #{$banner-query} {
   .thumbnailBox {
     display: none;
   }
@@ -384,7 +419,9 @@ $control-height: 2.125rem;
   .kickerBox {
     display: inline-flex;
   }
+}
 
+@media (max-width: 47.9375rem) {
   .actions {
     max-height: 3rem;
     transition:
@@ -444,4 +481,139 @@ $control-height: 2.125rem;
 
 .said:hover .saidLabel {
   color: var(--accent);
+}
+
+// Design 407q: below 48rem the three actions are icons, named by a tip.
+.iconAction {
+  @include controls.pill-shape;
+  @include controls.surface-control;
+  @include controls.circle($icon-action-size);
+
+  position: relative;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1rem;
+
+  &:active:not(:disabled) {
+    transform: scale($icon-action-press);
+  }
+
+  @include tip.shows(".tip") {
+    @include tip.label-shown;
+  }
+}
+
+.tip {
+  @include tip.label-above;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.listenGlyph {
+  position: relative;
+  display: inline-flex;
+}
+
+.listening,
+.listening:hover:not(:disabled) {
+  color: var(--on-action);
+}
+
+.orb,
+.orbUnder {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform $orb-out cubic-bezier(0.4, 0, 1, 1);
+}
+
+.orb {
+  background: var(--action);
+}
+
+.orbUnder {
+  background: color-mix(in srgb, var(--action) 62%, var(--card));
+}
+
+// Design 407q: a liquid orb, its layers on loops of different lengths so they never line up.
+.listening .orb,
+.listening .orbUnder {
+  transform: scale(1);
+  transition: transform $orb-in var(--motion-ease);
+}
+
+.listening .orb {
+  animation:
+    orbBreathe 2900ms ease-in-out $orb-in infinite,
+    orbMorph 3700ms ease-in-out $orb-in infinite,
+    orbDrift 9000ms linear $orb-in infinite;
+}
+
+.listening .orbUnder {
+  animation:
+    orbBreatheUnder 3400ms ease-in-out -1100ms infinite,
+    orbMorph 4600ms ease-in-out -2300ms infinite,
+    orbDrift 12000ms linear infinite reverse;
+}
+
+@keyframes orbBreathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  30% {
+    scale: 0.93;
+  }
+  55% {
+    scale: 0.97;
+  }
+  80% {
+    scale: 0.91;
+  }
+}
+
+@keyframes orbBreatheUnder {
+  0%,
+  100% {
+    scale: 0.99;
+  }
+  35% {
+    scale: 0.95;
+  }
+  60% {
+    scale: 1;
+  }
+  85% {
+    scale: 0.96;
+  }
+}
+
+@keyframes orbMorph {
+  0%,
+  100% {
+    border-radius: 50%;
+  }
+  25% {
+    border-radius: 54% 46% 52% 48% / 47% 53% 49% 51%;
+  }
+  50% {
+    border-radius: 47% 53% 46% 54% / 53% 48% 52% 47%;
+  }
+  75% {
+    border-radius: 52% 48% 55% 45% / 49% 54% 46% 51%;
+  }
+}
+
+@keyframes orbDrift {
+  to {
+    rotate: 360deg;
+  }
 }

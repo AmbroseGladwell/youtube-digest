@@ -146,12 +146,9 @@ design's own (170d, 170e, 170f); the third is a limit of the build.
 **No image.** A note without a picture, or one whose picture failed, has nothing for the
 row to land on. Both ends read the same `sourceImage`, so they always agree.
 
-**Under 768px — the phone and the panel.** `LibraryOverviewCard` hides its thumbnail below
-768px on purpose, because at that width it cannot tell one video from another and it costs
-the title its column, so there is no source to carry. This falls out of the row's layout
-rather than a viewport gate in `shouldAnimateNavigation()`: the name is set only where the
-row has a thumbnail with a box, and a hidden element measures zero. The panel is under 768px
-and its head has no image either (147g). In practice the morph runs from 768px up.
+**The panel.** Since OV-407 a phone row has an image at every width (`library-row-images.md`),
+so the morph runs on a phone too. The panel's head has no image (147g), so a row opened there
+has nothing to land on and the journey stays 9c.
 
 **A note that isn't loaded yet.** `ReaderPage` shows a pending state while the record is
 read, so on a cold open the transition captures a new page with no head image in it and the

@@ -599,31 +599,10 @@ theme has always done. The light theme is untouched throughout.
   and `Listen`, and a wash behind all three swallows `Listen`'s own tint — so the mark goes
   on the title, which is the thing that is actually going to open. The design's own library
   screens (2a, 2c) draw no row tint either.
-- **A phone row keeps the three pills**, where design 2c's phone card drops them to plain
-  type. A row now reads the same at both widths: the round favourite, outlined `Mark read`
-  and tinted `Listen`, on a 38px touch size — which is the size 9a draws its own icon
-  button at. They sit under the text with their left edge on the title's.
-
-  Note this is 38px where the rest of the phone layout — `+ New`, the filter toggles, the
-  dialog's buttons — takes the design's 44px. 38px was asked for and 9a uses it for an icon
-  button; if these should match the rest, it is one value in one media block.
-- **A phone row has no thumbnail at all.** At the width a phone can spare it, the image is
-  too small to tell one video from another and it costs the title the column it needs. The
-  title is the same way in to the reader, with the same words, so nothing is lost with it —
-  and it is `aria-hidden` and out of the tab order anyway, so hiding it takes nothing out
-  of the accessibility tree. Two things follow from dropping it: the title gets the full
-  width, and the three actions have room to sit under it on one line down to 320px.
-
-  This is a CSS `display: none` rather than a component that stops rendering it, which is
-  how the reader's breadcrumb and the library's rail already behave at this breakpoint. It
-  has one consequence worth knowing: **a hidden thumbnail is out of the grid but still the
-  first child in the tree.** The desktop rule that gives a thumbnail-less row its own
-  narrower grid is `.row:has(> .body:first-child)`, which therefore does *not* fire for a
-  row whose thumbnail is merely hidden — and *does* fire, and outranks a bare `.row`, for a
-  row that never had one. Both selectors have to be restated in the media block or the two
-  kinds of row lay out differently on the same screen. That is the shape of the bug the
-  phone test in `libraryActions.iwft.ts` exists to catch, which is why it asserts on both
-  rows rather than the first.
+- **A phone row kept the three pills** until OV-407, which made them 40px icons on the timing
+  line below 48rem (`library-row-images.md`).
+- **A phone row had no thumbnail at all** until OV-407, which gave it a banner below 30rem and
+  a scaling thumbnail above (`library-row-images.md`).
 
   The favourite's glyph grows with the circle, holding the ~47% ratio the 32px desktop pair
   has.
