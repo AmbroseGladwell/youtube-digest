@@ -144,6 +144,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   const waitingKeyRef = useRef(0);
   const [waiting, setWaiting] = useState<WaitingLink[]>([]);
   const waitingRef = useRef<WaitingLink[]>([]);
+  const runningUrlRef = useRef<string | null>(null);
   waitingRef.current = waiting;
   const [justNow, setJustNow] = useState<NewOverviewRun[]>([]);
   const prefetchVideo = usePrefetchVideo();
@@ -506,15 +507,21 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   // One at a time from Create; the rest wait their turn: docs/features/kept-links.md, "Several in a row".
   const launch = useCallback(
     (url: string, options: StartOverviewRunOptions, go: (runId: number, saveInstead: boolean) => void) => {
+      if (busyRef.current && (runningUrlRef.current === url || waitingRef.current.some((link) => link.url === url))) {
+        return;
+      }
+      setJustNow((current) => current.filter((done) => done.url !== url || done.error === null));
       if ((options.from === "dialog" || options.queued === true) && busyRef.current) {
         const key = (waitingKeyRef.current += 1);
-        setWaiting((current) => [...current, { key, url, video: null, go }]);
+        waitingRef.current = [...waitingRef.current, { key, url, video: null, go }];
+        setWaiting(waitingRef.current);
         if (isYouTubeUrl(url)) {
           void prefetchVideo(url).then((video) => setWaiting(withVideo(key, video)));
         }
         return;
       }
       busyRef.current = true;
+      runningUrlRef.current = url;
       go((runIdRef.current += 1), false);
     },
     [prefetchVideo],
@@ -525,6 +532,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       return;
     }
     busyRef.current = false;
+    runningUrlRef.current = null;
     if (run !== null) {
       setJustNow((current) => (current.some((done) => done.startedAt === run.startedAt) ? current : [...current, run]));
     }
@@ -532,8 +540,10 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     if (next === undefined) {
       return;
     }
+    waitingRef.current = rest;
     setWaiting(rest);
     busyRef.current = true;
+    runningUrlRef.current = next.url;
     next.go((runIdRef.current += 1), monthSpentRef.current);
   }, [run]);
 

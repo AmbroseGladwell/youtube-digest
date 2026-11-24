@@ -47,6 +47,7 @@ import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
 import { isStartAsked } from "../../onboarding/startAsked.js";
 import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
+import { QueueLink } from "../../captureQueue/components/QueueLink/QueueLink.js";
 
 export const HomePage = ({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) => {
   const isPanel = useIsPanel();
@@ -428,6 +429,10 @@ const Hero = ({
         {children}
 
         {extensionLine()}
+
+        <div className={styles.heroQueue}>
+          <QueueLink />
+        </div>
       </div>
 
       {aside}

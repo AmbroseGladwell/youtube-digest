@@ -3,6 +3,7 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
 import { podcastLinkStatusTestIds } from "../../../src/features/newOverview/components/PodcastLinkStatus/PodcastLinkStatusTestIds.js";
+import { justNowListTestIds } from "../../../src/features/newOverview/components/JustNowList/JustNowListTestIds.js";
 import { transcriptionNoticeTestIds } from "../../../src/features/podcasts/components/TranscriptionNotice/TranscriptionNoticeTestIds.js";
 
 const SIGNED_IN = {
@@ -126,7 +127,7 @@ test("when the check couldn't tell, Create asks before transcribing, and choosin
   expect(backendSimulator.podcasts.transcriptionAsks()).toHaveLength(1);
 });
 
-test("a transcription that couldn't start says nothing was counted, and Try again asks again", async ({
+test("a transcription that couldn't start says nothing was counted, and Try again asks again, once however often it is pressed", async ({
   page,
   launcher,
   backendSimulator,
@@ -149,10 +150,12 @@ test("a transcription that couldn't start says nothing was counted, and Try agai
     "Nothing was counted: no transcribing time and no overview.",
   );
   backendSimulator.podcasts.transcribesAs({ status: "ready", id: ID, transcript: WORDS });
-  await page.getByTestId(transcriptionNoticeTestIds.primary).click();
+  await page.getByTestId(transcriptionNoticeTestIds.primary).click({ clickCount: 3 });
 
+  await expect(page.getByTestId(justNowListTestIds.row)).toHaveCount(1);
   await expect.poll(() => backendSimulator.ourKey.generations().length, { timeout: 20_000 }).toBe(1);
   expect(backendSimulator.podcasts.transcriptionAsks()).toHaveLength(2);
+  await expect(page.getByTestId(justNowListTestIds.row)).toHaveCount(1);
 });
 
 test("Settings › Plan counts the month's transcribing in its own row, and the Plan row names it once some is used", async ({

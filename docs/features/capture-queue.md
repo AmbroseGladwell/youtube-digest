@@ -33,7 +33,7 @@ devices showed different queues, paused separately, and could both make the same
   as before (`claimOrSkip`).
 - **Paused is on the account** (`Settings.queuePaused`), so pausing on one device pauses
   every one.
-- **The device's own:** folded into the strip, waiting at a limit, and which chosen videos
+- **The device's own:** waiting at a limit, and which chosen videos
   were made today, still kept per account in `localStorage`
   (`captureQueuePreferencesStorage`).
 
@@ -76,13 +76,13 @@ the queue. Whatever it had spent on that video is spent, as with Cancel on a run
 
 ## Where it lives
 
-**In the library (27i).** A recessed group above the finished tiles: what is being made
-and the next two, with *See queue* and the count of what needs attention. Pending videos
-don't pretend to be overviews: no raised tile but the one being made, a faded thumbnail,
-no verdict or topic, and a text status (*Making now*, *Next*, *Waiting*) so the difference
-never rests on colour. The chevron folds the group into the strip (27i-2), which then
-carries the attention count and *Show queue*. The group shows above the first-run hero
-too, so following a playlist before making anything still shows what waits.
+**The way in (358h-6 to 358h-10).** `QueueLink`, at the top of the library's sidebar (the
+Filters sheet on a phone), with how many wait and, in the alert colour, how many need
+attention; shown only while something does. With an empty library, the first-run and Start
+screens carry the same link under their form, so following a playlist before making
+anything still shows what waits. The library's queue group (27i) and the strip under the
+masthead are gone from the web app and the phone (OV-358): the link and the page say the
+same.
 
 **The queue page (27j, `/queue`).** Making now, then the waiting list in order, numbered,
 each with a labelled Remove, then Needs attention. Pause or Resume and Clear queue, which
@@ -91,11 +91,13 @@ arrival. The panel has the same page, reached from its strip (27o).
 
 ## The strip
 
+**Only in the extension panel**, which has no sidebar for the Queue link: on its home
+screen (27o). The web app and the phone dropped it once the Queue link existed (OV-358).
 The generation strip's slot and shape (3c), one state at a time (`captureQueueStrip`):
 
 | State | Says | Offers |
 |---|---|---|
-| making | *Making 3 of 12* · the step · the title, with progress | Details, Pause, Queue |
+| making | *Making 3 of 12* · the step · the title, with progress | Pause, Queue |
 | no key | *10 videos are waiting for an API key* | Add a key, Queue |
 | at the month's limit | *Queue waiting · 9 videos* · *This month's 5 are made. Resumes 1 November, or when you add a key.* | Add a key or See plans where either would help, Queue |
 | paused | *Queue paused* · *10 waiting · nothing is made until you resume* | Resume, Queue |
@@ -115,10 +117,7 @@ the batch's, with the current video credited only for steps that have happened. 
 left from an earlier sitting don't announce themselves on opening; the library group and
 the page still carry them.
 
-A reader-started run takes the slot first, then the queue, then the move notice, the
-usage prompt and the account strips. Its text is a polite live region. On a phone it
-goes compact, with 44px icon buttons; in the panel it sits on the home screen (27o).
-*Details* opens the current video's steps in a dialog of its own (`QueueRunDialog`).
+Its text is a polite live region.
 
 ## Needs attention
 

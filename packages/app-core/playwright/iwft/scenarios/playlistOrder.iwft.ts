@@ -102,7 +102,7 @@ test("the preview follows in the reader's default order unless they change it, a
       },
     ]);
 
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.verifyWaiting([TITLES[2]!, TITLES[1]!, TITLES[0]!]);
 });
@@ -121,7 +121,7 @@ test("changing a playlist's order in Settings turns round what is already waitin
     backendSimulator.playlists.seedQueued(capture);
   }
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
 
   await queuePage.verifyWaiting([TITLES[0]!, LECTURE.title, TITLES[1]!, TITLES[2]!]);
@@ -138,7 +138,7 @@ test("changing a playlist's order in Settings turns round what is already waitin
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "playlists.settings.orderChanged"))
     .toEqual([{ name: "playlists.settings.orderChanged", props: { order: "newestFirst", waiting: 3 } }]);
 
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   await queuePage.verifyIsShown();
   await queuePage.verifyWaiting([TITLES[2]!, LECTURE.title, TITLES[1]!, TITLES[0]!]);
 });
