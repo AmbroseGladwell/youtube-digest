@@ -5,6 +5,7 @@ export const libraryOverviewCardTestIds = {
   meta: "LibraryOverviewCard.meta",
   siteLink: "LibraryOverviewCard.siteLink",
   metaLength: "LibraryOverviewCard.metaLength",
+  selectBox: "LibraryOverviewCard.selectBox",
   listenButton: "LibraryOverviewCard.listenButton",
   favouriteButton: "LibraryOverviewCard.favouriteButton",
   readButton: "LibraryOverviewCard.readButton",

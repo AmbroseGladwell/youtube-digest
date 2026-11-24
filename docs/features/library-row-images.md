@@ -38,6 +38,10 @@ over: a video or recipe cover-cropped from the centre, a podcast's square art an
 portrait cover matted on `--stone-tint`, and a name tile for a non-YouTube source with no
 image or a dead one. A YouTube video with no image has no slot, so the row reads as it did.
 
+**Selecting.** While selecting, each row's tick sits on its image's top-left corner, as it does
+on the wide row, so the topics and verdict keep their place. A row with no image puts its tick
+at the start of that line instead.
+
 ## The length on the image
 
 The source's length sits in the image's bottom-right corner, as a video site shows it

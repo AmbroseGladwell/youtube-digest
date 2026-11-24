@@ -431,11 +431,8 @@ $orb-out: 160ms;
 
 @media #{$banner-query} {
   .thumbnailBox {
-    display: none;
-  }
-
-  .kickerBox {
-    display: inline-flex;
+    top: 0.625rem;
+    left: 0.625rem;
   }
 }
 
