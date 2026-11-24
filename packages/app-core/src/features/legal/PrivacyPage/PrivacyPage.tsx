@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-23";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-24";
 
 const UNITED_STATES = "United States";
 
@@ -496,6 +496,11 @@ const sections: readonly LegalSection[] = [
           what we did with it.
         </p>
         <p>
+          If you close the box without sending, what you wrote stays on that device as a draft, one for general feedback and one for each
+          overview, until you send it or empty the box. It is never synced. If you said yes to analytics, we count opening the box, sending
+          it and closing it, with its kind and whether it was about an overview, never your words.
+        </p>
+        <p>
           Your feedback stays in our own database and goes to no one else. PostHog's daily copy for our dashboards counts feedback by day,
           plan, where it was sent from, its kind and what we did with it, under the same coded id as the cost summary, and never holds your
           words or the overview.
@@ -633,7 +638,8 @@ const sections: readonly LegalSection[] = [
           <strong>Strictly necessary</strong>, because the app can't work without it: your library and its transcripts, in the browser's
           database; any API keys you added; your settings; your sign-in state, and in the extension the server it talks to; where you got to
           in each transcript; which of a followed playlist's videos this device has seen; when you chose to keep a project the app asked
-          about after it was left alone; and, before you have an account, the trial token that lets us read your first link.
+          about after it was left alone; feedback you closed without sending; and, before you have an account, the trial token that lets us
+          read your first link.
         </p>
         <p>
           <strong>Analytics only</strong>, and deleted when you say no: your answer to the analytics question, the date you gave it, and,

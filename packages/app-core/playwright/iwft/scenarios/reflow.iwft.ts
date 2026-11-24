@@ -118,6 +118,18 @@ const screens: Screen[] = [
     verify: (reader) => reader.verifyActionsCanBeReached(),
   }),
   screen({
+    name: "the feedback box",
+    open: async (launcher, backendSimulator) => {
+      const library = await openLibrary(launcher, backendSimulator);
+      const reader = await library.nthCard(0).openReader();
+      const box = await reader.clickSendFeedback();
+      await box.chooseKind("wrong");
+      await box.type("The verdict felt wrong, and the section on pace was the most useful part.");
+      return box;
+    },
+    verify: (box) => box.verifyBoxCanBeUsed(),
+  }),
+  screen({
     name: "the Ask page",
     open: async (launcher, backendSimulator) => {
       await openLibrary(launcher, backendSimulator);

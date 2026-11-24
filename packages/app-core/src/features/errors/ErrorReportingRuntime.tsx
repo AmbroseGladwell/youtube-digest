@@ -48,6 +48,7 @@ export const ErrorReportingRuntime = ({ children }: { children: ReactNode }) => 
       warn: (warning) => queue.recordWarning({ ...warning, at: new Date().toISOString() }),
       time: (timing) => queue.recordTiming({ ...timing, at: new Date().toISOString() }),
       recordAction: (name) => trail.record(name),
+      trail: () => trail.entries(),
       flush: (options) => queue.flush(options),
     };
   }, [queue, trail]);

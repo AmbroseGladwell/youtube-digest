@@ -17,6 +17,7 @@ import { signOutCopy, useTimersWillStop } from "../../../cookingTimers/useTimers
 import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 import { shouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { useExtensionOffered } from "../../../../util/useExtensionOffered.js";
+import { useFeedbackBox } from "../../../feedback/FeedbackContext.js";
 
 const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
@@ -26,6 +27,7 @@ export const AccountMenu = () => {
   const isPanel = useIsPanel();
   const surface = useSurface();
   const extensionOffered = useExtensionOffered();
+  const feedback = useFeedbackBox();
   const sync = useSync();
   const signOutNow = useSignOut();
   const willStop = useTimersWillStop();
@@ -204,6 +206,19 @@ export const AccountMenu = () => {
             accountMenuTestIds.connectExtensionItem,
           )}
         {settings}
+        {feedback !== null &&
+          !signedOutAtServer &&
+          item(
+            "chat",
+            "Send feedback",
+            "sendFeedback",
+            () => {
+              close(false);
+              feedback.open({ about: null, from: "accountMenu", returnFocusTo: trigger.current });
+            },
+            accountMenuTestIds.sendFeedbackItem,
+          )}
+        <div role="separator" className={styles.separator} />
         {signOutControl()}
       </>
     );

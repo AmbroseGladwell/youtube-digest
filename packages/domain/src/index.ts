@@ -215,6 +215,7 @@ export * from "./ClientErrorBatch.js";
 export * from "./ClientWarning.js";
 export * from "./ClientTiming.js";
 export * from "./Feedback.js";
+export * from "./FeedbackKind.js";
 export * from "./redactFeedbackText.js";
 export * from "./analyticsPlatform.js";
 export * from "./normaliseTag.js";
