@@ -68,6 +68,7 @@ import {
   type VideoId,
   youTubeSource,
   type TranscriptSearchResponse,
+  type Capture,
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
@@ -263,6 +264,7 @@ export class BackendSimulator {
   #seedStates: OverviewState[] = [];
   #seedTopics: Topic[] = [];
   #seedTranscripts: StoredTranscript[] = [];
+  #seedCaptures: Capture[] = [];
   #seedUnreadable: UnreadableRecord[] = [];
 
   #behaviours = new Map<EndpointKey, EndpointBehaviour>(Object.values(EndpointKey).map((key) => [key, EndpointBehaviour.DEFAULT]));
@@ -425,6 +427,7 @@ export class BackendSimulator {
     seedFollowedPlaylists: this.#seedFollowed,
     seedPlaylistChecks: this.#seedChecks,
     seedQueue: this.#seedQueue,
+    seedCaptures: this.#seedCaptures,
     seedProjects: this.#seedProjects,
     seedProjectMembers: this.#seedProjectMembers,
     seedSuggestedQuestions: this.#seedSuggestedQuestions,
@@ -2159,6 +2162,9 @@ export class BackendSimulator {
   };
 
   captureStore = {
+    seed: (capture: Capture): void => {
+      this.#seedCaptures.push(capture);
+    },
     list: () => this.#page.evaluate(() => window.__iwftStores__.captureStore.listCaptures()),
   };
 

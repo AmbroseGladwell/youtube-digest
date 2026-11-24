@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ArticleRead, Overview } from "@overview/domain";
+import type { ArticleRead, Overview, SavedCapture } from "@overview/domain";
 import { overviewKeys } from "../../overviews/overviewKeys.js";
 import { transcriptKeys } from "../../transcripts/transcriptKeys.js";
 import { usePlayer } from "../../player/PlayerContext.js";
@@ -10,6 +10,7 @@ import {
   useRunArticleGeneration,
   useRunOverviewGeneration,
   useRunPodcastGeneration,
+  useRunSavedGeneration,
   useRunSocialGeneration,
   useRunTikTokGeneration,
 } from "../useRunOverviewGeneration.js";
@@ -22,6 +23,7 @@ export type GenerateOverviewVariables = RunOverviewGenerationOptions &
     | { podcast: PodcastRunRequest }
     | { tiktok: TikTokRunRequest }
     | { social: SocialRunRequest }
+    | { saved: SavedCapture }
   );
 
 export const useGenerateOverviewMutation = (apiKeys: ApiKeys) => {
@@ -32,10 +34,15 @@ export const useGenerateOverviewMutation = (apiKeys: ApiKeys) => {
   const generatePodcast = useRunPodcastGeneration(apiKeys);
   const generateTikTok = useRunTikTokGeneration(apiKeys);
   const generateSocial = useRunSocialGeneration(apiKeys);
+  const generateSaved = useRunSavedGeneration(apiKeys);
 
   return useMutation<Overview, Error, GenerateOverviewVariables>({
     mutationKey: overviewKeys.all,
     mutationFn: (variables) => {
+      if ("saved" in variables) {
+        const { saved, ...options } = variables;
+        return generateSaved(saved, options);
+      }
       if ("social" in variables) {
         const { social, ...options } = variables;
         return generateSocial(social, options);

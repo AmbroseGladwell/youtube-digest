@@ -32,6 +32,8 @@ import {
   type VideoSource,
   type CaptureStore,
   type CaptureSurface,
+  type SavedCapture,
+  isWrittenSource,
 } from "@overview/domain";
 import {
   clipAsVideo,
@@ -56,6 +58,7 @@ import { CaptureStopwatch } from "./CaptureStopwatch.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
 import { SocialPostTooShortError } from "./SocialPostTooShortError.js";
 import { SavedWithoutOverview } from "./SavedWithoutOverview.js";
+import { SavedSourceNeedsReadingError } from "./SavedSourceNeedsReadingError.js";
 import { savedCaptureOf } from "./savedCaptureOf.js";
 import type { OverviewMeta } from "./makeOverviewOnKeys.js";
 import type { TranscriptionProgress } from "../../podcasts/api/transcribeAudio.js";
@@ -116,6 +119,8 @@ export interface RunOverviewGenerationOptions {
   onProjectsFiled?: ((count: number) => void) | undefined;
   // Set, the words are kept and the link saved, and no overview is written (docs/features/kept-links.md).
   saveInstead?: CaptureSurface | undefined;
+  // Written under its saved capture's id, but filed as a new overview is.
+  madeFromSaved?: boolean | undefined;
 }
 
 export const runOverviewGeneration = async (
@@ -317,6 +322,55 @@ export const runSocialOverviewGeneration = async (
   );
 };
 
+// Its overview from what was kept: docs/features/kept-links.md, "Opening one".
+export const runSavedOverviewGeneration = async (
+  capture: SavedCapture,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
+  options: RunOverviewGenerationOptions = {},
+): Promise<Overview> => {
+  const what = await savedWhatToWrite(capture, deps.transcriptStore);
+  if ("video" in what && "transcript" in what) {
+    const transcriptWords = what.transcript.reduce((total, segment) => total + countWords(segment.text), 0);
+    const transcriptOpening = what.transcript
+      .map((segment) => segment.text)
+      .join(" ")
+      .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+    options.onProgress?.({ video: what.video, transcriptWords, transcriptSource: "stored", transcriptOpening });
+  }
+  stopIfCancelled(options);
+  return writeOverview(what, deps, { ...options, overviewId: capture.id, madeFromSaved: true });
+};
+
+const savedWhatToWrite = async (capture: SavedCapture, transcripts: TranscriptStore): Promise<WhatToWrite> => {
+  const { source } = capture;
+  const notes = capture.notes ?? "";
+  if (isWrittenSource(source)) {
+    if (source.kind === "web") {
+      throw new SavedSourceNeedsReadingError();
+    }
+    const article = postAsArticle(source, notes);
+    if (article === null) {
+      throw new SavedSourceNeedsReadingError();
+    }
+    return { social: source, article };
+  }
+  const stored = await transcripts.getTranscript(capture.sourceKey);
+  if (stored === null) {
+    throw new SavedSourceNeedsReadingError();
+  }
+  const transcript = stored.segments;
+  switch (source.kind) {
+    case "youtube":
+      return { video: notes === "" ? source : { ...source, fullDescription: notes }, transcript };
+    case "podcast":
+      return { podcast: source, video: episodeAsVideo(source, notes), transcript };
+    case "tiktok":
+      return { tiktok: source, video: clipAsVideo(source, notes), transcript };
+    default:
+      return { social: source, video: postAsVideo(source, notes), transcript };
+  }
+};
+
 const stopIfCancelled = (options: RunOverviewGenerationOptions): void => {
   if (options.isCancelled?.()) {
     throw new GenerationCancelledError();
@@ -369,7 +423,7 @@ const writeOverview = async (
   ]);
   // A regeneration keeps where the reader filed it, so only a new overview is filed.
   const existingProjects =
-    settings.fileIntoProjects && options.overviewId === undefined
+    settings.fileIntoProjects && (options.overviewId === undefined || options.madeFromSaved === true)
       ? projects.filter((project) => project.archivedAt === null).map(({ id, name, purpose }) => ({ id, name, purpose }))
       : [];
   let filedProjectIds: ProjectId[] = [];

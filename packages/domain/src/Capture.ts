@@ -43,6 +43,8 @@ export const SavedCapture = CaptureBase.extend({
   stage: z.literal("saved"),
   source: Source,
   savedAt: z.iso.datetime(),
+  // The description, show notes or caption its overview is written with (docs/features/kept-links.md).
+  notes: z.string().nullable().catch(null),
 });
 export type SavedCapture = z.infer<typeof SavedCapture>;
 

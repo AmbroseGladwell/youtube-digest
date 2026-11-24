@@ -46,7 +46,7 @@ export const SavedItemPage = ({ capture }: SavedItemPageProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { captureStore } = useStores();
-  const { start, openWith } = useNewOverviewRunController();
+  const { startFromSaved, openWith } = useNewOverviewRunController();
   const next = useNextQuota();
   const usage = useOverviewUsageQuery().data;
   const [plansOpen, setPlansOpen] = useState(false);
@@ -55,12 +55,12 @@ export const SavedItemPage = ({ capture }: SavedItemPageProps) => {
   const facts = [sourceName(capture.source), lengthOf(capture)].filter((fact): fact is string => fact !== null);
 
   const make = () => {
-    if (capture.source.kind === "youtube") {
-      start(capture.url, { from: "regenerate", overviewId: capture.id });
-      void navigate(Routes.home(), { viewTransition: shouldAnimateNavigation() });
+    if (capture.source.kind === "web") {
+      openWith(capture.url);
       return;
     }
-    openWith(capture.url);
+    startFromSaved(capture);
+    void navigate(Routes.home(), { viewTransition: shouldAnimateNavigation() });
   };
 
   const remove = async () => {

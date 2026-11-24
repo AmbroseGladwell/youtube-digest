@@ -15,6 +15,7 @@ import type {
   SuggestedQuestion,
   Topic,
   UnreadableRecord,
+  Capture,
 } from "@overview/domain";
 import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
@@ -36,6 +37,7 @@ export interface IwftHooksConfig {
   seedFollowedPlaylists?: FollowedPlaylist[];
   seedPlaylistChecks?: PlaylistCheck[];
   seedQueue?: QueuedCapture[];
+  seedCaptures?: Capture[];
   seedProjects?: Project[];
   seedProjectMembers?: ProjectMember[];
   seedSuggestedQuestions?: SuggestedQuestion[];

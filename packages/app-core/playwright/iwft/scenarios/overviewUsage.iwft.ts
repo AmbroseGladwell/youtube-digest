@@ -1,7 +1,10 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { IWFT_VIDEO_ID, makeServiceTranscriptFixture } from "../../network/fixtures/innerTubeFixtures.js";
+import { OverviewId, SourceKey, VideoId, youTubeSource, type Capture } from "@overview/domain";
+import { Routes } from "../../../src/app/Routes.js";
+import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
@@ -290,4 +293,48 @@ test("with the month's saves made, the wall offers only Plus and a key", async (
   await dialog.form.submitUrl(VALID_URL);
 
   await launcher.softWall.verifyOffersSaving(false);
+});
+
+test("once overviews are back, a saved item's Make overview writes it from its kept transcript, under its own id", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  const source = youTubeSource({
+    ...makeOverview().source,
+    id: VideoId.parse(IWFT_VIDEO_ID),
+    url: VALID_URL,
+    title: "The Simulated Video",
+  });
+  const capture: Capture = {
+    id: OverviewId.parse("5b8e2f1a-6c3d-4e7f-8a9b-0c1d2e3f4a5b"),
+    sourceKey: SourceKey.parse(IWFT_VIDEO_ID),
+    url: VALID_URL,
+    keptAt: "2026-10-20T09:00:00.000Z",
+    keptFrom: "phone",
+    captureReason: null,
+    title: "The Simulated Video",
+    thumbnailUrl: null,
+    fromPlaylist: null,
+    addedAt: null,
+    playlistIndex: null,
+    chosenAt: null,
+    stage: "saved",
+    source,
+    savedAt: "2026-10-20T09:00:00.000Z",
+    notes: null,
+  };
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 2 });
+  backendSimulator.captureStore.seed(capture);
+  backendSimulator.transcripts.seed(makeServiceTranscriptFixture(IWFT_VIDEO_ID, "The Simulated Video"));
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  await launcher.openPage(Routes.overview(capture.id));
+
+  await launcher.savedItem.verifyOffersMakingIt();
+  await launcher.savedItem.makeOverview();
+
+  await expect
+    .poll(async () => (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.id))
+    .toEqual([capture.id]);
+  expect(await backendSimulator.captureStore.list()).toEqual([]);
 });

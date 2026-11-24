@@ -3,6 +3,7 @@ import { useSurface } from "../../app/SurfaceContext.js";
 import { captureKeys } from "../captures/captureKeys.js";
 import { captureSurfaceOf } from "../captures/util/captureSurfaceOf.js";
 import { SavedWithoutOverview } from "./api/SavedWithoutOverview.js";
+import { SavedSourceNeedsReadingError } from "./api/SavedSourceNeedsReadingError.js";
 import { useCallback, useRef, useState } from "react";
 import {
   heldOverviewOf,
@@ -12,6 +13,7 @@ import {
   type CaptureTranscriptSource,
   type ClientTimingReport,
   type Overview,
+  type SavedCapture,
   podcastPlatform,
   wordCount,
 } from "@overview/domain";
@@ -43,6 +45,8 @@ export interface StartOverviewRunOptions {
   captureReason?: string | null | undefined;
   // The soft wall's Save it for now: docs/features/kept-links.md, "Saving at the limit".
   saveInstead?: boolean | undefined;
+  // Its overview from what it kept: docs/features/kept-links.md, "Opening one".
+  savedCapture?: SavedCapture | undefined;
 }
 
 export interface ArticleRunRequest extends StartOverviewRunOptions {
@@ -73,6 +77,7 @@ export interface NewOverviewRunController {
   transcribeAgain: () => void;
   startTikTok: (request: TikTokRunRequest & StartOverviewRunOptions) => void;
   startSocial: (request: SocialRunRequest & StartOverviewRunOptions) => void;
+  startFromSaved: (capture: SavedCapture) => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
@@ -234,6 +239,9 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         sourceWords = wordCount(socialRequest.post.description);
       }
       const whatToRead = () => {
+        if (options.savedCapture !== undefined) {
+          return { saved: options.savedCapture };
+        }
         if (socialRequest !== null) {
           return { social: socialRequest };
         }
@@ -374,6 +382,14 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
             }
           },
           onError: (error) => {
+            if (error instanceof SavedSourceNeedsReadingError) {
+              if (isCurrent()) {
+                setRun(null);
+                setPrefill(url);
+                setDialogOpen(true);
+              }
+              return;
+            }
             if (error instanceof SavedWithoutOverview) {
               void queryClient.invalidateQueries({ queryKey: captureKeys.all });
               if (isCurrent()) {
@@ -442,6 +458,15 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       });
     },
     [alreadyHeld, analytics, generate],
+  );
+
+  const startFromSaved = useCallback(
+    (capture: SavedCapture) => {
+      const runId = (runIdRef.current += 1);
+      setHeld(null);
+      generate(capture.url, { from: "regenerate", savedCapture: capture, captureReason: capture.captureReason }, runId);
+    },
+    [generate],
   );
 
   const startArticle = useCallback(
@@ -562,6 +587,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     transcribeAgain,
     startTikTok,
     startSocial,
+    startFromSaved,
     dismiss,
     setCaptureReason,
     commitCaptureReason,

@@ -26,7 +26,8 @@ source before its overview, under the id its overview will take. It has two stag
 | `saved` | the source and, for anything but a page, its transcript | the reader choosing to make its overview |
 
 Both carry `sourceKey`, `keptAt`, `keptFrom` (`web`, `phone`, `panel` or `playlist`), the
-reader's `captureReason`, and the title and thumbnail when known. A playlist video also
+reader's `captureReason`, and the title and thumbnail when known. A saved one also keeps
+`notes`: the description, show notes or caption its overview is written with. A playlist video also
 carries `fromPlaylist`, its place, when it was chosen to make now, and its queue status and
 problem (`capture-queue.md`). A capture is never in a share, and goes with the account
 (`account-deletion.md`: records and `capture_saves` cascade).
@@ -133,10 +134,14 @@ Questions are left out, not greyed out. In the overview's place, one card:
 
 - with the month spent, **No overview yet.**, saying when the overviews are back, and
   **Get Plus**;
-- with overviews left, **Make its overview now.** with **Make overview**. A YouTube video
-  is made at once under the capture's id, reading the transcript it already has; another
-  kind opens Create with its link, and the capture goes when its overview is written
-  (`tombstoneCapturesOf`).
+- with overviews left, **Make its overview now.** with **Make overview**, which writes it
+  at once from what was kept (`runSavedOverviewGeneration`): the transcript on this device
+  and the capture's `notes`, the description, show notes or caption the run had when it
+  saved, under the capture's id, so nothing is read or fetched again and it's filed into
+  projects as a new overview is. A page keeps no text, so an article opens Create with its
+  link instead; so does a source whose transcript isn't on this device
+  (`SavedSourceNeedsReadingError`). Either way the capture goes when its overview is
+  written (`tombstoneCapturesOf`).
 
 Nothing is made on its own when the month resets.
 

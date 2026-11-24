@@ -80,7 +80,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   const syncAvailable = hooksConfig?.syncAvailable === true;
   const connection = SyncConnection.parse(hooksConfig?.syncConnection ?? DEFAULT_SYNC_CONNECTION);
   const seeded = makeStores(syncAvailable);
-  const { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore } = seeded;
+  const { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, captureStore, projectStore } = seeded;
   const libraries = new Map<string | null, Window["__iwftStores__"]>([[libraryAccountIdOf(connection), seeded]]);
 
   for (const overview of hooksConfig?.seedOverviews ?? []) {
@@ -108,6 +108,9 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
     followedPlaylistStore.seedCheck(check);
   }
   await captureQueueStore.enqueue(hooksConfig?.seedQueue ?? []);
+  for (const capture of hooksConfig?.seedCaptures ?? []) {
+    await captureStore.saveCapture(capture);
+  }
   for (const project of hooksConfig?.seedProjects ?? []) {
     projectStore.seedProject(project);
   }

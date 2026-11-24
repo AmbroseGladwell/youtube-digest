@@ -15,7 +15,8 @@ import {
 } from "@overview/domain";
 
 export type SavedSourceOf =
-  | { video: VideoSource }
+  | { video: VideoSource; article?: never }
+  | { social: SocialSource; article: ExtractedArticle }
   | { podcast: PodcastSource }
   | { tiktok: TikTokSource }
   | { social: SocialSource }
@@ -35,6 +36,16 @@ const sourceOf = async (what: SavedSourceOf): Promise<Source> => {
     return webSource(what.article, await articleSourceId(what.article.url));
   }
   return youTubeSource((what as { video: VideoSource }).video);
+};
+
+const notesOf = (what: SavedSourceOf): string | null => {
+  if ("video" in what && what.video) {
+    return what.video.fullDescription ?? what.video.description;
+  }
+  if ("social" in what && "article" in what && what.article) {
+    return what.article.sections.map((section) => section.text).join("\n\n");
+  }
+  return null;
 };
 
 const addressOf = (source: Source): string => (source.kind === "podcast" ? source.sharedFrom : source.url);
@@ -70,5 +81,6 @@ export const savedCaptureOf = async (
     stage: "saved",
     source,
     savedAt: at,
+    notes: notesOf(what),
   };
 };
