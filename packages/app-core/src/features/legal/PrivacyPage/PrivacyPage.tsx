@@ -443,8 +443,9 @@ const sections: readonly LegalSection[] = [
           We count what is used so we know what to build and fix next. An event is a thing you did in the app, such as opening an overview,
           choosing a sort order or playing narration, with the choice you made, a count, or a random id of our own for the overview, topic
           or project. When an overview is made, or can’t be made, the event says whether it was on your key or ours, and names the provider
-          and the model; a new overview's also says how many of your projects it was put in, never which. An event can never carry a link, a
-          video, a title, an overview's words or anything you typed, because there is no field shaped to hold them.
+          and the model; a new overview's also says how many of your projects it was put in, never which. Some events also say which plan
+          you are on and how wide the library was drawn (a phone, a narrow window or a wide one), never the screen's size. An event can
+          never carry a link, a video, a title, an overview's words or anything you typed, because there is no field shaped to hold them.
         </p>
         <h3>Three situations</h3>
         <ul>

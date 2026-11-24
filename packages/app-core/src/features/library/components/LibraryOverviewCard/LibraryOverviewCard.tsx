@@ -2,6 +2,9 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
+import { ReadIcon } from "../../../../components/shared/ReadIcon/ReadIcon.js";
+import { useMediaQuery } from "../../../../util/useMediaQuery.js";
+import { useLongPressTip } from "../../../../util/useLongPressTip.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import {
   formatTimestamp,
@@ -34,6 +37,7 @@ export interface LibraryOverviewCardProps {
   entering?: boolean;
   topicNames: string[];
   onOpen: (from: "title" | "thumbnail" | "said") => void;
+  onImageFailed?: () => void;
   onToggleFavourite: () => void;
   onToggleRead: () => void;
   playing: boolean;
@@ -45,6 +49,13 @@ export interface LibraryOverviewCardProps {
 }
 
 const SAVED_CHIP_SHOWN_MS = 3_200;
+const ICON_ACTIONS_QUERY = "(max-width: 47.9375rem)";
+
+const actionTip = (label: string) => (
+  <span className={styles.tip} aria-hidden="true">
+    {label}
+  </span>
+);
 
 const markedText = (text: string, marks: readonly TextMark[]) => {
   const parts = [];
@@ -65,6 +76,7 @@ export const LibraryOverviewCard = ({
   entering = false,
   topicNames,
   onOpen,
+  onImageFailed,
   onToggleFavourite,
   onToggleRead,
   playing,
@@ -89,6 +101,14 @@ export const LibraryOverviewCard = ({
     }
     onToggleRead();
   };
+
+  const iconActions = useMediaQuery(ICON_ACTIONS_QUERY);
+  const favouriteTip = useLongPressTip(iconActions);
+  const readTip = useLongPressTip(iconActions);
+  const listenTip = useLongPressTip(iconActions);
+  const favouriteLabel = state.favourite ? "Favourited" : "Favourite";
+  const readLabel = state.read ? "Read" : "Mark read";
+  const listenLabel = playing ? "Playing" : "Listen";
 
   const box = (className: string | undefined) => (
     <span className={`${styles.box} ${className ?? ""}`} aria-hidden="true">
@@ -131,6 +151,7 @@ export const LibraryOverviewCard = ({
           className={styles.thumbnail}
           carriesIntoHead
           badge={noteLengthBadge(overview)}
+          onImageFailed={onImageFailed}
         />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
@@ -212,42 +233,80 @@ export const LibraryOverviewCard = ({
                 </span>
               </p>
               {savedMoment.phase !== "hidden" && saved.kind === "counted" && (
-                <SavedChip minutes={saved.minutes} leaving={savedMoment.phase === "leaving"} />
+                <span className={styles.savedSlot}>
+                  <SavedChip minutes={saved.minutes} leaving={savedMoment.phase === "leaving"} />
+                </span>
               )}
             </span>
 
             <div className={styles.actions}>
               <button
                 type="button"
-                className={`${styles.favouriteAction} ${state.favourite ? styles.favouriteActive : ""}`}
+                className={`${iconActions ? styles.iconAction : styles.favouriteAction} ${state.favourite ? styles.favouriteActive : ""}`}
                 onClick={onToggleFavourite}
                 aria-pressed={state.favourite}
-                aria-label={state.favourite ? "Favourited" : "Favourite"}
-                title={state.favourite ? "Favourited" : "Favourite"}
+                aria-label={favouriteLabel}
+                title={iconActions ? undefined : favouriteLabel}
                 data-testid={libraryOverviewCardTestIds.favouriteButton}
+                {...favouriteTip}
               >
                 <FavouriteIcon filled={state.favourite} />
+                {iconActions && actionTip(favouriteLabel)}
               </button>
-              <button
-                type="button"
-                className={`${styles.action} ${styles.readAction} ${state.read ? styles.actionActive : ""}`}
-                onClick={toggleRead}
-                aria-pressed={state.read}
-                data-testid={libraryOverviewCardTestIds.readButton}
-              >
-                {state.read && <StrokeIcon name="check" />}
-                {state.read ? "Read" : "Mark read"}
-              </button>
-              <button
-                type="button"
-                className={playing ? styles.actionPlaying : styles.action}
-                onClick={onListen}
-                aria-pressed={playing}
-                data-testid={libraryOverviewCardTestIds.listenButton}
-              >
-                <StrokeIcon name="headphones" />
-                {playing ? "Playing" : "Listen"}
-              </button>
+              {iconActions ? (
+                <button
+                  type="button"
+                  className={styles.iconAction}
+                  onClick={toggleRead}
+                  aria-pressed={state.read}
+                  data-testid={libraryOverviewCardTestIds.readButton}
+                  {...readTip}
+                >
+                  <ReadIcon read={state.read} />
+                  <span className={styles.visuallyHidden}>{readLabel}</span>
+                  {actionTip(readLabel)}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={`${styles.action} ${styles.readAction} ${state.read ? styles.actionActive : ""}`}
+                  onClick={toggleRead}
+                  aria-pressed={state.read}
+                  data-testid={libraryOverviewCardTestIds.readButton}
+                >
+                  {state.read && <StrokeIcon name="check" />}
+                  {readLabel}
+                </button>
+              )}
+              {iconActions ? (
+                <button
+                  type="button"
+                  className={`${styles.iconAction} ${styles.listenAction} ${playing ? styles.listening : ""}`}
+                  onClick={onListen}
+                  aria-pressed={playing}
+                  data-testid={libraryOverviewCardTestIds.listenButton}
+                  {...listenTip}
+                >
+                  <span className={styles.orbUnder} aria-hidden="true" />
+                  <span className={styles.orb} aria-hidden="true" />
+                  <span className={styles.listenGlyph}>
+                    <StrokeIcon name="headphones" size={18} />
+                  </span>
+                  <span className={styles.visuallyHidden}>{listenLabel}</span>
+                  {actionTip(listenLabel)}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={playing ? styles.actionPlaying : styles.action}
+                  onClick={onListen}
+                  aria-pressed={playing}
+                  data-testid={libraryOverviewCardTestIds.listenButton}
+                >
+                  <StrokeIcon name="headphones" />
+                  {listenLabel}
+                </button>
+              )}
             </div>
           </div>
         </div>

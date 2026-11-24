@@ -1,0 +1,56 @@
+$pop: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+$out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+.icon {
+  display: block;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.disc {
+  fill: transparent;
+  transform-origin: 50% 50%;
+  transition: fill var(--motion-state) ease-out;
+}
+
+.tick {
+  stroke-dasharray: 1;
+}
+
+.read .disc {
+  fill: currentColor;
+}
+
+.read .tick {
+  stroke: var(--card);
+}
+
+// Design 407q: the heart's pop, then the saved chip's own tick drawing in.
+.marking .disc {
+  animation: readPop 220ms $pop;
+}
+
+.marking .tick {
+  animation: readTick 360ms $out-expo 140ms backwards;
+}
+
+@keyframes readPop {
+  0% {
+    transform: scale(0.72);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes readTick {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}

@@ -56,8 +56,7 @@ test("on a phone a row's image runs across its tile, and a row without one keeps
   await library.nthCard(1).verifyHasNoThumbnail();
   await library.nthCard(1).verifyTitleSpansTheRow();
   for (const index of [0, 1]) {
-    await library.nthCard(index).verifyActionsAreTouchSized();
-    await library.nthCard(index).verifyActionsLineUpWithTheTitle();
+    await library.nthCard(index).verifyActionsAreIconsOnTheTimingLine();
   }
 });
 

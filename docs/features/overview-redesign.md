@@ -599,14 +599,8 @@ theme has always done. The light theme is untouched throughout.
   and `Listen`, and a wash behind all three swallows `Listen`'s own tint — so the mark goes
   on the title, which is the thing that is actually going to open. The design's own library
   screens (2a, 2c) draw no row tint either.
-- **A phone row keeps the three pills**, where design 2c's phone card drops them to plain
-  type. A row now reads the same at both widths: the round favourite, outlined `Mark read`
-  and tinted `Listen`, on a 38px touch size — which is the size 9a draws its own icon
-  button at. They sit under the text with their left edge on the title's.
-
-  Note this is 38px where the rest of the phone layout — `+ New`, the filter toggles, the
-  dialog's buttons — takes the design's 44px. 38px was asked for and 9a uses it for an icon
-  button; if these should match the rest, it is one value in one media block.
+- **A phone row kept the three pills** until OV-407, which made them 40px icons on the timing
+  line below 48rem (`library-row-images.md`).
 - **A phone row had no thumbnail at all** until OV-407, which gave it a banner below 30rem and
   a scaling thumbnail above (`library-row-images.md`).
 

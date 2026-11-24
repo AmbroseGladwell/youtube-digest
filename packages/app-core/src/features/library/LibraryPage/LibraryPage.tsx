@@ -49,6 +49,8 @@ import "./libraryTransitions.scss";
 import { useLibraryView } from "./useLibraryView.js";
 import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
+import { usePlan } from "../../plus/usePlan.js";
+import { useLibraryRowLayout } from "../useLibraryRowLayout.js";
 import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 import { recordLibraryFilterChange, type FilterControl } from "../util/recordLibraryFilterChange.js";
 import { MilestoneStack } from "../../timeSaved/components/MilestoneStack/MilestoneStack.js";
@@ -98,6 +100,8 @@ const searchPlaceholderFor = (filtered: boolean, sortedOnSheet: boolean): string
   }
   return sortedOnSheet ? "Search overviews" : "Search claims, channels, tags";
 };
+
+const imageFailuresReported = new Set<OverviewId>();
 
 export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) => {
   const topicsQuery = useTopicsQuery();
@@ -167,11 +171,14 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const player = usePlayer();
   const playerSnapshot = usePlayerSnapshot();
+  const { plan } = usePlan();
+  const layout = useLibraryRowLayout();
+  const rowAnalytics = { layout, plan };
 
   const isPlaying = (overviewId: OverviewId) =>
     playerSnapshot.track?.overviewId === overviewId && ["playing", "buffering", "preparing"].includes(playerSnapshot.status);
   const listen = (overview: Overview) => {
-    analytics.library.overviewCard.listenPressed({ overviewId: overview.id, listening: !isPlaying(overview.id) });
+    analytics.library.overviewCard.listenPressed({ overviewId: overview.id, listening: !isPlaying(overview.id), ...rowAnalytics });
     if (playerSnapshot.track?.overviewId === overview.id) {
       player.toggle("libraryRow");
       return;
@@ -435,12 +442,19 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           topicNames={entry.overview.topicIds
             .map((topicId) => topicNameById.get(topicId))
             .filter((name): name is string => name !== undefined)}
-          onOpen={(from) => analytics.library.overviewCard.opened({ overviewId: entry.overview.id, from })}
+          onOpen={(from) => analytics.library.overviewCard.opened({ overviewId: entry.overview.id, from, ...rowAnalytics })}
+          onImageFailed={() => {
+            if (!imageFailuresReported.has(entry.overview.id)) {
+              imageFailuresReported.add(entry.overview.id);
+              analytics.library.overviewCard.imageFailed({ kind: entry.overview.source.kind, ...rowAnalytics });
+            }
+          }}
           readerState={readerState}
           onToggleFavourite={() => {
             analytics.library.overviewCard.favouriteSwitched({
               overviewId: entry.overview.id,
               favourite: !entry.state.favourite,
+              ...rowAnalytics,
             });
             keepInPlace(entry.overview.id);
             setOverviewState.mutate({
@@ -449,7 +463,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
             });
           }}
           onToggleRead={() => {
-            analytics.library.overviewCard.readSwitched({ overviewId: entry.overview.id, read: !entry.state.read });
+            analytics.library.overviewCard.readSwitched({ overviewId: entry.overview.id, read: !entry.state.read, ...rowAnalytics });
             keepInPlace(entry.overview.id);
             setOverviewState.mutate({
               overviewId: entry.overview.id,

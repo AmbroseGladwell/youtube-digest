@@ -57,6 +57,9 @@ const TranscriptionStop = z.enum([
 const CodeRefusal = z.enum(["wrong", "expired", "limited"]);
 const EmailChangeRefusal = z.enum(["sameAddress", "wrong", "expired", "taken", "limited"]);
 const DeleteAccountRefusal = z.enum(["notVerified", "limited", "failed"]);
+// docs/features/library-row-images.md: below 30rem, to 48rem, and up.
+export const LibraryRowLayout = z.enum(["banner", "narrowRow", "row"]);
+export type LibraryRowLayout = z.infer<typeof LibraryRowLayout>;
 
 const event = <P extends AnalyticsProps = {}>(description: string, props?: P): AnalyticsEventDefinition<NoInfer<P>> => ({
   description,
@@ -1361,18 +1364,31 @@ export const analyticsEvents = {
       opened: event("The reader opens an overview from its library row; `said` is the moment a transcript match showed", {
         overviewId: OverviewId,
         from: z.enum(["title", "thumbnail", "said"]),
+        layout: LibraryRowLayout,
+        plan: Plan,
       }),
       readSwitched: event("The reader marks a library row read or unread, to the state chosen", {
         overviewId: OverviewId,
         read: z.boolean(),
+        layout: LibraryRowLayout,
+        plan: Plan,
       }),
       favouriteSwitched: event("The reader favourites or unfavourites a library row, to the state chosen", {
         overviewId: OverviewId,
         favourite: z.boolean(),
+        layout: LibraryRowLayout,
+        plan: Plan,
       }),
       listenPressed: event("The reader presses Listen on a library row, to the state chosen", {
         overviewId: OverviewId,
         listening: z.boolean(),
+        layout: LibraryRowLayout,
+        plan: Plan,
+      }),
+      imageFailed: event("A library row's image failed to load and its name tile or nothing showed instead, once per overview a session", {
+        kind: z.enum(["youtube", "web", "podcast", "tiktok", "instagram", "facebook"]),
+        layout: LibraryRowLayout,
+        plan: Plan,
       }),
     },
     unreadableCard: {
