@@ -25,12 +25,3 @@
     animation: libraryGlideEnter 240ms var(--motion-ease) 120ms both;
   }
 }
-
-// Over the rows and the masthead's 2: docs/features/tag-reuse.md, "The glide (84s, "OV-84 4 Chip Motion")".
-::view-transition-group(library-filter-scrim) {
-  z-index: 3;
-}
-
-::view-transition-group(library-filter-sheet) {
-  z-index: 4;
-}

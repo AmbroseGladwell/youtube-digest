@@ -108,26 +108,24 @@ test("an article with no share image shows the site's name, and one that fails t
   await expect(page.getByTestId("OverviewThumbnail.nameTile").filter({ hasText: "Coast & Country" })).toBeVisible();
 });
 
-test("the library filters by source once it holds both kinds", async ({ page, launcher, backendSimulator }) => {
+test("the library filters by kind once it holds both", async ({ page, launcher, backendSimulator }) => {
   await page.setViewportSize({ width: 1280, height: 1100 });
   backendSimulator.overviews.seed(makeArticleOverview());
   backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "A video about pricing" } }));
   const library = await launcher.launchExpectingLibrary();
   await library.expectCardCountToBe(2);
 
-  await page.getByTestId("FilterPanel.moreFiltersButton").click();
-  await page.getByTestId("FilterPanel.source.article").click();
+  await library.filterMenu.clickKind("article");
 
   await library.expectCardCountToBe(1);
   await library.verifyCardOrder(["The town that pays its bridge bill twice"]);
-  await expect(page.getByTestId("FilterPanel.moreFiltersSummary")).toHaveText("Articles · Any verdict");
+  await library.verifyChipsRead(["Article"]);
 });
 
-test("with one kind in the library there is no source to choose", async ({ page, launcher, backendSimulator }) => {
+test("with one kind in the library there is no kind to choose", async ({ page, launcher, backendSimulator }) => {
   await page.setViewportSize({ width: 1280, height: 1100 });
   backendSimulator.overviews.seed(makeArticleOverview());
-  await launcher.launchExpectingLibrary();
+  const library = await launcher.launchExpectingLibrary();
 
-  await page.getByTestId("FilterPanel.moreFiltersButton").click();
-  await expect(page.getByTestId("FilterPanel.source.article")).toHaveCount(0);
+  await library.filterMenu.verifyOffersNoKinds();
 });

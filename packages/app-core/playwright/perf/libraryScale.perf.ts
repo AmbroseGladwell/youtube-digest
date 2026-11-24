@@ -4,7 +4,7 @@ import { SIMULATED_EMAIL } from "../network/BackendSimulator.testHelper.js";
 import { seedLargeLibrary } from "./seedLargeLibrary.testHelper.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { librarySearchTestIds } from "../../src/features/library/components/LibrarySearch/LibrarySearchTestIds.js";
-import { filterPanelTestIds } from "../../src/features/library/components/FilterPanel/FilterPanelTestIds.js";
+import { filterMenuTestIds } from "../../src/features/library/components/FilterMenu/FilterMenuTestIds.js";
 import { libraryPageTestIds } from "../../src/features/library/LibraryPage/LibraryPageTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { askPageTestIds } from "../../src/features/chats/AskPage/AskPageTestIds.js";
@@ -143,14 +143,10 @@ for (const size of SIZES) {
     await settle(page, 2000);
     await take(page);
 
-    const filterButton = page.getByTestId(libraryPageTestIds.filterButton);
-    const sheet = await filterButton.isVisible();
-    if (sheet) {
-      await filterButton.click();
-      await settle(page, 600);
-    }
+    await page.getByTestId(libraryPageTestIds.filterButton).click();
+    await settle(page, 600);
     await take(page);
-    await page.getByTestId(filterPanelTestIds.statusChip("unread")).click();
+    await page.getByTestId(filterMenuTestIds.choice("show", "unread")).click();
     await settle(page, 2000);
     results.filterUnread = await take(page);
 

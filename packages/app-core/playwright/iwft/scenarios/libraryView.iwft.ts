@@ -24,18 +24,21 @@ const returnToTheLibrary = async (launcher: Launcher, library: LibraryPageObject
   return new LibraryPageObject(library.testContext).verifyIsShown();
 };
 
-test("a first visit opens on unread, says so in words, and offers to show everything", async ({ launcher, backendSimulator }) => {
+test("a first visit opens on unread with no chip for it, and turning Unread off shows everything with a chip and Reset", async ({
+  launcher,
+  backendSimulator,
+}) => {
   seedLibrary(backendSimulator);
 
   const library = await launcher.launchExpectingLibrary();
 
   await library.verifyCardOrder(["Apple", "Zebra"]);
-  await library.verifyViewReads("Showing: Unread · Newest saved first");
+  await library.verifyNoChips();
   await library.verifyOffersReset(false);
 
   await library.showAll();
   await library.verifyCardOrder(["Apple", "Already read", "Zebra"]);
-  await library.verifyViewReads("Showing: All overviews · Newest saved first");
+  await library.verifyChipsRead(["Read and unread"]);
   await library.verifyOffersReset(true);
 });
 
@@ -43,15 +46,16 @@ test("the filters and order the reader leaves are the ones they come back to", a
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.clickStatusChip("unread");
+  await library.filterMenu.clickStatusChip("unread");
   await library.sortPill.sortBy("title");
 
   const returned = await returnToTheLibrary(launcher, library);
   await returned.verifyCardOrder(["Already read", "Apple", "Zebra"]);
-  await returned.verifyViewReads("Showing: All overviews · Title A–Z");
+  await returned.verifyChipsRead(["Read and unread"]);
+  await returned.sortPill.verifyReads("Title A–Z");
 });
 
-test("Reset goes back to unread, newest first, and that is kept too", async ({ launcher, backendSimulator }) => {
+test("Reset puts the filters back to unread, keeps the order, and that is kept too", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   await library.showAll();
@@ -59,10 +63,11 @@ test("Reset goes back to unread, newest first, and that is kept too", async ({ l
 
   await library.resetView();
 
-  await library.verifyCardOrder(["Apple", "Zebra"]);
+  await library.verifyCardOrder(["Zebra", "Apple"]);
   await library.verifyOffersReset(false);
   const returned = await returnToTheLibrary(launcher, library);
-  await returned.verifyViewReads("Showing: Unread · Newest saved first");
+  await returned.verifyNoChips();
+  await returned.sortPill.verifyReads("Oldest saved first");
 });
 
 test("a link that names a view is followed, and the saved view is left as it was", async ({ launcher, backendSimulator }) => {
@@ -73,7 +78,8 @@ test("a link that names a view is followed, and the saved view is left as it was
   await library.verifyCardOrder(["Already read"]);
 
   const returned = await returnToTheLibrary(launcher, library);
-  await returned.verifyViewReads("Showing: Unread · Newest saved first");
+  await returned.verifyCardOrder(["Apple", "Zebra"]);
+  await returned.verifyNoChips();
 });
 
 test("with nothing unread, the list says the reader is caught up and offers everything", async ({ launcher, backendSimulator }) => {
@@ -130,9 +136,10 @@ test("Reset and the caught-up way out are counted, with each filter they change"
   await test.expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("library.")))
     .toEqual([
-      { name: "library.filters.allCleared", props: { applied: 1 } },
-      { name: "library.filters.statusChosen", props: { status: "all", from: "clearAll" } },
-      { name: "library.view.reset", props: { applied: 0 } },
+      { name: "library.filterSheet.opened", props: {} },
+      { name: "library.filters.statusChosen", props: { status: "all", from: "panel" } },
+      { name: "library.filterSheet.closed", props: {} },
+      { name: "library.view.reset", props: { applied: 1 } },
       { name: "library.filters.statusChosen", props: { status: "unread", from: "reset" } },
     ]);
 });

@@ -1,0 +1,11 @@
+.tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 7px;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-weight: 700;
+  line-height: 1;
+}

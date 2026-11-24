@@ -8,7 +8,7 @@ test("the rail offers a new topic even when the library has none to filter by", 
   backendSimulator.overviews.seed(unsortedOverview("The Quiet Return of Nuclear Baseload"));
 
   const library = await launcher.launchExpectingLibrary();
-  await library.filterPanel.verifyOffersNoTopics();
+  await library.filterMenu.verifyOffersNoTopics();
 
   const dialog = await library.openNewTopic();
   await dialog.verifyHintReads("Overviews that fit it are filed here from now on.");
@@ -27,7 +27,7 @@ test("naming the topic says what it will do, and creating it makes it filterable
   await dialog.clickCreate();
 
   await dialog.verifyIsNotShown();
-  await library.filterPanel.verifyOffersTopic("climate");
+  await library.filterMenu.verifyOffersTopic("climate");
 });
 
 test("unsorted overviews can be moved in as the topic is made, and the button counts them", async ({ launcher, backendSimulator }) => {

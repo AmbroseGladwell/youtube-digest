@@ -14,6 +14,7 @@
   display: inline-flex;
   align-items: center;
   flex: none;
+  max-width: 50%;
   height: 2.5rem;
   padding-left: 0.875rem;
   border-radius: var(--radius-badge);
@@ -41,6 +42,26 @@
   font-variant-numeric: tabular-nums;
 }
 
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reset {
+  flex: none;
+  margin-left: 0.25rem;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 600 0.8125rem var(--font-body);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 .measure {
   position: absolute;
   top: 0;
@@ -49,4 +70,8 @@
   gap: 0.5rem;
   visibility: hidden;
   pointer-events: none;
+
+  .chip {
+    max-width: none;
+  }
 }

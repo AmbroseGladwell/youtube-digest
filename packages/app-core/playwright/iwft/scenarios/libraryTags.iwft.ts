@@ -12,20 +12,20 @@ const seedLibrary = (backendSimulator: BackendSimulator) => {
   backendSimulator.overviews.seed(titled("Nuclear in the UK", ["energy", "nuclear"], "2026-10-01T09:00:00.000Z"));
 };
 
-test("the rail lists the library's tags under More filters, most used first, and choosing one filters to it", async ({
+test("the filter menu lists the library's tags under Tags, most used first, and choosing one filters to it", async ({
   launcher,
   backendSimulator,
 }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.openMoreFilters();
-  await library.filterPanel.verifyListsTags(["#founder-interview2", "#saas2", "#energy1", "#nuclear1", "#pricing1"]);
+  await library.filterMenu.verifyListsTags(["#founder-interview2", "#saas2", "#energy1", "#nuclear1", "#pricing1"]);
 
-  await library.filterPanel.clickTagChip("saas");
+  await library.filterMenu.clickTagChip("saas");
 
   await library.verifyCardOrder(["Side project to forty k", "Chrome extension money"]);
-  await library.filterPanel.verifyMoreFiltersSummaryReads("Any verdict · #saas");
+  await library.filterMenu.verifyFoldReads("tags", "#saas");
+  await library.filterMenu.close();
   await library.verifyChipsRead(["#saas"]);
   await library.verifyCountReads("2 overviews tagged #saas · 2 unread");
 });
@@ -37,8 +37,8 @@ test("several tags show what has any of them, and each chip under the search tak
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.clickTagChip("saas");
-  await library.filterPanel.clickTagChip("energy");
+  await library.filterMenu.clickTagChip("saas");
+  await library.filterMenu.clickTagChip("energy");
   await library.expectCardCountToBe(3);
   await library.verifyChipsRead(["#saas", "#energy"]);
 
@@ -54,39 +54,36 @@ test("a search typed beside the tag searches within it", async ({ launcher, back
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.clickTagChip("saas");
+  await library.filterMenu.clickTagChip("saas");
   await library.search("chrome");
 
   await library.verifyCardOrder(["Chrome extension money"]);
 });
 
-test("a link to a tag opens the library filtered to it, with the group it is in open", async ({ launcher, backendSimulator }) => {
+test("a link to a tag opens the library filtered to it, with its chip", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
   await launcher.openPage(Routes.taggedLibrary("founder-interview"));
 
   await library.expectCardCountToBe(2);
-  await library.verifyChipsRead(["#founder-interview", "Read and unread"]);
-  await library.filterPanel.verifyMoreFiltersAreOpen();
+  await library.verifyChipsRead(["Read and unread", "#founder-interview"]);
 });
 
-test("past six tags the rest wait behind Show all", async ({ launcher, backendSimulator }) => {
+test("past five tags the rest wait behind Show all", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled("Many tags", ["a1", "a2", "a3", "a4", "a5", "a6"]));
   backendSimulator.overviews.seed(titled("More tags", ["a1", "b1", "b2"]));
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.openMoreFilters();
-  await library.filterPanel.verifyListsTags(["#a12", "#a21", "#a31", "#a41", "#a51", "#a61"]);
+  await library.filterMenu.verifyListsTags(["#a12", "#a21", "#a31", "#a41", "#a51"]);
 
-  await library.filterPanel.clickShowAllTags();
-  await library.filterPanel.verifyListsTags(["#a12", "#a21", "#a31", "#a41", "#a51", "#a61", "#b11", "#b21"]);
+  await library.filterMenu.clickShowAllTags();
+  await library.filterMenu.verifyListsTags(["#a12", "#a21", "#a31", "#a41", "#a51", "#a61", "#b11", "#b21"]);
 });
 
 test("a library with no tags has no Tags group at all", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled("Untagged", []));
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.openMoreFilters();
-  await library.filterPanel.verifyOffersNoTags();
+  await library.filterMenu.verifyOffersNoTags();
 });

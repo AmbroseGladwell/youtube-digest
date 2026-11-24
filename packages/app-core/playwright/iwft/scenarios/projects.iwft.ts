@@ -537,7 +537,7 @@ test.describe("on an overview", () => {
 });
 
 test.describe("on a phone and in the panel", () => {
-  test("Projects sit in the Filters sheet, choosing one closes it onto the project's page, and back goes to All projects", async ({
+  test("Until the navigation moves, projects sit at the foot of the Filters sheet; choosing one closes it onto the project's page, and back goes to All projects", async ({
     launcher,
     backendSimulator,
     page,
@@ -553,8 +553,6 @@ test.describe("on a phone and in the panel", () => {
     const library = await launcher.launchExpectingLibrary();
 
     await library.openFilters();
-    await library.projectsRail.verifyRowMatchesTopicRow("Kitchen renovation", home.id);
-    await library.projectsRail.verifyAllProjectsIsShapedLikeTheTopicsButtons();
     const head = await library.projectsRail.openProject("Kitchen renovation");
 
     await library.verifyFiltersAreOpen(false);

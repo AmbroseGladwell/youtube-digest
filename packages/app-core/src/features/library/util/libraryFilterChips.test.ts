@@ -13,19 +13,19 @@ describe("libraryFilterChips", () => {
     expect(libraryFilterChips({ ...DEFAULTS, query: "grid" }, TOPICS)).toEqual([]);
   });
 
-  it("orders the chips tag, topic, verdict, show, and each clears only its own filter back to the default", () => {
+  it("orders the chips as the menu's groups, and each clears only its own filter back to the default", () => {
     const chips = libraryFilterChips(
       { ...DEFAULTS, tags: ["founder-interview"], topicId: BUSINESS, novelties: ["fresh_angle"], favourite: true, status: "all" },
       TOPICS,
     );
 
-    expect(chips.map(({ label }) => label)).toEqual(["#founder-interview", "Business", "Fresh angle", "Favourite", "Read and unread"]);
+    expect(chips.map(({ label }) => label)).toEqual(["Read and unread", "Favourite", "Business", "#founder-interview", "Fresh angle"]);
     expect(chips.map(({ clear }) => clear)).toEqual([
-      { tags: [] },
-      { topicId: "all" },
-      { novelties: [] },
-      { favourite: false },
       { status: "unread" },
+      { favourite: false },
+      { topicId: "all" },
+      { tags: [] },
+      { novelties: [] },
     ]);
   });
 
@@ -38,8 +38,8 @@ describe("libraryFilterChips", () => {
       sources,
     );
 
-    expect(chips.map(({ label }) => label)).toEqual(["Videos", "Recipes", "YouTube", "Today"]);
-    expect(chips[0]?.clear).toEqual({ kinds: ["recipe"] });
-    expect(chips[2]?.clear).toEqual({ sources: [] });
+    expect(chips.map(({ label }) => label)).toEqual(["Today", "Video", "Recipe", "YouTube"]);
+    expect(chips[1]?.clear).toEqual({ kinds: ["recipe"] });
+    expect(chips[3]?.clear).toEqual({ sources: [] });
   });
 });

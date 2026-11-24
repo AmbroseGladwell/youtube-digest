@@ -3,8 +3,7 @@
 OV-400 (https://trello.com/c/VxSsixdN) split what the library called "source" into **Kind**
 (what it is) and **Source** (where it came from), and added **Added**, **No topic**, and
 more than one choice for Kind, Source, Verdict and Tags. Its screens are OV-399's design
-round (the filter popover and phone sheet); until those are built, the rail keeps its own
-controls and the new filters can be reached by link.
+round, built as the filter menu below.
 
 ## Any of a group, every group at once
 
@@ -85,3 +84,42 @@ Every chosen value has its own chip, and its × takes off only that value. Each 
 switched on or off is one event: `kindSwitched`, `sourceSwitched` (platform only),
 `noveltySwitched`, `tagChosen`/`tagCleared` (never the tag), and `addedChosen` and
 `noTopicChosen` for the single-choice groups.
+
+## The menu (OV-399, design 399o)
+
+The filter button in the search row opens `FilterMenu`: a `Popover` 384 wide under the button
+on a wide screen, and the shared `BottomSheet` under 48rem (which includes 200% zoom on a
+laptop). Each tap applies at once; there is no Apply. Its foot has Reset and the count of
+overviews, or on a phone Reset and an orange "Show N overviews" that only closes the sheet.
+
+- **Groups, in order:** Show (Unread, Favourite, and No overview yet while any is saved) and
+  Added and Kind as chips; then Source, Topic, Tags and Verdict as folded rows that name what is
+  chosen ("Serious Eats", "2 chosen", "#work") and open one at a time. Verdict's chips are the
+  three novelties and ⚠ Dubious, which the owner kept on 24 Nov 2026 though the design left it out.
+- **Source and Tags** have a search, the top 5 (4 on a phone) by count with anything chosen
+  kept in view, and Show all: in place on a wide screen, a list of its own in the sheet with
+  the number of matches announced and Done. Tags end with Manage tags.
+- **Topic** is radio rows: All topics, up to 7 (the chosen one always shown), No topic, Show
+  all N topics, and New topic.
+- **The controls** are `ChoiceGroup`: native radios and checkboxes in a `fieldset` with a
+  `legend`, drawn as chips or as rows with a box. Each input lies over its whole chip or row, so
+  a tap lands on it and the reflow check can reach it.
+- **Never off screen:** the popover caps its height at the space under the button less 16px and
+  scrolls inside with a fade; on a short screen the title and foot scroll with it.
+- **Sheets:** `BottomSheet` has a × and a handle. Dragging down past halfway or a flick closes
+  it, dragging up grows it to full height, anything else springs back; × and Escape close it
+  too. It holds the keyboard (`useFocusTrap`) and gives it back to the button. OV-404 moves every
+  other sheet in the app onto it.
+
+**The chip line** under the search is one line at every width: the whole chips that fit, each
+capped at half the line and cut with … (its full name on hover and as its accessible name),
+then +N and Reset. +N opens `AppliedFilters` (a popover, or a sheet on a phone): every value
+grouped as in the menu with its ×, Clear under a group of two or more, "+N more" past 6, Edit
+filters, and the menu's foot. Chips are what differs from the view the library opens on, so the
+default Unread has none.
+
+**Nothing matches** says so, with Reset filters.
+
+**Until the navigation moves** (OV-399's shell slice), the rail on a wide screen keeps only the
+queue link, projects and milestones, and under 62rem the projects group and queue link sit at
+the foot of the filter menu, the only way to them on a phone until the masthead has Projects.

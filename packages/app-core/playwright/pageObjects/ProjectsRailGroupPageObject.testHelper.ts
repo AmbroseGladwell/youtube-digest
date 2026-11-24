@@ -1,5 +1,4 @@
 import { expect } from "@playwright/experimental-ct-react";
-import { filterPanelTestIds } from "../../src/features/library/components/FilterPanel/FilterPanelTestIds.js";
 import { projectsRailGroupTestIds } from "../../src/features/projects/components/ProjectsRailGroup/ProjectsRailGroupTestIds.js";
 import { NewProjectDialogPageObject } from "./NewProjectDialogPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -8,34 +7,6 @@ import { ProjectsIndexPageObject } from "./ProjectsIndexPageObject.testHelper.js
 
 export class ProjectsRailGroupPageObject extends PageObject {
   private rows = () => this.get(projectsRailGroupTestIds.root).getByRole("listitem");
-
-  private measure = (testId: string) =>
-    this.get(testId).evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        height: element.getBoundingClientRect().height,
-        fontSize: style.fontSize,
-        padding: style.padding,
-        margin: style.margin,
-        borderRadius: style.borderRadius,
-        color: style.color,
-      };
-    });
-
-  verifyRowMatchesTopicRow = (name: string, topicId: string) =>
-    this.step(`verifyRowMatchesTopicRow ${name} ${topicId}`, async () => {
-      const { height, fontSize, padding } = await this.measure(projectsRailGroupTestIds.project(name));
-      const topic = await this.measure(filterPanelTestIds.topicChip(topicId));
-      // To a hundredth of a pixel: where a row lands can leave sub-pixel noise.
-      expect(height).toBeCloseTo(topic.height, 2);
-      expect({ fontSize, padding }).toEqual({ fontSize: topic.fontSize, padding: topic.padding });
-    });
-
-  verifyAllProjectsIsShapedLikeTheTopicsButtons = () =>
-    this.step("verifyAllProjectsIsShapedLikeTheTopicsButtons", async () => {
-      expect(await this.measure(projectsRailGroupTestIds.allProjectsLink)).toEqual(await this.measure(filterPanelTestIds.newTopicButton));
-      await expect(this.get(projectsRailGroupTestIds.allProjectsLink)).toHaveCSS("text-decoration-line", "underline");
-    });
 
   verifyListsProjects = (names: string[]) =>
     this.step(`verifyListsProjects ${names.join(", ")}`, () =>

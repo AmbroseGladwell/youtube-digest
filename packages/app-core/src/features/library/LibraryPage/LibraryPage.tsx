@@ -16,7 +16,8 @@ import { pickerAction, type PickerChange } from "../util/pickerAction.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import { libraryEntryId, readableEntries, type LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { topicCounts, unsortedOverviews } from "../../overviews/util/topicCounts.js";
-import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
+import { FilterMenu } from "../components/FilterMenu/FilterMenu.js";
+import { AppliedFilters } from "../components/AppliedFilters/AppliedFilters.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageTagsDialog.js";
 import { SortPill } from "../components/SortPill/SortPill.js";
@@ -25,15 +26,8 @@ import { LibraryOverviewCard, type SaidMoment } from "../components/LibraryOverv
 import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { LibraryCaptureCard } from "../components/LibraryCaptureCard/LibraryCaptureCard.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
-import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
 import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
-import {
-  applyLibraryFilterPatch,
-  applyLibrarySort,
-  applyLibraryView,
-  isSameLibraryView,
-  parseLibraryView,
-} from "../util/libraryFilterParams.js";
+import { applyLibraryFilterPatch, applyLibrarySort, parseLibraryView } from "../util/libraryFilterParams.js";
 import { LibrarySearch, type LibrarySearchText } from "../components/LibrarySearch/LibrarySearch.js";
 import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
 import { meaningEntries } from "../util/meaningEntries.js";
@@ -46,15 +40,12 @@ import { useLibraryActivity } from "../useLibraryActivity.js";
 import { NO_LIBRARY_FILTERS, NO_LIBRARY_FILTERS as EVERY_OVERVIEW } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 import { libraryViewState } from "../util/libraryViewState.js";
-import { libraryViewSummary } from "../util/libraryViewSummary.js";
 import { filtersChangedFromDefault } from "../util/filtersChangedFromDefault.js";
-import { libraryFilterChips } from "../util/libraryFilterChips.js";
+import { clearGroupPatch, libraryFilterChips } from "../util/libraryFilterChips.js";
 import { LibraryFilterChips } from "../components/LibraryFilterChips/LibraryFilterChips.js";
 import { libraryRowGlideName, useLibraryGlide } from "./useLibraryGlide.js";
 import "./libraryTransitions.scss";
 import { useLibraryView } from "./useLibraryView.js";
-import { useDismissOnOutside } from "../../../util/useDismissOnOutside.js";
-import { useFocusTrap } from "../../../util/useFocusTrap.js";
 import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { useTypingSettled } from "../../analytics/useTypingSettled.js";
@@ -189,7 +180,9 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   };
   const createTopic = useCreateTopicMutation();
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const rail = useRef<HTMLElement | null>(null);
+  const [appliedOpen, setAppliedOpen] = useState(false);
+  const filterButton = useRef<HTMLButtonElement | null>(null);
+  const moreChipsButton = useRef<HTMLButtonElement | null>(null);
   const [newTopicOpen, setNewTopicOpen] = useState(false);
   const [manageTagsOpen, setManageTagsOpen] = useState(false);
   const [timeSavedOpen, setTimeSavedOpen] = useState(false);
@@ -233,6 +226,13 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     </>
   );
 
+  const placeKey = place.kind === "project" ? place.projectId : place.kind;
+  const [menuPlace, setMenuPlace] = useState(placeKey);
+  if (menuPlace !== placeKey) {
+    setMenuPlace(placeKey);
+    setFiltersOpen(false);
+    setAppliedOpen(false);
+  }
   const entering = useEnteringOverviewIds(entries.map(libraryEntryId));
   const closeFilters = () => {
     if (filtersOpen) {
@@ -240,8 +240,6 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     }
     setFiltersOpen(false);
   };
-  useFocusTrap(filtersOpen, rail);
-  useDismissOnOutside(filtersOpen, closeFilters, rail);
   useEffect(() => {
     if (selection.selecting || !refocusSelect.current) {
       return;
@@ -265,7 +263,6 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const filters = { ...view.filters, query };
   const topics = topicsQuery.data ?? [];
   const counts = libraryFilterCounts(entries);
-  const applied = appliedLibraryFilters(filters, topics, counts.bySource);
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1], from: FilterControl | null = null) => {
     if (from !== null) {
@@ -274,10 +271,9 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     changeView(applyLibraryFilterPatch(viewParams, patch));
   };
   const showAll = (from: FilterControl) => changeFilters(NO_LIBRARY_FILTERS, from);
-  const resetView = () => {
-    analytics.library.view.reset({ applied: applied.length });
-    recordLibraryFilterChange(analytics.library.filters, filters, defaultView.filters, "reset", counts.bySource);
-    changeView(applyLibraryView(viewParams, defaultView));
+  const resetFilters = () => {
+    analytics.library.view.reset({ applied: chips.length });
+    changeFilters({ ...defaultView.filters, query: filters.query }, "reset");
   };
   const keepInPlace = (overviewId: string) => setKeptIds((kept) => new Set(kept).add(overviewId));
   const readerState = libraryViewState(viewParams, keptIds);
@@ -524,9 +520,18 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       return (
         closeInMeaning.length === 0 &&
         saidInSource.length === 0 && (
-          <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
-            No overviews match these filters.
-          </p>
+          <div className={styles.nothing} data-testid={libraryPageTestIds.empty}>
+            <h2 className={styles.nothingTitle}>Nothing matches</h2>
+            <p className={styles.nothingBody}>None of your overviews match all of these filters. Remove a filter or start again.</p>
+            <button
+              type="button"
+              className={styles.nothingAction}
+              onClick={resetFilters}
+              data-testid={libraryPageTestIds.resetFiltersButton}
+            >
+              Reset filters
+            </button>
+          </div>
         )
       );
     }
@@ -543,65 +548,15 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
       <LearnedNotice />
       <div className={styles.grid}>
-        <aside
-          ref={rail}
-          className={`${styles.rail} ${filtersOpen ? styles.railOpen : ""}`}
-          aria-label="Filters"
-          inert={railIsSheet && !filtersOpen}
-          data-testid={libraryPageTestIds.rail}
-        >
-          <span className={styles.sheetHandle} aria-hidden="true" />
-          <div className={styles.sheetHead}>
-            <h2 className={styles.sheetTitle}>Filters</h2>
-            <button
-              type="button"
-              className={styles.sheetClose}
-              onClick={closeFilters}
-              aria-label="Close"
-              data-testid={libraryPageTestIds.closeFiltersButton}
-            >
-              <StrokeIcon name="close" size={18} />
-            </button>
-          </div>
-          <div className={styles.railBody} data-testid={libraryPageTestIds.railBody}>
-            <QueueLink />
-            <FilterPanel
-              filters={filters}
-              topics={topics}
-              counts={counts}
-              onChange={(patch) => changeFilters(patch, "panel")}
-              onNewTopic={() => {
-                analytics.library.newTopicDialog.opened();
-                setFiltersOpen(false);
-                setNewTopicOpen(true);
-              }}
-              onManageTags={() => {
-                analytics.library.manageTags.opened();
-                setFiltersOpen(false);
-                setManageTagsOpen(true);
-              }}
-              projects={<div onClickCapture={() => setFiltersOpen(false)}>{projects.railGroup}</div>}
-            />
-            {!railIsSheet && <div className={styles.milestones}>{milestoneStack}</div>}
-          </div>
-          <div className={styles.sheetFoot}>
-            <button
-              type="button"
-              className={styles.clearAll}
-              onClick={() => {
-                analytics.library.filters.allCleared({ applied: applied.length });
-                showAll("clearAll");
-              }}
-              data-testid={libraryPageTestIds.clearFiltersButton}
-            >
-              Clear all
-            </button>
-            <button type="button" className={styles.showResults} onClick={closeFilters} data-testid={libraryPageTestIds.showResultsButton}>
-              Show {visible.length} {visible.length === 1 ? "overview" : "overviews"}
-            </button>
-          </div>
-          {counts.unreadable > 0 && <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>}
-        </aside>
+        {!railIsSheet && (
+          <aside className={styles.rail} aria-label="Queue and projects" data-testid={libraryPageTestIds.rail}>
+            <div className={styles.railBody} data-testid={libraryPageTestIds.railBody}>
+              <QueueLink />
+              {projects.railGroup}
+              <div className={styles.milestones}>{milestoneStack}</div>
+            </div>
+          </aside>
+        )}
 
         <main className={styles.main} ref={main}>
           {listShown ? (
@@ -642,18 +597,29 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                   >
                     {sortControl}
                     <button
+                      ref={filterButton}
                       type="button"
                       className={styles.filterButton}
                       onClick={() => {
-                        analytics.library.filterSheet.opened();
-                        setFiltersOpen(true);
+                        if (filtersOpen) {
+                          closeFilters();
+                        } else {
+                          analytics.library.filterSheet.opened();
+                          setAppliedOpen(false);
+                          setFiltersOpen(true);
+                        }
                       }}
-                      aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} changed`}
+                      aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} applied`}
+                      aria-haspopup="dialog"
                       aria-expanded={filtersOpen}
                       data-testid={libraryPageTestIds.filterButton}
                     >
                       <StrokeIcon name="filter" size={17} />
-                      {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
+                      {changedFilters > 0 && (
+                        <span className={styles.filterCount} aria-hidden="true" data-testid={libraryPageTestIds.filterCount}>
+                          {changedFilters}
+                        </span>
+                      )}
                     </button>
                     {selectable && (
                       <button
@@ -690,46 +656,16 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                   )}
 
                   <LibraryFilterChips
+                    ref={moreChipsButton}
                     chips={chips}
+                    moreOpen={appliedOpen}
                     onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
                     onMore={() => {
-                      if (railIsSheet) {
-                        analytics.library.filterSheet.opened();
-                        setFiltersOpen(true);
-                      } else {
-                        rail.current?.querySelector<HTMLButtonElement>("[aria-controls]")?.focus();
-                      }
+                      setFiltersOpen(false);
+                      setAppliedOpen(!appliedOpen);
                     }}
+                    onReset={resetFilters}
                   />
-
-                  <div className={styles.viewLine}>
-                    <p className={styles.viewSummary} aria-live="polite" data-testid={libraryPageTestIds.viewSummary}>
-                      {libraryViewSummary(applied, sort)}
-                    </p>
-                    {!isSameLibraryView({ filters, sort }, defaultView) && (
-                      <button
-                        type="button"
-                        className={styles.viewAction}
-                        onClick={resetView}
-                        data-testid={libraryPageTestIds.resetViewButton}
-                      >
-                        Reset
-                      </button>
-                    )}
-                    {applied.length > 0 && (
-                      <button
-                        type="button"
-                        className={styles.viewAction}
-                        onClick={() => {
-                          analytics.library.filters.allCleared({ applied: applied.length });
-                          showAll("clearAll");
-                        }}
-                        data-testid={libraryPageTestIds.showAllButton}
-                      >
-                        Show all
-                      </button>
-                    )}
-                  </div>
                 </>
               )}
 
@@ -826,12 +762,57 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         </main>
       </div>
 
-      <div
-        className={`${styles.scrim} ${filtersOpen ? styles.scrimOpen : ""}`}
-        onClick={closeFilters}
-        aria-hidden="true"
-        data-testid={libraryPageTestIds.scrim}
-      />
+      {filtersOpen && (
+        <FilterMenu
+          anchor={filterButton}
+          filters={filters}
+          topics={topics}
+          counts={counts}
+          shown={visible.length}
+          onChange={(patch) => changeFilters(patch, "panel")}
+          onReset={resetFilters}
+          onClose={closeFilters}
+          onNewTopic={() => {
+            analytics.library.newTopicDialog.opened();
+            setFiltersOpen(false);
+            setNewTopicOpen(true);
+          }}
+          onManageTags={() => {
+            analytics.library.manageTags.opened();
+            setFiltersOpen(false);
+            setManageTagsOpen(true);
+          }}
+          extra={
+            <>
+              {railIsSheet && (
+                <div className={styles.menuExtra}>
+                  <QueueLink />
+                  {projects.railGroup}
+                </div>
+              )}
+              {counts.unreadable > 0 && (
+                <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>
+              )}
+            </>
+          }
+        />
+      )}
+      {appliedOpen && (
+        <AppliedFilters
+          anchor={moreChipsButton}
+          chips={chips}
+          shown={visible.length}
+          onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
+          onClearGroup={(group) => changeFilters(clearGroupPatch(group, defaultView.filters), "filterChip")}
+          onEdit={() => {
+            setAppliedOpen(false);
+            analytics.library.filterSheet.opened();
+            setFiltersOpen(true);
+          }}
+          onReset={resetFilters}
+          onClose={() => setAppliedOpen(false)}
+        />
+      )}
 
       <TimeSavedSheet
         open={timeSavedOpen}

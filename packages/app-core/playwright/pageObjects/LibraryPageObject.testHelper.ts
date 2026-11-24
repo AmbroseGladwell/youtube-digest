@@ -8,8 +8,10 @@ import { ToastPageObject } from "./ToastPageObject.testHelper.js";
 import { SelectionBarPageObject } from "./SelectionBarPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
-import { filterPanelTestIds } from "../../src/features/library/components/FilterPanel/FilterPanelTestIds.js";
-import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
+import { filterMenuTestIds } from "../../src/features/library/components/FilterMenu/FilterMenuTestIds.js";
+import { appliedFiltersTestIds } from "../../src/features/library/components/AppliedFilters/AppliedFiltersTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
+import { FilterMenuPageObject } from "./FilterMenuPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import type { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
@@ -22,8 +24,8 @@ import { ProjectsRailGroupPageObject } from "./ProjectsRailGroupPageObject.testH
 import { ProjectHeadPageObject } from "./ProjectHeadPageObject.testHelper.js";
 
 export class LibraryPageObject extends PageObject {
-  get filterPanel(): FilterPanelPageObject {
-    return new FilterPanelPageObject(this.testContext);
+  get filterMenu(): FilterMenuPageObject {
+    return new FilterMenuPageObject(this.testContext);
   }
 
   get projectsRail(): ProjectsRailGroupPageObject {
@@ -72,7 +74,7 @@ export class LibraryPageObject extends PageObject {
 
   openNewTopic = (): Promise<NewTopicDialogPageObject> =>
     this.step("openNewTopic", async () => {
-      await this.filterPanel.clickNewTopic();
+      await this.filterMenu.clickNewTopic();
       return this.newTopicDialog.verifyIsShown();
     });
 
@@ -213,47 +215,22 @@ export class LibraryPageObject extends PageObject {
       expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(this.page.viewportSize()!.height);
     });
 
-  openFiltersWhereFolded = () =>
-    this.step("openFiltersWhereFolded", async () => {
-      if (await this.get(libraryPageTestIds.filterButton).isVisible()) {
-        await this.openFilters();
-      }
-    });
+  openFiltersWhereFolded = () => this.filterMenu.open();
 
-  verifyFilterControlsCanBeReached = () => this.verifyControlsCanBeReached(this.get(libraryPageTestIds.rail));
+  verifyFilterControlsCanBeReached = () => this.verifyControlsCanBeReached(this.page.getByTestId(filterMenuTestIds.root));
 
-  openFilters = () =>
-    this.step("openFilters", async () => {
-      await this.click(libraryPageTestIds.filterButton);
-      await this.verifyFiltersAreOpen(true);
-    });
+  openFilters = () => this.filterMenu.open();
 
-  // The sheet slides off rather than unmounting, so its open state is read from the button and its rest.
   verifyFiltersAreOpen = (open: boolean) =>
-    this.step(`verifyFiltersAreOpen ${open}`, () =>
-      expect(async () => {
-        await expect(this.get(libraryPageTestIds.filterButton)).toHaveAttribute("aria-expanded", String(open));
-        const rail = (await this.get(libraryPageTestIds.rail).boundingBox())!;
-        const height = this.page.viewportSize()!.height;
-        expect(rail.y < height - 40).toBe(open);
-      }).toPass({ timeout: 4_000 }),
-    );
-
-  verifyFilterSheetIsReachable = (reachable: boolean) =>
-    this.step(`verifyFilterSheetIsReachable ${reachable}`, async () => {
-      await expect(this.get(libraryPageTestIds.rail)).toHaveJSProperty("inert", !reachable);
-      const option = this.page.getByTestId(filterPanelTestIds.favouriteChip);
-      const tookFocus = await option.evaluate((button: HTMLElement) => {
-        button.focus();
-        return document.activeElement === button;
-      });
-      expect(tookFocus).toBe(reachable);
+    this.step(`verifyFiltersAreOpen ${open}`, async () => {
+      await expect(this.get(libraryPageTestIds.filterButton)).toHaveAttribute("aria-expanded", String(open));
+      await this.filterMenu.verifyIsOpen(open);
     });
 
   verifyFilterSheetClearsTheBar = () =>
     this.step("verifyFilterSheetClearsTheBar", async () => {
       const masthead = (await this.page.getByTestId(appShellTestIds.masthead).boundingBox())!;
-      const head = (await this.get(libraryPageTestIds.closeFiltersButton).boundingBox())!;
+      const head = (await this.page.getByTestId(filterMenuTestIds.root).getByTestId(bottomSheetTestIds.close).boundingBox())!;
       expect(head.y).toBeGreaterThanOrEqual(masthead.y + masthead.height);
     });
 
@@ -261,38 +238,8 @@ export class LibraryPageObject extends PageObject {
     this.step(`verifyTabbingStaysInTheFilterSheet ${stops}`, async () => {
       for (let step = 0; step < stops; step += 1) {
         await this.page.keyboard.press("Tab");
-        expect(await this.get(libraryPageTestIds.rail).evaluate((rail) => rail.contains(document.activeElement))).toBe(true);
+        expect(await this.page.getByTestId(filterMenuTestIds.root).evaluate((menu) => menu.contains(document.activeElement))).toBe(true);
       }
-    });
-
-  // The glide paints above any z-index, so the sheet stays over the rows only if it is captured too.
-  verifyTheGlideCapturesTheFilterSheet = (change: () => Promise<void>) =>
-    this.step("verifyTheGlideCapturesTheFilterSheet", async () => {
-      const wanted = ["::view-transition-group(library-filter-sheet)", "::view-transition-group(library-filter-scrim)"];
-      const captured = this.page.evaluate(
-        (names) =>
-          new Promise<string[]>((resolve) => {
-            const seen = new Set<string>();
-            const start = performance.now();
-            const look = () => {
-              for (const animation of document.getAnimations()) {
-                const pseudo = (animation.effect as KeyframeEffect | null)?.pseudoElement;
-                if (pseudo) {
-                  seen.add(pseudo);
-                }
-              }
-              if (names.every((name) => seen.has(name)) || performance.now() - start > 4_000) {
-                resolve([...seen]);
-              } else {
-                requestAnimationFrame(look);
-              }
-            };
-            look();
-          }),
-        wanted,
-      );
-      await change();
-      expect(await captured).toEqual(expect.arrayContaining(wanted));
     });
 
   closeFiltersWithEscape = () =>
@@ -304,27 +251,28 @@ export class LibraryPageObject extends PageObject {
   verifyFilterButtonSays = (label: string) =>
     this.step(`verifyFilterButtonSays ${label}`, () => expect(this.get(libraryPageTestIds.filterButton)).toHaveAccessibleName(label));
 
-  showResults = (label: string) =>
-    this.step(`showResults ${label}`, async () => {
-      await expect(this.get(libraryPageTestIds.showResultsButton)).toHaveText(label);
-      await this.click(libraryPageTestIds.showResultsButton);
-      await this.verifyFiltersAreOpen(false);
-    });
+  showResults = (label: string) => this.filterMenu.showResults(label);
 
   verifyFocusIsOnTheFilterButton = () =>
     this.step("verifyFocusIsOnTheFilterButton", () => expect(this.get(libraryPageTestIds.filterButton)).toBeFocused());
 
-  showAll = () => this.step("showAll", () => this.click(libraryPageTestIds.showAllButton));
+  // Turns Unread off in the menu, which is all the default view sets.
+  showAll = () =>
+    this.step("showAll", async () => {
+      await this.filterMenu.clickStatusChip("unread");
+      await this.filterMenu.close();
+    });
 
-  resetView = () => this.step("resetView", () => this.click(libraryPageTestIds.resetViewButton));
-
-  verifyViewReads = (summary: string) =>
-    this.step(`verifyViewReads ${summary}`, () => expect(this.get(libraryPageTestIds.viewSummary)).toHaveText(summary));
+  resetView = () => this.step("resetView", () => this.click(libraryFilterChipsTestIds.resetButton));
 
   verifyOffersReset = (offered: boolean) =>
     this.step(`verifyOffersReset ${offered}`, () =>
-      offered ? this.expectToBeVisible(libraryPageTestIds.resetViewButton) : this.expectNotToBeVisible(libraryPageTestIds.resetViewButton),
+      offered
+        ? this.expectToBeVisible(libraryFilterChipsTestIds.resetButton)
+        : this.expectToHaveCount(libraryFilterChipsTestIds.resetButton, 0),
     );
+
+  resetFromNothingMatches = () => this.step("resetFromNothingMatches", () => this.click(libraryPageTestIds.resetFiltersButton));
 
   verifyCaughtUp = () => this.step("verifyCaughtUp", () => this.expectToBeVisible(libraryPageTestIds.caughtUp));
 
@@ -373,7 +321,11 @@ export class LibraryPageObject extends PageObject {
 
   verifyChipsRead = (chips: string[]) =>
     this.step(`verifyChipsRead ${chips.join(", ")}`, () =>
-      expect(this.page.getByRole("group", { name: "Filters set" }).locator(":scope > span, :scope > button")).toHaveText(chips),
+      expect(
+        this.get(libraryFilterChipsTestIds.root)
+          .locator(":scope > span, :scope > button")
+          .filter({ hasNotText: /^Reset$/ }),
+      ).toHaveText(chips),
     );
 
   verifyNoChips = () => this.step("verifyNoChips", () => this.expectToHaveCount(libraryFilterChipsTestIds.root, 0));
@@ -383,7 +335,7 @@ export class LibraryPageObject extends PageObject {
   openMoreChips = () =>
     this.step("openMoreChips", async () => {
       await this.click(libraryFilterChipsTestIds.moreButton);
-      await this.verifyFiltersAreOpen(true);
+      await expect(this.page.getByTestId(appliedFiltersTestIds.root)).toBeVisible();
     });
 
   verifySearchPlaceholderReads = (placeholder: string) =>
@@ -479,7 +431,10 @@ export class LibraryPageObject extends PageObject {
   }
 
   verifyFilterCountReads = (count: string) =>
-    this.step(`verifyFilterCountReads ${count}`, () => expect(this.get(libraryPageTestIds.rail).getByText(count)).toBeVisible());
+    this.step(`verifyFilterCountReads ${count}`, async () => {
+      await this.filterMenu.open();
+      await expect(this.page.getByTestId(filterMenuTestIds.root).getByText(count)).toBeVisible();
+    });
 
   cardWithTitle = (title: string): LibraryOverviewCardPageObject =>
     new LibraryOverviewCardPageObject(this.testContext, this.get(libraryOverviewCardTestIds.root).filter({ hasText: title }));
