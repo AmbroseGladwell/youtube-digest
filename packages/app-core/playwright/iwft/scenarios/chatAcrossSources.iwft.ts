@@ -28,6 +28,7 @@ const STEW = "Bean & halloumi stew";
 const SOUP = "Chorizo & chickpea soup";
 const PLANTS = "Eat more plants";
 const CURRY = "One-pot prawn & lentil curry";
+const CURRY_THUMBNAIL = "https://i.ytimg.example/curry.jpg";
 
 test.describe("Chat across sources", () => {
   test("typing @ offers projects and the newest overviews, filters by title, and Enter pins one, which the question sends and shows above it", async ({
@@ -114,19 +115,21 @@ test.describe("Chat across sources", () => {
   });
 
   test("more than two sources fold into +N, whose menu removes any of them or clears them all", async ({ launcher, backendSimulator }) => {
-    const others = [
-      titled(SOUP, "2026-11-02T09:00:00.000Z"),
-      titled(PLANTS, "2026-11-03T09:00:00.000Z"),
-      titled(CURRY, "2026-11-04T09:00:00.000Z"),
-    ];
+    const curry = titled(CURRY, "2026-11-04T09:00:00.000Z");
+    Object.assign(curry.source, { thumbnailUrl: CURRY_THUMBNAIL });
+    const others = [titled(SOUP, "2026-11-02T09:00:00.000Z"), titled(PLANTS, "2026-11-03T09:00:00.000Z"), curry];
     for (const overview of [...others, titled(STEW, "2026-11-10T09:00:00.000Z")]) {
       backendSimulator.overviews.seedSynced(overview);
     }
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
     await reader.chat.openFromMenu();
+    await reader.chat.type("@");
 
-    for (let pinned = 0; pinned < 3; pinned += 1) {
+    await reader.chat.verifyPickerThumbnailsRead([CURRY_THUMBNAIL, null, null]);
+
+    await reader.chat.choosePickerOption(0);
+    for (let pinned = 1; pinned < 3; pinned += 1) {
       await reader.chat.type("@");
       await reader.chat.choosePickerOption(0);
     }
@@ -136,10 +139,32 @@ test.describe("Chat across sources", () => {
     await reader.chat.openMoreSources();
 
     await reader.chat.verifyMoreSourcesRead([CURRY, PLANTS, SOUP]);
+    await reader.chat.verifyMoreSourceThumbnailsRead([CURRY_THUMBNAIL, null, null]);
 
     await reader.chat.clearAllSources();
 
     await reader.chat.verifyNextSourcesRead([]);
+  });
+
+  test("a long +N menu fits the room above it and scrolls inside itself", async ({ launcher, backendSimulator, page }) => {
+    await page.setViewportSize({ width: 1200, height: 560 });
+    for (let at = 0; at < 13; at += 1) {
+      backendSimulator.overviews.seedSynced(
+        titled(`Pinned overview ${at + 1}`, `2026-11-${String(at + 1).padStart(2, "0")}T09:00:00.000Z`),
+      );
+    }
+    backendSimulator.overviews.seedSynced(titled(STEW, "2026-11-20T09:00:00.000Z"));
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.openFromMenu();
+    for (let pinned = 0; pinned < 12; pinned += 1) {
+      await reader.chat.type("@");
+      await reader.chat.choosePickerOption(0);
+    }
+
+    await reader.chat.openMoreSources();
+
+    await reader.chat.verifyMoreSourcesFitAndScrollWithin();
   });
 
   test("Search my library off sends no found sources, and the conversation remembers it; a new one starts with it on", async ({

@@ -1,5 +1,6 @@
 import { chatMeterLineTestIds } from "../../src/features/chats/components/ChatMeterLine/ChatMeterLineTestIds.js";
 import { expect } from "@playwright/experimental-ct-react";
+import type { Locator } from "@playwright/test";
 import { chatCodeBlockTestIds } from "../../src/features/chats/components/ChatCodeBlock/ChatCodeBlockTestIds.js";
 import { chatMarkedTextTestIds } from "../../src/features/chats/components/ChatMarkedText/ChatMarkedTextTestIds.js";
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
@@ -475,7 +476,7 @@ export class ChatPanelPageObject extends PageObject {
 
   verifyPickerOffers = (titles: string[]) =>
     this.step(`verifyPickerOffers ${titles.join(" | ")}`, () =>
-      expect(this.panel().getByTestId(chatComposerTestIds.option).locator("b")).toHaveText(titles),
+      expect(this.panel().getByTestId(chatComposerTestIds.option).getByTestId(chatSourceChipTestIds.chip)).toHaveText(titles),
     );
 
   verifyPickerDetailsRead = (details: string[]) =>
@@ -525,11 +526,43 @@ export class ChatPanelPageObject extends PageObject {
 
   verifyMoreSourcesRead = (titles: string[]) =>
     this.step(`verifyMoreSourcesRead ${titles.join(" | ")}`, async () => {
-      const removes = this.panel().getByTestId(chatComposerTestIds.moreMenu).getByTestId(chatComposerTestIds.moreRemove);
+      const removes = this.panel().getByTestId(chatComposerTestIds.moreMenu).getByTestId(chatSourceChipTestIds.remove);
       await expect(removes).toHaveCount(titles.length);
       for (const [at, title] of titles.entries()) {
         await expect(removes.nth(at)).toHaveAccessibleName(`Remove source: ${title}`);
       }
+    });
+
+  verifyPickerThumbnailsRead = (sources: (string | null)[]) =>
+    this.step(`verifyPickerThumbnailsRead ${sources.join(" | ")}`, () =>
+      this.verifyChipThumbnails(this.panel().getByTestId(chatComposerTestIds.option), sources),
+    );
+
+  verifyMoreSourceThumbnailsRead = (sources: (string | null)[]) =>
+    this.step(`verifyMoreSourceThumbnailsRead ${sources.join(" | ")}`, () =>
+      this.verifyChipThumbnails(this.panel().getByTestId(chatComposerTestIds.moreMenu).getByTestId(chatSourceChipTestIds.chip), sources),
+    );
+
+  private verifyChipThumbnails = async (chips: Locator, sources: (string | null)[]) => {
+    await expect(chips).toHaveCount(sources.length);
+    for (const [at, source] of sources.entries()) {
+      const image = chips.nth(at).locator("img");
+      await (source === null ? expect(image).toHaveCount(0) : expect(image).toHaveAttribute("src", source));
+    }
+  };
+
+  verifyMoreSourcesFitAndScrollWithin = () =>
+    this.step("verifyMoreSourcesFitAndScrollWithin", async () => {
+      const menu = this.panel().getByTestId(chatComposerTestIds.moreMenu);
+      const box = (await menu.boundingBox())!;
+      const viewport = this.page.viewportSize()!;
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+      expect(await menu.evaluate((root) => root.scrollHeight > root.clientHeight)).toBe(true);
+      expect(await menu.evaluate((root) => getComputedStyle(root).overscrollBehaviorY)).toBe("contain");
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await this.page.mouse.wheel(0, 400);
+      await expect.poll(() => menu.evaluate((root) => root.scrollTop)).toBeGreaterThan(0);
     });
 
   clearAllSources = () => this.step("clearAllSources", () => this.click(this.panel().getByTestId(chatComposerTestIds.clearAll)));
