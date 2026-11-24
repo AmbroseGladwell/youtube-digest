@@ -11,7 +11,7 @@ import { ProjectsIndexPageObject } from "./ProjectsIndexPageObject.testHelper.js
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { StaleClientBannerPageObject } from "./StaleClientBannerPageObject.testHelper.js";
 import { ErrorStatePageObject } from "./ErrorStatePageObject.testHelper.js";
-import { CaptureQueueStripPageObject } from "./CaptureQueueStripPageObject.testHelper.js";
+import { queueLinkTestIds } from "../../src/features/captureQueue/components/QueueLink/QueueLinkTestIds.js";
 import { PlaylistFollowFlowPageObject } from "./PlaylistFollowFlowPageObject.testHelper.js";
 import { QueuePageObject } from "./QueuePageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
@@ -40,9 +40,11 @@ export class AppShellPageObject extends PageObject {
     return new GenerationStatusStripPageObject(this.testContext);
   }
 
-  get queueStrip(): CaptureQueueStripPageObject {
-    return new CaptureQueueStripPageObject(this.testContext);
-  }
+  openQueue = () =>
+    this.step("openQueue", async () => {
+      await this.click(appShellTestIds.brand);
+      await this.click(this.get(queueLinkTestIds.root).first());
+    });
 
   get playlistFlow(): PlaylistFollowFlowPageObject {
     return new PlaylistFollowFlowPageObject(this.testContext);

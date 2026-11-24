@@ -11,20 +11,21 @@ describe("captureQueuePreferencesStorage", () => {
   beforeEach(() => localStorage.clear());
 
   it("reads back what this account chose on this device, and nothing another account chose", () => {
-    writeCaptureQueuePreferences("account-a", { folded: true, hold: null, chosenToday: null });
+    const hold = { reason: "serverCap" as const, resumesAt: Date.parse("2099-01-01T00:00:00.000Z") };
+    writeCaptureQueuePreferences("account-a", { hold, chosenToday: null });
 
-    expect(readCaptureQueuePreferences("account-a")).toEqual({ folded: true, hold: null, chosenToday: null });
+    expect(readCaptureQueuePreferences("account-a")).toEqual({ hold, chosenToday: null });
     expect(readCaptureQueuePreferences("account-b")).toEqual(DEFAULT_CAPTURE_QUEUE_PREFERENCES);
   });
 
-  it("a stored value it can't read falls back to running and unfolded", () => {
+  it("a stored value it can't read falls back to the defaults", () => {
     localStorage.setItem("overview.captureQueue.noAccount", "{not json");
     expect(readCaptureQueuePreferences(null)).toEqual(DEFAULT_CAPTURE_QUEUE_PREFERENCES);
   });
 
   it("a hold is kept across reopening until its time has passed, so the server isn't asked again", () => {
     const hold = { reason: "serverCap" as const, resumesAt: Date.parse("2026-10-07T00:00:00.000Z") };
-    writeCaptureQueuePreferences(null, { folded: false, hold, chosenToday: null });
+    writeCaptureQueuePreferences(null, { hold, chosenToday: null });
 
     expect(readCaptureQueuePreferences(null, localStorage, NOW).hold).toEqual(hold);
     expect(readCaptureQueuePreferences(null, localStorage, new Date("2026-10-07T00:00:00.000Z")).hold).toBeNull();
@@ -32,13 +33,13 @@ describe("captureQueuePreferencesStorage", () => {
 
   it("preferences written before holds existed read back without one", () => {
     localStorage.setItem("overview.captureQueue.noAccount", JSON.stringify({ folded: true }));
-    expect(readCaptureQueuePreferences(null)).toEqual({ folded: true, hold: null, chosenToday: null });
+    expect(readCaptureQueuePreferences(null)).toEqual({ hold: null, chosenToday: null });
   });
 
   it("what the reader chose today is read back today, and forgotten once the day turns", () => {
     const today = new Date(2026, 9, 26, 15, 0);
     const chosenToday = { day: "2026-10-26", videoIds: ["video000001"] };
-    writeCaptureQueuePreferences(null, { folded: false, hold: null, chosenToday });
+    writeCaptureQueuePreferences(null, { hold: null, chosenToday });
 
     expect(readCaptureQueuePreferences(null, localStorage, today).chosenToday).toEqual(chosenToday);
     expect(readCaptureQueuePreferences(null, localStorage, new Date(2026, 9, 27, 0, 1)).chosenToday).toBeNull();

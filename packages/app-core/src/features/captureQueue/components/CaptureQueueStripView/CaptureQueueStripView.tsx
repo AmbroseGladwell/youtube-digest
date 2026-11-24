@@ -11,11 +11,8 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 export interface CaptureQueueStripViewProps {
   strip: CaptureQueueStrip;
   compact: boolean;
-  // Null where there is no library queue group folded into the strip.
-  folded: { attention: number; onUnfold: () => void } | null;
   onPause: () => void;
   onResume: () => void;
-  onDetails: () => void;
   onDismiss: () => void;
 }
 
@@ -31,7 +28,7 @@ const LEAD: Record<CaptureQueueStrip["kind"], StrokeIconName | null> = {
   done: "check",
 };
 
-export const CaptureQueueStripView = ({ strip, compact, folded, onPause, onResume, onDetails, onDismiss }: CaptureQueueStripViewProps) => {
+export const CaptureQueueStripView = ({ strip, compact, onPause, onResume, onDismiss }: CaptureQueueStripViewProps) => {
   const analytics = useAnalytics();
   const copy = captureQueueStripCopy(strip, compact);
   const lead = LEAD[strip.kind];
@@ -96,57 +93,26 @@ export const CaptureQueueStripView = ({ strip, compact, folded, onPause, onResum
     </button>
   );
 
-  const unfold =
-    folded === null ? null : (
-      <button
-        type="button"
-        className={compact ? styles.iconAction : styles.ghostAction}
-        onClick={() => {
-          analytics.queue.controls.folded({ folded: false });
-          folded.onUnfold();
-        }}
-        aria-expanded={false}
-        aria-label={compact ? "Show queue" : undefined}
-        data-testid={captureQueueStripViewTestIds.showQueueButton}
-      >
-        {!compact && "Show queue"}
-        <StrokeIcon name="chevronDown" size={compact ? 18 : 14} />
-      </button>
-    );
-
   const actions = (() => {
     switch (strip.kind) {
       case "making":
         return (
           <>
-            {!compact && (
-              <button
-                type="button"
-                className={styles.ghostAction}
-                onClick={() => {
-                  analytics.queue.controls.detailsOpened();
-                  onDetails();
-                }}
-                data-testid={captureQueueStripViewTestIds.detailsButton}
-              >
-                Details
-              </button>
-            )}
             {pause}
-            {unfold ?? queueLink(compact ? null : "Queue")}
+            {queueLink(compact ? null : "Queue")}
           </>
         );
       case "paused":
         return (
           <>
             {resume}
-            {unfold ?? queueLink(compact ? null : "Queue")}
+            {queueLink(compact ? null : "Queue")}
           </>
         );
       case "held": {
         const way = strip.hold.reason === "monthSpent" ? (monthHoldWays(strip.limit)[0] ?? null) : null;
         if (way === null) {
-          return unfold ?? queueLink(compact ? null : "Queue");
+          return queueLink(compact ? null : "Queue");
         }
         return (
           <>
@@ -165,7 +131,7 @@ export const CaptureQueueStripView = ({ strip, compact, folded, onPause, onResum
       case "checked":
       case "doneForToday":
       case "waitingForYou":
-        return unfold ?? queueLink(compact ? null : "Queue");
+        return queueLink(compact ? null : "Queue");
       case "noKey":
         return (
           <>
@@ -216,11 +182,6 @@ export const CaptureQueueStripView = ({ strip, compact, folded, onPause, onResum
           {copy.after !== undefined && (
             <span className={styles.after} data-testid={captureQueueStripViewTestIds.after}>
               {copy.after}
-            </span>
-          )}
-          {folded !== null && folded.attention > 0 && (
-            <span className={styles.attention} data-testid={captureQueueStripViewTestIds.attention}>
-              · {folded.attention} need attention
             </span>
           )}
         </span>

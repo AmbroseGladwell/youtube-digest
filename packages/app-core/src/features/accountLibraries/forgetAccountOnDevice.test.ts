@@ -33,7 +33,11 @@ describe("forgetAccountOnDevice", () => {
     const storage = memoryStorage();
     for (const accountId of [ACCOUNT, OTHER, null]) {
       writeReadingPosition("video", 1200, accountId, storage);
-      writeCaptureQueuePreferences(accountId, { ...DEFAULT_CAPTURE_QUEUE_PREFERENCES, folded: true }, storage);
+      writeCaptureQueuePreferences(
+        accountId,
+        { ...DEFAULT_CAPTURE_QUEUE_PREFERENCES, hold: { reason: "serverCap", resumesAt: Date.parse("2099-01-01T00:00:00.000Z") } },
+        storage,
+      );
     }
     const view = { filters: { ...NO_LIBRARY_FILTERS, status: "read" as const }, sort: DEFAULT_LIBRARY_SORT };
     writeLibraryView(ACCOUNT, view, storage);
@@ -43,11 +47,11 @@ describe("forgetAccountOnDevice", () => {
     forgetAccountOnDevice(ACCOUNT, storage);
 
     expect(readReadingPosition("video", ACCOUNT, storage)).toBeNull();
-    expect(readCaptureQueuePreferences(ACCOUNT, storage).folded).toBe(false);
+    expect(readCaptureQueuePreferences(ACCOUNT, storage).hold).toBeNull();
     expect(readLibraryView(ACCOUNT, storage)).toBeNull();
     expect(readReadingPosition("video", OTHER, storage)).toBe(1200);
     expect(readReadingPosition("video", null, storage)).toBe(1200);
-    expect(readCaptureQueuePreferences(OTHER, storage).folded).toBe(true);
+    expect(readCaptureQueuePreferences(OTHER, storage).hold).not.toBeNull();
     expect(readLibraryView(OTHER, storage)).not.toBeNull();
     expect(readAccountSeen(storage)).toBe(true);
   });

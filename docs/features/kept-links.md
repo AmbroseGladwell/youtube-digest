@@ -201,7 +201,8 @@ you", "From your phone").
 **The queue is off the Overviews list** (358h-6 to 358h-10): `QueueLink` sits at the top of
 the sidebar, which is the Filters sheet on a phone, with how many wait, shown only while
 something does, and "1 needs attention" in the alert colour when something does. The strip
-still shows while something is being made.
+under the masthead is gone on the web and the phone; the link is the way in, and the first-run
+and Start screens carry it too while the library is empty.
 
 **Make all** (358h-5): on Show › No overview yet, once overviews are back, "Make all 2 ·
 uses 2 of your 5" makes each saved video, episode, TikTok and post one after another

@@ -577,9 +577,9 @@ theme has always done. The light theme is untouched throughout.
 - **`Cancel` is on the dialog's running footer as well as the strip.** 5a draws only
   `Run in background`, which would mean backgrounding a run before you could stop it. It
   sits as quiet type beside the pill, the same treatment the strip gives it.
-- **`Paste from clipboard` shows at both widths**, where 4a has it only on the phone sheet
-  (the desktop panel spends that row on Depth, which isn't built). It renders only when
-  `navigator.clipboard.readText` exists, so an insecure context gets no dead button.
+- **No `Paste from clipboard`, and no line under the field** (owner, 24 Nov 2026). The
+  field takes focus each time the dialog opens, after `showModal()` has placed its own, so
+  pasting is one keystroke.
 - **The ready strip stands down on its own** after `READY_DISMISS_MS`. The design says the
   ready state "dismisses itself" without saying when; the note is in the library with 7a's
   entrance on it by then, so the strip has nothing left to say. A failed run never

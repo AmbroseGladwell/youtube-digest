@@ -117,7 +117,7 @@ export class NewOverviewDialogPageObject extends PageObject {
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 
-  verifyCloseHasFocus = () => this.step("verifyCloseHasFocus", () => expect(this.get(newOverviewDialogTestIds.closeButton)).toBeFocused());
+  verifyFieldHasFocus = () => this.step("verifyFieldHasFocus", () => expect(this.get(generateOverviewFormTestIds.urlInput)).toBeFocused());
 
   verifyAsksForAReason = (asks: boolean) =>
     this.step(`verifyAsksForAReason ${asks}`, () =>
