@@ -92,3 +92,22 @@ Marking read on a row brings in "Saved you N mins" (`time-saved.md`). Below 48re
 timing line's place for its three seconds, in the same grid cell, and the line comes back when
 it leaves. The cell keeps the line's height, so the tile doesn't shrink and the icons don't
 move. From 48rem up it sits beside the line as before.
+
+## Analytics
+
+The row's four events (`library.overviewCard.opened`, `readSwitched`, `favouriteSwitched`,
+`listenPressed`) carry `layout` (`banner` below 30rem, `narrowRow` to 48rem, `row` above,
+from `useLibraryRowLayout`, on the stylesheet's breakpoints) and the reader's `plan`.
+`library.overviewCard.imageFailed` counts a row whose image failed to load, by the source's
+kind, once per overview a session, so a list redrawn on scroll doesn't count it again.
+
+They answer the card's questions on the validation dashboard:
+
+- **Is the image used?** Opens from the image against the title, by layout and plan, before
+  and after this change.
+- **Did dropping the words cost the actions use?** Mark read and Listen presses per library
+  visit on `banner` and `narrowRow`, against the weeks before.
+- **Where does the image fail?** `imageFailed` by kind, against rows opened.
+
+Nothing here calls a model or a paid service, so the dashboard has no cost tile. It is built
+over the PostHog MCP once the events reach production, and checked against live data then.

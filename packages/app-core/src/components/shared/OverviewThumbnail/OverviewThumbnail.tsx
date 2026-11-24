@@ -14,6 +14,7 @@ export interface OverviewThumbnailProps {
   // Only a library row's thumbnail becomes a note's head; naming more could reuse the name at once.
   carriesIntoHead?: boolean | undefined;
   badge?: string | null | undefined;
+  onImageFailed?: (() => void) | undefined;
 }
 
 const MATTED = new Set(["podcast", "tiktok", "instagram", "facebook"]);
@@ -38,6 +39,7 @@ export const OverviewThumbnail = ({
   onOpen,
   carriesIntoHead = false,
   badge = null,
+  onImageFailed,
 }: OverviewThumbnailProps) => {
   const [failed, setFailed] = useState(false);
   const morph = useOverviewImageMorph<HTMLAnchorElement>(to ?? "", carriesIntoHead);
@@ -85,7 +87,10 @@ export const OverviewThumbnail = ({
       src={imageUrl!}
       alt=""
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => {
+        setFailed(true);
+        onImageFailed?.();
+      }}
       data-testid={overviewThumbnailTestIds.image}
     />
   );
