@@ -78,7 +78,9 @@ would be out of sight from the head, and missing altogether on the other tabs.
 white, kept as tokens in `theme/tokens.scss`), a ringed pill naming it, the total rolling in,
 and five lines that cycle. A light passes over it now and then.
 
-**Where it sits.** On a wide screen, in the rail under the filters (34ab). Where the rail is a
+**Where it sits.** Since OV-399 the running total sits at the sidebar's foot, or beside the
+heading without the sidebar (`navigation.md`); the cards sit above the list at every width.
+What follows is where they sat before. On a wide screen, in the rail under the filters (34ab). Where the rail is a
 sheet behind the filter button, below 62rem, it sits above the first overview instead (34ad),
 since a card inside a closed sheet would never be seen. Verdict folded into *More filters*
 at the foot of the rail to make room; closed, the row still says what is set (*Any verdict*,

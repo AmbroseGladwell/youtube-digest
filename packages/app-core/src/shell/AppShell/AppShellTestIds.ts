@@ -8,4 +8,7 @@ export const appShellTestIds = {
   askButton: "AppShell.askButton",
   newOverviewButton: "AppShell.newOverviewButton",
   notNowLink: "AppShell.notNowLink",
+  pageIcon: (name: string) => `AppShell.pageIcon.${name}`,
+  showSidebar: "AppShell.showSidebar",
+  sidebarSlot: "AppShell.sidebarSlot",
 };

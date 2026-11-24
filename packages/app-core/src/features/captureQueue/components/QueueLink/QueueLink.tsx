@@ -1,21 +1,14 @@
 import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { useKeptLinksController } from "../../../captures/KeptLinksContext.js";
-import { useCaptureQueueController } from "../../CaptureQueueContext.js";
+import { useQueueCount } from "../../useQueueCount.js";
 import styles from "./QueueLink.module.scss";
 import { queueLinkTestIds } from "./QueueLinkTestIds.js";
 
-// Designs 358h-6, 358h-10: a quiet way in at the top of the sidebar, shown only while something waits.
+// Design 358h-6: a quiet way in under the first-run hero, shown only while something waits.
 export const QueueLink = () => {
-  const queue = useCaptureQueueController();
-  const kept = useKeptLinksController();
-  const keptWaiting = kept?.links.filter((link) => link.queueStatus === "waiting").length ?? 0;
-  const keptFailed = kept?.links.filter((link) => link.queueStatus === "failed").length ?? 0;
-  const making = (queue.making === null ? 0 : 1) + (kept?.making == null ? 0 : 1);
-  const count = queue.waiting.length + keptWaiting + making;
-  const attention = queue.attention.length + keptFailed;
-  if (!queue.available || count + attention === 0) {
+  const count = useQueueCount();
+  if (count === null) {
     return null;
   }
   return (
@@ -24,9 +17,9 @@ export const QueueLink = () => {
         <StrokeIcon name="clock" size={14} />
         Queue
       </span>
-      <small className={attention > 0 ? styles.attention : styles.count} data-testid={queueLinkTestIds.count}>
-        {attention > 0 ? `${attention.toLocaleString("en-GB")} needs attention · ` : ""}
-        {count.toLocaleString("en-GB")}
+      <small className={count.attention > 0 ? styles.attention : styles.count} data-testid={queueLinkTestIds.count}>
+        {count.attention > 0 ? `${count.attention.toLocaleString("en-GB")} needs attention · ` : ""}
+        {count.queued.toLocaleString("en-GB")}
       </small>
     </PageLink>
   );

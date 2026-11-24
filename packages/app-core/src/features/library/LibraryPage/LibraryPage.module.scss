@@ -8,35 +8,13 @@
   flex-direction: column;
 }
 
-.grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr);
-}
-
-// No divider: on the stone ground the pills are all that need drawing (docs/features/stone-theme.md).
-.rail {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.railBody {
-  padding: 1.25rem 1rem 1.75rem 1.25rem;
-}
-
-// Why only the body sticks: docs/features/overview-redesign.md, "Chrome that stays put".
-@media (min-width: 62rem) {
-  .railBody {
-    position: sticky;
-    top: var(--masthead-height);
-    max-height: calc(100dvh - var(--masthead-height));
-    overflow-y: auto;
-  }
-}
-
+// Design 399c-4: the list centres in what the sidebar leaves.
 .main {
-  padding: 1.25rem 2rem 2rem 0.75rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 56.25rem;
+  margin: 0 auto;
+  padding: 1.25rem 2rem 2rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -123,10 +101,6 @@
 
 .timeSaved:hover {
   color: var(--ink);
-}
-
-.milestones {
-  margin-top: 1.375rem;
 }
 
 .list {
@@ -301,12 +275,6 @@
   margin-top: 0.5rem;
 }
 
-.menuExtra {
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--surface);
-}
-
 .sheetNote {
   margin: 0;
   padding: 0.75rem 0.25rem 0.5rem;
@@ -315,10 +283,6 @@
 }
 
 @media (max-width: 61.9375rem) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-
   .main {
     padding: 0.75rem 1.25rem 4rem;
   }

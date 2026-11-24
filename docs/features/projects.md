@@ -249,7 +249,8 @@ The result is recorded on the card.
 From the Claude Design round, "OV-168 1–6" in the design project, decided with the owner on
 13 Nov 2026.
 
-- **Where projects live.** A Projects group sits under Show in the library's rail, and in the
+- **Where projects live.** Since OV-399, in the sidebar and on their own Projects page
+  (`navigation.md`); what follows is how the rail held them. A Projects group sits under Show in the library's rail, and in the
   Filters sheet on a phone (moved there from the top by the owner after release). It is always there: with none, a heading and New project. Five show, last changed
   first; "All projects" (or "All N projects", with "· N archived") sits under them once any
   exist. Choosing one turns the main column into its page at `/projects/:id`; choosing it

@@ -73,33 +73,32 @@
   color: var(--ink);
 }
 
+// Design 399d: on a phone the two pages sit in the bar as icons, named by their tips.
 .nav {
   flex: none;
   display: flex;
   gap: 0.25rem;
-  font-size: 0.84375rem;
-  font-weight: 600;
 }
 
-.navLink {
-  padding: 0.4375rem 0.875rem;
-  border-radius: var(--radius-btn);
+// 44px like every target in the bar (OV-380), dropping to 40px only below about 340px.
+.pageIcon {
+  @include controls.circle(2.75rem);
+  @include controls.icon-control;
+
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
   color: var(--muted);
-  text-decoration: none;
-  transition:
-    background var(--motion-state) var(--motion-ease),
-    color var(--motion-state) var(--motion-ease);
-}
 
-.navLink:hover {
-  color: var(--ink);
-  background: var(--surface);
-}
+  &:hover,
+  &:visited {
+    color: var(--ink);
+  }
 
-.navLinkActive,
-.navLinkActive:hover {
-  color: var(--ink);
-  background: var(--surface);
+  &[aria-current="page"] {
+    background: var(--surface);
+    color: var(--ink);
+  }
 }
 
 .actions {
@@ -133,13 +132,92 @@
   gap: 0.5rem;
 }
 
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
 .pane {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
   padding-bottom: var(--mini-player-clearance, 0px);
   view-transition-name: pane;
+}
+
+// Design 399c-14: the sidebar slides in or out while the page narrows or widens with it; nothing dims.
+.sidebarSlot {
+  flex: none;
+  width: 14.75rem;
+  overflow: clip;
+  transition:
+    width 240ms var(--motion-ease),
+    visibility 0s;
+
+  &[data-open="false"] {
+    width: 0;
+    visibility: hidden;
+    transition:
+      width 240ms var(--motion-ease),
+      visibility 0s 240ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &[data-open="false"] {
+      transition: none;
+    }
+  }
+}
+
+// Design 399c-15: hidden, a floating button in the bottom left brings it back.
+.showSidebarHost {
+  position: fixed;
+  left: 1.5rem;
+  bottom: calc(1.375rem + var(--mini-player-clearance, 0px));
+  z-index: 4;
+  display: inline-flex;
+
+  @include tip.shows(".sideTip") {
+    display: block;
+  }
+}
+
+.showSidebar {
+  @include controls.circle(2.5rem);
+  @include controls.control-motion;
+
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: var(--shadow-float);
+  color: var(--ink);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface);
+  }
+}
+
+.sideTip {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 0.5rem);
+  display: none;
+  padding: 0.3125rem 0.5625rem;
+  border-radius: 0.5rem;
+  background: var(--ink);
+  color: var(--ground);
+  font: 600 0.75rem/1.3 var(--font-body);
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 // While the library glides a filter change its rows are captured one by one (useLibraryGlide).
@@ -161,12 +239,8 @@
   }
 }
 
-// Design 9m: no tabs to scroll on a phone, so the one tab goes and the name comes back.
+// Design 9m: a sign-in page on a phone has one way out.
 @media (max-width: 47.9375rem) {
-  .nav {
-    display: none;
-  }
-
   .titlePanel {
     font-size: 1.125rem;
   }
@@ -208,8 +282,8 @@
   display: none;
 }
 
-// OV-362: on a phone, round icon buttons named by tooltips, so they never squash the account.
-@media (max-width: 47.9375rem) {
+// OV-362, design 399d: on a phone, round icon buttons named by tooltips, so they never squash the account.
+.phoneNav {
   .actions .askButton,
   .actions .iconOnPhone {
     width: 2.75rem;
@@ -221,6 +295,33 @@
 
   .buttonLabel {
     display: none;
+  }
+
+  .brandSlot {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  // While the bar holds the way back, the page icons give way so its label fits.
+  .brandSlotBack ~ .actions .nav {
+    display: none;
+  }
+
+  .title:not(.titlePanel) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  // At 200% text the circles grow with it, so they wrap to a second row rather than run off the screen.
+  .actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+    gap: 0.375rem;
   }
 
   .tip {
@@ -380,5 +481,24 @@
     font-size: 1rem;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+// Design 399d at 400% zoom: below about 340px the bar's circles drop to 40px so it still fits.
+@media (max-width: 21.25rem) {
+  .phoneNav .pageIcon,
+  .phoneNav .actions .askButton,
+  .phoneNav .actions .iconOnPhone {
+    width: 2.5rem;
+    min-height: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .phoneNav .actions {
+    gap: 0.25rem;
+  }
+
+  .phoneNav .nav {
+    gap: 0;
   }
 }

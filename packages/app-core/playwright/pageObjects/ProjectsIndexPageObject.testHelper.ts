@@ -1,6 +1,8 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { projectsIndexTestIds } from "../../src/features/projects/components/ProjectsIndex/ProjectsIndexTestIds.js";
+import { NewProjectDialogPageObject } from "./NewProjectDialogPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ProjectHeadPageObject } from "./ProjectHeadPageObject.testHelper.js";
 
 export class ProjectsIndexPageObject extends PageObject {
   verifyIsShown = (): Promise<ProjectsIndexPageObject> =>
@@ -23,4 +25,16 @@ export class ProjectsIndexPageObject extends PageObject {
   showArchived = () => this.step("showArchived", () => this.click(projectsIndexTestIds.archivedToggle));
 
   restore = (name: string) => this.step(`restore ${name}`, () => this.click(projectsIndexTestIds.restoreButton(name)));
+
+  openProject = (name: string): Promise<ProjectHeadPageObject> =>
+    this.step(`openProject ${name}`, async () => {
+      await this.click(projectsIndexTestIds.card(name));
+      return new ProjectHeadPageObject(this.testContext).verifyIsShown();
+    });
+
+  clickNewProject = (): Promise<NewProjectDialogPageObject> =>
+    this.step("clickNewProject", async () => {
+      await this.click(projectsIndexTestIds.newProjectButton);
+      return new NewProjectDialogPageObject(this.testContext).verifyIsShown();
+    });
 }

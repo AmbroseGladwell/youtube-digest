@@ -35,7 +35,8 @@ test("a phone's full layout still gets the 44px touch target, as a round icon na
   await launcher.appShell.verifyIconButtonWithTip("new", "New overview");
 });
 
-test("the extension's own full page is still the library, with all of that chrome", async ({ launcher }) => {
+test("the extension's own full page is still the library, with all of that chrome", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeOverview());
   await launcher.launch({ apiKeys: API_KEYS, surface: "extension" });
 
   await launcher.appShell.verifyCarriesTheLibraryChrome();

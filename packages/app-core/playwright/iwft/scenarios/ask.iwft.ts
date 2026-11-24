@@ -141,7 +141,7 @@ test.describe("Ask", () => {
       stats: { overviews: 2 },
     });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-    const head = await library.projectsRail.openProject("Dinner Recipes");
+    const head = await library.sidebar.openProject("Dinner Recipes");
 
     const ask = await head.openAsk();
 

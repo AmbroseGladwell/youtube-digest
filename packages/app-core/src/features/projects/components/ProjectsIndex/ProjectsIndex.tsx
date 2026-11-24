@@ -1,8 +1,6 @@
 import { useId, useState } from "react";
 import type { Project } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
-import { useBackTo } from "../../../../app/useBackTo.js";
-import { useLentBackLink } from "../../../../app/useLentBackLink.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { projectShortDate } from "../../util/projectDates.js";
@@ -25,21 +23,9 @@ const plural = (count: number, one: string, many: string) => `${count} ${count =
 export const ProjectsIndex = ({ active, archived, now, onNew, onOpen, onRestore, onArchivedShown }: ProjectsIndexProps) => {
   const [archivedShown, setArchivedShown] = useState(false);
   const archivedId = useId();
-  const backToOverviews = useBackTo(Routes.home());
-  const backLink = useLentBackLink({ to: Routes.home(), label: "All overviews", follow: backToOverviews });
 
   return (
     <div className={styles.root} data-testid={projectsIndexTestIds.root}>
-      <PageLink
-        ref={backLink}
-        className={styles.back}
-        to={Routes.home()}
-        onClick={backToOverviews}
-        data-testid={projectsIndexTestIds.backLink}
-      >
-        <StrokeIcon name="arrowLeft" size={15} />
-        All overviews
-      </PageLink>
       <div className={styles.head}>
         <div>
           <h1 className={styles.title}>All projects</h1>

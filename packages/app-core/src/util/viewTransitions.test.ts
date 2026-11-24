@@ -58,6 +58,13 @@ describe("navigationDirection", () => {
     expect(navigationDirection(Routes.settingsSection("keys"), Routes.settings())).toBe("back");
   });
 
+  it("slides between the top-level pages in the order the navigation lists them", () => {
+    expect(navigationDirection(Routes.home(), Routes.projects())).toBe("forward");
+    expect(navigationDirection(Routes.projects(), Routes.ask())).toBe("forward");
+    expect(navigationDirection(Routes.ask(), Routes.projects())).toBe("back");
+    expect(navigationDirection(Routes.ask(), Routes.home())).toBe("back");
+  });
+
   it("has no direction between two Settings sections, which swap in place", () => {
     expect(navigationDirection(Routes.settingsSection("account"), Routes.settingsSection("voice"))).toBe("none");
   });

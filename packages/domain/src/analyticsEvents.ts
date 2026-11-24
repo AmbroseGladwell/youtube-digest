@@ -252,6 +252,8 @@ export const SettingsSection = z.enum([
   "privacy",
   "about",
 ]);
+const NavPage = z.enum(["overviews", "projects", "ask", "queue"]);
+const NavFrom = z.enum(["masthead", "sidebar", "queueLine"]);
 const LinkCodeFrom = z.enum(["emailLink", "webApp"]);
 const SignInCodeFrom = z.enum(["emailLink", "webApp", "emailCode"]);
 export const OverviewMenuItem = z.enum([
@@ -585,8 +587,20 @@ export const analyticsEvents = {
   app: {
     masthead: {
       homeChosen: event("The reader follows the wordmark home"),
-      overviewsChosen: event("The reader follows Overviews in the masthead"),
       notNowChosen: event("The reader leaves sign-in or account creation with Not now"),
+    },
+    nav: {
+      pageChosen: event("The reader goes to a top-level page from the masthead, the sidebar or the queue line", {
+        page: NavPage,
+        from: NavFrom,
+      }),
+      quickAccessChosen: event("The reader opens a project or a topic listed in the sidebar", { kind: z.enum(["project", "topic"]) }),
+    },
+    sidebar: {
+      toggled: event("The reader shows or hides the sidebar, by its button or the [ key", {
+        open: z.boolean(),
+        by: z.enum(["button", "key"]),
+      }),
     },
     accountMenu: {
       opened: event("The reader opens the account menu"),
@@ -1393,11 +1407,6 @@ export const analyticsEvents = {
   },
   // Ids and counts only: never a project's name or what it's for (docs/features/projects.md, "Measures").
   projects: {
-    rail: {
-      projectOpened: event("The reader opens a project from the library's rail or filter sheet", { projectId: ProjectId }),
-      projectLeft: event("The reader leaves a project's page for the whole library by choosing the project again"),
-      allProjectsOpened: event("The reader opens the page of every project"),
-    },
     index: {
       projectOpened: event("The reader opens a project from the page of every project", { projectId: ProjectId, archived: z.boolean() }),
       archivedShown: event("The reader shows or hides the archived projects on the page of every project", { shown: z.boolean() }),
@@ -1477,10 +1486,10 @@ export const analyticsEvents = {
       closed: event("The reader closes the list of projects to put an overview in"),
     },
     newProjectDialog: {
-      opened: event("The reader opens the new project dialog", { from: z.enum(["rail", "index", "picker", "selection"]) }),
+      opened: event("The reader opens the new project dialog", { from: z.enum(["sidebar", "index", "picker", "selection"]) }),
       created: event("The reader makes a project, and whether they said what it's for", {
         projectId: ProjectId,
-        from: z.enum(["rail", "index", "picker", "selection"]),
+        from: z.enum(["sidebar", "index", "picker", "selection"]),
         hasPurpose: z.boolean(),
       }),
       cancelled: event("The reader closes the new project dialog without making one"),

@@ -149,7 +149,7 @@ test.describe("selecting on the web", () => {
     await library.verifyIsShown();
     await library.selectionBar.verifyIsShown(false);
     await library.toast.verifyReads("Added 2 to Bathroom");
-    await library.projectsRail.verifyListsProjects(["Bathroom", "Kitchen renovation"]);
+    await library.sidebar.verifyListsProjects(["Bathroom", "Kitchen renovation"]);
     await expect
       .poll(async () => (await backendSimulator.projects.members()).filter((member) => member.projectId !== kitchen.id).length)
       .toBe(2);
@@ -284,7 +284,7 @@ test.describe("selecting on the web", () => {
     await library.expectCardCountToBe(2);
     await library.selectionBar.verifyIsShown(false);
     await library.toast.verifyReads("2 deleted");
-    await library.projectsRail.verifyRowReads("Kitchen renovation", "Kitchen renovation0");
+    await library.sidebar.verifyRowReads("Kitchen renovation", "Kitchen renovation0");
     await expect
       .poll(() => backendSimulator.analytics.events().filter((event) => event.name === "library.selection.deleted"))
       .toEqual([{ name: "library.selection.deleted", props: { overviews: 2 } }]);
@@ -296,7 +296,7 @@ test.describe("selecting in a project", () => {
     seed(backendSimulator);
     backendSimulator.projects.seedMember(makeProjectMember(kitchen, sink.id));
     const library = await launcher.launchExpectingLibrary();
-    await library.projectsRail.openProject("Kitchen renovation");
+    await library.sidebar.openProject("Kitchen renovation");
 
     await library.startSelecting();
     await library.verifySelectionLineReads("Click to select");

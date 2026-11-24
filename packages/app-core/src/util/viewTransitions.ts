@@ -26,9 +26,17 @@ export const useShouldAnimateNavigation = (): boolean => {
 
 const isSettingsSection = (path: string) => path.startsWith(`${Routes.settings()}/`);
 
+// The top-level pages in the order the navigation lists them, so a slide between two goes their way.
+const TOP_LEVEL_PAGES = [Routes.home(), Routes.projects(), Routes.ask()];
+
 export const navigationDirection = (from: string, to: string): NavigationDirection => {
   if (from === to || (isSettingsSection(from) && isSettingsSection(to))) {
     return "none";
+  }
+  const fromPage = TOP_LEVEL_PAGES.indexOf(from);
+  const toPage = TOP_LEVEL_PAGES.indexOf(to);
+  if (fromPage !== -1 && toPage !== -1) {
+    return toPage < fromPage ? "back" : "forward";
   }
   return to === Routes.home() || from.startsWith(`${to}/`) ? "back" : "forward";
 };

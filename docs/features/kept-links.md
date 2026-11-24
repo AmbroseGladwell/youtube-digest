@@ -198,7 +198,9 @@ carry on then, or now in the extension on a computer.", **Ready in the extension
 Needs attention. Each row's line says what it waits for and where it came from ("Added by
 you", "From your phone").
 
-**The queue is off the Overviews list** (358h-6 to 358h-10): `QueueLink` sits at the top of
+**The queue is off the Overviews list** (358h-6 to 358h-10). Since OV-399 it is the sidebar's
+Queue item, or a line under the search row without one (`navigation.md`); what follows is how
+it was first built. `QueueLink` sat at the top of
 the sidebar, which is the Filters sheet on a phone, with how many wait, shown only while
 something does, and "1 needs attention" in the alert colour when something does. The strip
 under the masthead is gone on the web and the phone; the link is the way in, and the first-run

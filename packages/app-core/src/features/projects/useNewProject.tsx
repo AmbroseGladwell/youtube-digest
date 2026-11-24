@@ -7,7 +7,7 @@ import { NewProjectDialog } from "./components/NewProjectDialog/NewProjectDialog
 import { useCreateProjectMutation } from "./mutations/useCreateProjectMutation.js";
 import { useAssistantConnections } from "./useAssistantConnections.js";
 
-export type NewProjectFrom = "rail" | "index" | "picker" | "selection";
+export type NewProjectFrom = "sidebar" | "index" | "picker" | "selection";
 
 interface Adding {
   from: NewProjectFrom;
@@ -52,7 +52,7 @@ export const useNewProject = (takenNames: string[]) => {
                 }
                 setAdding(null);
                 adding.onDone?.({ name: project.name });
-                if (adding.from === "rail" || adding.from === "index") {
+                if (adding.from === "sidebar" || adding.from === "index") {
                   void navigate(Routes.project(project.id));
                 }
               },

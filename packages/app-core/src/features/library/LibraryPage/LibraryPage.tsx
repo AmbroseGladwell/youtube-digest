@@ -1,5 +1,6 @@
 import { MakeAllSaved } from "../../captures/components/MakeAllSaved/MakeAllSaved.js";
-import { QueueLink } from "../../captureQueue/components/QueueLink/QueueLink.js";
+import { QueueLine } from "../../captureQueue/components/QueueLine/QueueLine.js";
+import { useSidebarShown } from "../../../app/SidebarContext.js";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { timeSavedName, timeSavedSummary, type Overview, type OverviewId, type SelectionAction, type TopicId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
@@ -74,7 +75,7 @@ import { SelectionTopicsPicker } from "../components/SelectionTopicsPicker/Selec
 import { DeleteOverviewsDialog } from "../components/DeleteOverviewsDialog/DeleteOverviewsDialog.js";
 import { useOverviewSelection } from "./useOverviewSelection.js";
 
-const RAIL_SHEET_QUERY = "(max-width: 61.9375rem)";
+const NARROW_QUERY = "(max-width: 61.9375rem)";
 const PHONE_QUERY = "(max-width: 47.9375rem)";
 const QUERY_TO_URL_MS = 300;
 
@@ -207,7 +208,8 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       transcriptSettled.current();
     }
   }, [transcriptQuery.data, transcriptQuery.isError, settledQuery]);
-  const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
+  const narrow = useMediaQuery(NARROW_QUERY);
+  const sidebarShown = useSidebarShown();
   const isPhone = useMediaQuery(PHONE_QUERY);
   const coarsePointer = useMediaQuery("(pointer: coarse)");
   const timeSaved = timeSavedSummary(readableEntries(entries));
@@ -396,8 +398,14 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     }
   };
 
-  const countLine =
-    filters.tags.length === 0 ? (
+  const topicTitle = place.kind === "library" ? topics.find((topic) => topic.id === filters.topicId) : undefined;
+  const inTopic =
+    topicTitle === undefined ? [] : readableEntries(entries).filter(({ overview }) => overview.topicIds.includes(topicTitle.id));
+  const countLine = (): ReactNode => {
+    if (topicTitle !== undefined) {
+      return `Topic · ${inTopic.length} ${inTopic.length === 1 ? "overview" : "overviews"} · ${inTopic.filter(({ state }) => !state.read).length} unread`;
+    }
+    return filters.tags.length === 0 ? (
       libraryCountLine(counts)
     ) : (
       <>
@@ -405,6 +413,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         <span className={styles.visuallyHidden}> tagged {filters.tags.map((tag) => `#${tag}`).join(" or ")}</span> · {unreadShown} unread
       </>
     );
+  };
   const row = (entry: LibraryEntry, order: number, said: SaidMoment | null = null) => (
     <div
       key={libraryEntryId(entry)}
@@ -495,14 +504,10 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       }}
     />
   );
-  const searchPlaceholder = searchPlaceholderFor(chips.length > 0, railIsSheet && !isDefaultLibrarySort(sort));
-  const listShown = place.kind !== "projects" && !projects.missing && !(place.kind === "project" && projects.current === null);
-  const notListed = (): ReactNode => {
-    if (place.kind === "projects") {
-      return projects.index;
-    }
-    return projects.missing ? <ErrorState screen="notFound" title="This project isn't here any more" back /> : null;
-  };
+  const searchPlaceholder = searchPlaceholderFor(chips.length > 0, narrow && !isDefaultLibrarySort(sort));
+  const listShown = !projects.missing && !(place.kind === "project" && projects.current === null);
+  const notListed = (): ReactNode =>
+    projects.missing ? <ErrorState screen="notFound" title="This project isn't here any more" back /> : null;
   const listBody = (): ReactNode => {
     if (visible.length === 0 && caughtUp) {
       return (
@@ -554,220 +559,206 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
       <LearnedNotice />
-      <div className={styles.grid}>
-        {!railIsSheet && (
-          <aside className={styles.rail} aria-label="Queue and projects" data-testid={libraryPageTestIds.rail}>
-            <div className={styles.railBody} data-testid={libraryPageTestIds.railBody}>
-              <QueueLink />
-              {projects.railGroup}
-              <div className={styles.milestones}>{milestoneStack}</div>
-            </div>
-          </aside>
-        )}
-
-        <main className={styles.main} ref={main}>
-          {listShown ? (
-            <>
-              {projects.head ?? (
-                <div className={styles.listHead}>
-                  <div className={styles.titleBlock}>
-                    <div className={styles.titleRow}>
-                      <h1 className={styles.title}>Overviews</h1>
-                      {railIsSheet && <span className={styles.timeSavedSlot}>{timeSavedButton}</span>}
-                    </div>
-                    <p className={`${styles.listCount} ${selection.selecting ? styles.listCountSelecting : ""}`} aria-live="polite">
-                      <span data-testid={libraryPageTestIds.listCount}>{selection.selecting ? selectionLine : countLine}</span>
-                      {!railIsSheet && !selection.selecting && (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          {timeSavedButton}
-                        </>
-                      )}
-                    </p>
+      <main className={styles.main} ref={main}>
+        {listShown ? (
+          <>
+            {projects.head ?? (
+              <div className={styles.listHead}>
+                <div className={styles.titleBlock}>
+                  <div className={styles.titleRow}>
+                    <h1 className={styles.title} data-testid={libraryPageTestIds.title}>
+                      {topicTitle?.name ?? "Overviews"}
+                    </h1>
+                    {!sidebarShown && <span className={styles.timeSavedSlot}>{timeSavedButton}</span>}
                   </div>
+                  <p className={`${styles.listCount} ${selection.selecting ? styles.listCountSelecting : ""}`} aria-live="polite">
+                    <span data-testid={libraryPageTestIds.listCount}>{selection.selecting ? selectionLine : countLine()}</span>
+                  </p>
                 </div>
-              )}
+              </div>
+            )}
 
-              {projects.suggestions}
+            {projects.suggestions}
 
-              {projects.empty === null && (
-                <>
-                  <LibrarySearch
-                    text={searchText}
-                    onType={(typed) => {
-                      setQuery(typed);
-                      setKeptIds((kept) => (kept.size === 0 ? kept : new Set()));
+            {projects.empty === null && (
+              <>
+                <LibrarySearch
+                  text={searchText}
+                  onType={(typed) => {
+                    setQuery(typed);
+                    setKeptIds((kept) => (kept.size === 0 ? kept : new Set()));
+                  }}
+                  onClearPressed={() => analytics.library.search.cleared()}
+                  isPhone={isPhone}
+                  placeholder={projects.current === null ? searchPlaceholder : `Search in ${projects.current.project.name}`}
+                >
+                  {sortControl}
+                  <button
+                    ref={filterButton}
+                    type="button"
+                    className={styles.filterButton}
+                    onClick={() => {
+                      if (filtersOpen) {
+                        closeFilters();
+                      } else {
+                        analytics.library.filterSheet.opened();
+                        setAppliedOpen(false);
+                        setFiltersOpen(true);
+                      }
                     }}
-                    onClearPressed={() => analytics.library.search.cleared()}
-                    isPhone={isPhone}
-                    placeholder={projects.current === null ? searchPlaceholder : `Search in ${projects.current.project.name}`}
+                    aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} applied`}
+                    aria-haspopup="dialog"
+                    aria-expanded={filtersOpen}
+                    data-testid={libraryPageTestIds.filterButton}
                   >
-                    {sortControl}
+                    <StrokeIcon name="filter" size={17} />
+                    {changedFilters > 0 && (
+                      <span className={styles.filterCount} aria-hidden="true" data-testid={libraryPageTestIds.filterCount}>
+                        {changedFilters}
+                      </span>
+                    )}
+                  </button>
+                  {selectable && (
                     <button
-                      ref={filterButton}
+                      ref={selectButton}
                       type="button"
-                      className={styles.filterButton}
+                      className={styles.selectButton}
                       onClick={() => {
-                        if (filtersOpen) {
-                          closeFilters();
+                        if (selection.selecting) {
+                          stopSelecting();
                         } else {
-                          analytics.library.filterSheet.opened();
-                          setAppliedOpen(false);
-                          setFiltersOpen(true);
+                          analytics.library.selection.started();
+                          selection.start();
                         }
                       }}
-                      aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} applied`}
-                      aria-haspopup="dialog"
-                      aria-expanded={filtersOpen}
-                      data-testid={libraryPageTestIds.filterButton}
+                      aria-pressed={selection.selecting}
+                      aria-label={selection.selecting ? "Stop selecting" : "Select"}
+                      title={selection.selecting ? "Stop selecting" : "Select"}
+                      data-testid={libraryPageTestIds.selectButton}
                     >
-                      <StrokeIcon name="filter" size={17} />
-                      {changedFilters > 0 && (
-                        <span className={styles.filterCount} aria-hidden="true" data-testid={libraryPageTestIds.filterCount}>
-                          {changedFilters}
-                        </span>
-                      )}
+                      <span className={styles.selectIcon} aria-hidden="true">
+                        <StrokeIcon name="squareCheck" size={16} />
+                      </span>
+                      <span className={styles.stopIcon} aria-hidden="true">
+                        <StrokeIcon name="close" size={16} />
+                      </span>
                     </button>
-                    {selectable && (
-                      <button
-                        ref={selectButton}
-                        type="button"
-                        className={styles.selectButton}
-                        onClick={() => {
-                          if (selection.selecting) {
-                            stopSelecting();
-                          } else {
-                            analytics.library.selection.started();
-                            selection.start();
-                          }
-                        }}
-                        aria-pressed={selection.selecting}
-                        aria-label={selection.selecting ? "Stop selecting" : "Select"}
-                        title={selection.selecting ? "Stop selecting" : "Select"}
-                        data-testid={libraryPageTestIds.selectButton}
-                      >
-                        <span className={styles.selectIcon} aria-hidden="true">
-                          <StrokeIcon name="squareCheck" size={16} />
-                        </span>
-                        <span className={styles.stopIcon} aria-hidden="true">
-                          <StrokeIcon name="close" size={16} />
-                        </span>
-                      </button>
-                    )}
-                  </LibrarySearch>
-
-                  {selection.selecting && projects.current !== null && (
-                    <p className={styles.selectionLine} aria-live="polite" data-testid={libraryPageTestIds.selectionLine}>
-                      {selectionLine}
-                    </p>
                   )}
+                </LibrarySearch>
 
-                  <LibraryFilterChips
-                    ref={moreChipsButton}
-                    chips={chips}
-                    moreOpen={appliedOpen}
-                    onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
-                    onMore={() => {
-                      setFiltersOpen(false);
-                      setAppliedOpen(!appliedOpen);
-                    }}
-                    onReset={resetFilters}
-                  />
-                </>
-              )}
+                {selection.selecting && projects.current !== null && (
+                  <p className={styles.selectionLine} aria-live="polite" data-testid={libraryPageTestIds.selectionLine}>
+                    {selectionLine}
+                  </p>
+                )}
 
-              {railIsSheet && projects.current === null && milestoneStack}
-
-              {projects.empty ?? listBody()}
-              {saidInSource.length > 0 && (
-                <section className={styles.meaning} aria-labelledby={saidHeadingId} data-testid={libraryPageTestIds.saidGroup}>
-                  <h2 className={styles.meaningHeading} id={saidHeadingId}>
-                    Said in the transcripts
-                  </h2>
-                  <p className={styles.meaningSub}>Your words aren't in these overviews, but they were said.</p>
-                  <div className={styles.list}>
-                    {saidInSource.map((entry, index) =>
-                      row(entry, visible.length + index, {
-                        moment: entry.moment,
-                        sourceWord: entry.overview.source.kind === "podcast" ? "episode" : "video",
-                      }),
-                    )}
-                  </div>
-                </section>
-              )}
-              {closeInMeaning.length > 0 && (
-                <section className={styles.meaning} aria-labelledby={meaningHeadingId} data-testid={libraryPageTestIds.meaningGroup}>
-                  <h2 className={styles.meaningHeading} id={meaningHeadingId}>
-                    Close in meaning
-                  </h2>
-                  <p className={styles.meaningSub}>These don't use your words, but they're about something close.</p>
-                  <div className={styles.list}>
-                    {closeInMeaning.map((entry, index) => row(entry, visible.length + saidInSource.length + index))}
-                  </div>
-                </section>
-              )}
-              {transcriptsUnavailable && (
-                <p className={styles.meaningSub} data-testid={libraryPageTestIds.transcriptsUnavailable}>
-                  Couldn't search what was said in your videos and episodes just now.
-                </p>
-              )}
-              {meaningUnavailable && (
-                <p className={styles.meaningSub} data-testid={libraryPageTestIds.meaningUnavailable}>
-                  Couldn't search by meaning just now, so these match your words only.
-                </p>
-              )}
-              {selection.selecting && (
-                <SelectionBar
-                  count={selected.length}
-                  iconsOnly={isPhone}
-                  allRead={allRead}
-                  allFavourite={allFavourite}
-                  projectName={projects.current?.project.name ?? null}
-                  onAddToProject={() => {
-                    acted("addToProject");
-                    const overviews = selected.length;
-                    projects.fileSelection(selected, (done, writes) => {
-                      if (done !== null) {
-                        finishActing("addToProject", done, writes, overviews);
-                      }
-                    });
+                <LibraryFilterChips
+                  ref={moreChipsButton}
+                  chips={chips}
+                  moreOpen={appliedOpen}
+                  onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
+                  onMore={() => {
+                    setFiltersOpen(false);
+                    setAppliedOpen(!appliedOpen);
                   }}
-                  onAddToTopic={() => {
-                    acted("addToTopic");
-                    topicSession.current = { changes: new Map(), writes: [] };
-                    setChoosingTopics(true);
-                  }}
-                  onToggleRead={() => {
-                    const action = allRead ? "markUnread" : "markRead";
-                    acted(action);
-                    const writes = setSelectedState({ read: !allRead });
-                    finishActing(action, { kind: allRead ? "unread" : "read", overviews: selected.length }, writes, selected.length);
-                  }}
-                  onToggleFavourite={() => {
-                    const action = allFavourite ? "unfavourite" : "favourite";
-                    acted(action);
-                    const writes = setSelectedState({ favourite: !allFavourite });
-                    finishActing(action, { kind: action, overviews: selected.length }, writes, selected.length);
-                  }}
-                  onRemoveFromProject={() => {
-                    acted("removeFromProject");
-                    const ids = selected.map(({ overview }) => overview.id);
-                    const writes = projects.removeFromCurrent(ids);
-                    const place = projects.current?.project.name ?? "";
-                    finishActing("removeFromProject", { kind: "removed", overviews: ids.length, place }, writes, ids.length);
-                  }}
-                  onDelete={() => {
-                    acted("delete");
-                    setConfirmingDelete(true);
-                  }}
+                  onReset={resetFilters}
                 />
-              )}
-            </>
-          ) : (
-            notListed()
-          )}
-        </main>
-      </div>
+              </>
+            )}
+
+            {!sidebarShown && place.kind === "library" && <QueueLine />}
+
+            {projects.current === null && milestoneStack}
+
+            {projects.empty ?? listBody()}
+            {saidInSource.length > 0 && (
+              <section className={styles.meaning} aria-labelledby={saidHeadingId} data-testid={libraryPageTestIds.saidGroup}>
+                <h2 className={styles.meaningHeading} id={saidHeadingId}>
+                  Said in the transcripts
+                </h2>
+                <p className={styles.meaningSub}>Your words aren't in these overviews, but they were said.</p>
+                <div className={styles.list}>
+                  {saidInSource.map((entry, index) =>
+                    row(entry, visible.length + index, {
+                      moment: entry.moment,
+                      sourceWord: entry.overview.source.kind === "podcast" ? "episode" : "video",
+                    }),
+                  )}
+                </div>
+              </section>
+            )}
+            {closeInMeaning.length > 0 && (
+              <section className={styles.meaning} aria-labelledby={meaningHeadingId} data-testid={libraryPageTestIds.meaningGroup}>
+                <h2 className={styles.meaningHeading} id={meaningHeadingId}>
+                  Close in meaning
+                </h2>
+                <p className={styles.meaningSub}>These don't use your words, but they're about something close.</p>
+                <div className={styles.list}>
+                  {closeInMeaning.map((entry, index) => row(entry, visible.length + saidInSource.length + index))}
+                </div>
+              </section>
+            )}
+            {transcriptsUnavailable && (
+              <p className={styles.meaningSub} data-testid={libraryPageTestIds.transcriptsUnavailable}>
+                Couldn't search what was said in your videos and episodes just now.
+              </p>
+            )}
+            {meaningUnavailable && (
+              <p className={styles.meaningSub} data-testid={libraryPageTestIds.meaningUnavailable}>
+                Couldn't search by meaning just now, so these match your words only.
+              </p>
+            )}
+            {selection.selecting && (
+              <SelectionBar
+                count={selected.length}
+                iconsOnly={isPhone}
+                allRead={allRead}
+                allFavourite={allFavourite}
+                projectName={projects.current?.project.name ?? null}
+                onAddToProject={() => {
+                  acted("addToProject");
+                  const overviews = selected.length;
+                  projects.fileSelection(selected, (done, writes) => {
+                    if (done !== null) {
+                      finishActing("addToProject", done, writes, overviews);
+                    }
+                  });
+                }}
+                onAddToTopic={() => {
+                  acted("addToTopic");
+                  topicSession.current = { changes: new Map(), writes: [] };
+                  setChoosingTopics(true);
+                }}
+                onToggleRead={() => {
+                  const action = allRead ? "markUnread" : "markRead";
+                  acted(action);
+                  const writes = setSelectedState({ read: !allRead });
+                  finishActing(action, { kind: allRead ? "unread" : "read", overviews: selected.length }, writes, selected.length);
+                }}
+                onToggleFavourite={() => {
+                  const action = allFavourite ? "unfavourite" : "favourite";
+                  acted(action);
+                  const writes = setSelectedState({ favourite: !allFavourite });
+                  finishActing(action, { kind: action, overviews: selected.length }, writes, selected.length);
+                }}
+                onRemoveFromProject={() => {
+                  acted("removeFromProject");
+                  const ids = selected.map(({ overview }) => overview.id);
+                  const writes = projects.removeFromCurrent(ids);
+                  const place = projects.current?.project.name ?? "";
+                  finishActing("removeFromProject", { kind: "removed", overviews: ids.length, place }, writes, ids.length);
+                }}
+                onDelete={() => {
+                  acted("delete");
+                  setConfirmingDelete(true);
+                }}
+              />
+            )}
+          </>
+        ) : (
+          notListed()
+        )}
+      </main>
 
       {filtersOpen && (
         <FilterMenu
@@ -790,17 +781,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
             setManageTagsOpen(true);
           }}
           extra={
-            <>
-              {railIsSheet && (
-                <div className={styles.menuExtra}>
-                  <QueueLink />
-                  {projects.railGroup}
-                </div>
-              )}
-              {counts.unreadable > 0 && (
-                <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>
-              )}
-            </>
+            counts.unreadable > 0 && <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>
           }
         />
       )}
@@ -821,14 +802,16 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         />
       )}
 
-      <TimeSavedSheet
-        open={timeSavedOpen}
-        summary={timeSaved}
-        onClose={() => {
-          analytics.timeSaved.library.breakdownClosed();
-          setTimeSavedOpen(false);
-        }}
-      />
+      {timeSavedOpen && (
+        <TimeSavedSheet
+          open
+          summary={timeSaved}
+          onClose={() => {
+            analytics.timeSaved.library.breakdownClosed();
+            setTimeSavedOpen(false);
+          }}
+        />
+      )}
 
       <ManageTagsDialog open={manageTagsOpen} entries={readableEntries(allEntries)} onClose={() => setManageTagsOpen(false)} />
 
