@@ -360,7 +360,7 @@ export const AppShell = () => {
                   prefill={newOverview.prefill}
                   run={newOverview.run}
                   held={newOverview.held}
-                  onSubmit={(url) => newOverview.start(url, { from: "dialog" })}
+                  onSubmit={(url, options) => newOverview.start(url, { from: "dialog", saveInstead: options?.saveInstead })}
                   onOpenHeld={(overviewId) => {
                     newOverview.dismiss();
                     void navigate(Routes.overview(overviewId), { viewTransition: shouldAnimateNavigation() });

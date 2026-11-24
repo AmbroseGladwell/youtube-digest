@@ -4,6 +4,7 @@ export const filterPanelTestIds = {
   sourceChip: (source: string) => `FilterPanel.source.${source}`,
   noveltyChip: (novelty: string) => `FilterPanel.noveltyChip.${novelty}`,
   statusChip: (status: string) => `FilterPanel.statusChip.${status}`,
+  withoutOverviewChip: "filter-panel-without-overview",
   favouriteChip: "FilterPanel.favouriteChip",
   newTopicButton: "FilterPanel.newTopicButton",
   showAllTopicsButton: "FilterPanel.showAllTopicsButton",

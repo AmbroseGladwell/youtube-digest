@@ -49,8 +49,12 @@ export class InMemoryOverviewStore implements OverviewStore {
     return [...this.#unreadable];
   }
 
+  // As IndexedDbOverviewStore does in one transaction: an overview takes its capture's place.
+  onSaved: (overview: Overview) => Promise<void> = async () => undefined;
+
   async saveOverview(overview: Overview) {
     this.#overviews.set(overview.id, overview);
+    await this.onSaved(overview);
   }
 
   async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {

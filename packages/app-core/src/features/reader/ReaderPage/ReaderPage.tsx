@@ -1,3 +1,5 @@
+import { SavedItemPage } from "../../captures/components/SavedItemPage/SavedItemPage.js";
+import { useSavedCaptureQuery } from "../../captures/queries/savedCaptureQuery.js";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import {
@@ -592,7 +594,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     if (folded !== undefined) {
       return <Navigate to={Routes.overview(folded.into)} replace />;
     }
-    return <ReaderNotFound />;
+    return <SavedItemOrNotFound id={overviewId} />;
   }
 
   const { state } = overviewQuery.data;
@@ -1211,6 +1213,14 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
       </div>
     </OverviewAnalyticsProvider>,
   );
+};
+
+const SavedItemOrNotFound = ({ id }: { id: string }) => {
+  const saved = useSavedCaptureQuery(id);
+  if (saved.isPending) {
+    return null;
+  }
+  return saved.data ? <SavedItemPage capture={saved.data} /> : <ReaderNotFound />;
 };
 
 const ReaderNotFound = () => {

@@ -25,4 +25,30 @@ export class SoftWallPageObject extends PageObject {
   getPlus = () => this.step("getPlus", () => this.click(softWallTestIds.getPlus));
 
   seeEveryPlan = () => this.step("seeEveryPlan", () => this.click(softWallTestIds.seePlans));
+
+  verifyOffersSaving = (offered: boolean) =>
+    this.step(`verifyOffersSaving ${offered}`, () => this.expectToHaveCount(softWallTestIds.saveForNow, offered ? 1 : 0));
+
+  verifySavesLeftReads = (text: string | null) =>
+    this.step(`verifySavesLeftReads ${text}`, async () => {
+      if (text === null) {
+        await this.expectToHaveCount(softWallTestIds.savesLeft, 0);
+        return;
+      }
+      await expect(this.get(softWallTestIds.savesLeft)).toHaveText(text);
+    });
+
+  saveForNow = () => this.step("saveForNow", () => this.click(softWallTestIds.saveForNow));
+
+  verifySaved = (title: string) =>
+    this.step("verifySaved", async () => {
+      const saved = this.get(softWallTestIds.saved);
+      await expect(saved.getByRole("heading", { name: "Saved, with its transcript." })).toBeFocused();
+      await expect(saved).toContainText(title);
+      await expect(saved).toContainText("Saved · no overview yet");
+    });
+
+  savedDone = () => this.step("savedDone", () => this.click(softWallTestIds.savedDone));
+
+  readTranscript = () => this.step("readTranscript", () => this.click(softWallTestIds.readTranscript));
 }

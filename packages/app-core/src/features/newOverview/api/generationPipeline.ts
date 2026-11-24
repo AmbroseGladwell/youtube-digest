@@ -30,6 +30,8 @@ import {
   type SettingsStore,
   type TranscriptStore,
   type VideoSource,
+  type CaptureStore,
+  type CaptureSurface,
 } from "@overview/domain";
 import {
   clipAsVideo,
@@ -53,6 +55,8 @@ import { ArticleReadError } from "./ArticleReadError.js";
 import { CaptureStopwatch } from "./CaptureStopwatch.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
 import { SocialPostTooShortError } from "./SocialPostTooShortError.js";
+import { SavedWithoutOverview } from "./SavedWithoutOverview.js";
+import { savedCaptureOf } from "./savedCaptureOf.js";
 import type { OverviewMeta } from "./makeOverviewOnKeys.js";
 import type { TranscriptionProgress } from "../../podcasts/api/transcribeAudio.js";
 
@@ -79,6 +83,8 @@ export interface GenerationPipelineDeps {
   transcriptStore: TranscriptStore;
   // Absent, nothing is filed into projects (docs/features/projects.md, "Filing as an overview is made").
   projectStore?: Pick<ProjectStore, "listProjects" | "fileIntoProject"> | undefined;
+  // Only for a save without an overview: docs/features/kept-links.md, "Saving at the limit".
+  captureStore?: Pick<CaptureStore, "saveCapture"> | undefined;
 }
 
 export interface TaggingCounts {
@@ -108,6 +114,8 @@ export interface RunOverviewGenerationOptions {
   onAttempt?: OverviewMeta["onAttempt"];
   // Not called when nothing was offered for filing: switched off, no projects, or a regeneration.
   onProjectsFiled?: ((count: number) => void) | undefined;
+  // Set, the words are kept and the link saved, and no overview is written (docs/features/kept-links.md).
+  saveInstead?: CaptureSurface | undefined;
 }
 
 export const runOverviewGeneration = async (
@@ -152,7 +160,7 @@ export const runOverviewGeneration = async (
 // Nothing is reserved until the page is read, so a page that can't be read costs the reader nothing.
 export const runArticleOverviewGeneration = async (
   read: () => Promise<ArticleRead>,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore">,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore" | "captureStore">,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
   const result = await read();
@@ -182,7 +190,10 @@ export interface PodcastRunRequest {
 export const runPodcastOverviewGeneration = async (
   { episode, sharedFrom }: PodcastRunRequest,
   findWords: (episode: PodcastEpisode, options: RunOverviewGenerationOptions) => Promise<Pick<PodcastTranscript, "transcript">>,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
+  deps: Pick<
+    GenerationPipelineDeps,
+    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore"
+  >,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
   const id = await podcastSourceId(episode);
@@ -218,7 +229,10 @@ export interface TikTokWords {
 export const runTikTokOverviewGeneration = async (
   video: TikTokVideo,
   findWords: (video: TikTokVideo) => Promise<TikTokWords>,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
+  deps: Pick<
+    GenerationPipelineDeps,
+    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore"
+  >,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
   const tiktok = tiktokSource(video);
@@ -263,7 +277,10 @@ export interface SocialWords {
 export const runSocialOverviewGeneration = async (
   post: SocialPost,
   findWords: (post: SocialPost) => Promise<SocialWords>,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
+  deps: Pick<
+    GenerationPipelineDeps,
+    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore"
+  >,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
   const social = socialSource(post);
@@ -326,10 +343,20 @@ type WhatToWrite =
 
 const writeOverview = async (
   what: WhatToWrite,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore">,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore" | "captureStore">,
   options: RunOverviewGenerationOptions,
   stopwatch: CaptureStopwatch | null = null,
 ): Promise<Overview> => {
+  if (options.saveInstead !== undefined && deps.captureStore !== undefined) {
+    const capture = await savedCaptureOf(what, {
+      id: options.overviewId,
+      keptFrom: options.saveInstead,
+      captureReason: options.captureReason ? captureReasonFromDraft(options.captureReason()) : null,
+      now: new Date(),
+    });
+    await deps.captureStore.saveCapture(capture);
+    throw new SavedWithoutOverview(capture);
+  }
   options.onWriting?.();
   const [existingTopics, claims, library, settings, previous, projects] = await Promise.all([
     deps.overviewStore.listTopics(),

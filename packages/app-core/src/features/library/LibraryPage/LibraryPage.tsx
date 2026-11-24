@@ -21,6 +21,7 @@ import { SortPill } from "../components/SortPill/SortPill.js";
 import { LibraryList } from "../components/LibraryList/LibraryList.js";
 import { LibraryOverviewCard, type SaidMoment } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
+import { LibraryCaptureCard } from "../components/LibraryCaptureCard/LibraryCaptureCard.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
 import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
@@ -400,17 +401,26 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     <div
       key={libraryEntryId(entry)}
       data-glide-name={libraryRowGlideName(libraryEntryId(entry))}
-      className={selection.selecting && entry.kind === "unreadable" ? styles.notSelectable : undefined}
-      inert={selection.selecting && entry.kind === "unreadable"}
+      className={selection.selecting && entry.kind !== "overview" ? styles.notSelectable : undefined}
+      inert={selection.selecting && entry.kind !== "overview"}
     >
-      {entry.kind === "unreadable" ? (
+      {entry.kind === "capture" && (
+        <LibraryCaptureCard
+          capture={entry.capture}
+          entering={entering.has(entry.capture.id)}
+          readerState={readerState}
+          onOpen={() => undefined}
+        />
+      )}
+      {entry.kind === "unreadable" && (
         <LibraryUnreadableCard
           onOpen={() => analytics.library.unreadableCard.opened()}
           readerState={readerState}
           record={entry.record}
           entering={entering.has(entry.record.id)}
         />
-      ) : (
+      )}
+      {entry.kind === "overview" && (
         <LibraryOverviewCard
           overviewWithState={entry}
           entering={entering.has(entry.overview.id)}

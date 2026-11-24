@@ -34,6 +34,7 @@ describe("appliedLibraryFilters", () => {
         novelty: "original",
         status: "unread",
         favourite: true,
+        withoutOverview: false,
         dubious: true,
         tag: "saas",
         query: "gdp",

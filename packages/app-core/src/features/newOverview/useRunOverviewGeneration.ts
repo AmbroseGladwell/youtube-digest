@@ -55,7 +55,8 @@ import { generationKeys } from "./generationKeys.js";
 export const missingKeyMessage = (provider: keyof typeof PROVIDER_SHORT_LABEL): string =>
   `Add your ${PROVIDER_SHORT_LABEL[provider]} API key first.`;
 
-type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptStore"> & Partial<Pick<Stores, "projectStore">>;
+type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptStore"> &
+  Partial<Pick<Stores, "projectStore" | "captureStore">>;
 
 // Nothing is made signed out where there are accounts: docs/architecture/tiers.md, "Signed out".
 export const useRunOverviewGeneration = (apiKeys: ApiKeys) => {
@@ -80,6 +81,7 @@ export const useRunOverviewGeneration = (apiKeys: ApiKeys) => {
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
           projectStore: stores.projectStore,
+          captureStore: stores.captureStore,
           warn: (warning) => reporter.warn(warning),
           timed: (timing) => reporter.time(timing),
         },
@@ -104,6 +106,7 @@ export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           projectStore: stores.projectStore,
+          captureStore: stores.captureStore,
         },
         options,
       )
@@ -202,6 +205,7 @@ export const useRunTikTokGeneration = (apiKeys: ApiKeys) => {
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
           projectStore: stores.projectStore,
+          captureStore: stores.captureStore,
         },
         options,
       )
@@ -252,6 +256,7 @@ export const useRunSocialGeneration = (apiKeys: ApiKeys) => {
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
           projectStore: stores.projectStore,
+          captureStore: stores.captureStore,
         },
         options,
       )
@@ -304,6 +309,7 @@ export const useRunPodcastGeneration = (apiKeys: ApiKeys) => {
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
           projectStore: stores.projectStore,
+          captureStore: stores.captureStore,
         },
         options,
       )

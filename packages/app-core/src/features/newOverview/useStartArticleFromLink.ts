@@ -6,12 +6,13 @@ import { useNewOverviewRunController } from "./NewOverviewRunContext.js";
 export const useStartArticleFromLink = () => {
   const { startArticle } = useNewOverviewRunController();
   return useCallback(
-    (article: ExtractedArticle, from: CaptureEntry) =>
+    (article: ExtractedArticle, from: CaptureEntry, saveInstead = false) =>
       startArticle({
         url: article.url,
         title: article.title,
         site: article.siteName ?? domainOf(article.url),
         from,
+        saveInstead,
         access: Promise.resolve(true),
         asking: false,
         oneTimeAccess: false,

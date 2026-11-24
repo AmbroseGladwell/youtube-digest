@@ -60,6 +60,7 @@ export const readLibraryView = (accountId: string | null, storage: Storage = glo
       novelty: field("novelty", NO_LIBRARY_FILTERS.novelty),
       status: field("status", NO_LIBRARY_FILTERS.status),
       favourite: field("favourite", NO_LIBRARY_FILTERS.favourite),
+      withoutOverview: NO_LIBRARY_FILTERS.withoutOverview,
       dubious: field("dubious", NO_LIBRARY_FILTERS.dubious),
       tag: NO_LIBRARY_FILTERS.tag,
       query: NO_LIBRARY_FILTERS.query,

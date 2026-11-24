@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type {
   CaptureQueueStore,
+  CaptureStore,
   ChatStore,
   FollowedPlaylistStore,
   OverviewStore,
@@ -17,6 +18,7 @@ export interface Stores {
   transcriptStore: TranscriptStore;
   followedPlaylistStore: FollowedPlaylistStore;
   captureQueueStore: CaptureQueueStore;
+  captureStore: CaptureStore;
   projectStore: ProjectStore;
   chatStore: ChatStore;
   suggestedQuestionStore: SuggestedQuestionStore;

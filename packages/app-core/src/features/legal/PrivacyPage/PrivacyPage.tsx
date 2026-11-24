@@ -93,8 +93,10 @@ const sections: readonly LegalSection[] = [
           Spotify or show page link you pasted, with the code Spotify adds to say who shared it removed; a shared link shows that link. For
           a TikTok it keeps the video's address, its creator's name and handle, the caption, its length, when it was posted and the link to
           its cover. For an Instagram or Facebook post it keeps the same about the post, with the whole of its description, and whether it
-          is a video, a photo or text. Beside it you may add a reason you saved it, file it under topics, put it in projects of your own,
-          and mark it read or favourite. When you take one of its questions to ask next to an assistant, it notes which question, which
+          is a video, a photo or text. When this month's overviews are made, you can save a link without its overview: it keeps the same
+          title, link and picture, and the transcript, as an overview would, until you make its overview or remove it, and removing it
+          deletes the transcript. Beside it you may add a reason you saved it, file it under topics, put it in projects of your own, and
+          mark it read or favourite. When you take one of its questions to ask next to an assistant, it notes which question, which
           assistant and when, so the overview can show it. When you ask questions about it, each conversation keeps your questions and the
           answers, with the moments in the video or episode, or in another of your conversations about it, that each answer drew on. A
           project holds its name, a line on what it is for, and for each overview in it whether you, a connected assistant or filing as the

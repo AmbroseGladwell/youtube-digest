@@ -38,7 +38,7 @@ import { createLabelOf, transcribeChoiceOf } from "../../../podcasts/util/episod
 export interface GenerateOverviewFormProps {
   url: string;
   onUrlChange: (url: string) => void;
-  onSubmit: (url: string) => void;
+  onSubmit: (url: string, options?: { saveInstead: boolean }) => void;
   onCancel: () => void;
   // docs/features/playlists.md, "Pasting a link".
   onPlaylist: (target: PlaylistTarget, pastedUrl: string) => void;
@@ -102,7 +102,9 @@ export const GenerateOverviewForm = ({
   const keysReady = readiness.ready;
   const limit = useLimitMessage();
   const next = useNextQuota();
-  const plan = useOverviewUsageQuery().data?.plan ?? DEFAULT_PLAN;
+  const usage = useOverviewUsageQuery().data;
+  const plan = usage?.plan ?? DEFAULT_PLAN;
+  const [saving, setSaving] = useState(false);
   // Plus keeps the note at the limit, since the wall's way on is Plus.
   const walled = limit !== null && plan !== "plus" && next?.kind === "spent" ? next : null;
   const [wallShown, setWallShown] = useState(false);
@@ -148,11 +150,15 @@ export const GenerateOverviewForm = ({
     if (choosing !== null || limit !== null) {
       return;
     }
+    begin(false);
+  };
+
+  const begin = (saveInstead: boolean) => {
     if (tiktokShown) {
       const transcribe = transcribeChoiceOf(episodeAction);
       if (tiktok.link.status === "found" && generateOffered && (tiktok.link.words !== null || transcribe !== undefined)) {
         setValidationError(null);
-        startTikTok({ video: tiktok.link.video, words: tiktok.link.words, transcribe, from: "dialog" });
+        startTikTok({ video: tiktok.link.video, words: tiktok.link.words, transcribe, from: "dialog", saveInstead });
       }
       return;
     }
@@ -161,7 +167,7 @@ export const GenerateOverviewForm = ({
       const link = social.link;
       if (link.status === "found" && generateOffered && (link.words !== null || link.post.media !== "video" || transcribe !== undefined)) {
         setValidationError(null);
-        startSocial({ post: link.post, words: link.words, transcribe, from: "dialog" });
+        startSocial({ post: link.post, words: link.words, transcribe, from: "dialog", saveInstead });
       }
       return;
     }
@@ -173,6 +179,7 @@ export const GenerateOverviewForm = ({
           sharedFrom: url.trim(),
           from: "dialog",
           transcribe: transcribeChoiceOf(episodeAction),
+          saveInstead,
         });
       }
       return;
@@ -182,7 +189,7 @@ export const GenerateOverviewForm = ({
     }
     if (article.link.status === "found") {
       setValidationError(null);
-      startArticle(article.link.article, "dialog");
+      startArticle(article.link.article, "dialog", saveInstead);
       return;
     }
     if (article.link.status !== "none") {
@@ -194,7 +201,7 @@ export const GenerateOverviewForm = ({
       return;
     }
     setValidationError(null);
-    onSubmit(url);
+    onSubmit(url, { saveInstead });
   };
 
   const isWatchedVideo = activeVideoUrl !== null && activeVideoUrl === url.trim();
@@ -271,6 +278,22 @@ export const GenerateOverviewForm = ({
     );
   };
 
+  const saves = usage?.saves;
+  const savesLeft = saves === undefined ? 0 : Math.max(0, saves.limit - saves.used);
+  const saveForNow =
+    saves === undefined || savesLeft === 0 || walled === null
+      ? undefined
+      : {
+          overviewsBack: String(walled.spent[0]?.limit ?? ""),
+          savesLeft,
+          savesLimit: saves.limit,
+          saving,
+          onSave: () => {
+            setSaving(true);
+            begin(true);
+          },
+        };
+
   if (wallShown && walled !== null) {
     const pasted = pastedLink();
     return (
@@ -284,6 +307,7 @@ export const GenerateOverviewForm = ({
             setPlansOpen(true);
           }}
           onFollowed={onCancel}
+          save={saveForNow}
         />
         <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} />
       </>

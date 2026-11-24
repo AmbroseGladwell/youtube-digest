@@ -59,6 +59,7 @@ import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHe
 import { OnboardingSamplesPageObject } from "../pageObjects/OnboardingSamplesPageObject.testHelper.js";
 import { SampleDeckPageObject } from "../pageObjects/SampleDeckPageObject.testHelper.js";
 import { PlansModalPageObject } from "../pageObjects/PlansModalPageObject.testHelper.js";
+import { SavedItemPageObject } from "../pageObjects/SavedItemPageObject.testHelper.js";
 import { SoftWallPageObject } from "../pageObjects/SoftWallPageObject.testHelper.js";
 import { createAccountThroughSample } from "../pageObjects/createAccountThroughSample.testHelper.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
@@ -384,6 +385,10 @@ export class Launcher {
 
   get softWall(): SoftWallPageObject {
     return new SoftWallPageObject(this.testContext);
+  }
+
+  get savedItem(): SavedItemPageObject {
+    return new SavedItemPageObject(this.testContext);
   }
 
   get plansModal(): PlansModalPageObject {

@@ -1,3 +1,4 @@
+import type { InMemoryCaptureStore } from "../../src/features/captures/types/InMemoryCaptureStore.testHelper.js";
 import type { IwftTikTokPages } from "./IwftTikTokPages.testHelper.js";
 import type { AccentColour } from "@overview/domain";
 import type { AppBuild } from "../../src/app/AppBuildContext.js";
@@ -31,6 +32,7 @@ declare global {
       transcriptStore: InMemoryTranscriptStore;
       followedPlaylistStore: InMemoryFollowedPlaylistStore;
       captureQueueStore: InMemoryCaptureQueueStore;
+      captureStore: InMemoryCaptureStore;
       projectStore: InMemoryProjectStore;
       chatStore: InMemoryChatStore;
       suggestedQuestionStore: InMemorySuggestedQuestionStore;
