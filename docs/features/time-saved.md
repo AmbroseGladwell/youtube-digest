@@ -50,7 +50,8 @@ draws only the phone; the desktop total is drawn as a button in parts 1 and 2 wi
 what it opens, and the breakdown is where the card's "says what it left out" lives, so the
 desktop opens the same panel.
 
-**The moment (34q, 34r).** *Mark read* brings in *Saved you N mins* beside the reading line,
+**The moment (34q, 34r).** *Mark read* brings in *Saved you N mins* beside the reading line
+(below 48rem in its place, `library-row-images.md`),
 *1 min* for a single one (OV-196, 6 Nov 2026; `pluralise` in `packages/domain`). The word
 comes off the figure rather than the counting number, so it holds still while the digits
 roll. A screen reader is given the figure in full instead — *Saved you 13 minutes*, from

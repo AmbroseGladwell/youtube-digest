@@ -249,7 +249,8 @@ Five folders, five different questions.
   device: saved views, URL wins, Reset and Show all, caught up, and the reader stepping
   through the same view.
 - `library-row-images.md` — the image on a library row at every width: the banner card below
-  30rem, the scaling thumbnail above, why 30rem and why rem, and the length on the image.
+  30rem, the scaling thumbnail above, why 30rem and why rem, the length on the image, and
+  the icon-only actions, their motion and the saved chip's place below 48rem.
 - `library-filters.md` — Kind and Source split apart, Added, No topic and several values per
   group: how a source is named from its domain on the device, the URL, the saved view and
   the counts.
