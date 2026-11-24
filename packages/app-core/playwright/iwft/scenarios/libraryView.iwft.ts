@@ -47,19 +47,19 @@ test("the filters and order the reader leaves are the ones they come back to", a
   const library = await launcher.launchExpectingLibrary();
 
   await library.filterMenu.clickStatusChip("unread");
-  await library.sortPill.sortBy("title");
+  await library.sortMenu.sortBy("title");
 
   const returned = await returnToTheLibrary(launcher, library);
   await returned.verifyCardOrder(["Already read", "Apple", "Zebra"]);
   await returned.verifyChipsRead(["Read and unread"]);
-  await returned.sortPill.verifyReads("Title A–Z");
+  await returned.sortMenu.verifyReads("Title, A–Z");
 });
 
 test("Reset puts the filters back to unread, keeps the order, and that is kept too", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   await library.showAll();
-  await library.sortPill.sortBy("oldest");
+  await library.sortMenu.sortBy("oldest");
 
   await library.resetView();
 
@@ -67,7 +67,7 @@ test("Reset puts the filters back to unread, keeps the order, and that is kept t
   await library.verifyOffersReset(false);
   const returned = await returnToTheLibrary(launcher, library);
   await returned.verifyNoChips();
-  await returned.sortPill.verifyReads("Oldest saved first");
+  await returned.sortMenu.verifyReads("Added, oldest first");
 });
 
 test("a link that names a view is followed, and the saved view is left as it was", async ({ launcher, backendSimulator }) => {
@@ -104,14 +104,14 @@ test("a row marked read from the unread list stays put until the view changes", 
 
   await library.cardWithTitle("Apple").verifyIsRead(true);
   await library.verifyCardOrder(["Apple", "Zebra"]);
-  await library.sortPill.sortBy("title");
+  await library.sortMenu.sortBy("title");
   await library.verifyCardOrder(["Zebra"]);
 });
 
 test("Previous and Next walk the list the reader opened it from, in its order", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
-  await library.sortPill.sortBy("title");
+  await library.sortMenu.sortBy("title");
 
   const reader = await library.cardWithTitle("Apple").openReader();
   await reader.verifyPosition("1 of 2");

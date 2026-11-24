@@ -2,8 +2,7 @@
 
 The library sorts by one field, in one direction, optionally grouped (OV-401,
 https://trello.com/c/oAC77Gha). The sort menu and the group headings are OV-399's screens
-(design 399p); until they're built, `SortPill` still offers its three orders (newest saved,
-oldest saved, title A–Z) as presets, and every other sort can be reached by link.
+(design 399p), described under "The menu" below.
 
 ## Fields
 
@@ -86,6 +85,29 @@ Unlike the filters, it:
 Sorting runs after filtering and search. The search's "Said in the transcripts" and "Close in
 meaning" groups aren't sorted or grouped. The reader's Previous and Next follow the sort and
 the filters when it was opened from the list (`library-view.md`).
+
+## The menu (OV-399, design 399p)
+
+`SortMenu` is an icon button in the search row, named "Sort: Added, newest first" (the same
+words as its tip), with an orange dot whenever the sort isn't Added, newest first, ungrouped.
+It opens a menu under the button on a wide screen (a `Popover` with role menu, 276 wide) and the
+shared `BottomSheet` under 48rem, titled Sort, with Reset and Done at its foot.
+
+- **Sort by** is a row per field with a line under it: Added (When you saved it), Published
+  (When it came out), Updated (Saved, edited or asked about), Title (By name).
+- **Order** is two chips, Newest first and Oldest first, or A–Z and Z–A for Title.
+- **Group by** is chips: None, Day, Week, Month for a date field; None and Letter for Title.
+- Every choice applies at once and the menu stays open; Escape, a tap outside, × or Done close
+  it and give focus back to the button. Changing to or from Title starts that field's own
+  direction, and a grouping that doesn't fit the new field goes back to None.
+- It stays a menu: `menuitemradio` buttons in groups named Sort by, Order and Group by. Focus
+  starts on the checked field; the arrow keys walk every item and wrap, Home and End jump.
+
+**Headings in the list.** `LibraryList` takes `headingAt`, from `libraryGroups` over the list
+as shown. A group's heading (Gloock, with its count) sits inside the group's first list item, so
+the list holds only items, `aria-posinset` and `aria-setsize` count overviews alone, and the
+heading is still a real `h2`. A row's measured height is kept under its key and its heading, so
+a row that gains or loses a heading is measured afresh and Back still lands on it.
 
 ## Analytics
 

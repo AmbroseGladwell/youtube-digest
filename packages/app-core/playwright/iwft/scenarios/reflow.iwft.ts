@@ -82,8 +82,8 @@ const screens: Screen[] = [
     name: "the sort menu",
     open: async (launcher, backendSimulator) => {
       const library = await openLibrary(launcher, backendSimulator);
-      await library.sortPill.open();
-      return library.sortPill;
+      await library.sortMenu.open();
+      return library.sortMenu;
     },
     verify: (sort) => sort.verifyOptionsCanBeReached(),
   }),

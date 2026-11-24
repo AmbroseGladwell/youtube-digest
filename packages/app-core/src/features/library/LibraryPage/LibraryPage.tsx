@@ -20,8 +20,9 @@ import { FilterMenu } from "../components/FilterMenu/FilterMenu.js";
 import { AppliedFilters } from "../components/AppliedFilters/AppliedFilters.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageTagsDialog.js";
-import { SortPill } from "../components/SortPill/SortPill.js";
-import { LibraryList } from "../components/LibraryList/LibraryList.js";
+import { SortMenu } from "../components/SortMenu/SortMenu.js";
+import { LibraryList, type LibraryListHeading } from "../components/LibraryList/LibraryList.js";
+import { libraryGroups, localeWeekStart } from "../util/libraryGroups.js";
 import { LibraryOverviewCard, type SaidMoment } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { LibraryCaptureCard } from "../components/LibraryCaptureCard/LibraryCaptureCard.js";
@@ -287,6 +288,13 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     sort,
     activity,
   );
+  const groupRuns = libraryGroups(visible, sort, { now: new Date(), weekStartsOn: localeWeekStart() }, activity);
+  const headingStarts = new Map<number, LibraryListHeading>();
+  groupRuns.reduce((start, run) => {
+    headingStarts.set(start, { text: run.heading, count: run.entries.length });
+    return start + run.entries.length;
+  }, 0);
+  const headingAt = (index: number) => headingStarts.get(index) ?? null;
   searchSettled.current = () => analytics.library.search.searched({ results: visible.length });
   const settledIsCurrent = settledQuery !== "" && settledQuery === filters.query.trim();
   const saidInSource = settledIsCurrent
@@ -479,9 +487,8 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     </button>
   );
   const sortControl = (
-    <SortPill
+    <SortMenu
       sort={sort}
-      compact={railIsSheet}
       onChange={(next) => {
         analytics.library.sortPill.orderChosen({ field: next.field, direction: next.direction, group: next.group });
         changeView(applyLibrarySort(viewParams, next));
@@ -539,7 +546,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     return (
       <>
         {savedShown.length > 0 && <MakeAllSaved saved={savedShown} />}
-        <LibraryList entries={visible} keyOf={libraryEntryId} row={row} testId={libraryPageTestIds.list} />
+        <LibraryList entries={visible} keyOf={libraryEntryId} row={row} headingAt={headingAt} testId={libraryPageTestIds.list} />
       </>
     );
   };

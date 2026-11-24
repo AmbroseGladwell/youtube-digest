@@ -52,7 +52,7 @@ export const libraryDirectionLabel = (sort: Pick<LibrarySort, "field" | "directi
 export const librarySortLabel = (sort: LibrarySort): string =>
   [LIBRARY_SORT_FIELD_LABEL[sort.field], libraryDirectionLabel(sort), GROUP_LABEL[sort.group]].filter(Boolean).join(", ");
 
-// The three orders today's sort pill offers, until OV-399's sort menu replaces it.
+// The three orders the sort pill offered, so old links and saved views read the same.
 export const LIBRARY_SORT_PRESETS = ["newest", "oldest", "title"] as const;
 export type LibrarySortPreset = (typeof LIBRARY_SORT_PRESETS)[number];
 
@@ -61,18 +61,3 @@ export const LIBRARY_SORT_PRESET: Record<LibrarySortPreset, LibrarySort> = {
   oldest: { field: "added", direction: "asc", group: "none" },
   title: { field: "title", direction: "asc", group: "none" },
 };
-
-export const LIBRARY_SORT_PRESET_LABEL: Record<LibrarySortPreset, string> = {
-  newest: "Newest saved first",
-  oldest: "Oldest saved first",
-  title: "Title A–Z",
-};
-
-export const LIBRARY_SORT_PRESET_SHORT_LABEL: Record<LibrarySortPreset, string> = {
-  newest: "",
-  oldest: "Oldest",
-  title: "A–Z",
-};
-
-export const librarySortPresetOf = (sort: LibrarySort): LibrarySortPreset | null =>
-  LIBRARY_SORT_PRESETS.find((preset) => isSameLibrarySort(LIBRARY_SORT_PRESET[preset], sort)) ?? null;

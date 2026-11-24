@@ -84,7 +84,7 @@ test("picking an order is counted by the order's own name", async ({ launcher, b
   seed(backendSimulator);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
 
-  await library.sortPill.sortBy("title");
+  await library.sortMenu.sortBy("title");
 
   await expect
     .poll(() => libraryEvents(backendSimulator))

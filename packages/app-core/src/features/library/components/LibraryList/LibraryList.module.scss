@@ -6,3 +6,22 @@
 .row {
   padding-bottom: 0.75rem;
 }
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  margin: 0.75rem 0.125rem 0.625rem;
+}
+
+.headingText {
+  margin: 0;
+  font: 400 1.1875rem var(--font-heading);
+  color: var(--ink);
+}
+
+.headingCount {
+  font-size: 0.78125rem;
+  font-weight: 500;
+  color: var(--muted);
+}
