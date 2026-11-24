@@ -1,3 +1,4 @@
+import { KeptHereBanner } from "../../captures/components/KeptHereBanner/KeptHereBanner.js";
 import { DEFAULT_PLAN, domainOf, formatClock, timeSavedSummary } from "@overview/domain";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -443,6 +444,7 @@ export const CapturePage = () => {
       data-testid={capturePageTestIds.root}
     >
       {queueStripOrNotice()}
+      <KeptHereBanner />
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
         {openingOffer()}
 
