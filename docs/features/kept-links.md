@@ -208,10 +208,19 @@ uses 2 of your 5" makes each saved video, episode, TikTok and post one after ano
 (`makeAllSaved`, queued behind whatever is being made), up to what's left this month.
 Articles still need Create.
 
+## In the extension
+
+Design 358j. The extension makes kept links itself as soon as its panel opens, since it
+reads YouTube in the reader's own browser; nothing waits for a press, because the reader
+already pressed Make. While any are waiting or being made, the panel's page says so above
+everything else (`KeptHereBanner`): "1 link from your phone is ready to make here.", then
+"Making 1 link from your phone here. Keep this panel open until they're done." The design's
+Make them button and list are left out for that reason, and its "they carry on while the
+browser is open" isn't said, since closing the side panel stops them.
+
 ## Not built yet
 
-- The extension's banner for links waiting for it, and keeping a TikTok only the extension
-  can read (slice 4b).
+- Keeping a TikTok only the extension can read, and making it there (OV-403).
 - "Already saved · no overview yet" and "Already in your queue" under the field (358c-2).
 - Undo after removing a kept link.
 - Kept links at the server cap, the queue's new home, and the extension's banner.

@@ -3,6 +3,8 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { IWFT_VIDEO_ID, makeServiceTranscriptFixture } from "../../network/fixtures/innerTubeFixtures.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
+import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
+import { keptHereBannerTestIds } from "../../../src/features/captures/components/KeptHereBanner/KeptHereBannerTestIds.js";
 import { keptLinksSectionTestIds } from "../../../src/features/captures/components/KeptLinksSection/KeptLinksSectionTestIds.js";
 import { makeAllSavedTestIds } from "../../../src/features/captures/components/MakeAllSaved/MakeAllSavedTestIds.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
@@ -83,4 +85,42 @@ test("once overviews are back, Make all on No overview yet makes every saved one
 
   await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(2);
   expect(await backendSimulator.captureStore.list()).toEqual([]);
+});
+
+test("the extension makes a link kept on a phone at once, and its panel says so while it does", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  const kept: Capture = {
+    id: OverviewId.parse("3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f"),
+    sourceKey: SourceKey.parse(IWFT_VIDEO_ID),
+    url: VALID_URL,
+    keptAt: "2026-10-06T20:00:00.000Z",
+    keptFrom: "phone",
+    captureReason: null,
+    title: "The Simulated Video",
+    thumbnailUrl: null,
+    fromPlaylist: null,
+    addedAt: null,
+    playlistIndex: null,
+    chosenAt: null,
+    stage: "kept",
+    source: null,
+    waitingFor: "server",
+    resumesAt: "2099-01-01T00:00:00.000Z",
+    queueStatus: "waiting",
+    problem: null,
+  };
+  backendSimulator.captureStore.seed(kept);
+  backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
+  await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY, youTubeFetch: true });
+
+  await expect(page.getByTestId(keptHereBannerTestIds.root)).toHaveText(
+    "Making 1 link from your phone here. Keep this panel open until they’re done.",
+  );
+  await backendSimulator.releaseEndpoint(EndpointKey.ANTHROPIC_MESSAGES);
+
+  await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.id)).toEqual([kept.id]);
+  await expect(page.getByTestId(keptHereBannerTestIds.root)).toHaveCount(0);
 });
