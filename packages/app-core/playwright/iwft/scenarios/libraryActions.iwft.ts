@@ -33,8 +33,11 @@ test("the way in and the way back are marked as different journeys for the pane 
   await launcher.appShell.verifyNavigationDirection("back");
 });
 
-// A hidden thumbnail is still the first child, so the thumbnail-less grid fires for only one row.
-test("on a phone a row drops its thumbnail, whether or not one was ever saved", async ({ launcher, backendSimulator, page }) => {
+test("on a phone a row's image runs across its tile, and a row without one keeps its title across", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
   const withThumbnail = makeOverview();
   backendSimulator.overviews.seed({
     ...withThumbnail,
@@ -49,9 +52,10 @@ test("on a phone a row drops its thumbnail, whether or not one was ever saved", 
 
   const library = await launcher.launchExpectingLibrary();
 
+  await library.nthCard(0).verifyImageSpansTheTile();
+  await library.nthCard(1).verifyHasNoThumbnail();
+  await library.nthCard(1).verifyTitleSpansTheRow();
   for (const index of [0, 1]) {
-    await library.nthCard(index).verifyHasNoThumbnail();
-    await library.nthCard(index).verifyTitleSpansTheRow();
     await library.nthCard(index).verifyActionsAreTouchSized();
     await library.nthCard(index).verifyActionsLineUpWithTheTitle();
   }

@@ -7,7 +7,13 @@ import styles from "./LibraryList.module.scss";
 import { libraryListTestIds } from "./LibraryListTestIds.js";
 
 const ESTIMATED_ROW_PX = 190;
+const BANNER_QUERY = "(max-width: 29.9375rem)";
+const BANNER_ROW_TEXT_PX = 250;
+
 const OVERSCAN_ROWS = 6;
+
+const estimatedRowPx = (listWidth: number): number =>
+  globalThis.matchMedia?.(BANNER_QUERY).matches ? Math.round(listWidth / 2) + BANNER_ROW_TEXT_PX : ESTIMATED_ROW_PX;
 
 export interface LibraryListProps<Entry> {
   entries: readonly Entry[];
@@ -28,6 +34,7 @@ export const LibraryList = <Entry,>({ entries, keyOf, row, headingAt, testId }: 
   const { key: historyKey } = useLocation();
   const [placed, setPlaced] = useState({ top: 0, width: 0 });
   const heights = libraryRowHeights(placed.width);
+  const rowEstimate = estimatedRowPx(placed.width);
   const keyAt = (index: number) => {
     const heading = headingAt?.(index) ?? null;
     return heading === null ? keyOf(entries[index]!) : `${keyOf(entries[index]!)}@${heading.text}`;
@@ -35,7 +42,7 @@ export const LibraryList = <Entry,>({ entries, keyOf, row, headingAt, testId }: 
 
   const virtualizer = useWindowVirtualizer<HTMLDivElement>({
     count: entries.length,
-    estimateSize: (index) => heights.get(keyAt(index)) ?? ESTIMATED_ROW_PX,
+    estimateSize: (index) => heights.get(keyAt(index)) ?? rowEstimate,
     getItemKey: keyAt,
     overscan: OVERSCAN_ROWS,
     scrollMargin: placed.top,

@@ -19,6 +19,7 @@ import {
 import {
   articleReadMinutes,
   kindChip,
+  noteLengthBadge,
   openPodcastLabel,
   recipeFrom,
   sourceImage,
@@ -246,4 +247,19 @@ test("a photo or text post is a written source, too short under 30 words of desc
   assert.equal(isWrittenSource(article), true);
   const long = socialSource({ ...reel, media: "text", durationSeconds: null, description: "word ".repeat(30) });
   assert.ok(isWrittenSource(long) && !hasTooFewWords(long));
+});
+
+test("a row's image carries the length alone, and nothing when it isn't known", () => {
+  assert.equal(noteLengthBadge({ ...makeOverview(), source: { ...makeOverview().source, durationMs: 698_000 } }), "11:38");
+  assert.equal(noteLengthBadge(makeOverview()), null);
+  assert.equal(noteLengthBadge({ source: article, recipe: null }), "14 min");
+  assert.equal(noteLengthBadge({ source: episode, recipe: null }), "1 hr 56 min");
+  assert.equal(noteLengthBadge({ source: { ...episode, durationMs: null }, recipe: null }), null);
+  assert.equal(noteLengthBadge({ source: tiktokSource(read), recipe: null }), "42 s");
+});
+
+test("a recipe's image carries its video's length, or its total time on a page", () => {
+  assert.equal(noteLengthBadge(makeRecipeOverview({}, { source: { ...makeOverview().source, durationMs: 698_000 } })), "11:38");
+  assert.equal(noteLengthBadge(makeRecipeOverview()), "1 hr 5 min");
+  assert.equal(noteLengthBadge(makeRecipeOverview({ totalMinutes: null })), null);
 });

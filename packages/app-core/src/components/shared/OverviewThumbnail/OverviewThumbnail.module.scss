@@ -68,3 +68,31 @@
   object-fit: cover;
   border-radius: 0.5rem;
 }
+
+$badge-backing: rgb(21 22 24 / 78%);
+
+.link {
+  position: relative;
+}
+
+// Design 407l: the source's length on its image, as a video site shows it.
+.badge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: $badge-backing;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tileHost:has(.badge) .nameTile {
+  align-items: flex-start;
+}
