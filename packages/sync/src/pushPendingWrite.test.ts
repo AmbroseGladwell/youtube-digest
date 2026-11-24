@@ -420,3 +420,29 @@ test("what became of a suggested question goes to that question by its whole id,
   );
   assert.deepEqual(gone, { result: "gone" });
 });
+
+test("a capture write goes to POST /captures, and its delete to DELETE /captures/:id", async () => {
+  const api = new ScriptedSyncApi();
+  const record = { id: "a", schemaVersion: 1, updatedAt: AT };
+
+  const saved = await pushPendingWrite(api, entry({ kind: "capture", change: { op: "replace", record } }), null, storage);
+  const deleted = await pushPendingWrite(api, entry({ kind: "capture", change: { op: "delete" } }), 1, storage);
+
+  assert.deepEqual(saved, { result: "written", rev: 1 });
+  assert.deepEqual(deleted, { result: "gone" });
+  assert.deepEqual(
+    api.calls.map((call) => call.method),
+    ["saveCapture", "deleteCapture"],
+  );
+});
+
+for (const code of ["video_already_held", "capture_already_held"] as const) {
+  test(`a capture refused with ${code} is superseded, to be forgotten here`, async () => {
+    const api = new ScriptedSyncApi();
+    api.failOnce("saveCapture", { code, details: {} });
+
+    const outcome = await pushPendingWrite(api, entry({ kind: "capture", change: { op: "replace", record: { id: "a" } } }), null, storage);
+
+    assert.deepEqual(outcome, { result: "superseded" });
+  });
+}

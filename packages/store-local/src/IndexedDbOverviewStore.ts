@@ -40,6 +40,7 @@ import {
   QUESTIONS_BY_OVERVIEW_INDEX,
   SUGGESTED_QUESTIONS_STORE,
   TOPICS_STORE,
+  CAPTURES_STORE,
 } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
@@ -108,8 +109,9 @@ export class IndexedDbOverviewStore implements OverviewStore {
   async saveOverview(overview: Overview) {
     const now = new Date();
     const record = stampStoredRecord(overview, CURRENT_OVERVIEW_SCHEMA_VERSION, now);
-    const transaction = this.#db.transaction([OVERVIEWS_STORE, ...JOURNALLED_STORES], "readwrite");
+    const transaction = this.#db.transaction([OVERVIEWS_STORE, CAPTURES_STORE, ...JOURNALLED_STORES], "readwrite");
     transaction.objectStore(OVERVIEWS_STORE).put(record);
+    transaction.objectStore(CAPTURES_STORE).delete(overview.id);
     const updatedAt = now.toISOString();
     const journaled = await appendPendingWrite(transaction, {
       kind: "overview",

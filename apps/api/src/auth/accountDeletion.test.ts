@@ -91,6 +91,7 @@ const seedEverything = async (testApp: TestApp, session: TestSession, email: str
     [shareTokenFor(email), accountId, overviewId, now],
   );
   await sql.query("insert into overview_usage (month, account_id, key_source, overviews) values ('2026-11-01', $1, 'own', 1)", [accountId]);
+  await sql.query("insert into capture_saves (month, account_id, saves) values ('2026-11-01', $1, 1)", [accountId]);
   await sql.query(
     "insert into overview_reservations (account_id, overview_id, source, reserved_at) values ($1, $2, 'own', $3::timestamptz)",
     [accountId, overviewId, now],

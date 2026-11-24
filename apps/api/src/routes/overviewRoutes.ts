@@ -20,6 +20,7 @@ import { decideTombstone } from "../records/decideTombstone.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
+import { tombstoneCapturesOf } from "../records/tombstoneCapturesOf.js";
 import { tombstoneChats } from "../records/tombstoneChats.js";
 import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
 import { tombstoneSuggestedQuestions } from "../records/tombstoneSuggestedQuestions.js";
@@ -62,6 +63,10 @@ export const overviewRoutes = (
         decide: (current, held) => decideReplace("overview", current, { body, schemaVersion, updatedAt, ifMatch }, request.client!, held),
       },
     ]);
+    const superseded = await tombstoneCapturesOf(records, accountId, { id, sourceKey: storedSourceKey(body) });
+    if (superseded > 0) {
+      request.log.info(apiLogLines.captures.superseded({ count: superseded }));
+    }
     return sendWritten(reply, written!, ifMatch === null ? 201 : 200);
   });
 

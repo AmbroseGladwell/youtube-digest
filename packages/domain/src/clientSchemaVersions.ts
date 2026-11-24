@@ -19,6 +19,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -33,6 +34,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -47,6 +49,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -61,6 +64,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -75,6 +79,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -89,6 +94,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -103,6 +109,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -117,6 +124,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -131,6 +139,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -145,6 +154,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -159,6 +169,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -173,6 +184,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -187,6 +199,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -201,6 +214,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -215,6 +229,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -229,6 +244,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -243,6 +259,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -257,6 +274,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -271,6 +289,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 0,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -285,6 +304,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 1,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -299,6 +319,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 1,
       chat: 0,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -313,6 +334,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 1,
       chat: 1,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -327,6 +349,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 2,
       chat: 1,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -341,6 +364,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 2,
       chat: 2,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -355,6 +379,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 2,
       chat: 3,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -369,6 +394,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 2,
       chat: 4,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -383,6 +409,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 2,
       chat: 5,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -397,6 +424,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 2,
       chat: 6,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -411,6 +439,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 2,
       chat: 7,
       suggestedQuestion: 0,
+      capture: 0,
     },
   },
   {
@@ -425,6 +454,22 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       projectMember: 2,
       chat: 7,
       suggestedQuestion: 1,
+      capture: 0,
+    },
+  },
+  {
+    clientVersion: 31,
+    schemaVersions: {
+      overview: 19,
+      overviewState: 1,
+      topic: 1,
+      settings: 3,
+      followedPlaylist: 3,
+      project: 1,
+      projectMember: 2,
+      chat: 7,
+      suggestedQuestion: 1,
+      capture: 1,
     },
   },
 ];

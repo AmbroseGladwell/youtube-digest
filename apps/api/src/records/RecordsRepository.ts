@@ -20,6 +20,7 @@ export interface WriteOperation {
   id: string;
   // So the decision can refuse a second: docs/features/one-overview-per-video.md, "The server is the arbiter".
   sourceKey?: string | null;
+  heldBy?: readonly RecordKind[];
   requires?: ReadonlyArray<{ kind: RecordKind; id: string }>;
   decide: (current: StoredRecord | null, held: StoredRecord | null, required: Array<StoredRecord | null>) => WriteDecision;
 }
@@ -29,6 +30,8 @@ export interface ChangesPage {
   next: number;
   more: boolean;
 }
+
+const OVERVIEWS_HOLD: readonly RecordKind[] = ["overview"];
 
 export const RECORD_COLUMNS = "kind, id, schema_version, rev, seq, updated_at, deleted, body";
 
@@ -55,10 +58,10 @@ export class RecordsRepository {
   async #write(accountId: AccountId, operations: WriteOperation[]): Promise<Array<WriteOutcome | null>> {
     return this.#sql.transaction(async (tx) => {
       const outcomes: Array<WriteOutcome | null> = [];
-      for (const { kind, id, sourceKey, requires = [], decide } of operations) {
+      for (const { kind, id, sourceKey, heldBy = OVERVIEWS_HOLD, requires = [], decide } of operations) {
         const seq = await allocateSeq(tx, accountId);
         const current = await this.#get(tx, accountId, kind, id);
-        const held = sourceKey == null ? null : await this.#liveOverviewOf(tx, accountId, sourceKey, id);
+        const held = sourceKey == null ? null : await this.#liveHolderOf(tx, accountId, sourceKey, id, heldBy);
         const required = await Promise.all(requires.map((other) => this.#get(tx, accountId, other.kind, other.id)));
         const decision = decide(current, held, required);
         if (decision.action === "nothing") {
@@ -138,12 +141,16 @@ export class RecordsRepository {
   }
 
   async liveOverviewsOfSources(accountId: AccountId, sourceKeys: readonly string[]): Promise<StoredRecord[]> {
+    return this.liveOfSources(accountId, "overview", sourceKeys);
+  }
+
+  async liveOfSources(accountId: AccountId, kind: RecordKind, sourceKeys: readonly string[]): Promise<StoredRecord[]> {
     if (sourceKeys.length === 0) {
       return [];
     }
     const rows = await this.#sql.query<RecordRow>(
-      `select ${RECORD_COLUMNS} from records where account_id = $1 and kind = 'overview' and not deleted and source_key = any($2::text[])`,
-      [accountId, [...sourceKeys]],
+      `select ${RECORD_COLUMNS} from records where account_id = $1 and kind = $2 and not deleted and source_key = any($3::text[])`,
+      [accountId, kind, [...sourceKeys]],
     );
     return rows.map(storedRecordFromRow);
   }
@@ -159,12 +166,18 @@ export class RecordsRepository {
     return rows.map(storedRecordFromRow);
   }
 
-  async #liveOverviewOf(tx: SqlClient, accountId: AccountId, sourceKey: string, exceptId: string): Promise<StoredRecord | null> {
+  async #liveHolderOf(
+    tx: SqlClient,
+    accountId: AccountId,
+    sourceKey: string,
+    exceptId: string,
+    kinds: readonly RecordKind[],
+  ): Promise<StoredRecord | null> {
     const rows = await tx.query<RecordRow>(
       `select ${RECORD_COLUMNS} from records
-       where account_id = $1 and kind = 'overview' and not deleted and source_key = $2 and id <> $3
-       order by seq limit 1`,
-      [accountId, sourceKey, exceptId],
+       where account_id = $1 and kind = any($4::text[]) and not deleted and source_key = $2 and id <> $3
+       order by kind = 'overview' desc, seq limit 1`,
+      [accountId, sourceKey, exceptId, kinds],
     );
     return rows[0] === undefined ? null : storedRecordFromRow(rows[0]);
   }

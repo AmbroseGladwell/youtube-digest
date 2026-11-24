@@ -271,7 +271,10 @@ presses Overview (`docs/features/watching-detection.md`). Uploading every transc
 would send the account the reader's viewing history, and megabytes nobody asked for. So
 `saveTranscript` journals nothing. `IndexedDbOverviewStore.saveOverview` journals a
 `transcript` entry for the note's video in the same transaction as the note, and captions
-for a video with no note stay on the device that fetched them.
+for a video with no note stay on the device that fetched them. A **saved capture**, a source
+saved without its overview (OV-358), counts as a note here: `IndexedDbCaptureStore.saveCapture`
+journals its transcript the same way, and the server keeps it while the capture is live
+(`kept-links.md`, "Transcripts"). A kept link holds none.
 
 **Up, through the outbox.** That entry gets the same retries, parking and "waiting to
 send" count as any record, and there is no wrapper store (`docs/features/sync-client.md`).
