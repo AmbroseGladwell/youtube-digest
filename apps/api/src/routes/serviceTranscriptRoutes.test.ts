@@ -10,6 +10,7 @@ import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper
 import { makeFakeYouTube, type FakeYouTube } from "../transcripts/FakeYouTube.testHelper.js";
 import { PROXY_PRICE, serviceTranscriptQuotas } from "../transcripts/ServiceTranscripts.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
+import { saveQuotas } from "../usage/saveQuotas.js";
 import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
 import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
@@ -203,13 +204,17 @@ const spend = async (testApp: TestApp, accountId: AccountId, keySource: "ours" |
   }
 };
 
-test("an account with no overview left this month on either key is refused, with the reset date", async () => {
+const spendSaves = (testApp: TestApp, accountId: AccountId, saves: number) =>
+  testApp.sql.query("insert into capture_saves (month, account_id, saves) values ('2026-09-01', $1, $2)", [accountId, saves]);
+
+test("an account with no overview and no save left this month is refused, with the reset date", async () => {
   const youTube = makeFakeYouTube();
   const { lines, logger } = recordingLogger();
   const testApp = await serviceApp(youTube, 1000, logger);
   const account = await makeAccount(testApp);
   await spend(testApp, account.accountId, "ours", overviewQuotas.free.ours);
   await spend(testApp, account.accountId, "own", overviewQuotas.free.own);
+  await spendSaves(testApp, account.accountId, saveQuotas.free);
 
   const response = await account.inject({ method: "POST", url: `/api/service-transcripts/${FIXTURE_VIDEO_ID}` });
 
@@ -219,6 +224,22 @@ test("an account with no overview left this month on either key is refused, with
   assert.ok(Number(response.headers["retry-after"]) > 0);
   assert.equal(youTube.requests.length, 0);
   assert.equal(saying(lines, "service transcript refused for spent overviews").length, 1);
+  await testApp.close();
+});
+
+test("with no overview left but saves to spare, the transcript is fetched for a save without an overview", async () => {
+  const youTube = makeFakeYouTube();
+  const { lines, logger } = recordingLogger();
+  const testApp = await serviceApp(youTube, 1000, logger);
+  const account = await makeAccount(testApp);
+  await spend(testApp, account.accountId, "ours", overviewQuotas.free.ours);
+  await spend(testApp, account.accountId, "own", overviewQuotas.free.own);
+  await spendSaves(testApp, account.accountId, saveQuotas.free - 1);
+
+  const response = await account.inject({ method: "POST", url: `/api/service-transcripts/${FIXTURE_VIDEO_ID}` });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(saying(lines, "service transcript fetched for a save").length, 1);
   await testApp.close();
 });
 

@@ -1,5 +1,5 @@
 export const DATABASE_NAME = "overview-local-store";
-export const DATABASE_VERSION = 9;
+export const DATABASE_VERSION = 10;
 
 export const OVERVIEWS_STORE = "overviews";
 export const TOPICS_STORE = "topics";
@@ -18,6 +18,8 @@ export const CHATS_BY_PROJECT_INDEX = "byProject";
 export const SUGGESTED_QUESTIONS_STORE = "suggestedQuestions";
 export const QUESTIONS_BY_OVERVIEW_INDEX = "byOverview";
 export const QUESTIONS_BY_PROJECT_INDEX = "byProject";
+export const CAPTURES_STORE = "captures";
+export const CAPTURES_BY_SOURCE_INDEX = "bySource";
 
 // This device's own: docs/features/capture-queue.md, "On this device, for now".
 export const PLAYLIST_CHECKS_STORE = "playlistChecks";

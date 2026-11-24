@@ -83,6 +83,7 @@ import { sampleRoutes } from "./routes/sampleRoutes.js";
 import { topicRoutes } from "./routes/topicRoutes.js";
 import { projectRoutes } from "./routes/projectRoutes.js";
 import { suggestedQuestionRoutes } from "./routes/suggestedQuestionRoutes.js";
+import { captureRoutes } from "./routes/captureRoutes.js";
 import { chatRoutes } from "./routes/chatRoutes.js";
 import { transcriptRoutes } from "./routes/transcriptRoutes.js";
 import { sharePagePlugin } from "./shares/sharePagePlugin.js";
@@ -92,6 +93,7 @@ import { ServiceTranscripts } from "./transcripts/ServiceTranscripts.js";
 import { ServiceUsageRepository } from "./transcripts/ServiceUsageRepository.js";
 import { OverviewReservationsRepository } from "./usage/OverviewReservationsRepository.js";
 import { OverviewUsageRepository } from "./usage/OverviewUsageRepository.js";
+import { CaptureSavesRepository } from "./usage/CaptureSavesRepository.js";
 import { TrialsRepository } from "./usage/TrialsRepository.js";
 import { OurKeyGenerator } from "./generation/OurKeyGenerator.js";
 import { ChatAnswerer } from "./chats/ChatAnswerer.js";
@@ -322,6 +324,7 @@ export const buildApp = async ({
       changesRoutes(api, records);
       const transcripts = new TranscriptsRepository(sql, clock);
       const overviewUsage = new OverviewUsageRepository(sql);
+      const captureSaves = new CaptureSavesRepository(sql);
       const reservations = new OverviewReservationsRepository(sql, overviewUsage);
       const trials = new TrialsRepository(sql);
       overviewRoutes(api, records, transcripts, reservations);
@@ -331,6 +334,7 @@ export const buildApp = async ({
       followedPlaylistRoutes(api, records);
       projectRoutes(api, records);
       suggestedQuestionRoutes(api, records, questionRefresher);
+      captureRoutes(api, { records, transcripts, saves: captureSaves, sql, clock });
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
@@ -338,7 +342,7 @@ export const buildApp = async ({
         transcriptionQueue === null
           ? null
           : createPodcastTranscriptions({ fetchPublicWeb: podcastWeb, jobs: transcriptionJobs, queue: transcriptionQueue, clock });
-      overviewUsageRoutes(api, { usage: overviewUsage, transcriptions, sql, clock });
+      overviewUsageRoutes(api, { usage: overviewUsage, saves: captureSaves, transcriptions, sql, clock });
       overviewReservationRoutes(api, { reservations, usage: overviewUsage, shares, sql, clock });
       const chatUsage = new ChatUsageRepository(sql);
       chatRoutes(api, {
@@ -417,7 +421,7 @@ export const buildApp = async ({
                 .then((answer) => answer.transcript)
                 .catch(() => null),
       });
-      serviceTranscriptRoutes(api, { usage: overviewUsage, service: youTubeService, sql, clock });
+      serviceTranscriptRoutes(api, { usage: overviewUsage, saves: captureSaves, service: youTubeService, sql, clock });
       const planOf = (accountId: AccountId): Promise<Plan> => accountPlan(sql, accountId);
       podcastRoutes(api, {
         readEpisode: readPodcastEpisode,

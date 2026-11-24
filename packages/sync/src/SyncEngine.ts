@@ -242,6 +242,11 @@ export class SyncEngine {
         case "sent":
           await this.#storage.acknowledge(entry.key, { sent: true });
           break;
+        case "superseded":
+          if (entry.kind !== "transcript") {
+            await this.#storage.forgetRecord(entry.kind, entry.id);
+          }
+          break;
         case "held": {
           const folded = await this.#fold(entry, outcome.by);
           if (folded === "folded") {
@@ -301,7 +306,10 @@ export class SyncEngine {
 
   // The server keeps a transcript only once its note is there.
   #waitsBehindParkedNote({ change }: OutboxEntry, blocked: Set<string>): boolean {
-    return change.op === "transcript" && blocked.has(pendingKey("overview", change.overviewId));
+    return (
+      change.op === "transcript" &&
+      (blocked.has(pendingKey("overview", change.overviewId)) || blocked.has(pendingKey("capture", change.overviewId)))
+    );
   }
 
   async #pull(): Promise<SyncStop | null> {

@@ -15,6 +15,8 @@ export interface SyncApi {
   updateSettings(patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   saveFollowedPlaylist(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
   deleteFollowedPlaylist(id: string): Promise<WrittenRecord | null>;
+  saveCapture(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
+  deleteCapture(id: string): Promise<WrittenRecord | null>;
   createProject(record: Record<string, unknown>): Promise<WrittenRecord>;
   updateProject(id: string, patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   deleteProject(id: string): Promise<WrittenRecord | null>;

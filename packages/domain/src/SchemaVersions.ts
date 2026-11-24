@@ -7,6 +7,7 @@ import { CURRENT_PROJECT_SCHEMA_VERSION } from "./projectMigrations.js";
 import { CURRENT_PROJECT_MEMBER_SCHEMA_VERSION } from "./projectMemberMigrations.js";
 import { CURRENT_CHAT_SCHEMA_VERSION } from "./chatMigrations.js";
 import { CURRENT_SUGGESTED_QUESTION_SCHEMA_VERSION } from "./suggestedQuestionMigrations.js";
+import { CURRENT_CAPTURE_SCHEMA_VERSION } from "./captureMigrations.js";
 import type { UnreadableRecordKind } from "./UnreadableRecord.js";
 
 export type SyncedRecordKind = UnreadableRecordKind;
@@ -21,6 +22,7 @@ export const SYNCED_RECORD_KINDS: readonly SyncedRecordKind[] = [
   "projectMember",
   "chat",
   "suggestedQuestion",
+  "capture",
 ];
 
 // Zero for an unknown kind: docs/features/sync-api.md, "A kind a client was built before".
@@ -38,4 +40,5 @@ export const CURRENT_SCHEMA_VERSIONS: SchemaVersions = {
   projectMember: CURRENT_PROJECT_MEMBER_SCHEMA_VERSION,
   chat: CURRENT_CHAT_SCHEMA_VERSION,
   suggestedQuestion: CURRENT_SUGGESTED_QUESTION_SCHEMA_VERSION,
+  capture: CURRENT_CAPTURE_SCHEMA_VERSION,
 };

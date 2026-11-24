@@ -14,6 +14,7 @@ import {
   type RecordChange,
   type StoredTranscript,
   type SyncStorage,
+  type SyncedRecordKind,
   type WriteAcknowledgement,
   sourceKey,
 } from "@overview/domain";
@@ -118,6 +119,10 @@ export class InMemorySyncStorage implements SyncStorage {
     return { from, into };
   }
 
+  async forgetRecord(kind: SyncedRecordKind, id: string) {
+    this.outbox = this.outbox.filter((entry) => !(entry.kind === kind && entry.id === id));
+  }
+
   async transcriptToPush(videoId: string) {
     const noted = (await this.overviewStore.listOverviews()).some((overview) => sourceKey(overview.source) === videoId);
     return noted ? this.transcriptStore.getTranscript(videoId as never) : null;
@@ -168,6 +173,7 @@ export class InMemorySyncStorage implements SyncStorage {
         case "project":
         case "projectMember":
         case "suggestedQuestion":
+        case "capture":
           break;
       }
     }

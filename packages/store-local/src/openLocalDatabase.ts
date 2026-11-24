@@ -15,6 +15,8 @@ import {
   QUESTIONS_BY_OVERVIEW_INDEX,
   QUESTIONS_BY_PROJECT_INDEX,
   SUGGESTED_QUESTIONS_STORE,
+  CAPTURES_STORE,
+  CAPTURES_BY_SOURCE_INDEX,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   PLAYLIST_CHECKS_STORE,
@@ -102,6 +104,9 @@ export const openLocalDatabase = (options: OpenLocalDatabaseOptions = {}): Promi
         const questions = db.createObjectStore(SUGGESTED_QUESTIONS_STORE, { keyPath: "id" });
         questions.createIndex(QUESTIONS_BY_OVERVIEW_INDEX, "overviewIds", { multiEntry: true });
         questions.createIndex(QUESTIONS_BY_PROJECT_INDEX, "scope.projectId");
+      }
+      if (!db.objectStoreNames.contains(CAPTURES_STORE)) {
+        db.createObjectStore(CAPTURES_STORE, { keyPath: "id" }).createIndex(CAPTURES_BY_SOURCE_INDEX, "sourceKey");
       }
     };
 

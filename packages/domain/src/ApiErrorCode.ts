@@ -6,6 +6,7 @@ export const API_ERROR_CODES = {
   not_found: 404,
   already_exists: 409,
   video_already_held: 409,
+  capture_already_held: 409,
   link_invalid: 410,
   record_newer_than_client: 409,
   revision_mismatch: 412,

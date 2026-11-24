@@ -17,6 +17,7 @@ import {
   BY_READER,
   SETTINGS_MIGRATIONS,
   SUGGESTED_QUESTION_MIGRATIONS,
+  CAPTURE_MIGRATIONS,
   QueuedCapture,
   StoredTranscript,
   SYNCED_RECORD_KINDS,
@@ -57,6 +58,7 @@ import {
   QUESTIONS_BY_OVERVIEW_INDEX,
   QUESTIONS_BY_PROJECT_INDEX,
   SUGGESTED_QUESTIONS_STORE,
+  CAPTURES_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   PLAYLIST_CHECKS_STORE,
@@ -86,6 +88,7 @@ const RECORD_STORES: Record<SyncedRecordKind, string> = {
   projectMember: PROJECT_MEMBERS_STORE,
   chat: CHATS_STORE,
   suggestedQuestion: SUGGESTED_QUESTIONS_STORE,
+  capture: CAPTURES_STORE,
 };
 
 const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
@@ -98,6 +101,7 @@ const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
   projectMember: "id",
   chat: "id",
   suggestedQuestion: "id",
+  capture: "id",
 };
 
 const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
@@ -110,6 +114,7 @@ const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
   projectMember: PROJECT_MEMBER_MIGRATIONS,
   chat: CHAT_MIGRATIONS,
   suggestedQuestion: SUGGESTED_QUESTION_MIGRATIONS,
+  capture: CAPTURE_MIGRATIONS,
 };
 
 // What every library that pulled before the cursor's kinds were kept was pulled with.
@@ -182,12 +187,12 @@ export class IndexedDbSyncStorage implements SyncStorage {
 
   // Only a note's transcripts: docs/features/transcript-storage.md, "Following the reader across devices".
   async #transcriptWrites(transaction: IDBTransaction): Promise<PendingWrite[]> {
-    const [overviews, transcripts, pending] = await Promise.all([
-      promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
+    const [kept, transcripts, pending] = await Promise.all([
+      keptSources(transaction),
       promisifyRequest<unknown[]>(transaction.objectStore(TRANSCRIPTS_STORE).getAll()),
       promisifyRequest<OutboxEntry[]>(transaction.objectStore(OUTBOX_STORE).getAll()),
     ]);
-    const noteOn = new Map(overviews.flatMap(notedSource));
+    const noteOn = new Map(kept);
     const queued = new Set(pending.filter((entry) => entry.kind === "transcript").map((entry) => entry.id));
     return transcripts.flatMap((raw) => {
       const transcript = readableTranscript(raw);
@@ -274,6 +279,19 @@ export class IndexedDbSyncStorage implements SyncStorage {
     const revisions = this.#db.transaction(SYNC_REVISIONS_STORE, "readonly").objectStore(SYNC_REVISIONS_STORE);
     const known = await promisifyRequest<{ rev: number } | undefined>(revisions.get([kind, id]));
     return known?.rev ?? null;
+  }
+
+  async forgetRecord(kind: SyncedRecordKind, id: string): Promise<void> {
+    const transaction = this.#db.transaction([RECORD_STORES[kind], OUTBOX_STORE, SYNC_REVISIONS_STORE], "readwrite");
+    transaction.objectStore(RECORD_STORES[kind]).delete(id);
+    transaction.objectStore(SYNC_REVISIONS_STORE).delete([kind, id]);
+    const outbox = transaction.objectStore(OUTBOX_STORE);
+    for (const entry of await promisifyRequest<OutboxEntry[]>(outbox.getAll())) {
+      if (entry.kind === kind && entry.id === id) {
+        outbox.delete(entry.key);
+      }
+    }
+    await promisifyTransaction(transaction);
   }
 
   // docs/features/one-overview-per-video.md, "The client resolves the refusal".
@@ -376,12 +394,12 @@ export class IndexedDbSyncStorage implements SyncStorage {
   }
 
   async transcriptToPush(videoId: string): Promise<StoredTranscript | null> {
-    const transaction = this.#db.transaction([TRANSCRIPTS_STORE, OVERVIEWS_STORE], "readonly");
-    const [raw, overviews] = await Promise.all([
+    const transaction = this.#db.transaction([TRANSCRIPTS_STORE, OVERVIEWS_STORE, CAPTURES_STORE], "readonly");
+    const [raw, kept] = await Promise.all([
       promisifyRequest<unknown>(transaction.objectStore(TRANSCRIPTS_STORE).get(videoId)),
-      promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
+      keptSources(transaction),
     ]);
-    if (raw === undefined || !overviews.flatMap(notedSource).some(([noted]) => noted === videoId)) {
+    if (raw === undefined || !kept.some(([noted]) => noted === videoId)) {
       return null;
     }
     return readableTranscript(raw);
@@ -597,6 +615,21 @@ const notedSource = (raw: unknown): Array<[key: string, overviewId: string]> => 
   const overview = readable("overview", raw);
   const key = storedSourceKey(overview);
   return key !== null && typeof overview?.id === "string" ? [[key, overview.id]] : [];
+};
+
+const savedCaptureSource = (raw: unknown): Array<[key: string, captureId: string]> => {
+  const capture = readable("capture", raw);
+  return capture?.stage === "saved" && typeof capture.sourceKey === "string" && typeof capture.id === "string"
+    ? [[capture.sourceKey, capture.id]]
+    : [];
+};
+
+const keptSources = async (transaction: IDBTransaction): Promise<Array<[key: string, holderId: string]>> => {
+  const [overviews, captures] = await Promise.all([
+    promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
+    promisifyRequest<unknown[]>(transaction.objectStore(CAPTURES_STORE).getAll()),
+  ]);
+  return [...captures.flatMap(savedCaptureSource), ...overviews.flatMap(notedSource)];
 };
 
 const transcriptWrite = (transcript: StoredTranscript, overviewId: string): PendingWrite => {
