@@ -39,7 +39,7 @@ test("filtering names a topic by its id and a verdict by its value, and says whe
     .toEqual([
       { name: "library.filters.topicChosen", props: { topicId: ENERGY.id, from: "panel" } },
       { name: "library.filters.moreShown", props: { shown: true } },
-      { name: "library.filters.noveltyChosen", props: { novelty: "common_knowledge", from: "panel" } },
+      { name: "library.filters.noveltySwitched", props: { novelty: "common_knowledge", on: true, from: "panel" } },
     ]);
 });
 

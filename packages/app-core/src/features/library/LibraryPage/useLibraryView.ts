@@ -13,7 +13,7 @@ const restoringFor = (accountId: string | null): RestoredLibraryView => {
 
 const withoutMissingTopic = (restoring: RestoredLibraryView, topics: Topic[]): RestoredLibraryView => {
   const { topicId } = restoring.view.filters;
-  if (topicId === "all" || topics.some((topic) => topic.id === topicId)) {
+  if (topicId === "all" || topicId === "none" || topics.some((topic) => topic.id === topicId)) {
     return restoring;
   }
   return {
@@ -53,7 +53,8 @@ export const useLibraryView = (topics: Topic[] | undefined, { remember = true }:
     if (restoring === null || target.current?.restoring === restoring) {
       return;
     }
-    if (topics === undefined && restoring.view.filters.topicId !== "all") {
+    const { topicId } = restoring.view.filters;
+    if (topics === undefined && topicId !== "all" && topicId !== "none") {
       return;
     }
     const restored = topics === undefined ? restoring : withoutMissingTopic(restoring, topics);

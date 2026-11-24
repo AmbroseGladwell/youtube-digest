@@ -8,16 +8,16 @@ const TAGS = ["one", "two", "three", "four", "five", "six", "seven", "eight"].ma
 
 describe("cappedTags", () => {
   it("stops at the limit and counts what it held back", () => {
-    const { shown, hiddenCount } = cappedTags(TAGS, null);
+    const { shown, hiddenCount } = cappedTags(TAGS, []);
 
     expect(shown.map(({ tag }) => tag)).toEqual(["one", "two", "three", "four", "five", "six"]);
     expect(hiddenCount).toBe(2);
   });
 
-  it("keeps the tag being filtered by visible, even from beyond the limit", () => {
-    const { shown, hiddenCount } = cappedTags(TAGS, "eight");
+  it("keeps the tags being filtered by visible, even from beyond the limit", () => {
+    const { shown, hiddenCount } = cappedTags(TAGS, ["seven", "eight"]);
 
-    expect(shown.map(({ tag }) => tag)).toContain("eight");
-    expect(hiddenCount).toBe(1);
+    expect(shown.map(({ tag }) => tag)).toEqual(expect.arrayContaining(["seven", "eight"]));
+    expect(hiddenCount).toBe(0);
   });
 });

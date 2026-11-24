@@ -1,5 +1,7 @@
 import { NOVELTY_LABEL, type Topic } from "@overview/domain";
-import { LIBRARY_SOURCE_LABEL, type LibraryFilters } from "../types/LibraryFilters.js";
+import { LIBRARY_ADDED_LABEL, LIBRARY_KIND_LABEL, type LibraryFilters } from "../types/LibraryFilters.js";
+import type { LibrarySource } from "./librarySourceOf.js";
+import { librarySourceName } from "./librarySourceName.js";
 
 export interface AppliedLibraryFilter {
   key: string;
@@ -7,26 +9,34 @@ export interface AppliedLibraryFilter {
   clear: Partial<LibraryFilters>;
 }
 
-export const appliedLibraryFilters = (filters: LibraryFilters, topics: Topic[]): AppliedLibraryFilter[] => {
+// One per value, so each can be taken off alone: docs/features/library-filters.md, "Chips".
+export const appliedLibraryFilters = (
+  filters: LibraryFilters,
+  topics: Topic[],
+  sources: readonly LibrarySource[] = [],
+): AppliedLibraryFilter[] => {
   const applied: AppliedLibraryFilter[] = [];
+  const without = <T>(values: T[], value: T): T[] => values.filter((candidate) => candidate !== value);
 
-  if (filters.source !== "all") {
-    applied.push({ key: "source", label: LIBRARY_SOURCE_LABEL[filters.source], clear: { source: "all" } });
+  for (const kind of filters.kinds) {
+    applied.push({ key: `kind:${kind}`, label: LIBRARY_KIND_LABEL[kind], clear: { kinds: without(filters.kinds, kind) } });
+  }
+  for (const source of filters.sources) {
+    applied.push({
+      key: `source:${source}`,
+      label: librarySourceName(source, sources),
+      clear: { sources: without(filters.sources, source) },
+    });
+  }
+  if (filters.added !== "any") {
+    applied.push({ key: "added", label: LIBRARY_ADDED_LABEL[filters.added], clear: { added: "any" } });
   }
   if (filters.topicId !== "all") {
-    const topic = topics.find((candidate) => candidate.id === filters.topicId);
-    applied.push({
-      key: "topic",
-      label: topic?.name ?? "Topic",
-      clear: { topicId: "all" },
-    });
+    const label = filters.topicId === "none" ? "No topic" : (topics.find((candidate) => candidate.id === filters.topicId)?.name ?? "Topic");
+    applied.push({ key: "topic", label, clear: { topicId: "all" } });
   }
-  if (filters.novelty !== "all") {
-    applied.push({
-      key: "verdict",
-      label: NOVELTY_LABEL[filters.novelty],
-      clear: { novelty: "all" },
-    });
+  for (const novelty of filters.novelties) {
+    applied.push({ key: `verdict:${novelty}`, label: NOVELTY_LABEL[novelty], clear: { novelties: without(filters.novelties, novelty) } });
   }
   if (filters.status !== "all") {
     applied.push({
@@ -36,13 +46,13 @@ export const appliedLibraryFilters = (filters: LibraryFilters, topics: Topic[]):
     });
   }
   if (filters.favourite) {
-    applied.push({ key: "favourite", label: "Favourites", clear: { favourite: false } });
+    applied.push({ key: "favourite", label: "Favourite", clear: { favourite: false } });
   }
   if (filters.dubious) {
     applied.push({ key: "dubious", label: "⚠ Dubious", clear: { dubious: false } });
   }
-  if (filters.tag !== null) {
-    applied.push({ key: "tag", label: `#${filters.tag}`, clear: { tag: null } });
+  for (const tag of filters.tags) {
+    applied.push({ key: `tag:${tag}`, label: `#${tag}`, clear: { tags: without(filters.tags, tag) } });
   }
   if (filters.query.trim() !== "") {
     applied.push({ key: "query", label: `“${filters.query.trim()}”`, clear: { query: "" } });

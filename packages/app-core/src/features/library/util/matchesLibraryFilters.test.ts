@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_OVERVIEW_STATE, SourceKey, TopicId } from "@overview/domain";
 import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { makeOverviewWithState, makeUnreadableEntry } from "../../overviews/types/OverviewFactory.testHelper.js";
-import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { NO_LIBRARY_FILTERS, type LibrarySourceId } from "../types/LibraryFilters.js";
 import { matchesLibraryFilters } from "./matchesLibraryFilters.js";
 
 const FITNESS_TOPIC = TopicId.parse("11111111-1111-4111-8111-111111111111");
@@ -33,8 +33,8 @@ describe("matchesLibraryFilters", () => {
     });
     const thin = makeOverviewWithState({ thin: true, verdict: null });
 
-    expect(matchesLibraryFilters(withVerdict, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(true);
-    expect(matchesLibraryFilters(thin, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(false);
+    expect(matchesLibraryFilters(withVerdict, { ...NO_LIBRARY_FILTERS, novelties: ["original"] })).toBe(true);
+    expect(matchesLibraryFilters(thin, { ...NO_LIBRARY_FILTERS, novelties: ["original"] })).toBe(false);
   });
 
   it("filters by favourite, and by the dubious flag on the verdict", () => {
@@ -90,10 +90,10 @@ describe("matchesLibraryFilters", () => {
     const entry = makeUnreadableEntry();
 
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(false);
-    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelties: ["original"] })).toBe(false);
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, dubious: true })).toBe(false);
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, query: "anything" })).toBe(false);
-    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, tags: ["saas"] })).toBe(false);
   });
 
   it("filters by a tag on the note or one the reader added", () => {
@@ -101,9 +101,9 @@ describe("matchesLibraryFilters", () => {
     const userTagged = makeOverviewWithState({ tags: ["energy"] }, { userTags: ["saas"] });
     const other = makeOverviewWithState({ tags: ["energy"] });
 
-    expect(matchesLibraryFilters(tagged, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(true);
-    expect(matchesLibraryFilters(userTagged, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(true);
-    expect(matchesLibraryFilters(other, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(false);
+    expect(matchesLibraryFilters(tagged, { ...NO_LIBRARY_FILTERS, tags: ["saas"] })).toBe(true);
+    expect(matchesLibraryFilters(userTagged, { ...NO_LIBRARY_FILTERS, tags: ["saas"] })).toBe(true);
+    expect(matchesLibraryFilters(other, { ...NO_LIBRARY_FILTERS, tags: ["saas"] })).toBe(false);
   });
 });
 
@@ -134,7 +134,7 @@ describe("matchesLibraryFilters with a source saved without its overview", () =>
     };
   };
 
-  it("shows under the default view and Unread only, found by its title", () => {
+  it("shows under the default view and Unread, found by its title", () => {
     const entry = saved();
     const title = entry.kind === "capture" ? entry.capture.source.title : "";
     expect(matchesLibraryFilters(entry, NO_LIBRARY_FILTERS)).toBe(true);
@@ -145,8 +145,8 @@ describe("matchesLibraryFilters with a source saved without its overview", () =>
   it("is never under a topic, a verdict, a tag, Read or a favourite, since its overview decides those", () => {
     const entry = saved();
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(false);
-    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(false);
-    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, tag: "pricing" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelties: ["original"] })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, tags: ["pricing"] })).toBe(false);
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, status: "read" })).toBe(false);
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, favourite: true })).toBe(false);
   });
@@ -154,5 +154,69 @@ describe("matchesLibraryFilters with a source saved without its overview", () =>
   it("is all that Show › No overview yet shows", () => {
     expect(matchesLibraryFilters(saved(), { ...NO_LIBRARY_FILTERS, withoutOverview: true })).toBe(true);
     expect(matchesLibraryFilters(makeOverviewWithState(), { ...NO_LIBRARY_FILTERS, withoutOverview: true })).toBe(false);
+  });
+});
+
+describe("matchesLibraryFilters, the groups with several values", () => {
+  const recipeVideo = makeOverviewWithState({ recipe: {} as never });
+  const article = makeOverviewWithState({
+    source: {
+      kind: "web",
+      id: SourceKey.parse("article1"),
+      url: "https://www.seriouseats.com/best-pizza",
+      title: "Pizza",
+      siteName: "Serious Eats",
+      author: null,
+      publishedAt: null,
+      language: null,
+      imageUrl: null,
+      wordCount: 900,
+    },
+  } as never);
+
+  it("matches a recipe video under Video and under Recipe", () => {
+    expect(matchesLibraryFilters(recipeVideo, { ...NO_LIBRARY_FILTERS, kinds: ["video"] })).toBe(true);
+    expect(matchesLibraryFilters(recipeVideo, { ...NO_LIBRARY_FILTERS, kinds: ["recipe"] })).toBe(true);
+    expect(matchesLibraryFilters(recipeVideo, { ...NO_LIBRARY_FILTERS, kinds: ["article"] })).toBe(false);
+  });
+
+  it("matches any of a group's values", () => {
+    expect(matchesLibraryFilters(article, { ...NO_LIBRARY_FILTERS, kinds: ["video", "article"] })).toBe(true);
+    const tagged = makeOverviewWithState({ tags: ["pricing"] });
+    expect(matchesLibraryFilters(tagged, { ...NO_LIBRARY_FILTERS, tags: ["saas", "pricing"] })).toBe(true);
+  });
+
+  it("filters by source, a website by its domain", () => {
+    expect(matchesLibraryFilters(article, { ...NO_LIBRARY_FILTERS, sources: ["site:seriouseats.com" as LibrarySourceId] })).toBe(true);
+    expect(matchesLibraryFilters(article, { ...NO_LIBRARY_FILTERS, sources: ["youtube" as LibrarySourceId] })).toBe(false);
+    expect(matchesLibraryFilters(recipeVideo, { ...NO_LIBRARY_FILTERS, sources: ["youtube" as LibrarySourceId] })).toBe(true);
+  });
+
+  it("matches No topic only for an overview in no topic", () => {
+    expect(matchesLibraryFilters(makeOverviewWithState(), { ...NO_LIBRARY_FILTERS, topicId: "none" })).toBe(true);
+    expect(matchesLibraryFilters(makeOverviewWithState({ topicIds: [FITNESS_TOPIC] }), { ...NO_LIBRARY_FILTERS, topicId: "none" })).toBe(
+      false,
+    );
+  });
+});
+
+describe("matchesLibraryFilters by when it was saved", () => {
+  const NOW = new Date(2026, 10, 24, 0, 30);
+  const savedAt = (date: Date) => makeOverviewWithState({ savedAt: date.toISOString() });
+
+  it("counts Today from local midnight", () => {
+    expect(matchesLibraryFilters(savedAt(new Date(2026, 10, 24, 0, 1)), { ...NO_LIBRARY_FILTERS, added: "today" }, NOW)).toBe(true);
+    expect(matchesLibraryFilters(savedAt(new Date(2026, 10, 23, 23, 59)), { ...NO_LIBRARY_FILTERS, added: "today" }, NOW)).toBe(false);
+  });
+
+  it("counts months back on the calendar", () => {
+    expect(matchesLibraryFilters(savedAt(new Date(2026, 7, 24, 1, 0)), { ...NO_LIBRARY_FILTERS, added: "3m" }, NOW)).toBe(true);
+    expect(matchesLibraryFilters(savedAt(new Date(2026, 7, 23, 23, 0)), { ...NO_LIBRARY_FILTERS, added: "3m" }, NOW)).toBe(false);
+  });
+
+  it("keeps an unreadable record with no date only under Any time", () => {
+    const undated = makeUnreadableEntry({ salvaged: null });
+    expect(matchesLibraryFilters(undated, NO_LIBRARY_FILTERS, NOW)).toBe(true);
+    expect(matchesLibraryFilters(undated, { ...NO_LIBRARY_FILTERS, added: "6m" }, NOW)).toBe(false);
   });
 });

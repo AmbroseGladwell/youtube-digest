@@ -9,8 +9,8 @@ describe("libraryViewSummary", () => {
   it("names each filter that is on, in text, with the order", () => {
     const applied = [
       { key: "status", label: "Unread", clear: { status: "all" as const } },
-      { key: "favourite", label: "Favourites", clear: { favourite: false } },
+      { key: "favourite", label: "Favourite", clear: { favourite: false } },
     ];
-    expect(libraryViewSummary(applied, "title")).toBe("Showing: Unread, Favourites · Title A–Z");
+    expect(libraryViewSummary(applied, "title")).toBe("Showing: Unread, Favourite · Title A–Z");
   });
 });

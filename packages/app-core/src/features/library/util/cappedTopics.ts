@@ -1,4 +1,5 @@
-import type { Topic, TopicId } from "@overview/domain";
+import type { Topic } from "@overview/domain";
+import type { LibraryTopicFilter } from "../types/LibraryFilters.js";
 
 export const TOPIC_LIMIT = 6;
 
@@ -7,7 +8,7 @@ export interface CappedTopics {
   hiddenCount: number;
 }
 
-export const cappedTopics = (topics: Topic[], selectedId: TopicId | "all", limit: number = TOPIC_LIMIT): CappedTopics => {
+export const cappedTopics = (topics: Topic[], selectedId: LibraryTopicFilter, limit: number = TOPIC_LIMIT): CappedTopics => {
   const shown = topics.slice(0, limit);
   const selected = topics.find((topic) => topic.id === selectedId);
 

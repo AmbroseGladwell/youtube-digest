@@ -10,6 +10,10 @@ describe("filtersChangedFromDefault", () => {
   });
 
   it("counts each filter that differs, turning Unread off among them, but never the search", () => {
-    expect(filtersChangedFromDefault({ ...defaults, status: "all", tag: "saas", query: "grid" })).toBe(2);
+    expect(filtersChangedFromDefault({ ...defaults, status: "all", tags: ["saas"], query: "grid" })).toBe(2);
+  });
+
+  it("counts each chosen value in a group with several, as each has its own chip", () => {
+    expect(filtersChangedFromDefault({ ...defaults, kinds: ["video", "recipe"], novelties: ["original"], added: "7d" })).toBe(4);
   });
 });

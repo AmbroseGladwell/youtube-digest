@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { NOVELTY_LABEL, NOVELTY_ORDER, type Novelty, type Topic } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { LibraryFilterCounts } from "../../util/libraryFilterCounts.js";
-import { LIBRARY_SOURCE_LABEL, LIBRARY_SOURCES, type LibraryFilters } from "../../types/LibraryFilters.js";
+import { LIBRARY_KIND_LABEL, LIBRARY_KINDS, type LibraryFilters } from "../../types/LibraryFilters.js";
 import { cappedTags } from "../../util/cappedTags.js";
 import { cappedTopics } from "../../util/cappedTopics.js";
 import styles from "./FilterPanel.module.scss";
@@ -22,21 +22,22 @@ export interface FilterPanelProps {
 const MORE_PANEL_ID = "FilterPanel-more";
 
 const moreSummary = (filters: LibraryFilters): string => {
-  const verdict = [...(filters.novelty === "all" ? [] : [NOVELTY_LABEL[filters.novelty]]), ...(filters.dubious ? ["Dubious only"] : [])];
+  const verdict = [...filters.novelties.map((novelty) => NOVELTY_LABEL[novelty]), ...(filters.dubious ? ["Dubious only"] : [])];
   return [
-    ...(filters.source === "all" ? [] : [LIBRARY_SOURCE_LABEL[filters.source]]),
+    ...filters.kinds.map((kind) => LIBRARY_KIND_LABEL[kind]),
     ...(verdict.length === 0 ? ["Any verdict"] : verdict),
-    ...(filters.tag === null ? [] : [`#${filters.tag}`]),
+    ...filters.tags.map((tag) => `#${tag}`),
   ].join(" · ");
 };
 
 export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onManageTags, projects = null }: FilterPanelProps) => {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
-  const [moreShown, setMoreShown] = useState(filters.tag !== null);
-  const [shownForTag, setShownForTag] = useState(filters.tag);
-  if (shownForTag !== filters.tag) {
-    setShownForTag(filters.tag);
-    if (filters.tag !== null) {
+  const tagKey = filters.tags.join(",");
+  const [moreShown, setMoreShown] = useState(tagKey !== "");
+  const [shownForTags, setShownForTags] = useState(tagKey);
+  if (shownForTags !== tagKey) {
+    setShownForTags(tagKey);
+    if (tagKey !== "") {
       setMoreShown(true);
     }
   }
@@ -44,9 +45,9 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
   const analytics = useAnalytics();
   const capped = cappedTopics(topics, filters.topicId);
   const shownTopics = allTopicsShown ? topics : capped.shown;
-  const tags = cappedTags(counts.byTag, filters.tag);
+  const tags = cappedTags(counts.byTag, filters.tags);
   const shownTags = allTagsShown ? counts.byTag : tags.shown;
-  const sources = LIBRARY_SOURCES.filter((source) => (counts.bySource[source] ?? 0) > 0);
+  const kinds = LIBRARY_KINDS.filter((kind) => (counts.byKind[kind] ?? 0) > 0);
 
   return (
     <div className={styles.root} data-testid={filterPanelTestIds.root}>
@@ -58,7 +59,7 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
           onClick={() => onChange({ status: filters.status === "unread" ? "all" : "unread" })}
           testId={filterPanelTestIds.statusChip("unread")}
         >
-          Unread only
+          Unread
         </Toggle>
         <Toggle
           active={filters.favourite}
@@ -66,7 +67,7 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
           onClick={() => onChange({ favourite: !filters.favourite })}
           testId={filterPanelTestIds.favouriteChip}
         >
-          Only favourites
+          Favourite
         </Toggle>
         {(counts.withoutOverview > 0 || filters.withoutOverview) && (
           <Toggle
@@ -150,27 +151,27 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
         </button>
         <div id={MORE_PANEL_ID} className={`${styles.morePanel} ${moreShown ? styles.morePanelOpen : ""}`} inert={!moreShown}>
           <div className={styles.morePanelInner}>
-            {sources.length > 1 && (
+            {kinds.length > 1 && (
               <>
-                <p className={styles.label}>Source</p>
-                <div className={styles.list} role="group" aria-label="Filter by source">
+                <p className={styles.label}>Kind</p>
+                <div className={styles.list} role="group" aria-label="Filter by kind">
                   <ListOption
-                    active={filters.source === "all"}
+                    active={filters.kinds.length === 0}
                     count={counts.total}
-                    onClick={() => onChange({ source: "all" })}
+                    onClick={() => onChange({ kinds: [] })}
                     testId={filterPanelTestIds.sourceChip("all")}
                   >
-                    Any source
+                    Any kind
                   </ListOption>
-                  {sources.map((source) => (
+                  {kinds.map((kind) => (
                     <ListOption
-                      key={source}
-                      active={filters.source === source}
-                      count={counts.bySource[source] ?? 0}
-                      onClick={() => onChange({ source })}
-                      testId={filterPanelTestIds.sourceChip(source)}
+                      key={kind}
+                      active={filters.kinds.includes(kind)}
+                      count={counts.byKind[kind] ?? 0}
+                      onClick={() => onChange({ kinds: [kind] })}
+                      testId={filterPanelTestIds.sourceChip(kind)}
                     >
-                      {LIBRARY_SOURCE_LABEL[source]}
+                      {LIBRARY_KIND_LABEL[kind]}
                     </ListOption>
                   ))}
                 </div>
@@ -179,9 +180,9 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
             <p className={styles.label}>Verdict</p>
             <div className={styles.list} role="group" aria-label="Filter by verdict">
               <ListOption
-                active={filters.novelty === "all"}
+                active={filters.novelties.length === 0}
                 count={counts.total}
-                onClick={() => onChange({ novelty: "all" })}
+                onClick={() => onChange({ novelties: [] })}
                 testId={filterPanelTestIds.noveltyChip("all")}
               >
                 Any verdict
@@ -189,9 +190,9 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
               {NOVELTY_ORDER.map((novelty: Novelty) => (
                 <ListOption
                   key={novelty}
-                  active={filters.novelty === novelty}
+                  active={filters.novelties.includes(novelty)}
                   count={counts.byNovelty[novelty] ?? 0}
-                  onClick={() => onChange({ novelty })}
+                  onClick={() => onChange({ novelties: [novelty] })}
                   testId={filterPanelTestIds.noveltyChip(novelty)}
                 >
                   {NOVELTY_LABEL[novelty]}
@@ -214,9 +215,13 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
                   {shownTags.map(({ tag, count }) => (
                     <ListOption
                       key={tag}
-                      active={filters.tag === tag}
+                      active={filters.tags.includes(tag)}
                       count={count}
-                      onClick={() => onChange({ tag: filters.tag === tag ? null : tag })}
+                      onClick={() =>
+                        onChange({
+                          tags: filters.tags.includes(tag) ? filters.tags.filter((chosen) => chosen !== tag) : [...filters.tags, tag],
+                        })
+                      }
                       testId={filterPanelTestIds.tagChip(tag)}
                     >
                       {`#${tag}`}

@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { TopicId, type Topic } from "@overview/domain";
-import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { NO_LIBRARY_FILTERS, type LibrarySourceId } from "../types/LibraryFilters.js";
 import { appliedLibraryFilters } from "./appliedLibraryFilters.js";
 
 const FITNESS = TopicId.parse("11111111-1111-4111-8111-111111111111");
+const SERIOUS_EATS = "site:seriouseats.com" as LibrarySourceId;
 const TOPICS: Topic[] = [{ id: FITNESS, name: "fitness", description: null, createdAt: "2026-09-01" }];
 
 describe("appliedLibraryFilters", () => {
@@ -26,21 +27,52 @@ describe("appliedLibraryFilters", () => {
     expect(appliedLibraryFilters({ ...NO_LIBRARY_FILTERS, query: "   " }, TOPICS)).toEqual([]);
   });
 
-  it("lists every active filter", () => {
+  it("lists every active filter, one chip per chosen value", () => {
     const applied = appliedLibraryFilters(
       {
-        source: "article" as const,
+        kinds: ["article"],
+        sources: [SERIOUS_EATS],
+        added: "7d",
         topicId: FITNESS,
-        novelty: "original",
+        novelties: ["original"],
         status: "unread",
         favourite: true,
         withoutOverview: false,
         dubious: true,
-        tag: "saas",
+        tags: ["saas", "gift-ideas"],
         query: "gdp",
       },
       TOPICS,
     );
-    expect(applied.map((chip) => chip.key)).toEqual(["source", "topic", "verdict", "status", "favourite", "dubious", "tag", "query"]);
+    expect(applied.map((chip) => chip.key)).toEqual([
+      "kind:article",
+      `source:${SERIOUS_EATS}`,
+      "added",
+      "topic",
+      "verdict:original",
+      "status",
+      "favourite",
+      "dubious",
+      "tag:saas",
+      "tag:gift-ideas",
+      "query",
+    ]);
+  });
+
+  it("takes off only its own value from a group with several", () => {
+    const applied = appliedLibraryFilters({ ...NO_LIBRARY_FILTERS, kinds: ["video", "recipe"], tags: ["a", "b"] }, TOPICS);
+    expect(applied.find((chip) => chip.key === "kind:video")?.clear).toEqual({ kinds: ["recipe"] });
+    expect(applied.find((chip) => chip.key === "tag:b")?.clear).toEqual({ tags: ["a"] });
+  });
+
+  it("names a source from the library, and a source no longer in it by its domain", () => {
+    const known = [{ id: SERIOUS_EATS, name: "Serious Eats", domain: "seriouseats.com", platform: "website" as const }];
+    const gone = "site:example.org" as LibrarySourceId;
+    const applied = appliedLibraryFilters({ ...NO_LIBRARY_FILTERS, sources: [SERIOUS_EATS, gone] }, TOPICS, known);
+    expect(applied.map((chip) => chip.label)).toEqual(["Serious Eats", "example.org"]);
+  });
+
+  it("names No topic", () => {
+    expect(appliedLibraryFilters({ ...NO_LIBRARY_FILTERS, topicId: "none" }, TOPICS)[0]?.label).toBe("No topic");
   });
 });

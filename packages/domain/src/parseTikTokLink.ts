@@ -53,3 +53,5 @@ export const parseTikTokLink = (link: string): TikTokLink | null => {
     url,
   );
 };
+
+export { TIKTOK_HOSTS, SHORT_HOSTS as TIKTOK_SHORT_HOSTS };

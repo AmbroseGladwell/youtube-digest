@@ -58,3 +58,5 @@ export const parsePodcastLink = (link: string): PodcastLink | null => {
   }
   return { platform: "page", url: url.href };
 };
+
+export { APPLE_HOSTS as APPLE_PODCAST_HOSTS, SPOTIFY_HOSTS, SPOTIFY_SHORT_HOSTS };
