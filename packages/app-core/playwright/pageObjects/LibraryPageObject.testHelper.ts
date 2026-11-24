@@ -17,7 +17,8 @@ import type { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 import { LibraryOverviewCardPageObject } from "./LibraryOverviewCardPageObject.testHelper.js";
 import { LibraryUnreadableCardPageObject } from "./LibraryUnreadableCardPageObject.testHelper.js";
 import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";
-import { SortPillPageObject } from "./SortPillPageObject.testHelper.js";
+import { SortMenuPageObject } from "./SortMenuPageObject.testHelper.js";
+import { libraryListTestIds } from "../../src/features/library/components/LibraryList/LibraryListTestIds.js";
 import { MilestoneStackPageObject } from "./MilestoneStackPageObject.testHelper.js";
 import { TimeSavedSheetPageObject } from "./TimeSavedSheetPageObject.testHelper.js";
 import { ProjectsRailGroupPageObject } from "./ProjectsRailGroupPageObject.testHelper.js";
@@ -55,8 +56,8 @@ export class LibraryPageObject extends PageObject {
       return new TimeSavedSheetPageObject(this.testContext).verifyIsShown();
     });
 
-  get sortPill(): SortPillPageObject {
-    return new SortPillPageObject(this.testContext);
+  get sortMenu(): SortMenuPageObject {
+    return new SortMenuPageObject(this.testContext);
   }
 
   verifyCardOrder = (titles: string[]) =>
@@ -273,6 +274,9 @@ export class LibraryPageObject extends PageObject {
     );
 
   resetFromNothingMatches = () => this.step("resetFromNothingMatches", () => this.click(libraryPageTestIds.resetFiltersButton));
+
+  verifyHeadingsRead = (headings: string[]) =>
+    this.step(`verifyHeadingsRead ${headings.join(" | ")}`, () => expect(this.get(libraryListTestIds.heading)).toHaveText(headings));
 
   verifyCaughtUp = () => this.step("verifyCaughtUp", () => this.expectToBeVisible(libraryPageTestIds.caughtUp));
 

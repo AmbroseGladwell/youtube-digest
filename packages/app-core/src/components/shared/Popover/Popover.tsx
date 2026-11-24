@@ -9,6 +9,8 @@ export interface PopoverProps {
   onClose: () => void;
   foot?: ReactNode;
   width?: number;
+  role?: "dialog" | "menu";
+  titleShown?: boolean;
   testId?: string;
   children: ReactNode;
 }
@@ -31,7 +33,17 @@ const placeUnder = (anchor: HTMLElement, width: number): Place => {
 };
 
 // Never off screen: capped at the space below its button, the body scrolls inside (design 399o-3b).
-export const Popover = ({ anchor, title, onClose, foot, width = 384, testId, children }: PopoverProps) => {
+export const Popover = ({
+  anchor,
+  title,
+  onClose,
+  foot,
+  width = 384,
+  role = "dialog",
+  titleShown = true,
+  testId,
+  children,
+}: PopoverProps) => {
   const root = useRef<HTMLDivElement | null>(null);
   const body = useRef<HTMLDivElement | null>(null);
   const [place, setPlace] = useState<Place | null>(null);
@@ -74,22 +86,32 @@ export const Popover = ({ anchor, title, onClose, foot, width = 384, testId, chi
     return () => observer.disconnect();
   });
 
+  const placed = place !== null;
   useEffect(() => {
-    root.current?.querySelector<HTMLElement>("input, button, [href], [tabindex]:not([tabindex='-1'])")?.focus();
-  }, []);
+    if (!placed) {
+      return;
+    }
+    const first = root.current?.querySelector<HTMLElement>("[aria-checked='true'], input:checked") ?? null;
+    (
+      first ?? root.current?.querySelector<HTMLElement>("input, button, [href], [role^='menuitem'], [tabindex]:not([tabindex='-1'])")
+    )?.focus();
+  }, [placed]);
 
   return createPortal(
     <div
       ref={root}
       className={styles.root}
-      role="dialog"
-      aria-labelledby={titleId}
+      role={role}
+      aria-labelledby={titleShown ? titleId : undefined}
+      aria-label={titleShown ? undefined : title}
       style={place === null ? { visibility: "hidden" } : { top: place.top, left: place.left, maxHeight: place.maxHeight, width }}
       data-testid={testId}
     >
-      <h2 id={titleId} className={styles.title}>
-        {title}
-      </h2>
+      {titleShown && (
+        <h2 id={titleId} className={styles.title}>
+          {title}
+        </h2>
+      )}
       <div ref={body} className={`${styles.body} ${overflows ? styles.overflows : ""}`}>
         {children}
       </div>

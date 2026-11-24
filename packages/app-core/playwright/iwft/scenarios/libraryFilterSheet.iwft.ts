@@ -93,7 +93,7 @@ test("on a phone the chips under the search keep to one line, with +N opening Ap
   await library.openMoreChips();
 });
 
-test("on a phone sort is an icon beside the search, which shows a short name for any order but the newest", async ({
+test("on a phone sort opens as a sheet with Reset and Done, and the button carries a dot for any order but the default", async ({
   launcher,
   backendSimulator,
   page,
@@ -102,10 +102,11 @@ test("on a phone sort is an icon beside the search, which shows a short name for
   await page.setViewportSize(PHONE);
   const library = await launcher.launchExpectingLibrary();
 
-  await library.sortPill.verifyCompactReads("", "Newest saved first");
-  await library.sortPill.verifyCompactIsACircleAroundTheIcon();
-  await library.sortPill.sortBy("oldest");
+  await library.sortMenu.verifyReads("Added, newest first");
+  await library.sortMenu.verifyMarkedChanged(false);
+  await library.sortMenu.sortBy("oldest");
 
-  await library.sortPill.verifyCompactReads("Oldest", "Oldest saved first");
+  await library.sortMenu.verifyReads("Added, oldest first");
+  await library.sortMenu.verifyMarkedChanged(true);
   await library.verifySearchPlaceholderReads("Search overviews");
 });

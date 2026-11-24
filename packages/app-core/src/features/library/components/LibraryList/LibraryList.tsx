@@ -4,6 +4,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { libraryRowHeights } from "../../util/libraryRowHeights.js";
 import { libraryScrollPositions } from "../../util/libraryScrollPositions.js";
 import styles from "./LibraryList.module.scss";
+import { libraryListTestIds } from "./LibraryListTestIds.js";
 
 const ESTIMATED_ROW_PX = 190;
 const OVERSCAN_ROWS = 6;
@@ -12,20 +13,30 @@ export interface LibraryListProps<Entry> {
   entries: readonly Entry[];
   keyOf: (entry: Entry) => string;
   row: (entry: Entry, index: number) => ReactNode;
+  headingAt?: (index: number) => LibraryListHeading | null;
   testId: string;
 }
 
-// Why only the rows near the screen are in the page: docs/features/library-view.md, "At scale".
-export const LibraryList = <Entry,>({ entries, keyOf, row, testId }: LibraryListProps<Entry>) => {
+export interface LibraryListHeading {
+  text: string;
+  count: number;
+}
+
+// Only rows near the screen, a heading in its group's first item: docs/features/library-view.md, "At scale"; library-sort.md, "Group by".
+export const LibraryList = <Entry,>({ entries, keyOf, row, headingAt, testId }: LibraryListProps<Entry>) => {
   const list = useRef<HTMLDivElement | null>(null);
   const { key: historyKey } = useLocation();
   const [placed, setPlaced] = useState({ top: 0, width: 0 });
   const heights = libraryRowHeights(placed.width);
+  const keyAt = (index: number) => {
+    const heading = headingAt?.(index) ?? null;
+    return heading === null ? keyOf(entries[index]!) : `${keyOf(entries[index]!)}@${heading.text}`;
+  };
 
   const virtualizer = useWindowVirtualizer<HTMLDivElement>({
     count: entries.length,
-    estimateSize: (index) => heights.get(keyOf(entries[index]!)) ?? ESTIMATED_ROW_PX,
-    getItemKey: (index) => keyOf(entries[index]!),
+    estimateSize: (index) => heights.get(keyAt(index)) ?? ESTIMATED_ROW_PX,
+    getItemKey: keyAt,
     overscan: OVERSCAN_ROWS,
     scrollMargin: placed.top,
     initialOffset: () => libraryScrollPositions.get(historyKey) ?? 0,
@@ -74,9 +85,18 @@ export const LibraryList = <Entry,>({ entries, keyOf, row, testId }: LibraryList
           data-index={item.index}
           data-key={item.key}
         >
+          {headingBefore(headingAt?.(item.index) ?? null)}
           {row(entries[item.index]!, item.index)}
         </div>
       ))}
     </div>
   );
 };
+
+const headingBefore = (heading: LibraryListHeading | null): ReactNode =>
+  heading === null ? null : (
+    <div className={styles.heading} data-testid={libraryListTestIds.heading}>
+      <h2 className={styles.headingText}>{heading.text}</h2>
+      <small className={styles.headingCount}>{heading.count}</small>
+    </div>
+  );
