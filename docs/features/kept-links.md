@@ -69,7 +69,7 @@ source first (`POST /api/capture-claims/:sourceKey` with a holder id per tab), a
 10-minute lease; another device's claim answers `409 claimed_elsewhere` with when it runs
 out, and that device leaves the capture alone until then. The holder releases the claim
 when its run ends (`DELETE` with the same holder), and a tab that closes mid-run lets the
-lease run out (`capture_claims`, V0048). See `capture-queue.md`, "One queue on every device".
+lease run out (`capture_claims`, V0049). See `capture-queue.md`, "One queue on every device".
 
 ## Transcripts
 
