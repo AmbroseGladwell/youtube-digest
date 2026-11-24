@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { chatRecordId, MAX_CHAT_PINS, type Chat, type ChatSourceKind, type OverviewId, type ProjectId } from "@overview/domain";
+import {
+  chatRecordId,
+  MAX_CHAT_PINS,
+  type Chat,
+  type ChatSourceKind,
+  type OverviewId,
+  type ProjectId,
+  type TopicId,
+} from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { chatKeys } from "./chatKeys.js";
 import { useDeleteChatMutation } from "./mutations/useDeleteChatMutation.js";
@@ -22,7 +30,8 @@ export const UNDO_DELETE_MS = 6000;
 
 export type PinnedItem =
   | { kind: "overview"; id: OverviewId; title: string }
-  | { kind: "project"; id: ProjectId; title: string; count: number };
+  | { kind: "project"; id: ProjectId; title: string; count: number }
+  | { kind: "topic"; id: TopicId; title: string; count: number };
 
 const newConversationId = (): string => crypto.randomUUID();
 
@@ -74,6 +83,7 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
     pins: {
       overviews: pinned.flatMap((item) => (item.kind === "overview" ? [item.id] : [])),
       projects: pinned.flatMap((item) => (item.kind === "project" ? [item.id] : [])),
+      topics: pinned.flatMap((item) => (item.kind === "topic" ? [item.id] : [])),
     },
     setAside: removed,
     searchLibrary,

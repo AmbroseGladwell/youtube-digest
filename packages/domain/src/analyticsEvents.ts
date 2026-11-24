@@ -455,12 +455,13 @@ export const analyticsEvents = {
     // Never the question or the answer (docs/features/chats.md).
     chat: {
       asked: event(
-        "The reader asks a question about the overview, where from, whether it starts a new conversation, how many overviews and projects it newly pins and sets aside, and whether Search my library is on",
+        "The reader asks a question about the overview, where from, whether it starts a new conversation, how many overviews, projects and topics it newly pins and sets aside, and whether Search my library is on",
         {
           from: ChatAskedFrom,
           newConversation: z.boolean(),
           pinnedOverviews: z.number().int().nonnegative().optional(),
           pinnedProjects: z.number().int().nonnegative().optional(),
+          pinnedTopics: z.number().int().nonnegative().optional(),
           setAside: z.number().int().nonnegative().optional(),
           searchLibrary: z.boolean().optional(),
         },
@@ -472,8 +473,8 @@ export const analyticsEvents = {
           found: z.number().int().nonnegative(),
         },
       ),
-      sourcePinned: event('The reader pins an overview or a project with "@" for the next question', {
-        kind: z.enum(["overview", "project"]),
+      sourcePinned: event('The reader pins an overview, a project or a topic with "@" for the next question', {
+        kind: z.enum(["overview", "project", "topic"]),
       }),
       sourceRemoved: event("The reader removes a source from the next question, or clears them all", { all: z.boolean() }),
       searchLibrarySwitched: event("The reader turns Search my library on or off for the conversation", { on: z.boolean() }),
@@ -1495,13 +1496,14 @@ export const analyticsEvents = {
     },
     chat: {
       asked: event(
-        "The reader asks on the Ask page, over what, whether they typed it or chose a starter, whether it starts a new conversation, and how many overviews and projects it newly pins and sets aside",
+        "The reader asks on the Ask page, over what, whether they typed it or chose a starter, whether it starts a new conversation, and how many overviews, projects and topics it newly pins and sets aside",
         {
           scope: AskScope,
           from: z.enum(["typed", "starter"]),
           newConversation: z.boolean(),
           pinnedOverviews: z.number().int().nonnegative(),
           pinnedProjects: z.number().int().nonnegative(),
+          pinnedTopics: z.number().int().nonnegative().optional(),
           setAside: z.number().int().nonnegative(),
         },
       ),
@@ -1524,9 +1526,9 @@ export const analyticsEvents = {
         sources: z.number().int().nonnegative(),
       }),
       readOpened: event("The reader opens the line naming the overviews an Ask answer read", { scope: AskScope }),
-      sourcePinned: event('The reader pins an overview or a project with "@" on the Ask page', {
+      sourcePinned: event('The reader pins an overview, a project or a topic with "@" on the Ask page', {
         scope: AskScope,
-        kind: z.enum(["overview", "project"]),
+        kind: z.enum(["overview", "project", "topic"]),
       }),
       sourceRemoved: event("The reader removes a source from the next Ask question, or clears them all", {
         scope: AskScope,

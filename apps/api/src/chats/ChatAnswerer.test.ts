@@ -28,7 +28,7 @@ import { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { breadNote, conceptEmbedder, foundersNote, noteAbout } from "../testing/meaningFixtures.testHelper.js";
-import { storedOverview, UPDATED_AT } from "../testing/storedRecords.testHelper.js";
+import { storedOverview, storedTopic, UPDATED_AT } from "../testing/storedRecords.testHelper.js";
 import { appendChatMessages } from "./appendChatMessages.js";
 import { ChatAnswerer } from "./ChatAnswerer.js";
 import { makeFakeChatOpenAi, type FakeChatAnswer, type FakeChatOpenAi } from "./FakeChatOpenAi.testHelper.js";
@@ -631,7 +631,7 @@ test("a reader who stops an answer, or leaves, before it is stored gets the ques
   const events = await answerer.ask(
     { accountId: account.accountId, plan: "free", acrossSources: true },
     setup.overviewId,
-    { conversationId, text: "How much?", pins: { overviews: [], projects: [] }, setAside: [], searchLibrary: true },
+    { conversationId, text: "How much?", pins: { overviews: [], projects: [], topics: [] }, setAside: [], searchLibrary: true },
     logger,
   );
   const first = await events.next();
@@ -1085,4 +1085,57 @@ test("with Search my library off, nothing is found by meaning or by words, pins 
     found: [],
   });
   assert.equal((answered(response.body).messages[0] as Extract<ChatMessage, { from: "reader" }>).searchedLibrary, false);
+});
+
+test("a pinned topic reads like a pinned project: whole when small, the closest whole and the rest in brief when large", async (t) => {
+  const setup = await setUp(t, [otherAnswer("Boards rarely push back.", ["S1.kp2"]), otherAnswer("Still so.", ["S1.kp2"])], {
+    embedder: conceptEmbedder(),
+  });
+  const small = storedTopic({ name: "Leaders" });
+  const large = storedTopic({ name: "Everything" });
+  for (const topic of [small, large]) {
+    assert.equal((await setup.account.inject({ method: "POST", url: "/api/topics", body: topic })).statusCode, 201);
+  }
+  const filed = <T extends Overview>(overview: T, ...topics: { id: string }[]): T => ({
+    ...overview,
+    topicIds: topics.map((topic) => topic.id as Overview["topicIds"][number]),
+  });
+  const founders = filed(titled(foundersNote(), "Founders who stay too long"), small, large);
+  const others = Array.from({ length: 9 }, (_, index) =>
+    filed(titled(noteAbout(`Other claim ${index}`, ["A point", "Another point", "A third point"]), `Extra ${index}`), large),
+  );
+  await saved(setup, founders, ...others);
+
+  answered((await setup.ask(randomUUID(), "What do leaders who overstay do?", setup.overviewId, { pins: { topics: [small.id] } })).body);
+  const whole = setup.openAi.requests[0]!.messages[1]!.content;
+  assert.match(whole, /The reader pinned their topic "Leaders" to this conversation\. Its overviews are S1\./);
+  assert.doesNotMatch(whole, /in brief/);
+
+  const response = await setup.ask(randomUUID(), "What do leaders who overstay do?", setup.overviewId, { pins: { topics: [large.id] } });
+  const block = setup.openAi.requests[1]!.messages.at(-2)!.content;
+  assert.equal(block.match(/^## S\d+$/gm)?.length, 5);
+  assert.match(block, /# The rest of the topic "Everything", in brief/);
+  const sources = (answered(response.body).messages[0] as Extract<ChatMessage, { from: "reader" }>).sources ?? [];
+  assert.equal(sources.length, 10);
+  assert.equal(sources.filter((source) => source.brief === true).length, 5);
+  assert.ok(sources.every((source) => source.how === "pinned" && source.topicId === large.id));
+});
+
+test("an overview in a pinned project and a pinned topic comes in once, and an unknown topic is ignored", async (t) => {
+  const setup = await setUp(t, [otherAnswer("Boards rarely push back.", ["S1.kp2"])], { embedder: conceptEmbedder() });
+  const topic = storedTopic({ name: "Leaders" });
+  assert.equal((await setup.account.inject({ method: "POST", url: "/api/topics", body: topic })).statusCode, 201);
+  const founders = { ...titled(foundersNote(), "Founders who stay too long"), topicIds: [topic.id as Overview["topicIds"][number]] };
+  await saved(setup, founders);
+  const project = await projectOf(setup, [founders], "Leadership");
+
+  const response = await setup.ask(randomUUID(), "What do leaders who overstay do?", setup.overviewId, {
+    pins: { projects: [project], topics: [topic.id, randomUUID()] },
+  });
+
+  const sources = (answered(response.body).messages[0] as Extract<ChatMessage, { from: "reader" }>).sources ?? [];
+  assert.deepEqual(
+    sources.map((source) => [source.overviewId, source.projectId, source.topicId]),
+    [[founders.id, project, undefined]],
+  );
 });

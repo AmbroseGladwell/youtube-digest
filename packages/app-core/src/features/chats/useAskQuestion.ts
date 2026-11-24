@@ -8,6 +8,7 @@ import {
   type ChatSourceKind,
   type OverviewId,
   type ProjectId,
+  type TopicId,
 } from "@overview/domain";
 import { createFetchChatApi, type ChatApi } from "@overview/sync";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
@@ -20,12 +21,12 @@ import { chatWaitOf, type ChatWait } from "./util/chatWaitOf.js";
 import { withAnswer } from "./util/withAnswer.js";
 
 export interface AskExtras {
-  pins: { overviews: OverviewId[]; projects: ProjectId[] };
+  pins: { overviews: OverviewId[]; projects: ProjectId[]; topics: TopicId[] };
   setAside: OverviewId[];
   searchLibrary: boolean;
 }
 
-export const NO_EXTRAS: AskExtras = { pins: { overviews: [], projects: [] }, setAside: [], searchLibrary: true };
+export const NO_EXTRAS: AskExtras = { pins: { overviews: [], projects: [], topics: [] }, setAside: [], searchLibrary: true };
 
 export type AskState =
   | { status: "idle" }
@@ -74,6 +75,7 @@ export const useAskQuestion = (overviewId: OverviewId, about: ChatSourceKind, ap
         newConversation: !known.some((chat) => chat.id === chatId),
         pinnedOverviews: extras.pins.overviews.length,
         pinnedProjects: extras.pins.projects.length,
+        pinnedTopics: extras.pins.topics.length,
         setAside: extras.setAside.length,
         searchLibrary: extras.searchLibrary,
       });

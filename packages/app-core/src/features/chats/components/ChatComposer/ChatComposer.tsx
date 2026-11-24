@@ -10,6 +10,7 @@ import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviews
 import { useProjectMembersQuery } from "../../../projects/queries/projectMembersQuery.js";
 import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
 import { useProjectsQuery } from "../../../projects/queries/projectsQuery.js";
+import { useTopicsQuery } from "../../../overviews/queries/topicsQuery.js";
 import type { PinnedItem } from "../../useChatPanel.js";
 import { useChipFit } from "../../useChipFit.js";
 import {
@@ -66,6 +67,7 @@ const announcementOf = (full: boolean, options: PickerOption[]): string => {
   }
   return [
     plural(options.filter((option) => option.kind === "project").length, "project"),
+    plural(options.filter((option) => option.kind === "topic").length, "topic"),
     plural(options.filter((option) => option.kind === "overview").length, "overview"),
     plural(options.filter((option) => option.kind === "saved").length, "item without an overview yet"),
   ]
@@ -73,15 +75,34 @@ const announcementOf = (full: boolean, options: PickerOption[]): string => {
     .join(", ");
 };
 
+const groupOf = (option: PickerOption): "project" | "topic" | "overview" =>
+  option.kind === "project" || option.kind === "topic" ? option.kind : "overview";
+
+const PIN_ICON = { project: "folder", topic: "tag", overview: "fileText" } as const;
+
+const pinnedItemOf = (option: Exclude<PickerOption, { kind: "saved" }>): PinnedItem => {
+  switch (option.kind) {
+    case "project":
+      return { kind: "project", id: option.project.id, title: option.project.name, count: option.count };
+    case "topic":
+      return { kind: "topic", id: option.topic.id, title: option.topic.name, count: option.count };
+    case "overview":
+      return { kind: "overview", id: option.overview.id, title: option.overview.source.title };
+  }
+};
+
 const headLabelOf = (option: PickerOption, query: string): string => {
   if (option.kind === "project") {
     return "Projects";
+  }
+  if (option.kind === "topic") {
+    return "Topics";
   }
   return query === "" ? "Recent overviews" : "Overviews";
 };
 
 const optionDetailOf = (option: Exclude<PickerOption, { kind: "saved" }>): string => {
-  if (option.kind === "project") {
+  if (option.kind === "project" || option.kind === "topic") {
     return `${option.count} ${option.count === 1 ? "overview" : "overviews"}`;
   }
   if (option.overview.source.kind === "web") {
@@ -98,7 +119,7 @@ interface RowItem {
   title: string;
   imageUrl: string | null;
   wide: boolean;
-  project: boolean;
+  icon: (typeof PIN_ICON)[keyof typeof PIN_ICON];
   deleted: boolean;
   remove: () => void;
 }
@@ -121,6 +142,7 @@ export const ChatComposer = ({
   const library = useOverviewsWithStateQuery().data ?? [];
   const projects = useProjectsQuery().data ?? [];
   const members = useProjectMembersQuery().data ?? [];
+  const topics = useTopicsQuery().data ?? [];
   const saved = useSavedCapturesQuery().data ?? [];
   const navigate = useNavigate();
   const canMake = useNextQuota()?.kind === "quota";
@@ -151,7 +173,7 @@ export const ChatComposer = ({
   const { options, more } =
     picking === null
       ? { options: [], more: 0 }
-      : sourcePickerOptions({ query: picking.query, projects, members, overviews, saved, exclude });
+      : sourcePickerOptions({ query: picking.query, projects, members, topics, overviews, saved, exclude });
   const open = picking !== null;
   const current = currentOf(options, active);
 
@@ -174,7 +196,7 @@ export const ChatComposer = ({
         title: item.title,
         imageUrl: overview === undefined ? null : sourceImage(overview.source),
         wide: overview?.source.kind === "youtube",
-        project: item.kind === "project",
+        icon: PIN_ICON[item.kind],
         deleted: false,
         remove: () => onUnpin(item.id),
       };
@@ -186,7 +208,7 @@ export const ChatComposer = ({
         title: source.title,
         imageUrl: overview === undefined ? null : sourceImage(overview.source),
         wide: overview?.source.kind === "youtube",
-        project: false,
+        icon: PIN_ICON.overview,
         deleted: overview === undefined && library.length > 0,
         remove: () => onRemoveSource(source.overviewId),
       };
@@ -219,11 +241,7 @@ export const ChatComposer = ({
       return;
     }
     dropQuery();
-    onPin(
-      option.kind === "project"
-        ? { kind: "project", id: option.project.id, title: option.project.name, count: option.count }
-        : { kind: "overview", id: option.overview.id, title: option.overview.source.title },
-    );
+    onPin(pinnedItemOf(option));
     input.current?.focus();
   };
 
@@ -284,9 +302,9 @@ export const ChatComposer = ({
       );
     }
     return (
-      <ul className={styles.list} id={listId} role="listbox" aria-label="Overviews and projects">
+      <ul className={styles.list} id={listId} role="listbox" aria-label="Overviews, projects and topics">
         {options.map((option, index) => {
-          const head = index === 0 || (options[index - 1]!.kind === "project") !== (option.kind === "project");
+          const head = index === 0 || groupOf(options[index - 1]!) !== groupOf(option);
           const title = pickerTitleOf(option);
           const marked = markedPieces(title, query).map((piece, at) =>
             piece.marked ? <strong key={at}>{piece.text}</strong> : <span key={at}>{piece.text}</span>,
@@ -345,7 +363,7 @@ export const ChatComposer = ({
                   onClick={() => choose(option)}
                   data-testid={chatComposerTestIds.option}
                 >
-                  <StrokeIcon name={option.kind === "project" ? "folder" : "fileText"} size={15} />
+                  <StrokeIcon name={PIN_ICON[groupOf(option)]} size={15} />
                   <b>{marked}</b>
                   <small>{optionDetailOf(option)}</small>
                 </div>
@@ -383,7 +401,7 @@ export const ChatComposer = ({
                 label={item.title}
                 imageUrl={item.imageUrl}
                 wide={item.wide}
-                icon={item.project ? "folder" : "fileText"}
+                icon={item.icon}
                 deleted={item.deleted}
                 onRemove={item.remove}
               />
@@ -405,7 +423,7 @@ export const ChatComposer = ({
                 <div className={styles.moreMenu} role="menu" data-testid={chatComposerTestIds.moreMenu}>
                   {rows.map((item) => (
                     <div key={item.id} className={styles.moreRow} role="none">
-                      <StrokeIcon name={item.project ? "folder" : "fileText"} size={14} />
+                      <StrokeIcon name={item.icon} size={14} />
                       <span className={styles.moreTitle}>{item.title}</span>
                       <button
                         type="button"

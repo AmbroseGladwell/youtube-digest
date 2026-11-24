@@ -69,6 +69,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
       pins: {
         overviews: [...new Set([...pinned.flatMap((item) => (item.kind === "overview" ? [item.id] : [])), ...alsoPinned])],
         projects: pinned.flatMap((item) => (item.kind === "project" ? [item.id] : [])),
+        topics: pinned.flatMap((item) => (item.kind === "topic" ? [item.id] : [])),
       },
       setAside: removed,
     });

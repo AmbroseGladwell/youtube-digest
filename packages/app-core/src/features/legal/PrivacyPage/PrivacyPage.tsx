@@ -307,10 +307,11 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           A question can also draw on your other saved overviews. Our server sends the question to OpenAI to make an embedding, and compares
-          it with the embeddings of your overviews to find the few closest to it, as search by meaning does; any overview or project you add
-          to the question yourself goes in too. Those overviews go to OpenAI with the question, as overviews only, never their transcripts.
-          The conversation keeps which overviews went in with each question, and the titles of any an answer cites. Turn Search my library
-          off in a conversation and only what you add yourself is sent, with no search by meaning or by words.
+          it with the embeddings of your overviews to find the few closest to it, as search by meaning does; any overview, project or topic
+          you add to the question yourself goes in too, a project or topic with its name. Those overviews go to OpenAI with the question, as
+          overviews only, never their transcripts. The conversation keeps which overviews went in with each question, and the titles of any
+          an answer cites. Turn Search my library off in a conversation and only what you add yourself is sent, with no search by meaning or
+          by words.
         </p>
         <p>
           To find a detail only a video's or episode's words hold, a question is also searched by its words across your own copies of your
@@ -324,8 +325,8 @@ const sections: readonly LegalSection[] = [
           ingredients), and then the few overviews chosen from those, whole. Each overview goes with a line of facts (its kind, its length,
           the day you saved it, how new its ideas are and its topics), and the question goes with which overviews you have marked read or
           favourite, so it can narrow to, say, the ones you haven't read. A project's question also sends its name and what you keep it for.
-          Any overview or project you add with "@" goes too. The conversation keeps which overviews were read whole for each question, and
-          the titles each part of an answer cites.
+          Any overview, project or topic you add with "@" goes too. The conversation keeps which overviews were read whole for each
+          question, and the titles each part of an answer cites.
         </p>
         <p>
           The question and the answer are kept as a conversation in your library, under your account, and synced to your devices; your

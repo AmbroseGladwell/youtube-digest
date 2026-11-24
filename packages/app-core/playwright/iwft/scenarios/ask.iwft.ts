@@ -5,6 +5,8 @@ import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { savedCaptureFrom } from "../../../src/features/captures/types/SavedCaptureFactory.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeProject, makeProjectMember } from "../../../src/features/projects/types/ProjectFactory.testHelper.js";
+import { chatComposerTestIds } from "../../../src/features/chats/components/ChatComposer/ChatComposerTestIds.js";
+import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -171,6 +173,30 @@ test.describe("Ask", () => {
 
     expect(backendSimulator.chats.questions()[0]).toMatchObject({ pins: { overviews: [plants.id], projects: [] } });
     await ask.verifyPinnedRead(0, [PLANTS]);
+  });
+
+  test("a topic found by its name with @ is pinned and goes with the question, as a project is", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    const cooking = makeTopic({ name: "Cooking" });
+    const plants = { ...titled(PLANTS, "2026-11-03T09:00:00.000Z"), topicIds: [cooking.id] };
+    const stew = { ...titled(STEW, "2026-11-04T09:00:00.000Z"), topicIds: [cooking.id] };
+    backendSimulator.overviews.seedTopic(cooking);
+    backendSimulator.overviews.seedSynced(plants);
+    backendSimulator.overviews.seedSynced(stew);
+    backendSimulator.chats.answerWith({ text: "Beans.", citations: [cite(plants)], stats: { overviews: 2, read: 2 } });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.type("@cook");
+    await expect(page.getByTestId(chatComposerTestIds.option)).toHaveText(["Cooking2 overviews"]);
+    await ask.pickWithEnter();
+    await expect(page.getByTestId(chatComposerTestIds.sources)).toContainText("Cooking");
+    await ask.ask("What should I cook first?");
+
+    expect(backendSimulator.chats.questions()[0]).toMatchObject({ pins: { overviews: [], projects: [], topics: [cooking.id] } });
   });
 
   test("an item saved without an overview shows in the @ picker muted and can't be chosen, with Get Plus (358l-5)", async ({

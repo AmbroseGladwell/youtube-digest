@@ -1,10 +1,11 @@
-import type { Overview, Project, ProjectMember, SavedCapture } from "@overview/domain";
+import type { Overview, Project, ProjectMember, SavedCapture, Topic } from "@overview/domain";
 
 export const RECENT_OVERVIEWS_SHOWN = 4;
 export const PICKER_OPTIONS_SHOWN = 8;
 
 export type PickerOption =
   | { kind: "project"; project: Project; count: number }
+  | { kind: "topic"; topic: Topic; count: number }
   | { kind: "overview"; overview: Overview }
   | { kind: "saved"; capture: SavedCapture };
 
@@ -12,12 +13,18 @@ export const pickerTitleOf = (option: PickerOption): string => {
   if (option.kind === "project") {
     return option.project.name;
   }
+  if (option.kind === "topic") {
+    return option.topic.name;
+  }
   return option.kind === "overview" ? option.overview.source.title : option.capture.source.title;
 };
 
 export const pickerKeyOf = (option: PickerOption): string => {
   if (option.kind === "project") {
     return option.project.id;
+  }
+  if (option.kind === "topic") {
+    return option.topic.id;
   }
   return option.kind === "overview" ? option.overview.id : option.capture.id;
 };
@@ -42,6 +49,7 @@ export interface SourcePickerQuery {
   query: string;
   projects: readonly Project[];
   members: readonly ProjectMember[];
+  topics?: readonly Topic[];
   overviews: readonly Overview[];
   saved: readonly SavedCapture[];
   exclude: ReadonlySet<string>;
@@ -52,7 +60,15 @@ interface Dated {
   option: PickerOption;
 }
 
-export const sourcePickerOptions = ({ query, projects, members, overviews, saved, exclude }: SourcePickerQuery): PickerOptions => {
+export const sourcePickerOptions = ({
+  query,
+  projects,
+  members,
+  topics = [],
+  overviews,
+  saved,
+  exclude,
+}: SourcePickerQuery): PickerOptions => {
   const words = wordsOf(query);
   const counted = projects
     .filter((project) => project.archivedAt === null && !exclude.has(project.id))
@@ -61,17 +77,30 @@ export const sourcePickerOptions = ({ query, projects, members, overviews, saved
       project,
       count: members.filter((member) => member.projectId === project.id && member.removedAt === null).length,
     }));
+  const topicCounts = topics
+    .filter((topic) => !exclude.has(topic.id))
+    .map((topic): PickerOption => ({
+      kind: "topic",
+      topic,
+      count: overviews.filter((overview) => overview.topicIds.some((id) => id === topic.id)).length,
+    }))
+    .filter((option) => option.kind === "topic" && option.count > 0);
   const newest = [...overviews]
     .filter((overview) => !exclude.has(overview.id))
     .sort((left, right) => right.savedAt.localeCompare(left.savedAt));
   if (words.length === 0) {
     return {
-      options: [...counted, ...newest.slice(0, RECENT_OVERVIEWS_SHOWN).map((overview): PickerOption => ({ kind: "overview", overview }))],
+      options: [
+        ...counted,
+        ...topicCounts,
+        ...newest.slice(0, RECENT_OVERVIEWS_SHOWN).map((overview): PickerOption => ({ kind: "overview", overview })),
+      ],
       more: 0,
     };
   }
   const found = [
     ...counted.filter((option) => option.kind === "project" && matches(option.project.name, words)),
+    ...topicCounts.filter((option) => option.kind === "topic" && matches(option.topic.name, words)),
     ...[
       ...newest.map((overview): Dated => ({ savedAt: overview.savedAt, option: { kind: "overview", overview } })),
       ...saved.map((capture): Dated => ({ savedAt: capture.savedAt, option: { kind: "saved", capture } })),

@@ -107,7 +107,7 @@ export interface AskAccount {
 export interface LibraryQuestion {
   conversationId: string;
   text: string;
-  pins?: { overviews: readonly string[]; projects: readonly string[] };
+  pins?: Pins;
   setAside?: readonly string[];
 }
 
@@ -119,6 +119,7 @@ export interface OverviewPassages {
 export interface Pins {
   overviews: readonly string[];
   projects: readonly string[];
+  topics?: readonly string[];
 }
 
 export interface ResolvedScope {
@@ -171,7 +172,7 @@ export class LibraryChatAnswerer {
     // Pins: docs/features/chats.md, "Library and project chat".
     const pastSources = asked.flatMap((message) => message.sources ?? []);
     const wasSetAside = new Set(asked.flatMap((message) => message.setAside ?? []));
-    const pinnedNow = await this.#pinned(accountId, question.pins ?? { overviews: [], projects: [] });
+    const pinnedNow = await this.#pinned(accountId, question.pins ?? { overviews: [], projects: [], topics: [] });
     const labels = new Map(material.labels);
     const labelOf = new Map([...labels].map(([label, overview]) => [overview.id as string, label]));
     const outside = await this.#overviewsOf(
@@ -500,6 +501,23 @@ export class LibraryChatAnswerer {
           .slice(0, PINNED_PROJECT_WHOLE)
           .map((member) => member.overviewId),
       );
+    }
+    const pinnedTopics = pins.topics ?? [];
+    if (pinnedTopics.length > 0) {
+      const topicIds = new Set<string>(
+        readAll(await records.readLive(accountId, "topic", pinnedTopics), Topic, TOPIC_MIGRATIONS).map((topic) => topic.id),
+      );
+      const newestFirst = readAll(await records.listLive(accountId, "overview", "%"), Overview, OVERVIEW_MIGRATIONS).sort((left, right) =>
+        right.savedAt.localeCompare(left.savedAt),
+      );
+      for (const topicId of topicIds) {
+        members.push(
+          ...newestFirst
+            .filter((overview) => overview.topicIds.some((id) => id === topicId))
+            .slice(0, PINNED_PROJECT_WHOLE)
+            .map((overview) => overview.id),
+        );
+      }
     }
     const ids = [...new Set([...pins.overviews, ...members])];
     const found = new Map((await this.#overviewsOf(accountId, ids)).map((overview) => [overview.id as string, overview]));

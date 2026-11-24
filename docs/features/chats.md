@@ -93,6 +93,13 @@ sent as overviews only (no transcripts; OV-352 adds keyword minutes):
   A pinned project (`pins.projects`) goes in whole up to 8 members; past that its 5 closest to the
   question go in whole (claim search within the project, then the most recently added) and the
   rest `brief`, as title, big picture and core claim. The UI that pins is OV-354.
+- **A pinned topic** (`pins.topics`, OV-402) reads the same way: its live overviews, newest saved
+  first and never the chat's own, whole up to 8, else the 5 closest whole and the rest `brief`
+  (`pinnedGroup` in `chooseOtherSources`, shared with projects). Each carries `topicId` as a
+  project's members carry `projectId` (chat schema 8, client 32), so the prompt leads with the
+  topic's name and lists the rest under "The rest of the topic …, in brief". An overview in a
+  pinned project and a pinned topic comes in once, by the first. An unknown topic id is ignored.
+  Library and project chat take the 8 newest of each pinned topic, as they take a project's.
 - **Append-only.** What a question adds is stored on its reader message as `sources`
   (`ChatSource`: `label` S1, S2…, `overviewId`, `title`, `how`, and `projectId` and `brief` for a
   project's), and each later question rebuilds those blocks in the same places
@@ -294,7 +301,7 @@ No route lets a device write a chat.
 
 `POST /api/chats/:overviewId/messages` with `{ conversationId, text, pins?, setAside? }`
 (`ChatQuestionRequest`): a new conversation is a new uuid, a follow-up repeats its conversation's;
-`pins` (`{ overviews, projects }`) and `setAside` are up to 20 ids each ("Other overviews" above). Signed in only, on
+`pins` (`{ overviews, projects, topics }`) and `setAside` are up to 20 ids each ("Other overviews" above). Signed in only, on
 our key, on GPT-6 Luna (`chatModel.ts`) for every plan. `ChatAnswerer` settles everything that
 can refuse before the answer starts, so a refusal is an ordinary JSON error:
 
@@ -799,9 +806,10 @@ From the hand-off's pages, built for the panel beside the note and the phone she
 
 - **The "@" picker** (`ChatComposer`) opens from the "@" at the field's left or by typing "@" at the
   start of a word (`atQueryOf`). The field is its combobox: arrow keys move, Enter pins, Escape
-  closes, and a polite line announces how many projects and overviews it shows. Empty, it lists the
-  projects with their counts, then the four overviews saved most recently; typed words filter titles
-  and project names, every word matching and shown in bold, the first eight with "N more · Keep
+  closes, and a polite line announces how many projects, topics and overviews it shows. Empty, it
+  lists the projects with their counts, then the topics that hold something with theirs (OV-402, a
+  tag icon), then the four overviews saved most recently; typed words filter titles, project names
+  and topic names, every word matching and shown in bold, the first eight with "N more · Keep
   typing to narrow it down." (`sourcePickerOptions`). Titles only, no search by meaning. Never the
   chat's own overview, nor anything already added. At 20 it says so and pins nothing more.
 - **The row above the field** is everything the next question sends besides its words: what was just

@@ -3,6 +3,7 @@ import type { Overview, ProjectMember } from "@overview/domain";
 import { savedCaptureFrom } from "../../captures/types/SavedCaptureFactory.testHelper.js";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeProject, makeProjectMember } from "../../projects/types/ProjectFactory.testHelper.js";
+import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
 import { atQueryOf, markedPieces, pickerTitleOf, sourcePickerOptions } from "./sourcePickerOptions.js";
 
 const titled = (title: string, savedAt: string): Overview => {
@@ -84,5 +85,33 @@ describe("markedPieces and atQueryOf", () => {
     expect(atQueryOf("How does @chori", 15)).toEqual({ start: 9, query: "chori" });
     expect(atQueryOf("me@example", 10)).toBeNull();
     expect(atQueryOf("no at here", 10)).toBeNull();
+  });
+});
+
+describe("sourcePickerOptions, topics", () => {
+  const cooking = makeTopic({ name: "Cooking" });
+  const empty = makeTopic({ name: "Empty" });
+  const soup = { ...titled("Chorizo soup", "2026-11-01T09:00:00.000Z"), topicIds: [cooking.id] };
+  const talk = titled("A talk", "2026-11-02T09:00:00.000Z");
+
+  it("offers each topic that holds something, with its count, after the projects and before the overviews", () => {
+    const { options } = sourcePickerOptions({
+      query: "",
+      projects: [],
+      members: [],
+      topics: [cooking, empty],
+      overviews: [soup, talk],
+      saved: [],
+      exclude: new Set(),
+    });
+    expect(
+      options.map((option) => (option.kind === "topic" ? `topic ${option.topic.name} ${option.count}` : pickerTitleOf(option))),
+    ).toEqual(["topic Cooking 1", "A talk", "Chorizo soup"]);
+  });
+
+  it("matches a topic by its name, and leaves out one already pinned", () => {
+    const query = { query: "cook", projects: [], members: [], topics: [cooking], overviews: [soup, talk], saved: [] };
+    expect(sourcePickerOptions({ ...query, exclude: new Set() }).options.map((option) => option.kind)).toEqual(["topic"]);
+    expect(sourcePickerOptions({ ...query, exclude: new Set([cooking.id]) }).options).toEqual([]);
   });
 });
