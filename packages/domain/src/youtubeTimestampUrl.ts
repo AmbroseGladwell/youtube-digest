@@ -16,3 +16,5 @@ export const youtubeMomentUrl = (videoUrl: string, startMs: number): string | nu
   }
   return YOUTUBE_HOSTS.has(host) ? youtubeTimestampUrl(videoUrl, startMs) : null;
 };
+
+export { YOUTUBE_HOSTS };

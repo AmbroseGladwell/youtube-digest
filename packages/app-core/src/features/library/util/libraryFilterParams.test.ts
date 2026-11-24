@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TopicId } from "@overview/domain";
-import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { NO_LIBRARY_FILTERS, type LibrarySourceId } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
 import {
   applyLibraryFilterPatch,
@@ -23,14 +23,10 @@ describe("parseLibraryFilters", () => {
   it("reads valid topic, verdict, status and q params", () => {
     const params = new URLSearchParams({ topic: TOPIC, verdict: "original", status: "read", q: "botox" });
     expect(parseLibraryFilters(params)).toEqual({
-      source: "all",
+      ...NO_LIBRARY_FILTERS,
       topicId: TOPIC,
-      novelty: "original",
+      novelties: ["original"],
       status: "read",
-      favourite: false,
-      withoutOverview: false,
-      dubious: false,
-      tag: null,
       query: "botox",
     });
   });
@@ -40,9 +36,34 @@ describe("parseLibraryFilters", () => {
     expect(parseLibraryFilters(params)).toEqual(NO_LIBRARY_FILTERS);
   });
 
-  it("reads a tag only when it is a tag as the library stores them", () => {
-    expect(parseLibraryFilters(new URLSearchParams({ tag: "micro-saas" })).tag).toBe("micro-saas");
-    expect(parseLibraryFilters(new URLSearchParams({ tag: "Micro SaaS" })).tag).toBeNull();
+  it("reads only the tags that are tags as the library stores them", () => {
+    expect(parseLibraryFilters(new URLSearchParams({ tag: "micro-saas,gift-ideas" })).tags).toEqual(["micro-saas", "gift-ideas"]);
+    expect(parseLibraryFilters(new URLSearchParams({ tag: "Micro SaaS,gift-ideas" })).tags).toEqual(["gift-ideas"]);
+  });
+
+  it("reads several kinds, sources and verdicts, the Added range and No topic", () => {
+    const params = new URLSearchParams({
+      kind: "video,recipe,made-up",
+      source: "youtube,site:seriouseats.com",
+      verdict: "original,fresh_angle",
+      added: "3m",
+      topic: "none",
+    });
+    expect(parseLibraryFilters(params)).toMatchObject({
+      kinds: ["video", "recipe"],
+      sources: ["youtube", "site:seriouseats.com"],
+      novelties: ["original", "fresh_angle"],
+      added: "3m",
+      topicId: "none",
+    });
+  });
+
+  it("reads an old ?source=video link as the kind, so bookmarks keep working", () => {
+    expect(parseLibraryFilters(new URLSearchParams({ source: "video" }))).toMatchObject({ kinds: ["video"], sources: [] });
+  });
+
+  it("falls back to any time for an Added value it doesn't know", () => {
+    expect(parseLibraryFilters(new URLSearchParams({ added: "1y" })).added).toBe("any");
   });
 
   it("reads the favourite and dubious flags only from their exact param value", () => {
@@ -66,14 +87,21 @@ describe("applyLibraryFilterPatch", () => {
   });
 
   it("sets a param for a real value", () => {
-    const next = applyLibraryFilterPatch(new URLSearchParams(), { novelty: "common_knowledge" });
-    expect(next.get("verdict")).toBe("common_knowledge");
+    const next = applyLibraryFilterPatch(new URLSearchParams(), { novelties: ["common_knowledge", "original"] });
+    expect(next.get("verdict")).toBe("common_knowledge,original");
   });
 
-  it("removes the param when patched back to 'all', instead of writing the literal string", () => {
-    const withFilter = new URLSearchParams({ verdict: "common_knowledge" });
-    const next = applyLibraryFilterPatch(withFilter, { novelty: "all" });
-    expect(next.has("verdict")).toBe(false);
+  it("removes the param when a group is patched back to nothing chosen", () => {
+    const withFilter = new URLSearchParams({ verdict: "common_knowledge", added: "7d" });
+    const next = applyLibraryFilterPatch(withFilter, { novelties: [], added: "any" });
+    expect(next.toString()).toBe("");
+  });
+
+  it("moves an old ?source=video into kind when either kinds or sources change", () => {
+    const next = applyLibraryFilterPatch(new URLSearchParams({ source: "video" }), { sources: ["youtube" as LibrarySourceId] });
+    expect(next.get("kind")).toBe("video");
+    expect(next.get("source")).toBe("youtube");
+    expect(parseLibraryFilters(next)).toMatchObject({ kinds: ["video"], sources: ["youtube"] });
   });
 
   it("removes q when patched to an empty string", () => {
@@ -84,7 +112,7 @@ describe("applyLibraryFilterPatch", () => {
 
   it("leaves untouched params alone", () => {
     const params = new URLSearchParams({ status: "read" });
-    const next = applyLibraryFilterPatch(params, { novelty: "original" });
+    const next = applyLibraryFilterPatch(params, { novelties: ["original"] });
     expect(next.get("status")).toBe("read");
     expect(next.get("verdict")).toBe("original");
   });

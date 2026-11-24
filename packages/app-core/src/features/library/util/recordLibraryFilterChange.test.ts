@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { TopicId } from "@overview/domain";
 import { createAnalytics } from "../../analytics/createAnalytics.js";
-import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { NO_LIBRARY_FILTERS, type LibrarySourceId } from "../types/LibraryFilters.js";
 import { recordLibraryFilterChange } from "./recordLibraryFilterChange.js";
 
 const FITNESS = TopicId.parse("11111111-1111-4111-8111-111111111111");
@@ -17,13 +17,13 @@ describe("recordLibraryFilterChange", () => {
     const { recorded, filters } = recording();
 
     recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { topicId: FITNESS }, "panel");
-    recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { novelty: "common_knowledge" }, "panel");
+    recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { novelties: ["common_knowledge"] }, "panel");
     recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { status: "unread" }, "panel");
     recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { dubious: true }, "panel");
 
     expect(recorded).toEqual([
       ["library.filters.topicChosen", { topicId: FITNESS, from: "panel" }],
-      ["library.filters.noveltyChosen", { novelty: "common_knowledge", from: "panel" }],
+      ["library.filters.noveltySwitched", { novelty: "common_knowledge", on: true, from: "panel" }],
       ["library.filters.statusChosen", { status: "unread", from: "panel" }],
       ["library.filters.dubiousSwitched", { on: true, from: "panel" }],
     ]);
@@ -32,8 +32,8 @@ describe("recordLibraryFilterChange", () => {
   it("counts a tag being chosen and cleared without ever naming the tag", () => {
     const { recorded, filters } = recording();
 
-    recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { tag: "saas" }, "panel");
-    recordLibraryFilterChange(filters, { ...NO_LIBRARY_FILTERS, tag: "saas" }, { tag: null }, "filterChip");
+    recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { tags: ["saas"] }, "panel");
+    recordLibraryFilterChange(filters, { ...NO_LIBRARY_FILTERS, tags: ["saas"] }, { tags: [] }, "filterChip");
 
     expect(recorded).toEqual([
       ["library.filters.tagChosen", { from: "panel" }],
@@ -50,6 +50,38 @@ describe("recordLibraryFilterChange", () => {
     expect(recorded).toEqual([
       ["library.filters.topicCleared", { from: "clearAll" }],
       ["library.filters.favouriteSwitched", { on: false, from: "clearAll" }],
+    ]);
+  });
+
+  it("names a website source only as a website, never its domain, and a platform by name", () => {
+    const { recorded, filters } = recording();
+    const sources = [
+      { id: "site:seriouseats.com" as LibrarySourceId, name: "Serious Eats", domain: "seriouseats.com", platform: "website" as const },
+    ];
+
+    recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { sources: [sources[0]!.id, "youtube" as LibrarySourceId] }, "panel", sources);
+
+    expect(recorded).toEqual([
+      ["library.filters.sourceSwitched", { platform: "website", on: true, from: "panel" }],
+      ["library.filters.sourceSwitched", { platform: "youtube", on: true, from: "panel" }],
+    ]);
+  });
+
+  it("counts each kind switched on or off, the Added range and No topic", () => {
+    const { recorded, filters } = recording();
+
+    recordLibraryFilterChange(
+      filters,
+      { ...NO_LIBRARY_FILTERS, kinds: ["video"] },
+      { kinds: ["recipe"], added: "7d", topicId: "none" },
+      "panel",
+    );
+
+    expect(recorded).toEqual([
+      ["library.filters.kindSwitched", { kind: "recipe", on: true, from: "panel" }],
+      ["library.filters.kindSwitched", { kind: "video", on: false, from: "panel" }],
+      ["library.filters.addedChosen", { added: "7d", from: "panel" }],
+      ["library.filters.noTopicChosen", { from: "panel" }],
     ]);
   });
 });

@@ -30,17 +30,24 @@ test("the rail lists the library's tags under More filters, most used first, and
   await library.verifyCountReads("2 overviews tagged #saas · 2 unread");
 });
 
-test("one tag at a time: choosing another swaps it, and its chip under the search clears it", async ({ launcher, backendSimulator }) => {
+test("several tags show what has any of them, and each chip under the search takes off only its own", async ({
+  launcher,
+  backendSimulator,
+}) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
   await library.filterPanel.clickTagChip("saas");
   await library.filterPanel.clickTagChip("energy");
+  await library.expectCardCountToBe(3);
+  await library.verifyChipsRead(["#saas", "#energy"]);
+
+  await library.removeChip("tag:saas");
+  await library.verifyChipsRead(["#energy"]);
   await library.verifyCardOrder(["Nuclear in the UK"]);
 
-  await library.removeChip("tag");
+  await library.removeChip("tag:energy");
   await library.verifyNoChips();
-  await library.expectCardCountToBe(3);
 });
 
 test("a search typed beside the tag searches within it", async ({ launcher, backendSimulator }) => {

@@ -1,30 +1,52 @@
 import { Novelty, Tag, TopicId } from "@overview/domain";
-import { LIBRARY_SOURCES, NO_LIBRARY_FILTERS, type LibraryFilters } from "../types/LibraryFilters.js";
+import {
+  LIBRARY_ADDED,
+  LIBRARY_KINDS,
+  NO_LIBRARY_FILTERS,
+  type LibraryFilters,
+  type LibraryKind,
+  type LibrarySourceId,
+  type LibraryTopicFilter,
+} from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS, type LibrarySort } from "../types/LibrarySort.js";
 import type { LibraryView } from "../types/LibraryView.js";
 
 const STATUS_VALUES = new Set(["all", "read", "unread"]);
-const LIBRARY_VIEW_PARAMS = ["source", "topic", "verdict", "status", "fav", "pending", "dubious", "tag", "q", "sort"];
+const SOURCE_ID = /^(?:[a-zA-Z]+|site:[^,\s]+)$/;
+const LIBRARY_VIEW_PARAMS = ["kind", "source", "added", "topic", "verdict", "status", "fav", "pending", "dubious", "tag", "q", "sort"];
 
+const listParam = (searchParams: URLSearchParams, name: string): string[] => {
+  const value = searchParams.get(name);
+  return value ? [...new Set(value.split(",").filter(Boolean))] : [];
+};
+
+const isKind = (value: string): value is LibraryKind => (LIBRARY_KINDS as readonly string[]).includes(value);
+
+const parseTopic = (value: string | null): LibraryTopicFilter => {
+  if (value === "none") {
+    return "none";
+  }
+  return value && TopicId.safeParse(value).success ? (value as TopicId) : "all";
+};
+
+// An old ?source=video names a kind, so bookmarks keep working: docs/features/library-filters.md, "In the URL".
 export const parseLibraryFilters = (searchParams: URLSearchParams): LibraryFilters => {
-  const topicParam = searchParams.get("topic");
-  const noveltyParam = searchParams.get("verdict");
   const statusParam = searchParams.get("status");
-  const tagParam = searchParams.get("tag");
-
-  const topicId = topicParam && TopicId.safeParse(topicParam).success ? (topicParam as TopicId) : "all";
-  const novelty = noveltyParam && Novelty.safeParse(noveltyParam).success ? (noveltyParam as Novelty) : "all";
-  const status = statusParam && STATUS_VALUES.has(statusParam) ? (statusParam as LibraryFilters["status"]) : "all";
+  const addedParam = searchParams.get("added");
+  const sourceValues = listParam(searchParams, "source");
+  const oldKinds = searchParams.has("kind") ? [] : sourceValues.filter(isKind);
 
   return {
-    source: LIBRARY_SOURCES.find((source) => source === searchParams.get("source")) ?? "all",
-    topicId,
-    novelty,
-    status,
+    kinds: [...new Set([...listParam(searchParams, "kind").filter(isKind), ...oldKinds])],
+    sources: sourceValues.filter((value) => !isKind(value) && SOURCE_ID.test(value)) as LibrarySourceId[],
+    added: LIBRARY_ADDED.find((added) => added === addedParam) ?? NO_LIBRARY_FILTERS.added,
+    topicId: parseTopic(searchParams.get("topic")),
+    novelties: listParam(searchParams, "verdict").filter((value): value is Novelty => Novelty.safeParse(value).success),
+    status: statusParam && STATUS_VALUES.has(statusParam) ? (statusParam as LibraryFilters["status"]) : "all",
     favourite: searchParams.get("fav") === "1",
     withoutOverview: searchParams.get("pending") === "1",
     dubious: searchParams.get("dubious") === "1",
-    tag: tagParam !== null && Tag.safeParse(tagParam).success ? tagParam : NO_LIBRARY_FILTERS.tag,
+    tags: listParam(searchParams, "tag").filter((value) => Tag.safeParse(value).success),
     query: searchParams.get("q") ?? NO_LIBRARY_FILTERS.query,
   };
 };
@@ -32,14 +54,19 @@ export const parseLibraryFilters = (searchParams: URLSearchParams): LibraryFilte
 export const applyLibraryFilterPatch = (current: URLSearchParams, patch: Partial<LibraryFilters>): URLSearchParams => {
   const next = new URLSearchParams(current);
 
-  if ("source" in patch) {
-    setOrDelete(next, "source", patch.source === "all" ? undefined : patch.source);
+  if ("kinds" in patch || "sources" in patch) {
+    const before = parseLibraryFilters(current);
+    setOrDelete(next, "kind", (patch.kinds ?? before.kinds).join(","));
+    setOrDelete(next, "source", (patch.sources ?? before.sources).join(","));
+  }
+  if ("added" in patch) {
+    setOrDelete(next, "added", patch.added === "any" ? undefined : patch.added);
   }
   if ("topicId" in patch) {
     setOrDelete(next, "topic", patch.topicId === "all" ? undefined : patch.topicId);
   }
-  if ("novelty" in patch) {
-    setOrDelete(next, "verdict", patch.novelty === "all" ? undefined : patch.novelty);
+  if ("novelties" in patch) {
+    setOrDelete(next, "verdict", patch.novelties?.join(","));
   }
   if ("status" in patch) {
     setOrDelete(next, "status", patch.status === "all" ? undefined : patch.status);
@@ -53,8 +80,8 @@ export const applyLibraryFilterPatch = (current: URLSearchParams, patch: Partial
   if ("dubious" in patch) {
     setOrDelete(next, "dubious", patch.dubious ? "1" : undefined);
   }
-  if ("tag" in patch) {
-    setOrDelete(next, "tag", patch.tag ?? undefined);
+  if ("tags" in patch) {
+    setOrDelete(next, "tag", patch.tags?.join(","));
   }
   if ("query" in patch) {
     setOrDelete(next, "q", patch.query || undefined);

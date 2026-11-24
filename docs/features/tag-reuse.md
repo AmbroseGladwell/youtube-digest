@@ -115,8 +115,9 @@ always listed (`cappedTags`, as `cappedTopics`). A library with no tags has no T
 all. Closed, the row's summary names the tag beside the verdict ("Any verdict · #saas"), and
 wraps rather than being cut off.
 
-**One tag at a time.** Picking another swaps it, and picking the active one clears it. The
-filter is the URL's `tag` param, so a note's tag links to `Routes.taggedLibrary(tag)`, and
+**Several tags mean any of them** (OV-400, design 399s; until then it was one tag at a
+time). Picking another adds it, and picking an active one takes it off. The filter is the
+URL's `tag` param, a comma list, so a note's tag links to `Routes.taggedLibrary(tag)`, and
 arriving that way opens More filters, so the tag is never set out of sight. A link names a
 whole view, so it also shows read overviews, and that shows as its own chip.
 

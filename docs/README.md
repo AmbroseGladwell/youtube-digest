@@ -248,6 +248,9 @@ Five folders, five different questions.
 - `library-view.md` — the list opens on unread or as the reader left it, per account and
   device: saved views, URL wins, Reset and Show all, caught up, and the reader stepping
   through the same view.
+- `library-filters.md` — Kind and Source split apart, Added, No topic and several values per
+  group: how a source is named from its domain on the device, the URL, the saved view and
+  the counts.
 - `library-sort.md` — the sort pill's three orders and why verdict isn't one, where a
   record with no date or title lands, why the order is in the URL but isn't a filter, and
   what doesn't follow it yet.

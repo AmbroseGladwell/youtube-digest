@@ -1,3 +1,4 @@
+import { SourceKey, TopicId } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
@@ -106,4 +107,59 @@ test("filters combine with AND: a video matching only one active filter stays hi
   const library = await launcher.launchExpectingLibrary();
   await library.filterPanel.clickNoveltyChip("original");
   await library.verifyEmptyState();
+});
+
+const article = (title: string, url: string, siteName: string | null) =>
+  makeOverview({
+    source: {
+      kind: "web",
+      id: SourceKey.parse(`article-${title.length}`),
+      url,
+      title,
+      siteName,
+      author: null,
+      publishedAt: null,
+      language: null,
+      imageUrl: null,
+      wordCount: 900,
+    },
+  } as never);
+
+test("a link can filter by source, Added, No topic and several values at once", async ({ launcher, backendSimulator }) => {
+  const topic = TopicId.parse("11111111-1111-4111-8111-111111111111");
+  backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "A video in a topic" }, topicIds: [topic] }));
+  backendSimulator.overviews.seed(
+    makeOverview({ source: { ...makeOverview().source, title: "An old video" }, savedAt: "2025-01-01T09:00:00.000Z" }),
+  );
+  backendSimulator.overviews.seed(article("Pizza at home", "https://www.seriouseats.com/pizza", "Serious Eats"));
+  backendSimulator.overviews.seed(article("Pasta at home", "https://m.seriouseats.com/pasta", null));
+  backendSimulator.overviews.seed(article("A long read", "https://www.example.org/long-read", "Example"));
+
+  const library = await launcher.launchExpectingLibrary();
+  await library.expectCardCountToBe(5);
+
+  await launcher.openPage("/?source=site:seriouseats.com");
+  await library.expectCardCountToBe(2);
+
+  await launcher.openPage("/?source=site:seriouseats.com,site:example.org");
+  await library.expectCardCountToBe(3);
+
+  await launcher.openPage("/?added=30d&kind=video");
+  await library.expectCardCountToBe(1);
+  await library.cardWithTitle("A video in a topic").verifyTitle("A video in a topic");
+
+  await launcher.openPage("/?topic=none&kind=video");
+  await library.expectCardCountToBe(1);
+  await library.cardWithTitle("An old video").verifyTitle("An old video");
+});
+
+test("an old link that filtered by ?source=article still opens the articles", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "A video" } }));
+  backendSimulator.overviews.seed(article("Pizza at home", "https://www.seriouseats.com/pizza", "Serious Eats"));
+
+  const library = await launcher.launchExpectingLibrary();
+  await launcher.openPage("/?source=article");
+
+  await library.expectCardCountToBe(1);
+  await library.cardWithTitle("Pizza at home").verifyTitle("Pizza at home");
 });

@@ -84,3 +84,5 @@ export const parseSocialPostLink = (link: string): SocialPostLink | null => {
   }
   return FACEBOOK_HOSTS.has(host) ? facebookPath(segments, url) : null;
 };
+
+export { INSTAGRAM_HOSTS, FACEBOOK_HOSTS, FACEBOOK_SHORT_HOSTS };

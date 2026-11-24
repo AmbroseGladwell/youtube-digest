@@ -1240,12 +1240,25 @@ export const analyticsEvents = {
     filters: {
       topicChosen: event("The reader filters the library to one topic", { topicId: TopicId, from: FilterControl }),
       topicCleared: event("The reader stops filtering the library by topic", { from: FilterControl }),
-      sourceChosen: event("The reader filters the library to one kind of source, or back to all", {
-        source: z.enum(["all", "video", "article", "recipe", "podcast"]),
+      noTopicChosen: event("The reader filters the library to the overviews in no topic", { from: FilterControl }),
+      kindSwitched: event("The reader adds a kind to the library's filter, or takes one off", {
+        kind: z.enum(["video", "article", "podcast", "recipe"]),
+        on: z.boolean(),
         from: FilterControl,
       }),
-      noveltyChosen: event("The reader filters the library by the verdict's novelty, or back to all", {
-        novelty: z.enum([...Novelty.options, "all"]),
+      // A website is only "website": its domain says what the reader reads (docs/architecture/analytics.md).
+      sourceSwitched: event("The reader adds a source to the library's filter, or takes one off", {
+        platform: z.enum(["youtube", "tiktok", "instagram", "facebook", "spotify", "applePodcasts", "website"]),
+        on: z.boolean(),
+        from: FilterControl,
+      }),
+      addedChosen: event("The reader filters the library by when overviews were saved, or back to any time", {
+        added: z.enum(["any", "today", "7d", "30d", "3m", "6m"]),
+        from: FilterControl,
+      }),
+      noveltySwitched: event("The reader adds a verdict's novelty to the library's filter, or takes one off", {
+        novelty: Novelty,
+        on: z.boolean(),
         from: FilterControl,
       }),
       statusChosen: event("The reader filters the library by read or unread, or back to all", {
@@ -1255,8 +1268,8 @@ export const analyticsEvents = {
       favouriteSwitched: event("The reader turns the favourites filter on or off", { on: z.boolean(), from: FilterControl }),
       dubiousSwitched: event("The reader turns the dubious-claims filter on or off", { on: z.boolean(), from: FilterControl }),
       // Never which tag: a tag is the reader's own word (docs/architecture/analytics.md).
-      tagChosen: event("The reader filters the library to one tag", { from: FilterControl }),
-      tagCleared: event("The reader stops filtering the library by tag", { from: FilterControl }),
+      tagChosen: event("The reader adds a tag to the library's filter", { from: FilterControl }),
+      tagCleared: event("The reader takes a tag off the library's filter", { from: FilterControl }),
       allTagsShown: event("The reader shows or hides the tags past the first few", { shown: z.boolean() }),
       allCleared: event("The reader shows every overview, clearing every library filter at once", {
         applied: z.number().int().nonnegative(),

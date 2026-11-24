@@ -42,13 +42,16 @@ describe("libraryFilterCounts", () => {
       dubious: 1,
       unreadable: 0,
       withoutOverview: 0,
+      noTopic: 1,
       byTopic: { [FITNESS]: 2, [FINANCE]: 1 },
       byNovelty: { original: 1, common_knowledge: 1 },
       byTag: [
         { tag: "pricing", count: 2 },
         { tag: "saas", count: 2 },
       ],
-      bySource: { video: 3 },
+      byKind: { video: 3 },
+      bySource: [{ id: "youtube", name: "YouTube", domain: null, platform: "youtube", count: 3 }],
+      byAdded: { any: 3, today: 3, "7d": 3, "30d": 3, "3m": 3, "6m": 3 },
     });
   });
 
@@ -76,10 +79,27 @@ describe("libraryFilterCounts", () => {
       dubious: 0,
       unreadable: 0,
       withoutOverview: 0,
+      noTopic: 0,
       byTopic: {},
       byNovelty: {},
       byTag: [],
-      bySource: {},
+      byKind: {},
+      bySource: [],
+      byAdded: { any: 0, today: 0, "7d": 0, "30d": 0, "3m": 0, "6m": 0 },
     });
+  });
+
+  it("counts each Added range from the device's clock, the sources by count, and a recipe under its medium and Recipe", () => {
+    const now = new Date(2026, 10, 24, 12, 0);
+    const counts = libraryFilterCounts(
+      [
+        makeOverviewWithState({ savedAt: new Date(2026, 10, 24, 9, 0).toISOString(), recipe: {} as never }),
+        makeOverviewWithState({ savedAt: new Date(2026, 9, 1, 9, 0).toISOString() }),
+      ],
+      now,
+    );
+
+    expect(counts.byAdded).toEqual({ any: 2, today: 1, "7d": 1, "30d": 1, "3m": 2, "6m": 2 });
+    expect(counts.byKind).toEqual({ video: 2, recipe: 1 });
   });
 });

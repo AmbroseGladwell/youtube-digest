@@ -263,25 +263,25 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const filters = { ...view.filters, query };
   const topics = topicsQuery.data ?? [];
   const counts = libraryFilterCounts(entries);
-  const applied = appliedLibraryFilters(filters, topics);
+  const applied = appliedLibraryFilters(filters, topics, counts.bySource);
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1], from: FilterControl | null = null) => {
     if (from !== null) {
-      recordLibraryFilterChange(analytics.library.filters, filters, patch, from);
+      recordLibraryFilterChange(analytics.library.filters, filters, patch, from, counts.bySource);
     }
     changeView(applyLibraryFilterPatch(viewParams, patch));
   };
   const showAll = (from: FilterControl) => changeFilters(NO_LIBRARY_FILTERS, from);
   const resetView = () => {
     analytics.library.view.reset({ applied: applied.length });
-    recordLibraryFilterChange(analytics.library.filters, filters, defaultView.filters, "reset");
+    recordLibraryFilterChange(analytics.library.filters, filters, defaultView.filters, "reset", counts.bySource);
     changeView(applyLibraryView(viewParams, defaultView));
   };
   const keepInPlace = (overviewId: string) => setKeptIds((kept) => new Set(kept).add(overviewId));
   const readerState = libraryViewState(viewParams, keptIds);
   const caughtUp = filters.status === "unread" && counts.unread === 0;
   const changedFilters = filtersChangedFromDefault(filters, defaultView.filters);
-  const chips = libraryFilterChips(filters, topics, defaultView.filters);
+  const chips = libraryFilterChips(filters, topics, defaultView.filters, counts.bySource);
 
   // Why a changed row stays put: docs/features/library-view.md, "Show all, Reset, caught up".
   const visible = orderLibraryEntries(
@@ -390,12 +390,12 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   };
 
   const countLine =
-    filters.tag === null ? (
+    filters.tags.length === 0 ? (
       libraryCountLine(counts)
     ) : (
       <>
         {visible.length} {visible.length === 1 ? "overview" : "overviews"}
-        <span className={styles.visuallyHidden}> tagged #{filters.tag}</span> · {unreadShown} unread
+        <span className={styles.visuallyHidden}> tagged {filters.tags.map((tag) => `#${tag}`).join(" or ")}</span> · {unreadShown} unread
       </>
     );
   const row = (entry: LibraryEntry, order: number, said: SaidMoment | null = null) => (
