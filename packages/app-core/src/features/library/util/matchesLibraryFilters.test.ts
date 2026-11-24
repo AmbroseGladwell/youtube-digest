@@ -128,6 +128,7 @@ describe("matchesLibraryFilters with a source saved without its overview", () =>
         stage: "saved",
         source: overview.source,
         savedAt: overview.savedAt,
+        notes: null,
       },
       state: { ...DEFAULT_OVERVIEW_STATE, overviewId: overview.id },
     };

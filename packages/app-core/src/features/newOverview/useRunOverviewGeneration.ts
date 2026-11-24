@@ -10,6 +10,7 @@ import {
   type StoredTranscript,
   type TranscribeChoice,
   type TranscribedSource,
+  type SavedCapture,
 } from "@overview/domain";
 import type { OverviewInput } from "@overview/generation";
 import { createFetchGenerationApi, createFetchPodcastApi, createFetchSocialApi, createFetchTikTokApi } from "@overview/sync";
@@ -37,6 +38,7 @@ import {
   runPodcastOverviewGeneration,
   runTikTokOverviewGeneration,
   runSocialOverviewGeneration,
+  runSavedOverviewGeneration,
   type SocialRunRequest,
   type TikTokRunRequest,
   type PodcastRunRequest,
@@ -392,4 +394,27 @@ const useOverviewMaker = (apiKeys: ApiKeys) => {
   const settled = useCallback(() => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }), [queryClient]);
 
   return { makeWith, learnFrom, settled };
+};
+
+export const useRunSavedGeneration = (apiKeys: ApiKeys) => {
+  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const shown = useStores();
+
+  return useCallback(
+    async (capture: SavedCapture, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> =>
+      runSavedOverviewGeneration(
+        capture,
+        {
+          makeOverview: makeWith(),
+          overviewStore: stores.overviewStore,
+          settingsStore: stores.settingsStore,
+          transcriptStore: stores.transcriptStore,
+          projectStore: stores.projectStore,
+        },
+        options,
+      )
+        .then((overview) => learnFrom(overview, stores))
+        .finally(settled),
+    [makeWith, learnFrom, settled, shown],
+  );
 };

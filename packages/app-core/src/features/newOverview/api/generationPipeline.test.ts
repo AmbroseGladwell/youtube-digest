@@ -5,7 +5,6 @@ import {
   type ArticleRead,
   type ClaimSummary,
   type Overview,
-  type OverviewId,
   type OverviewStore,
   type Settings,
   type StoredTranscript,
@@ -19,6 +18,10 @@ import {
   type SocialPost,
   podcastSourceId,
   ProjectId,
+  type Capture,
+  type SavedCapture,
+  OverviewId,
+  youTubeSource,
 } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { PodcastTranscript } from "../../podcasts/api/podcastTranscript.js";
@@ -38,12 +41,15 @@ import { SocialPostTooShortError } from "./SocialPostTooShortError.js";
 import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
+import { SavedWithoutOverview } from "./SavedWithoutOverview.js";
+import { SavedSourceNeedsReadingError } from "./SavedSourceNeedsReadingError.js";
 import {
   runArticleOverviewGeneration,
   runOverviewGeneration,
   runPodcastOverviewGeneration,
   runTikTokOverviewGeneration,
   runSocialOverviewGeneration,
+  runSavedOverviewGeneration,
   type SocialWords,
   type GenerationPipelineDeps,
   type GenerationProgress,
@@ -722,5 +728,61 @@ describe("runSocialOverviewGeneration", () => {
     ).rejects.toBeInstanceOf(ArticleAlreadyHeldError);
     expect(asked).toBe(false);
     expect(made).toHaveLength(0);
+  });
+});
+
+describe("saving without an overview, and making it later", () => {
+  const savedVideo = (notes: string | null): SavedCapture => ({
+    id: OverviewId.parse("7a1c0f8e-3b52-4d6e-9f10-2c4b5a6d7e8f"),
+    sourceKey: VIDEO.id!,
+    url: VIDEO.url,
+    keptAt: "2026-11-24T09:00:00.000Z",
+    keptFrom: "phone",
+    captureReason: "For the training plan",
+    title: VIDEO.title,
+    thumbnailUrl: VIDEO.thumbnailUrl,
+    fromPlaylist: null,
+    addedAt: null,
+    playlistIndex: null,
+    chosenAt: null,
+    stage: "saved",
+    source: youTubeSource(VIDEO),
+    savedAt: "2026-11-24T09:00:00.000Z",
+    notes,
+  });
+
+  it("saves a capture with its notes instead of writing, and asks no model", async () => {
+    const { deps, inputs, saved } = makeDeps();
+    const captures: Capture[] = [];
+
+    const outcome = runOverviewGeneration(
+      VIDEO.url,
+      { ...deps, captureStore: { saveCapture: async (capture) => void captures.push(capture) } },
+      { saveInstead: "phone" },
+    );
+
+    await expect(outcome).rejects.toBeInstanceOf(SavedWithoutOverview);
+    expect(inputs).toEqual([]);
+    expect(saved).toEqual([]);
+    expect(captures[0]).toMatchObject({ stage: "saved", sourceKey: VIDEO.id, keptFrom: "phone" });
+  });
+
+  it("writes a saved video's overview under its id from its kept transcript and notes, with its reason", async () => {
+    const { deps, inputs, saved } = makeDeps();
+    const capture = savedVideo("Chapters and links in the description.");
+
+    const overview = await runSavedOverviewGeneration(capture, deps, { captureReason: () => capture.captureReason ?? "" });
+
+    expect(overview.id).toBe(capture.id);
+    expect(inputs[0]?.video.fullDescription).toBe("Chapters and links in the description.");
+    expect(inputs[0]?.transcript).toEqual([{ startMs: 0, endMs: 4_000, text: "Three cuts cover most of a week." }]);
+    expect(saved[0]?.captureReason).toBe("For the training plan");
+  });
+
+  it("asks for the link to be read again when its words aren't on this device", async () => {
+    const { deps, inputs } = makeDeps({ held: false });
+
+    await expect(runSavedOverviewGeneration(savedVideo(null), deps)).rejects.toBeInstanceOf(SavedSourceNeedsReadingError);
+    expect(inputs).toEqual([]);
   });
 });
