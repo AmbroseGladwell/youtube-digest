@@ -45,4 +45,12 @@ export type SharedNote = z.infer<typeof SharedNote>;
 export const SHARED_NOTE_FIELDS = Object.keys(SharedNote.shape).sort();
 
 // docs/features/sharing.md, "What is in a shared copy, and what is not".
-export const PRIVATE_OVERVIEW_FIELDS = ["captureReason", "topicIds", "fromPlaylist", "madeOn", "fromSample", "followUpQuestions"] as const;
+export const PRIVATE_OVERVIEW_FIELDS = [
+  "captureReason",
+  "topicIds",
+  "fromPlaylist",
+  "madeOn",
+  "fromSample",
+  "followUpQuestions",
+  "editedAt",
+] as const;

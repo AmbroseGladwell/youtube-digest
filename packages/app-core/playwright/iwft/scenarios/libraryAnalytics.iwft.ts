@@ -90,6 +90,6 @@ test("picking an order is counted by the order's own name", async ({ launcher, b
     .poll(() => libraryEvents(backendSimulator))
     .toEqual([
       { name: "library.sortPill.opened", props: {} },
-      { name: "library.sortPill.orderChosen", props: { sort: "title" } },
+      { name: "library.sortPill.orderChosen", props: { field: "title", direction: "asc", group: "none" } },
     ]);
 });

@@ -17,17 +17,20 @@ export const rebasePendingChanges = (remote: Record<string, unknown>, pending: r
   return record;
 };
 
+const editedAt = (change: { edited?: true }, entry: OutboxEntry): { editedAt?: string } =>
+  change.edited ? { editedAt: entry.updatedAt } : {};
+
 const apply = (record: Record<string, unknown>, entry: OutboxEntry): Record<string, unknown> | null => {
   const { change } = entry;
   switch (change.op) {
     case "replace":
       return { ...change.record };
     case "topics":
-      return { ...record, topicIds: change.topicIds };
+      return { ...record, topicIds: change.topicIds, ...editedAt(change, entry) };
     case "captureReason":
-      return { ...record, captureReason: change.captureReason };
+      return { ...record, captureReason: change.captureReason, ...editedAt(change, entry) };
     case "tags":
-      return { ...record, tags: change.tags };
+      return { ...record, tags: change.tags, ...editedAt(change, entry) };
     case "state":
       return { ...record, ...change.patch };
     case "settings":

@@ -49,6 +49,8 @@ export const Overview = z
     madeOn: MadeOn.nullable(),
     // From one of Start's samples, so not the reader's first: docs/features/onboarding.md, "Try a sample".
     fromSample: z.literal(true).optional(),
+    // The reader's last topic, tag or why edit, never the app's: docs/features/library-sort.md, "Updated".
+    editedAt: z.iso.datetime().optional(),
   })
   .extend(CoreFields.shape)
   .extend(Filing.shape)

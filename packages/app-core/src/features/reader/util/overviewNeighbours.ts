@@ -3,6 +3,7 @@ import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryE
 import { matchesLibraryFilters } from "../../library/util/matchesLibraryFilters.js";
 import { orderLibraryEntries } from "../../library/util/orderLibraryEntries.js";
 import type { SteppedLibraryView } from "../../library/util/libraryViewState.js";
+import { NO_LIBRARY_ACTIVITY, type LibraryActivity } from "../../library/util/libraryEntryDate.js";
 
 export interface OverviewNeighbours {
   position: number | null;
@@ -16,6 +17,7 @@ export const overviewNeighbours = (
   entries: LibraryEntry[],
   overviewId: string,
   stepped: Pick<SteppedLibraryView, "view" | "kept"> | null = null,
+  activity: LibraryActivity = NO_LIBRARY_ACTIVITY,
 ): OverviewNeighbours => {
   const ordered =
     stepped === null
@@ -26,6 +28,7 @@ export const overviewNeighbours = (
             return id === overviewId || stepped.kept.has(id) || matchesLibraryFilters(entry, stepped.view.filters);
           }),
           stepped.view.sort,
+          activity,
         );
   const index = ordered.findIndex((entry) => libraryEntryId(entry) === overviewId);
   if (index === -1) {

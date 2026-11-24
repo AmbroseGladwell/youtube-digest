@@ -6,9 +6,10 @@ export interface SyncApi {
   changes(since: number, limit?: number): Promise<RecordChangesPage>;
   createOverview(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
   reserveOverview(overviewId: string): Promise<void>;
-  setOverviewTopics(id: string, topicIds: string[], updatedAt: string): Promise<WrittenRecord>;
-  setOverviewCaptureReason(id: string, captureReason: string | null, updatedAt: string): Promise<WrittenRecord>;
-  setOverviewTags(id: string, tags: string[], updatedAt: string): Promise<WrittenRecord>;
+  // Edited is the reader's own change, which moves Updated; a fold of duplicates isn't.
+  setOverviewTopics(id: string, topicIds: string[], updatedAt: string, edited?: boolean): Promise<WrittenRecord>;
+  setOverviewCaptureReason(id: string, captureReason: string | null, updatedAt: string, edited?: boolean): Promise<WrittenRecord>;
+  setOverviewTags(id: string, tags: string[], updatedAt: string, edited?: boolean): Promise<WrittenRecord>;
   setOverviewState(id: string, patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   deleteOverview(id: string): Promise<WrittenRecord | null>;
   createTopic(record: Record<string, unknown>): Promise<WrittenRecord>;

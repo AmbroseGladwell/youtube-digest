@@ -64,11 +64,11 @@ const send = async (
           return createOverview(api, change.record, knownRev);
       }
     case "topics":
-      return written(await api.setOverviewTopics(entry.id, change.topicIds, entry.updatedAt));
+      return written(await api.setOverviewTopics(entry.id, change.topicIds, entry.updatedAt, change.edited === true));
     case "captureReason":
-      return written(await api.setOverviewCaptureReason(entry.id, change.captureReason, entry.updatedAt));
+      return written(await api.setOverviewCaptureReason(entry.id, change.captureReason, entry.updatedAt, change.edited === true));
     case "tags":
-      return written(await api.setOverviewTags(entry.id, change.tags, entry.updatedAt));
+      return written(await api.setOverviewTags(entry.id, change.tags, entry.updatedAt, change.edited === true));
     case "state":
       return written(await api.setOverviewState(entry.id, change.patch, entry.updatedAt));
     case "settings":

@@ -27,9 +27,12 @@ import { tombstoneSuggestedQuestions } from "../records/tombstoneSuggestedQuesti
 import { ApiError } from "../http/ApiError.js";
 
 const Params = z.object({ id: OverviewId });
-const TopicsPatch = z.object({ topicIds: z.array(TopicId), updatedAt: UpdatedAt });
-const TagsPatch = z.object({ tags: Filing.shape.tags, updatedAt: UpdatedAt });
-const CaptureReasonPatch = z.object({ captureReason: z.string().nullable(), updatedAt: UpdatedAt });
+// Edited marks the reader's own change, so Updated moves: docs/features/library-sort.md, "Updated".
+const Edited = z.boolean().optional();
+const TopicsPatch = z.object({ topicIds: z.array(TopicId), updatedAt: UpdatedAt, edited: Edited });
+const TagsPatch = z.object({ tags: Filing.shape.tags, updatedAt: UpdatedAt, edited: Edited });
+const CaptureReasonPatch = z.object({ captureReason: z.string().nullable(), updatedAt: UpdatedAt, edited: Edited });
+const editedAt = (edited: boolean | undefined, updatedAt: string): { editedAt?: string } => (edited ? { editedAt: updatedAt } : {});
 // No default on asked: one would write an empty list over every read or favourite patch.
 const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: true })
   .partial()
@@ -72,13 +75,19 @@ export const overviewRoutes = (
 
   app.put("/overviews/:id/topics", async (request, reply) => {
     const { id } = parseOrThrow(Params, request.params, "The overview's id");
-    const { topicIds, updatedAt } = parseOrThrow(TopicsPatch, request.body, "The topics patch");
+    const { topicIds, updatedAt, edited } = parseOrThrow(TopicsPatch, request.body, "The topics patch");
     const ifMatch = ifMatchOf(request);
     const [written] = await records.write(request.session!.accountId, [
       {
         kind: "overview",
         id,
-        decide: (current) => decideMerge("overview", current, { patch: { topicIds }, updatedAt, ifMatch, defaults: null }, request.client!),
+        decide: (current) =>
+          decideMerge(
+            "overview",
+            current,
+            { patch: { topicIds, ...editedAt(edited, updatedAt) }, updatedAt, ifMatch, defaults: null },
+            request.client!,
+          ),
       },
     ]);
     return sendWritten(reply, written!);
@@ -86,14 +95,19 @@ export const overviewRoutes = (
 
   app.put("/overviews/:id/capture-reason", async (request, reply) => {
     const { id } = parseOrThrow(Params, request.params, "The overview's id");
-    const { captureReason, updatedAt } = parseOrThrow(CaptureReasonPatch, request.body, "The capture reason");
+    const { captureReason, updatedAt, edited } = parseOrThrow(CaptureReasonPatch, request.body, "The capture reason");
     const ifMatch = ifMatchOf(request);
     const [written] = await records.write(request.session!.accountId, [
       {
         kind: "overview",
         id,
         decide: (current) =>
-          decideMerge("overview", current, { patch: { captureReason }, updatedAt, ifMatch, defaults: null }, request.client!),
+          decideMerge(
+            "overview",
+            current,
+            { patch: { captureReason, ...editedAt(edited, updatedAt) }, updatedAt, ifMatch, defaults: null },
+            request.client!,
+          ),
       },
     ]);
     return sendWritten(reply, written!);
@@ -101,13 +115,19 @@ export const overviewRoutes = (
 
   app.put("/overviews/:id/tags", async (request, reply) => {
     const { id } = parseOrThrow(Params, request.params, "The overview's id");
-    const { tags, updatedAt } = parseOrThrow(TagsPatch, request.body, "The tags patch");
+    const { tags, updatedAt, edited } = parseOrThrow(TagsPatch, request.body, "The tags patch");
     const ifMatch = ifMatchOf(request);
     const [written] = await records.write(request.session!.accountId, [
       {
         kind: "overview",
         id,
-        decide: (current) => decideMerge("overview", current, { patch: { tags }, updatedAt, ifMatch, defaults: null }, request.client!),
+        decide: (current) =>
+          decideMerge(
+            "overview",
+            current,
+            { patch: { tags, ...editedAt(edited, updatedAt) }, updatedAt, ifMatch, defaults: null },
+            request.client!,
+          ),
       },
     ]);
     return sendWritten(reply, written!);

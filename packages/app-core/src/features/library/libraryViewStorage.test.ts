@@ -19,7 +19,7 @@ const CHOSEN = {
     tags: [],
     query: "",
   },
-  sort: "title" as const,
+  sort: { field: "title" as const, direction: "asc" as const, group: "letter" as const },
 };
 
 describe("libraryViewStorage", () => {
@@ -77,7 +77,7 @@ describe("libraryViewStorage", () => {
     expect(readLibraryView(null)).toEqual({
       view: {
         filters: { ...DEFAULT_LIBRARY_VIEW.filters, kinds: ["recipe"], novelties: ["original"], favourite: true },
-        sort: "title",
+        sort: { field: "title", direction: "asc", group: "none" },
       },
       dropped: [],
     });
@@ -135,5 +135,31 @@ describe("libraryViewStorage, when the browser refuses storage", () => {
   it("saves nothing and has nothing saved, without throwing", () => {
     expect(() => writeLibraryView(null, CHOSEN, refusing)).not.toThrow();
     expect(readLibraryView(null, refusing)).toBeNull();
+  });
+});
+
+describe("libraryViewStorage, the sort", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("keeps a sort with its direction and grouping", () => {
+    const sort = { field: "updated" as const, direction: "desc" as const, group: "week" as const };
+    writeLibraryView(null, { ...DEFAULT_LIBRARY_VIEW, sort });
+
+    expect(readLibraryView(null)?.view.sort).toEqual(sort);
+  });
+
+  it("reads a sort saved by its old name as the same order", () => {
+    localStorage.setItem("overview.libraryView.noAccount", JSON.stringify({ version: 2, status: "all", sort: "oldest" }));
+
+    expect(readLibraryView(null)?.view.sort).toEqual({ field: "added", direction: "asc", group: "none" });
+  });
+
+  it("drops a grouping that doesn't fit its field", () => {
+    localStorage.setItem(
+      "overview.libraryView.noAccount",
+      JSON.stringify({ version: 2, status: "all", sort: { field: "title", direction: "asc", group: "month" } }),
+    );
+
+    expect(readLibraryView(null)?.dropped).toContain("sort");
   });
 });

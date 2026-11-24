@@ -1,6 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { sortPillTestIds } from "../../src/features/library/components/SortPill/SortPillTestIds.js";
-import type { LibrarySort } from "../../src/features/library/types/LibrarySort.js";
+import type { LibrarySortPreset as LibrarySort } from "../../src/features/library/types/LibrarySort.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class SortPillPageObject extends PageObject {

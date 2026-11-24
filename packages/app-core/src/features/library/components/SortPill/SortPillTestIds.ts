@@ -1,7 +1,7 @@
-import type { LibrarySort } from "../../types/LibrarySort.js";
+import type { LibrarySortPreset } from "../../types/LibrarySort.js";
 
 export const sortPillTestIds = {
   trigger: "SortPill.trigger",
   menu: "SortPill.menu",
-  option: (sort: LibrarySort) => `SortPill.option.${sort}`,
+  option: (preset: LibrarySortPreset) => `SortPill.option.${preset}`,
 };

@@ -58,7 +58,7 @@ describe("overviewNeighbours", () => {
       savedAt: "2026-09-14T00:00:00.000Z",
       source: { ...makeOverviewWithState().overview.source, title: "Apple" },
     });
-    const view = { ...DEFAULT_LIBRARY_VIEW, sort: "title" as const };
+    const view = { ...DEFAULT_LIBRARY_VIEW, sort: { field: "title" as const, direction: "asc" as const, group: "none" as const } };
 
     expect(overviewNeighbours([zebra, read, apple], apple.overview.id, { view, kept: new Set() })).toEqual({
       position: 1,
