@@ -503,6 +503,36 @@ const sections: readonly LegalSection[] = [
     ),
   },
   {
+    id: "feedback",
+    heading: "Feedback you send us",
+    body: (
+      <>
+        <p>
+          When you are signed in you can send us feedback: something that's wrong, or an idea. We keep what you wrote, with any email
+          address and anything that looks like a key or a token replaced by a marker, and with it your account id, the time, whether you
+          sent it from the web app or the extension, the app's version, which overview it was about if you sent it from one, and whether you
+          marked it as something wrong or an idea. When you say something is wrong, it also carries the names of the last twenty things you
+          did in the app, as an error report does, so we can retrace them. We read it, match it against our list of planned work, and note
+          what we did with it.
+        </p>
+        <p>
+          If you close the box without sending, what you wrote stays on that device as a draft, one for general feedback and one for each
+          overview, until you send it or empty the box. It is never synced. If you said yes to analytics, we count opening the box, sending
+          it and closing it, with its kind and whether it was about an overview, never your words.
+        </p>
+        <p>
+          Your feedback stays in our own database and goes to no one else. PostHog's daily copy for our dashboards counts feedback by day,
+          plan, where it was sent from, its kind and what we did with it, under the same coded id as the cost summary, and never holds your
+          words or the overview.
+        </p>
+        <p>
+          <strong>Basis:</strong> our legitimate interest in fixing what's wrong and deciding what to build. <strong>Kept:</strong> until
+          you delete the account.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "logs",
     heading: "Server logs and safety limits",
     body: (
@@ -561,7 +591,11 @@ const sections: readonly LegalSection[] = [
             ["Fly.io", "runs our server and the narration service", "London"],
             ["Neon", "our database: accounts, libraries, transcripts, usage counts", "London"],
             ["Cloudflare", "stores narration audio (R2) and serves our domain's DNS", "Cloudflare's network"],
-            ["PostHog", "analytics, error reports, server logs, the monthly cost summary and daily cost totals", "EU cloud"],
+            [
+              "PostHog",
+              "analytics, error reports, server logs, the monthly cost summary, daily cost totals and feedback counts",
+              "EU cloud",
+            ],
             ["Brevo", "sends sign-in emails", "European Union"],
             [
               "OpenAI",
@@ -624,7 +658,8 @@ const sections: readonly LegalSection[] = [
           <strong>Strictly necessary</strong>, because the app can't work without it: your library and its transcripts, in the browser's
           database; any API keys you added; your settings; your sign-in state, and in the extension the server it talks to; where you got to
           in each transcript; which of a followed playlist's videos this device has seen; when you chose to keep a project the app asked
-          about after it was left alone; and, before you have an account, the trial token that lets us read your first link.
+          about after it was left alone; feedback you closed without sending; and, before you have an account, the trial token that lets us
+          read your first link.
         </p>
         <p>
           <strong>Analytics only</strong>, and deleted when you say no: your answer to the analytics question, the date you gave it, and,
@@ -674,6 +709,7 @@ const sections: readonly LegalSection[] = [
           ],
           ["An episode's audio, while it is transcribed", "not kept: deleted once it has been turned into words"],
           ["Monthly and daily usage counts, and the daily cost tally, for an account", "with the account"],
+          ["Feedback you sent, and what we noted about it", "until the account is deleted"],
           ["Hashed addresses for the monthly transcription allowance", "until the month ends"],
           [
             "The record of a deletion: the account's opaque id, the random analytics id joined to it, the narration files asked for, and how each erasure ended",
@@ -701,14 +737,15 @@ const sections: readonly LegalSection[] = [
           <strong>Deleting your account.</strong> Settings › Account & sync has Delete account. After a code to your address confirms it is
           you, skipped if you signed in within the last fifteen minutes, it deletes straight away and in one step: the account, its email
           and name, any email change in progress and the record of each change, every session and connected assistant, your library and
-          settings and conversations, your shared links, the monthly and daily counts, the sign-in links held for your address, and every
-          narration file your account asked for. Then we ask PostHog to delete the person records under your account's id and the random id
-          joined to it at sign-up, with every event and error report under them; PostHog removes the person within minutes and the events in
-          a later scheduled run, not instantly. If asking fails, we keep a record of the deletion saying so and ask again by hand. What
-          stays is what the table above says outlives an account: where an episode's words were found, which names no account; and the
-          record of the deletion itself, which holds no address. Server logs expire on their own within fourteen days. The device you
-          deleted from removes its copy of your library; copies on other devices stay on those devices, signed out, until you clear the
-          site's data there. Signing in with the same address afterwards finds no account; creating one with it starts a new, empty account.
+          settings and conversations, any feedback you sent, your shared links, the monthly and daily counts, the sign-in links held for
+          your address, and every narration file your account asked for. Then we ask PostHog to delete the person records under your
+          account's id and the random id joined to it at sign-up, with every event and error report under them; PostHog removes the person
+          within minutes and the events in a later scheduled run, not instantly. If asking fails, we keep a record of the deletion saying so
+          and ask again by hand. What stays is what the table above says outlives an account: where an episode's words were found, which
+          names no account; and the record of the deletion itself, which holds no address. Server logs expire on their own within fourteen
+          days. The device you deleted from removes its copy of your library; copies on other devices stay on those devices, signed out,
+          until you clear the site's data there. Signing in with the same address afterwards finds no account; creating one with it starts a
+          new, empty account.
         </p>
         <p>
           <strong>Without an account.</strong> Turning analytics off in Settings › Privacy deletes the random id from your device and stops

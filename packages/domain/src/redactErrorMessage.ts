@@ -1,7 +1,7 @@
 export const MAX_ERROR_MESSAGE_LENGTH = 200;
 
 const URL_PATTERN = /\b(?:[a-z][a-z0-9+.-]*:\/\/|www\.)\S+/gi;
-const EMAIL_PATTERN = /\b[^\s@<>"'`]+@[^\s@<>"'`]+\.[a-z]{2,}\b/gi;
+export const EMAIL_PATTERN = /\b[^\s@<>"'`]+@[^\s@<>"'`]+\.[a-z]{2,}\b/gi;
 const QUOTED_PATTERN = /"([^"]*)"|'([^']*)'|`([^`]*)`|“([^”]*)”|‘([^’]*)’/g;
 const IDENTIFIER = /^[A-Za-z_$][\w$]{0,39}$/;
 const ID_LIKE_PATTERN = /\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{8,}\b|\b\d{6,}\b/g;

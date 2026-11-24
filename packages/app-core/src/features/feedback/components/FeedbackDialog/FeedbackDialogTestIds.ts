@@ -1,0 +1,15 @@
+export const feedbackDialogTestIds = {
+  root: "FeedbackDialog.root",
+  closeButton: "FeedbackDialog.closeButton",
+  about: "FeedbackDialog.about",
+  kind: (kind: string) => `FeedbackDialog.kind.${kind}`,
+  draftNote: "FeedbackDialog.draftNote",
+  field: "FeedbackDialog.field",
+  count: "FeedbackDialog.count",
+  failure: "FeedbackDialog.failure",
+  sentWith: "FeedbackDialog.sentWith",
+  cancelButton: "FeedbackDialog.cancelButton",
+  sendButton: "FeedbackDialog.sendButton",
+  sent: "FeedbackDialog.sent",
+  doneButton: "FeedbackDialog.doneButton",
+};

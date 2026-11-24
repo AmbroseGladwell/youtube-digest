@@ -37,5 +37,6 @@ export const rateLimits = {
   anonymousEventsPerAddress: { name: "anonymousEventsAddress", limit: 60, windowMs: MINUTE_MS },
   sharedPageEventsPerAddress: { name: "sharedPageEventsAddress", limit: 60, windowMs: MINUTE_MS },
   errorsPerAddress: { name: "errorsAddress", limit: 30, windowMs: MINUTE_MS },
+  feedbackPerAccount: { name: "feedbackAccount", limit: 20, windowMs: HOUR_MS },
   sharePagePerAddress: { name: "sharePageAddress", limit: 600, windowMs: HOUR_MS },
 } as const satisfies Record<string, RateLimit>;
