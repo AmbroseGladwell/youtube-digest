@@ -187,6 +187,36 @@ $focus-ring-room: 4px;
   background: var(--surface);
 }
 
+.off {
+  cursor: default;
+
+  :global(svg) {
+    opacity: 0.55;
+  }
+
+  b {
+    color: var(--muted);
+  }
+
+  small {
+    grid-column: 2 / -1;
+    white-space: normal;
+  }
+}
+
+.offLink {
+  display: block;
+  margin: -4px 0 6px 46px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 0.75rem var(--font-body);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
 .more,
 .line {
   margin: 0;

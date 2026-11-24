@@ -218,10 +218,35 @@ everything else (`KeptHereBanner`): "1 link from your phone is ready to make her
 Make them button and list are left out for that reason, and its "they carry on while the
 browser is open" isn't said, since closing the side panel stops them.
 
+## In chat
+
+Design 358l-5. Until it has its overview an item is left out of chat, as a reason to
+upgrade: there is no Ask on it, and library and project chat read only overviews. Chat's @
+picker still finds it by title, among overviews by date, but muted and never chosen
+(`aria-disabled`; the arrow keys and Enter pass over it). Under it, "No overview yet, so it
+can't be asked about yet", then **Get Plus**, or **Make its overview** once overviews are
+back, which opens it. Get Plus sits outside the option, so it isn't read as disabled with
+it.
+
+## Events
+
+Under `keptLinks` in the catalogue, each with `plan` and `surface` (web, phone or panel),
+never the link:
+
+- `queue.linkKept`: Keep it pressed, with what the link waits for.
+- `queue.keptLinkMade`: an overview written for a kept link, with how many minutes it
+  waited, what for, where it was kept, and whether the extension made it.
+- `queue.keptLinkRemoved`, `queue.keptLinkFailed` (with the problem).
+- `saved.savedWithoutOverview`: whether it was transcribed and whether it was a kept link.
+- `saved.overviewMadeLater`: hours waited, and `after`: `reset` when the UTC month turned
+  since it was saved, `sameMonth` when more overviews came another way (a plan, a key).
+- `saved.saveCapReached`: the wall met with no saves left.
+
+The server logs `capture claim expired` when a device takes over a claim another left to
+run out. The "Kept links" dashboard in PostHog reads these.
+
 ## Not built yet
 
 - Keeping a TikTok only the extension can read, and making it there (OV-403).
 - "Already saved · no overview yet" and "Already in your queue" under the field (358c-2).
 - Undo after removing a kept link.
-- Kept links at the server cap, the queue's new home, and the extension's banner.
-- The @ picker's muted row, the events and the "Kept links" dashboard.

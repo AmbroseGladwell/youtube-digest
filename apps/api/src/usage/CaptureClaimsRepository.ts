@@ -1,7 +1,7 @@
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 
-export type ClaimOutcome = { claimed: true; until: Date } | { claimed: false; until: Date };
+export type ClaimOutcome = { claimed: true; until: Date; expiredTaken: boolean } | { claimed: false; until: Date };
 
 // docs/features/kept-links.md, "Made once".
 export class CaptureClaimsRepository {
@@ -12,6 +12,10 @@ export class CaptureClaimsRepository {
   }
 
   async claim(accountId: AccountId, sourceKey: string, holder: string, now: Date, until: Date): Promise<ClaimOutcome> {
+    const [before] = await this.#sql.query<{ holder: string }>(
+      "select holder from capture_claims where account_id = $1 and source_key = $2",
+      [accountId, sourceKey],
+    );
     const taken = await this.#sql.query<{ until: string }>(
       `insert into capture_claims (account_id, source_key, holder, until) values ($1, $2, $3, $5::timestamptz)
        on conflict (account_id, source_key) do update set holder = excluded.holder, until = excluded.until
@@ -20,7 +24,7 @@ export class CaptureClaimsRepository {
       [accountId, sourceKey, holder, now.toISOString(), until.toISOString()],
     );
     if (taken.length > 0) {
-      return { claimed: true, until };
+      return { claimed: true, until, expiredTaken: before !== undefined && before.holder !== holder };
     }
     const [held] = await this.#sql.query<{ until: string | Date }>(
       "select until from capture_claims where account_id = $1 and source_key = $2",

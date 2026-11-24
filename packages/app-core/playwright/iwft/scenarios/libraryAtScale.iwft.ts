@@ -13,6 +13,12 @@ const seedALongLibrary = (seed: (overview: ReturnType<typeof makeOverview>) => v
   }
 };
 
+const scrollSettled = () =>
+  new Promise<boolean>((resolve) => {
+    const before = window.scrollY;
+    setTimeout(() => resolve(window.scrollY === before), 300);
+  });
+
 test("a long library puts only the rows near the screen in the page, and still says how long the list is", async ({
   launcher,
   backendSimulator,
@@ -38,6 +44,7 @@ test("on a phone, coming back from an overview deep in a long library puts its r
     await page.mouse.wheel(0, 900);
   }
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(6_000);
+  await expect.poll(() => page.evaluate(scrollSettled)).toBe(true);
   const left = await library.readScrollPosition();
   const row = await library.readARowOnScreen();
   const reader = await library.openTheRow(row.title);

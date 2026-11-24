@@ -237,6 +237,11 @@ export const apiLogLines = coded("api", {
       "capture save limit reached",
       "A save without an overview was refused: the month's saves are used. `plan` and `limit`.",
     ),
+    claimExpired: line(
+      "info",
+      "capture claim expired",
+      "A device took over a source whose claim had run out without being released: the device making it closed or lost its connection.",
+    ),
     claimedElsewhere: line(
       "info",
       "capture claimed elsewhere",

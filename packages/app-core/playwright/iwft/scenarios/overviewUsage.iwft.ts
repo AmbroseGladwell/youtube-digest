@@ -15,6 +15,12 @@ const SIGNED_IN = {
 };
 const { apiKeys: _noKey, ...SIGNED_IN_WITHOUT_A_KEY } = SIGNED_IN;
 
+const keptLinkEvents = (backendSimulator: { analytics: { events: () => { name: string; props: unknown }[] } }, name: string) =>
+  backendSimulator.analytics
+    .events()
+    .filter((event) => event.name === `keptLinks.saved.${name}`)
+    .map((event) => event.props);
+
 test("on Free with a key, the line counts the reader's own key first, and counts the overview just made", async ({
   launcher,
   backendSimulator,
@@ -264,6 +270,9 @@ test("at the wall, Save it for now keeps the link with its transcript, makes not
 
   await launcher.softWall.verifySaved("The Simulated Video");
   expect(backendSimulator.ourKey.generations()).toEqual([]);
+  await expect
+    .poll(() => keptLinkEvents(backendSimulator, "savedWithoutOverview"))
+    .toEqual([{ plan: "free", surface: "web", transcribed: false, fromKeptLink: false }]);
   const [capture] = await backendSimulator.captureStore.list();
   expect(capture).toMatchObject({ stage: "saved", sourceKey: IWFT_VIDEO_ID });
   await launcher.softWall.savedDone();
@@ -293,6 +302,7 @@ test("with the month's saves made, the wall offers only Plus and a key", async (
   await dialog.form.submitUrl(VALID_URL);
 
   await launcher.softWall.verifyOffersSaving(false);
+  await expect.poll(() => keptLinkEvents(backendSimulator, "saveCapReached")).toEqual([{ plan: "free", surface: "web" }]);
 });
 
 test("once overviews are back, a saved item's Make overview writes it from its kept transcript, under its own id", async ({
@@ -337,4 +347,7 @@ test("once overviews are back, a saved item's Make overview writes it from its k
     .poll(async () => (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.id))
     .toEqual([capture.id]);
   expect(await backendSimulator.captureStore.list()).toEqual([]);
+  await expect
+    .poll(() => keptLinkEvents(backendSimulator, "overviewMadeLater"))
+    .toMatchObject([{ plan: "free", surface: "web", after: "reset" }]);
 });

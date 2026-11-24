@@ -137,6 +137,9 @@ export const captureRoutes = (app: FastifyInstance, { records, transcripts, save
       request.log.info(apiLogLines.captures.claimedElsewhere());
       throw new ApiError("claimed_elsewhere", "Another device is making this source", { until: outcome.until.toISOString() });
     }
+    if (outcome.expiredTaken) {
+      request.log.info(apiLogLines.captures.claimExpired());
+    }
     return { until: outcome.until.toISOString() };
   });
 

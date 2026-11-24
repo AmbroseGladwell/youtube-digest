@@ -1,4 +1,6 @@
 import type { Overview } from "@overview/domain";
+import { useSurface } from "../../../../app/SurfaceContext.js";
+import { captureSurfaceOf } from "../../../captures/util/captureSurfaceOf.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { JustNowList } from "../JustNowList/JustNowList.js";
 import { newOverviewDialogTestIds } from "../NewOverviewDialog/NewOverviewDialogTestIds.js";
@@ -115,6 +117,7 @@ export const GenerateOverviewForm = ({
   const limit = useLimitMessage();
   const next = useNextQuota();
   const usage = useOverviewUsageQuery().data;
+  const surface = useSurface();
   const plan = usage?.plan ?? DEFAULT_PLAN;
   const [saving, setSaving] = useState(false);
   // Plus keeps the note at the limit, since the wall's way on is Plus.
@@ -156,6 +159,9 @@ export const GenerateOverviewForm = ({
     }
     if (walled !== null && url.trim() !== "") {
       analytics.capture.newOverviewForm.wallShown({ plan });
+      if (usage?.saves !== undefined && usage.saves.used >= usage.saves.limit) {
+        analytics.keptLinks.saved.saveCapReached({ plan, surface: captureSurfaceOf(surface) });
+      }
       setWallShown(true);
       return;
     }

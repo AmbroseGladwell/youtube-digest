@@ -22,6 +22,12 @@ const SIGNED_IN = {
   syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL },
 };
 
+const propsOf = (backendSimulator: { analytics: { events: () => { name: string; props: unknown }[] } }, name: string) =>
+  backendSimulator.analytics
+    .events()
+    .filter((event) => event.name === `keptLinks.${name}`)
+    .map((event) => event.props);
+
 const saved = (videoId: string, title: string, id: string): Capture => ({
   id: OverviewId.parse(id),
   sourceKey: SourceKey.parse(videoId),
@@ -48,7 +54,7 @@ test("stopped at our server's cap, Keep it keeps the link, and it is made by its
 }) => {
   await page.clock.install({ time: EVENING });
   backendSimulator.transcripts.serviceCapReached(CAP_RESETS_IN_SECONDS);
-  await launcher.launch({ apiKeys: ANTHROPIC_KEY });
+  await launcher.launch({ ...SIGNED_IN, apiKeys: ANTHROPIC_KEY });
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.submitUrl(VALID_URL);
 
@@ -66,6 +72,10 @@ test("stopped at our server's cap, Keep it keeps the link, and it is made by its
 
   await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.id)).toEqual([kept!.id]);
   expect(await backendSimulator.captureStore.list()).toEqual([]);
+  await expect.poll(() => propsOf(backendSimulator, "queue.linkKept")).toEqual([{ plan: "free", surface: "web", waitingFor: "server" }]);
+  await expect
+    .poll(() => propsOf(backendSimulator, "queue.keptLinkMade"))
+    .toEqual([{ plan: "free", surface: "web", keptFrom: "web", waitingFor: "server", waitedMinutes: 151, byExtension: false }]);
 });
 
 test("once overviews are back, Make all on No overview yet makes every saved one, one after another", async ({
@@ -114,7 +124,7 @@ test("the extension makes a link kept on a phone at once, and its panel says so 
   };
   backendSimulator.captureStore.seed(kept);
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
-  await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY, youTubeFetch: true });
+  await launcher.launchPanel({ ...SIGNED_IN, apiKeys: ANTHROPIC_KEY, youTubeFetch: true });
 
   await expect(page.getByTestId(keptHereBannerTestIds.root)).toHaveText(
     "Making 1 link from your phone here. Keep this panel open until they’re done.",
@@ -123,4 +133,7 @@ test("the extension makes a link kept on a phone at once, and its panel says so 
 
   await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.id)).toEqual([kept.id]);
   await expect(page.getByTestId(keptHereBannerTestIds.root)).toHaveCount(0);
+  await expect
+    .poll(() => propsOf(backendSimulator, "queue.keptLinkMade"))
+    .toMatchObject([{ surface: "panel", keptFrom: "phone", waitingFor: "server", byExtension: true }]);
 });

@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { overviewPartHash, type Chat, type ChatAnswerSections, type ChatCitation, type Overview, type ProjectId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { savedCaptureFrom } from "../../../src/features/captures/types/SavedCaptureFactory.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeProject, makeProjectMember } from "../../../src/features/projects/types/ProjectFactory.testHelper.js";
 
@@ -170,6 +171,31 @@ test.describe("Ask", () => {
 
     expect(backendSimulator.chats.questions()[0]).toMatchObject({ pins: { overviews: [plants.id], projects: [] } });
     await ask.verifyPinnedRead(0, [PLANTS]);
+  });
+
+  test("an item saved without an overview shows in the @ picker muted and can't be chosen, with Get Plus (358l-5)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    const stew = titled(STEW, "2026-11-03T09:00:00.000Z");
+    backendSimulator.overviews.seedSynced(stew);
+    backendSimulator.captureStore.seed(savedCaptureFrom(titled("Beans on toast, three ways", "2026-11-04T09:00:00.000Z")));
+    backendSimulator.chats.answerWith({ text: "Beans.", citations: [cite(stew)], stats: { overviews: 1, read: 1 } });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.type("@bean");
+    await ask.verifyMutedPickerOption("Beans on toast, three ways");
+    await ask.tryMutedPickerOption();
+    await ask.getPlusFromMutedPickerOption();
+    await launcher.plansModal.verifyIsShown();
+    await launcher.plansModal.close();
+
+    await ask.type("@bean");
+    await ask.pickWithEnter();
+    await ask.ask("What goes in it?");
+
+    expect(backendSimulator.chats.questions()[0]).toMatchObject({ pins: { overviews: [stew.id], projects: [] } });
   });
 
   test("on the web the drawer starts open (OV-370), a column at the left listing library, project and overview conversations by day; it opens a library or project one beside it, and a deleted one comes back with Undo", async ({

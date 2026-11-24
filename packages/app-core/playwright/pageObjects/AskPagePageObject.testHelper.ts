@@ -83,6 +83,27 @@ export class AskPagePageObject extends PageObject {
   choosePickerOption = (index: number) =>
     this.step(`choosePickerOption ${index}`, () => this.click(this.root().getByTestId(chatComposerTestIds.option).nth(index)));
 
+  verifyMutedPickerOption = (title: string) =>
+    this.step(`verifyMutedPickerOption ${title}`, async () => {
+      const option = this.root().getByTestId(chatComposerTestIds.savedOption);
+      await expect(option).toHaveAttribute("aria-disabled", "true");
+      await expect(option).toContainText(title);
+      await expect(option).toContainText("No overview yet, so it can’t be asked about yet");
+      await expect(this.root().getByTestId(chatComposerTestIds.savedGetPlus)).toHaveText("Get Plus");
+    });
+
+  tryMutedPickerOption = () =>
+    this.step("tryMutedPickerOption", async () => {
+      await this.root().getByTestId(chatComposerTestIds.savedOption).locator("b").click();
+      await expect(this.root().getByTestId(chatComposerTestIds.picker)).toBeVisible();
+      await expect(this.root().getByTestId(chatComposerTestIds.sources)).toHaveCount(0);
+    });
+
+  pickWithEnter = () => this.step("pickWithEnter", () => this.field().press("Enter"));
+
+  getPlusFromMutedPickerOption = () =>
+    this.step("getPlusFromMutedPickerOption", () => this.click(this.root().getByTestId(chatComposerTestIds.savedGetPlus)));
+
   verifyQuestionsRead = (questions: string[]) =>
     this.step(`verifyQuestionsRead ${questions.join(" | ")}`, () =>
       expect(this.root().getByTestId(askPageTestIds.question)).toHaveText(questions),
