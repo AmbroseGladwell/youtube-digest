@@ -23,6 +23,15 @@ export class LibraryOverviewCardPageObject extends PageObject {
   verifyTitle = (title: string) =>
     this.step(`verifyTitle ${title}`, () => expect(this.get(libraryOverviewCardTestIds.titleLink)).toContainText(title));
 
+  verifySiteLinked = (name: string | null) =>
+    this.step(`verifySiteLinked ${name}`, () =>
+      name === null
+        ? this.expectToHaveCount(libraryOverviewCardTestIds.siteLink, 0)
+        : expect(this.get(libraryOverviewCardTestIds.siteLink)).toHaveText(name),
+    );
+
+  openSitePage = () => this.step("openSitePage", () => this.click(libraryOverviewCardTestIds.siteLink));
+
   openReader = (): Promise<ReaderPageObject> =>
     this.step("openReader", async () => {
       await this.click(libraryOverviewCardTestIds.titleLink);

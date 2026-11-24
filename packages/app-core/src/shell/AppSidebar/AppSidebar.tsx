@@ -7,9 +7,8 @@ import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../features/analytics/AnalyticsContext.js";
 import { useQueueCount } from "../../features/captureQueue/useQueueCount.js";
 import { NewTopicDialog } from "../../features/library/components/NewTopicDialog/NewTopicDialog.js";
-import { readLibraryView, writeLibraryView } from "../../features/library/libraryViewStorage.js";
-import { DEFAULT_LIBRARY_VIEW } from "../../features/library/types/LibraryView.js";
-import { applyLibraryFilterPatch, applyLibraryView, parseLibraryView } from "../../features/library/util/libraryFilterParams.js";
+import { useLibraryViewLink } from "../../features/library/useLibraryViewLink.js";
+import { parseLibraryView } from "../../features/library/util/libraryFilterParams.js";
 import { useCreateTopicMutation } from "../../features/overviews/mutations/useCreateTopicMutation.js";
 import { useOverviewsWithStateQuery } from "../../features/overviews/queries/overviewsWithStateQuery.js";
 import { useTopicsQuery } from "../../features/overviews/queries/topicsQuery.js";
@@ -20,8 +19,6 @@ import { useNewProject } from "../../features/projects/useNewProject.js";
 import { useProjectSummaries } from "../../features/projects/useProjectSummaries.js";
 import { projectMarkColour } from "../../features/projects/util/projectMarkColour.js";
 import { activeSummaries, archivedSummaries } from "../../features/projects/util/projectSummaries.js";
-import { libraryAccountIdOf } from "../../features/sync/types/SyncConnection.js";
-import { useSyncConnection } from "../../features/sync/useSyncConnection.js";
 import { TimeSavedFigure } from "../../features/timeSaved/components/TimeSavedFigure/TimeSavedFigure.js";
 import { TimeSavedSheet } from "../../features/timeSaved/components/TimeSavedSheet/TimeSavedSheet.js";
 import { milestoneColourStyle } from "../../features/timeSaved/util/milestoneColourStyle.js";
@@ -54,7 +51,6 @@ const overviewsWord = (count: number) => `${count} ${count === 1 ? "overview" : 
 export const AppSidebar = ({ onHide }: AppSidebarProps) => {
   const { pathname, search } = useLocation();
   const analytics = useAnalytics();
-  const accountId = libraryAccountIdOf(useSyncConnection().connection);
   const overviews = readableEntries(useOverviewsWithStateQuery().data ?? []);
   const topics = useTopicsQuery().data ?? [];
   const { summaries } = useProjectSummaries(overviews);
@@ -83,10 +79,7 @@ export const AppSidebar = ({ onHide }: AppSidebarProps) => {
   const next = MILESTONES.find((milestone) => milestone.minutes > timeSaved.minutes);
   const from = MILESTONES.filter((milestone) => milestone.minutes <= timeSaved.minutes).at(-1)?.minutes ?? 0;
 
-  const topicParams = (line: TopicLine): URLSearchParams => {
-    const base = onHome ? homeParams : applyLibraryView(new URLSearchParams(), readLibraryView(accountId)?.view ?? DEFAULT_LIBRARY_VIEW);
-    return applyLibraryFilterPatch(base, { topicId: line.topic.id === chosenTopic ? "all" : line.topic.id });
-  };
+  const viewLink = useLibraryViewLink();
   const page = (name: "Overviews" | "Projects", to: string, icon: "list" | "folder", on: boolean) => (
     <PageLink
       className={`${styles.page} ${on ? styles.on : ""}`}
@@ -182,17 +175,17 @@ export const AppSidebar = ({ onHide }: AppSidebarProps) => {
         <ul className={styles.list} aria-label="Topics">
           {listedTopics.map((line) => {
             const on = line.topic.id === chosenTopic;
-            const params = topicParams(line);
+            const link = viewLink({ topicId: on ? "all" : line.topic.id });
             return (
               <li key={line.topic.id}>
                 <PageLink
                   className={`${styles.item} ${on ? styles.on : ""}`}
-                  to={Routes.libraryView(params)}
+                  to={link.to}
                   aria-current={on ? "true" : undefined}
                   aria-label={`${line.topic.name}, ${overviewsWord(line.count)}, ${line.count - line.read} unread`}
                   onClick={() => {
                     analytics.app.nav.quickAccessChosen({ kind: "topic" });
-                    writeLibraryView(accountId, parseLibraryView(params));
+                    link.follow();
                   }}
                   data-testid={appSidebarTestIds.topic(line.topic.name)}
                 >

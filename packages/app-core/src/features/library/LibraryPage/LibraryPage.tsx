@@ -24,7 +24,7 @@ import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageT
 import { SortMenu } from "../components/SortMenu/SortMenu.js";
 import { LibraryList, type LibraryListHeading } from "../components/LibraryList/LibraryList.js";
 import { libraryGroups, localeWeekStart } from "../util/libraryGroups.js";
-import { LibraryOverviewCard, type SaidMoment } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
+import { LibraryOverviewCard, type SaidMoment, type SiteLink } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
 import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { LibraryCaptureCard } from "../components/LibraryCaptureCard/LibraryCaptureCard.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
@@ -48,6 +48,9 @@ import { LibraryFilterChips } from "../components/LibraryFilterChips/LibraryFilt
 import { libraryRowGlideName, useLibraryGlide } from "./useLibraryGlide.js";
 import "./libraryTransitions.scss";
 import { useLibraryView } from "./useLibraryView.js";
+import { useLibraryViewLink } from "../useLibraryViewLink.js";
+import { SourceHead } from "../components/SourceHead/SourceHead.js";
+import { librarySourceOf } from "../util/librarySourceOf.js";
 import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { usePlan } from "../../plus/usePlan.js";
@@ -196,6 +199,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const [manageTagsOpen, setManageTagsOpen] = useState(false);
   const [timeSavedOpen, setTimeSavedOpen] = useState(false);
   const analytics = useAnalytics();
+  const viewLink = useLibraryViewLink();
   const searchSettled = useRef(() => {});
   useTypingSettled(query, () => searchSettled.current());
   const settledQuery = useSettledText(query.trim());
@@ -405,6 +409,20 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     }
   };
 
+  const pageSource =
+    place.kind === "library" && filters.sources.length === 1 ? counts.bySource.find(({ id }) => id === filters.sources[0]) : undefined;
+  const sourceHead =
+    pageSource === undefined ? null : (
+      <SourceHead
+        source={pageSource}
+        overviews={readableEntries(entries).filter(({ overview }) => librarySourceOf(overview.source).id === pageSource.id)}
+        back={viewLink({ sources: [] })}
+        isPhone={isPhone}
+        now={new Date()}
+        onLeave={() => analytics.library.sourcePage.left()}
+        onSiteOpened={() => analytics.library.sourcePage.siteOpened()}
+      />
+    );
   const topicTitle = place.kind === "library" ? topics.find((topic) => topic.id === filters.topicId) : undefined;
   const inTopic =
     topicTitle === undefined ? [] : readableEntries(entries).filter(({ overview }) => overview.topicIds.includes(topicTitle.id));
@@ -420,6 +438,20 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         <span className={styles.visuallyHidden}> tagged {filters.tags.map((tag) => `#${tag}`).join(" or ")}</span> · {unreadShown} unread
       </>
     );
+  };
+  const siteLinkFor = (overview: Overview): SiteLink | null => {
+    const source = librarySourceOf(overview.source);
+    if (source.platform !== "website" || source.domain === null) {
+      return null;
+    }
+    const link = viewLink({ sources: [source.id] });
+    return {
+      to: link.to,
+      follow: () => {
+        analytics.library.sourcePage.rowLinkFollowed();
+        link.follow();
+      },
+    };
   };
   const row = (entry: LibraryEntry, order: number, said: SaidMoment | null = null) => (
     <div
@@ -483,6 +515,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           onListen={() => listen(entry.overview)}
           addedBy={projects.addedByFor(entry.overview.id)}
           said={said}
+          siteLink={siteLinkFor(entry.overview)}
           selection={
             selection.selecting
               ? { selected: selection.picked.has(entry.overview.id), onToggle: () => selection.toggle(entry.overview.id), order }
@@ -576,7 +609,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       <main className={styles.main} ref={main}>
         {listShown ? (
           <>
-            {projects.head ?? (
+            {projects.head ?? sourceHead ?? (
               <div className={styles.listHead}>
                 <div className={styles.titleBlock}>
                   <div className={styles.titleRow}>

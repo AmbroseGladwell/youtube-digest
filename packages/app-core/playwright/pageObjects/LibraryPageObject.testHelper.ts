@@ -22,6 +22,7 @@ import { libraryListTestIds } from "../../src/features/library/components/Librar
 import { MilestoneStackPageObject } from "./MilestoneStackPageObject.testHelper.js";
 import { TimeSavedSheetPageObject } from "./TimeSavedSheetPageObject.testHelper.js";
 import { AppSidebarPageObject } from "./AppSidebarPageObject.testHelper.js";
+import { SourceHeadPageObject } from "./SourceHeadPageObject.testHelper.js";
 import { appSidebarTestIds } from "../../src/shell/AppSidebar/AppSidebarTestIds.js";
 import { queueLineTestIds } from "../../src/features/captureQueue/components/QueueLine/QueueLineTestIds.js";
 import { ProjectHeadPageObject } from "./ProjectHeadPageObject.testHelper.js";
@@ -29,6 +30,10 @@ import { ProjectHeadPageObject } from "./ProjectHeadPageObject.testHelper.js";
 export class LibraryPageObject extends PageObject {
   get filterMenu(): FilterMenuPageObject {
     return new FilterMenuPageObject(this.testContext);
+  }
+
+  get sourceHead(): SourceHeadPageObject {
+    return new SourceHeadPageObject(this.testContext);
   }
 
   get sidebar(): AppSidebarPageObject {

@@ -3,6 +3,7 @@ export const libraryOverviewCardTestIds = {
   row: "LibraryOverviewCard.row",
   titleLink: "LibraryOverviewCard.titleLink",
   meta: "LibraryOverviewCard.meta",
+  siteLink: "LibraryOverviewCard.siteLink",
   metaLength: "LibraryOverviewCard.metaLength",
   listenButton: "LibraryOverviewCard.listenButton",
   favouriteButton: "LibraryOverviewCard.favouriteButton",
