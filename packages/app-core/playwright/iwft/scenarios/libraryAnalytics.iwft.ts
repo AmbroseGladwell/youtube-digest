@@ -58,7 +58,7 @@ test("searching the library is counted once the reader stops typing, with how ma
   expect(JSON.stringify(backendSimulator.analytics.batches())).not.toContain("sourdough");
 });
 
-test("a row's read and favourite are counted with the state chosen and the overview's id, and so is opening it", async ({
+test("a row's read and favourite are counted with the state chosen, the overview's id, its layout and plan, and so is opening it", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -74,9 +74,9 @@ test("a row's read and favourite are counted with the state chosen and the overv
   await expect
     .poll(() => libraryEvents(backendSimulator))
     .toEqual([
-      { name: "library.overviewCard.readSwitched", props: { overviewId, read: true } },
-      { name: "library.overviewCard.favouriteSwitched", props: { overviewId, favourite: true } },
-      { name: "library.overviewCard.opened", props: { overviewId, from: "title" } },
+      { name: "library.overviewCard.readSwitched", props: { overviewId, read: true, layout: "row", plan: "free" } },
+      { name: "library.overviewCard.favouriteSwitched", props: { overviewId, favourite: true, layout: "row", plan: "free" } },
+      { name: "library.overviewCard.opened", props: { overviewId, from: "title", layout: "row", plan: "free" } },
     ]);
 });
 
@@ -92,4 +92,39 @@ test("picking an order is counted by the order's own name", async ({ launcher, b
       { name: "library.sortPill.opened", props: {} },
       { name: "library.sortPill.orderChosen", props: { field: "title", direction: "asc", group: "none" } },
     ]);
+});
+
+test("on a phone the row's events say it was the banner", async ({ launcher, backendSimulator, page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const grid = seed(backendSimulator);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+
+  await library.cardWithTitle("Grid batteries").clickListen();
+
+  await expect
+    .poll(() => libraryEvents(backendSimulator).filter(({ name }) => name === "library.overviewCard.listenPressed"))
+    .toEqual([
+      { name: "library.overviewCard.listenPressed", props: { overviewId: grid.id, listening: true, layout: "banner", plan: "free" } },
+    ]);
+});
+
+test("a row whose image fails is counted once by its kind, however often it is drawn again", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  await page.route("https://cdn.example/**", (route) => route.abort());
+  const broken = makeOverview({
+    source: { ...makeOverview().source, title: "Broken picture", thumbnailUrl: "https://cdn.example/missing.jpg" },
+  });
+  backendSimulator.overviews.seed(broken);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  await library.cardWithTitle("Broken picture").verifyHasNoThumbnail();
+  const reader = await library.cardWithTitle("Broken picture").openReaderFromTitle();
+  const back = await reader.clickBackToLibrary();
+  await back.cardWithTitle("Broken picture").verifyHasNoThumbnail();
+
+  await expect
+    .poll(() => libraryEvents(backendSimulator).filter(({ name }) => name === "library.overviewCard.imageFailed"))
+    .toEqual([{ name: "library.overviewCard.imageFailed", props: { kind: "youtube", layout: "row", plan: "free" } }]);
 });

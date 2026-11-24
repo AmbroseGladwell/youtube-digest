@@ -37,6 +37,7 @@ export interface LibraryOverviewCardProps {
   entering?: boolean;
   topicNames: string[];
   onOpen: (from: "title" | "thumbnail" | "said") => void;
+  onImageFailed?: () => void;
   onToggleFavourite: () => void;
   onToggleRead: () => void;
   playing: boolean;
@@ -75,6 +76,7 @@ export const LibraryOverviewCard = ({
   entering = false,
   topicNames,
   onOpen,
+  onImageFailed,
   onToggleFavourite,
   onToggleRead,
   playing,
@@ -149,6 +151,7 @@ export const LibraryOverviewCard = ({
           className={styles.thumbnail}
           carriesIntoHead
           badge={noteLengthBadge(overview)}
+          onImageFailed={onImageFailed}
         />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
