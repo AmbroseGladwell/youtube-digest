@@ -38,7 +38,7 @@ test("a pasted article is named before Generate, then read once and made into a 
   await expect(page.getByTestId(articleLinkStatusTestIds.found)).toHaveText("Article on The Harbour Post · 14 min read");
   await page.getByTestId(generateOverviewFormTestIds.generateButton).click();
 
-  await expect(page.getByText("Fetching the article")).toBeVisible();
+  await launcher.appShell.newOverviewDialog.verifySourceTitle(ARTICLE.title);
   await expect.poll(() => backendSimulator.ourKey.generations().length).toBe(1);
   expect(backendSimulator.ourKey.generations()[0]?.input).toHaveProperty("article.url", LINK);
   expect(backendSimulator.articles.reads()).toEqual([LINK]);

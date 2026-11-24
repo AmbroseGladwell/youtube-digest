@@ -1,7 +1,7 @@
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { IWFT_VIDEO_ID, makeServiceTranscriptFixture } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
@@ -41,14 +41,12 @@ test("each step reports what it produced, and there is no audio step because nob
   await form.submitUrl(VALID_URL);
 
   await dialog.verifySourceTitle("The Simulated Video");
-  await dialog.verifyStepCountIs(2);
-  await dialog.verifyStepDetail("01", "Transcript fetched · 1,123 words");
   await dialog.verifyStepState("01", "done");
   await dialog.verifyStepState("02", "running");
-  await dialog.verifyElapsedIsShown();
+  await dialog.verifyStatusReads(/· Step 2 of 2/);
 
   await backendSimulator.releaseEndpoint(EndpointKey.ANTHROPIC_MESSAGES);
-  await dialog.verifyStepDetailMatches("02", /^Overview written · \d+ min read$/);
+  await dialog.verifyStatusReads(/^Overview written · \d+ min read$/);
   await dialog.verifyStepState("02", "done");
 });
 
@@ -79,7 +77,7 @@ test("run in the background, the strip carries the run and the new row arrives w
   await dialog.verifyStepState("02", "running");
 
   const strip = launcher.appShell.generationStatusStrip;
-  await dialog.clickRunInBackground();
+  await dialog.clickDone();
   await dialog.verifyIsHidden();
   await strip.verifyIsShown();
   await strip.verifyReads("Creating overview", "Step 2 of 2");
@@ -99,7 +97,7 @@ test("the ready strip stands down on its own, once the note is in the library be
   await launcher.launchExpectingLibrary({ apiKeys: API_KEYS });
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.submitUrl(VALID_URL);
-  await dialog.clickRunInBackground();
+  await dialog.clickDone();
 
   const strip = launcher.appShell.generationStatusStrip;
   await backendSimulator.releaseEndpoint(EndpointKey.ANTHROPIC_MESSAGES);
@@ -113,7 +111,7 @@ test("the strip's Details reopens the same run rather than starting a second one
   const dialog = launcher.appShell.newOverviewDialog;
 
   await form.submitUrl(VALID_URL);
-  await dialog.clickRunInBackground();
+  await dialog.clickDone();
   await launcher.appShell.generationStatusStrip.clickDetails();
 
   await dialog.verifyIsShown();
@@ -121,29 +119,14 @@ test("the strip's Details reopens the same run rather than starting a second one
   expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
 });
 
-test("cancelling a run saves nothing, even once the call it was waiting on comes back", async ({ launcher, backendSimulator }) => {
-  backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
-  const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
-  const dialog = launcher.appShell.newOverviewDialog;
-
-  await form.submitUrl(VALID_URL);
-  await dialog.verifyStepState("02", "running");
-  await dialog.clickCancelRun();
-
-  await dialog.verifyIsHidden();
-  await launcher.appShell.generationStatusStrip.verifyIsHidden();
-
-  await backendSimulator.releaseEndpoint(EndpointKey.ANTHROPIC_MESSAGES);
-  expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
-});
-
-test("a failure hands the dialog back to the form with the link still in it, and saves nothing", async ({ launcher, backendSimulator }) => {
+test("a failure shows on its row, the field is ready for the next link, and nothing is saved", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.ANTHROPIC_MESSAGES);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 
   await form.submitUrl(VALID_URL);
   await form.verifyGenerationErrorIsVisible();
-  await form.verifyUrlInputHolds(VALID_URL);
+  await launcher.appShell.newOverviewDialog.verifyStage("failed");
+  await form.verifyUrlInputHolds("");
 
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
 });
@@ -165,4 +148,46 @@ test("a video the library already holds offers to open the existing overview, an
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle("Already Here");
   await dialog.verifyIsHidden();
+});
+
+test("several links in a row: the next waits its turn with its transcript fetched, and each is made one after another", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.transcripts.seedService(makeServiceTranscriptFixture("secondVideo1", "How Your Brain Fills In the Gaps"));
+  backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
+  const dialog = launcher.appShell.newOverviewDialog;
+
+  await form.submitUrl(VALID_URL);
+  await dialog.verifyStepState("02", "running");
+  await form.verifyUrlInputHolds("");
+  await form.submitUrl("https://www.youtube.com/watch?v=secondVideo1");
+
+  await dialog.verifyWaitingCount(1);
+  await dialog.verifyWaitingReads(/^Next · Transcript ready$/);
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(1);
+
+  await backendSimulator.releaseEndpoint(EndpointKey.ANTHROPIC_MESSAGES);
+  await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(2);
+  await dialog.verifyWaitingCount(0);
+  await dialog.verifyStage("done");
+  await dialog.verifySourceTitle("How Your Brain Fills In the Gaps");
+});
+
+test("closing with a link still waiting leaves both to be made in the background", async ({ launcher, backendSimulator }) => {
+  backendSimulator.transcripts.seedService(makeServiceTranscriptFixture("secondVideo1", "How Your Brain Fills In the Gaps"));
+  backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
+  const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
+  const dialog = launcher.appShell.newOverviewDialog;
+  await form.submitUrl(VALID_URL);
+  await dialog.verifyStepState("02", "running");
+  await form.submitUrl("https://www.youtube.com/watch?v=secondVideo1");
+  await dialog.verifyWaitingCount(1);
+
+  await dialog.clickDone();
+  await dialog.verifyIsHidden();
+  await backendSimulator.releaseEndpoint(EndpointKey.ANTHROPIC_MESSAGES);
+
+  await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(2);
 });

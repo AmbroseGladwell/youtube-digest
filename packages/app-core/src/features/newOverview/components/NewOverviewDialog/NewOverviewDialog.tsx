@@ -1,16 +1,10 @@
-import { episodeFacts } from "../PodcastLinkStatus/PodcastLinkStatus.js";
-import { TikTokCover } from "../../../reader/components/TikTokPlayer/TikTokPlayer.js";
-import { formatClock, SOCIAL_PLATFORM_NAME, socialTitle, tiktokTitle } from "@overview/domain";
+import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { Overview } from "@overview/domain";
+import type { Overview, OverviewId } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
-import { useSurface } from "../../../../app/SurfaceContext.js";
-import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { AlreadyHeld } from "../../types/AlreadyHeld.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
-import { useElapsedSeconds } from "../../useElapsedSeconds.js";
-import { CaptureReasonField } from "../CaptureReasonField/CaptureReasonField.js";
 import { GenerateOverviewForm, playlistTargetOf } from "../GenerateOverviewForm/GenerateOverviewForm.js";
 import {
   PlaylistFollowFlow,
@@ -19,13 +13,9 @@ import {
 } from "../../../playlists/components/PlaylistFollowFlow/PlaylistFollowFlow.js";
 import { usePlaylistApi } from "../../../playlists/usePlaylistApi.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
-import { GenerationSteps } from "../GenerationSteps/GenerationSteps.js";
 import styles from "./NewOverviewDialog.module.scss";
 import { newOverviewDialogTestIds } from "./NewOverviewDialogTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
-import { useOverviewUsageQuery } from "../../queries/overviewUsageQuery.js";
-import { resetDate } from "../../util/usageLine.js";
-import { SavedForNow } from "../SoftWall/SavedForNow.js";
 
 export interface NewOverviewDialogProps {
   open: boolean;
@@ -99,14 +89,12 @@ export const NewOverviewDialog = ({
     [],
   );
 
-  const inProgress = run !== null && run.overview === null && run.error === null;
+  const { waiting } = useNewOverviewRunController();
+  const inProgress = (run !== null && run.finishedAt === null) || waiting.length > 0;
 
   // docs/features/overview-redesign.md, "Generating in the background".
   const analytics = useAnalytics();
-  const closeForm = () => {
-    analytics.capture.newOverviewDialog.closed({ run: run === null ? "none" : "failed" });
-    onDismiss();
-  };
+  const closeForm = () => requestClose();
   const requestClose = () => {
     if (inProgress) {
       analytics.capture.newOverviewDialog.closed({ run: "running" });
@@ -122,28 +110,12 @@ export const NewOverviewDialog = ({
   };
 
   const handleSubmit = (submittedUrl: string, options?: { saveInstead: boolean }) => {
-    setUrl(submittedUrl);
+    setUrl(options?.saveInstead ? submittedUrl : "");
     onSubmit(submittedUrl, options);
   };
 
-  const usage = useOverviewUsageQuery().data;
-
   const dialogBody = (): ReactNode => {
-    if (run?.saved != null) {
-      const saved = run.saved;
-      return (
-        <SavedForNow
-          title={saved.title ?? saved.url}
-          kicker={null}
-          resetsOn={usage === undefined ? "" : resetDate(usage.resetsOn)}
-          overviewsBack={String(usage?.ours.limit ?? "")}
-          hasTranscript={saved.source.kind !== "web"}
-          onDone={onDismiss}
-          onReadTranscript={() => onOpenHeld(saved.id)}
-        />
-      );
-    }
-    if (playlist !== null && run === null) {
+    if (playlist !== null) {
       return (
         <>
           <div className={styles.head}>
@@ -182,85 +154,38 @@ export const NewOverviewDialog = ({
       );
     }
     // docs/features/one-overview-per-video.md, "Prevention: not generating what is already here".
-    if (held !== null && run === null) {
-      return (
-        <>
-          <div className={styles.head}>
-            <h2 className={styles.heading} id={HEADING_ID}>
-              You already have this
-            </h2>
-            <button
-              type="button"
-              className={styles.close}
-              onClick={closeForm}
-              aria-label="Close"
-              data-testid={newOverviewDialogTestIds.closeButton}
-            >
-              <StrokeIcon name="close" size={16} />
-            </button>
-          </div>
-          <p className={styles.sourceMeta} data-testid={newOverviewDialogTestIds.alreadyHeld}>
-            {held.readable
-              ? "Your library already holds an overview of this video, so nothing new was made."
-              : "Your library already holds an overview of this video that this version of the app can't read yet, so nothing new was made."}
-          </p>
-          <div className={styles.foot}>
-            <span className={styles.footActions}>
-              <button type="button" className={styles.secondaryAction} onClick={closeForm}>
-                Close
-              </button>
-              <button
-                type="button"
-                className={styles.primaryAction}
-                onClick={() => onOpenHeld(held.overviewId)}
-                data-testid={newOverviewDialogTestIds.openHeldButton}
-              >
-                Open your overview
-              </button>
-            </span>
-          </div>
-        </>
-      );
-    }
-    if (run === null || run.error !== null) {
-      return (
-        <>
-          <div className={styles.head}>
-            <h2 className={styles.heading} id={HEADING_ID}>
-              New overview
-            </h2>
-            <button
-              type="button"
-              className={styles.close}
-              onClick={closeForm}
-              aria-label="Close"
-              data-testid={newOverviewDialogTestIds.closeButton}
-            >
-              <StrokeIcon name="close" size={16} />
-            </button>
-          </div>
-          <GenerateOverviewForm
-            url={url}
-            onUrlChange={setUrl}
-            onSubmit={handleSubmit}
-            onCancel={closeForm}
-            onPlaylist={(target, pastedUrl) => setPlaylist({ target, pastedUrl, from: "dialog" })}
-            generationError={run?.error ?? null}
-            active={open}
-          />
-        </>
-      );
-    }
     return (
-      <RunProgress
-        run={run}
-        headingId={HEADING_ID}
-        onClose={onClose}
-        onDismiss={onDismiss}
-        onReadOverview={onReadOverview}
-        onCaptureReasonChange={onCaptureReasonChange}
-        onCaptureReasonCommit={onCaptureReasonCommit}
-      />
+      <>
+        <div className={styles.head}>
+          <h2 className={styles.heading} id={HEADING_ID}>
+            Make an overview
+          </h2>
+          <button
+            type="button"
+            className={styles.close}
+            onClick={closeForm}
+            aria-label="Close"
+            data-testid={newOverviewDialogTestIds.closeButton}
+          >
+            <StrokeIcon name="close" size={16} />
+          </button>
+        </div>
+        <GenerateOverviewForm
+          url={url}
+          onUrlChange={setUrl}
+          onSubmit={handleSubmit}
+          onCancel={closeForm}
+          onPlaylist={(target, pastedUrl) => setPlaylist({ target, pastedUrl, from: "dialog" })}
+          active={open}
+          onReadOverview={(overview) => {
+            analytics.capture.newOverviewDialog.readChosen({ overviewId: overview.id, from: "dialog" });
+            onReadOverview(overview);
+          }}
+          onOpen={(id) => onOpenHeld(id as OverviewId)}
+          onCaptureReasonChange={onCaptureReasonChange}
+          onCaptureReasonCommit={onCaptureReasonCommit}
+        />
+      </>
     );
   };
 
@@ -287,200 +212,5 @@ export const NewOverviewDialog = ({
         {dialogBody()}
       </div>
     </dialog>
-  );
-};
-
-interface RunSourceProps {
-  run: NewOverviewRun;
-  headingId: string;
-}
-
-const RunSource = ({ run, headingId }: RunSourceProps) => {
-  // Designs 130d, 130d-2: the portrait cover and the caption, never a landscape crop.
-  if (run.tiktok !== null) {
-    const length = run.tiktok.durationSeconds === null ? null : formatClock(run.tiktok.durationSeconds);
-    return (
-      <>
-        <span className={styles.tiktokCover}>
-          <TikTokCover className={styles.tiktokCoverImage} url={run.tiktok.coverUrl} />
-        </span>
-        <div className={styles.sourceText}>
-          <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
-            {tiktokTitle(run.tiktok.caption, run.tiktok.handle)}
-          </h2>
-          <p className={styles.sourceMeta}>{[`@${run.tiktok.handle}`, "TikTok", length].filter(Boolean).join(" · ")}</p>
-        </div>
-      </>
-    );
-  }
-  // As a TikTok's: the portrait cover, never a landscape crop; a photo post shows its picture.
-  if (run.social !== null) {
-    const { post } = run.social;
-    const length = post.durationSeconds === null ? null : formatClock(post.durationSeconds);
-    const by = post.handle === null ? post.authorName : `@${post.handle}`;
-    return (
-      <>
-        <span className={styles.tiktokCover}>
-          <TikTokCover className={styles.tiktokCoverImage} url={post.coverUrl} />
-        </span>
-        <div className={styles.sourceText}>
-          <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
-            {socialTitle(post)}
-          </h2>
-          <p className={styles.sourceMeta}>{[by, SOCIAL_PLATFORM_NAME[post.platform], length].filter(Boolean).join(" · ")}</p>
-        </div>
-      </>
-    );
-  }
-  if (run.video) {
-    return (
-      <>
-        <OverviewThumbnail video={run.video} className={styles.thumbnail} />
-        <div className={styles.sourceText}>
-          <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
-            {run.video.title}
-          </h2>
-          <p className={styles.sourceMeta}>
-            {run.video.channel}
-            {run.video.durationMs !== null && ` · ${formatClock(run.video.durationMs / 1000)}`}
-          </p>
-        </div>
-      </>
-    );
-  }
-  if (run.podcast !== null) {
-    return (
-      <div className={styles.sourceText}>
-        <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
-          {run.podcast.title}
-        </h2>
-        <p className={styles.sourceMeta}>
-          {[run.podcast.show, "Podcast", episodeFacts({ durationSeconds: run.podcast.durationSeconds, publishedAt: null }) || null]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      </div>
-    );
-  }
-  if (run.article !== null) {
-    return (
-      <div className={styles.sourceText}>
-        <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
-          {run.article.title}
-        </h2>
-        <p className={styles.sourceMeta}>{run.article.site}</p>
-      </div>
-    );
-  }
-  return (
-    <div className={styles.sourceText}>
-      <h2 className={styles.sourceTitle} id={headingId}>
-        New overview
-      </h2>
-      <p className={styles.sourceMeta}>{run.url}</p>
-    </div>
-  );
-};
-
-interface RunProgressProps {
-  run: NewOverviewRun;
-  headingId: string;
-  onClose: () => void;
-  onDismiss: () => void;
-  onReadOverview: (overview: Overview) => void;
-  onCaptureReasonChange: (captureReason: string) => void;
-  onCaptureReasonCommit: () => void;
-}
-
-const RunProgress = ({
-  run,
-  headingId,
-  onClose,
-  onDismiss,
-  onReadOverview,
-  onCaptureReasonChange,
-  onCaptureReasonCommit,
-}: RunProgressProps) => {
-  const surface = useSurface();
-  const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
-  const isDone = run.overview !== null;
-  const analytics = useAnalytics();
-
-  return (
-    <>
-      <div className={styles.source}>
-        <RunSource run={run} headingId={headingId} />
-      </div>
-
-      <GenerationSteps run={run} />
-
-      {/* Stays through the done state, so a reason can still be added before Read overview. */}
-      <CaptureReasonField value={run.captureReason} onChange={onCaptureReasonChange} onCommit={onCaptureReasonCommit} />
-
-      <div className={styles.foot}>
-        <span className={styles.footText}>
-          <span className={styles.elapsed} data-testid={newOverviewDialogTestIds.elapsed}>
-            {formatClock(elapsedSeconds)} elapsed
-          </span>
-          {!isDone && (
-            <p className={styles.footNote} data-testid={newOverviewDialogTestIds.footNote}>
-              You can close this — it keeps going.
-              {surface === "extension" && " Closing the side panel does stop it."}
-            </p>
-          )}
-        </span>
-        {isDone ? (
-          <span className={styles.footActions}>
-            <button
-              type="button"
-              className={styles.secondaryAction}
-              onClick={() => {
-                analytics.capture.newOverviewDialog.runDismissed({ run: "ready" });
-                onDismiss();
-              }}
-              data-testid={newOverviewDialogTestIds.closeWhenDoneButton}
-            >
-              Close
-            </button>
-            <button
-              type="button"
-              className={styles.primaryAction}
-              onClick={() => {
-                analytics.capture.newOverviewDialog.readChosen({ overviewId: run.overview!.id, from: "dialog" });
-                onReadOverview(run.overview!);
-              }}
-              data-testid={newOverviewDialogTestIds.readOverviewButton}
-            >
-              Read overview
-            </button>
-          </span>
-        ) : (
-          <span className={styles.footActions}>
-            <button
-              type="button"
-              className={styles.quietAction}
-              onClick={() => {
-                analytics.capture.newOverviewDialog.runCancelled();
-                onDismiss();
-              }}
-              data-testid={newOverviewDialogTestIds.cancelRunButton}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className={styles.secondaryAction}
-              onClick={() => {
-                analytics.capture.newOverviewDialog.closed({ run: "running" });
-                onClose();
-              }}
-              data-testid={newOverviewDialogTestIds.runInBackgroundButton}
-            >
-              Run in background
-            </button>
-          </span>
-        )}
-      </div>
-    </>
   );
 };

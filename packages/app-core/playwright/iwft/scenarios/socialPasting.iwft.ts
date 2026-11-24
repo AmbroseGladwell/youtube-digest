@@ -3,7 +3,7 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { articleFailureNoticeTestIds } from "../../../src/features/capture/components/ArticleFailureNotice/ArticleFailureNoticeTestIds.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
-import { generationStepsTestIds } from "../../../src/features/newOverview/components/GenerationSteps/GenerationStepsTestIds.js";
+import { justNowListTestIds } from "../../../src/features/newOverview/components/JustNowList/JustNowListTestIds.js";
 import { socialLinkStatusTestIds } from "../../../src/features/newOverview/components/SocialLinkStatus/SocialLinkStatusTestIds.js";
 
 const SHOTS = process.env.IWFT_SHOTS;
@@ -87,7 +87,7 @@ test("an Instagram reel with no words offers to transcribe it, and Transcribe an
   }
   await page.getByTestId(generateOverviewFormTestIds.generateButton).click();
 
-  await expect(page.getByTestId(generationStepsTestIds.stepDetail("02"))).toHaveText("None, so we’re making a transcript");
+  await expect(page.getByTestId(justNowListTestIds.status).last()).toContainText("Transcribing");
   await expect.poll(() => backendSimulator.ourKey.generations().length, { timeout: 20_000 }).toBe(1);
   expect(backendSimulator.social.transcriptionAsks()).toEqual([REEL.url]);
   expect(backendSimulator.ourKey.generations()[0]?.input).toHaveProperty("social.kind", "instagram");

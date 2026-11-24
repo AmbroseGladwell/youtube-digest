@@ -145,9 +145,39 @@ Questions are left out, not greyed out. In the overview's place, one card:
 
 Nothing is made on its own when the month resets.
 
+## Several in a row
+
+Designs 358a–358d; decided with the owner on 24 Nov 2026 to follow them with one change:
+**overviews are written one at a time**, while later links' transcripts may be fetched
+meanwhile.
+
+- **Create** is one field with **Make my overview** inside it and the usage line under it.
+  Making one clears the field and keeps it focused, so the next link can go straight in.
+  The dialog no longer turns into a progress screen.
+- **Just now** lists every link given since the dialog was opened, in order (`JustNowList`).
+  Each row says where it has got to, worked out from the same steps the old progress view
+  used (`justNowRowOf` over `generationRunSteps`): fetching or writing, with "Step 1 of 2"
+  and a bar; **Made** with "Overview written · 2 min read" and **Read overview**; **Saved ·
+  no overview yet**; or the run's error. A link given while another is being made waits as
+  **Next**; a YouTube link's transcript is fetched for it straight away (`usePrefetchVideo`),
+  so its title shows and its run starts from the stored words.
+- **One at a time.** `useNewOverviewRun` keeps a queue for runs started from Create: the
+  next starts as the last finishes, whether or not the dialog is open, and Done (or
+  closing) leaves them running. A run started elsewhere (the panel, a regeneration, a saved
+  item's Make overview) replaces what's running, as before.
+- **When the month runs out mid-way** (358b-3), the next link waiting is saved with its
+  transcript instead of made, and a run the server refuses for the month is saved instead
+  rather than failing.
+- **Add a reason** sits on the row being made (left out on a phone), and opens the reason
+  field for that link.
+- The foot line "You can close this — it keeps going." stays while anything runs, and in the
+  extension still says that closing the side panel stops it. There's no Cancel for a run.
+- **Already in your library. Open it** shows under the field (358c) in place of a screen of
+  its own.
+
 ## Not built yet
 
-- Create's "Just now" list, and falling back to a save when the month runs out mid-run.
 - Make all, which needs saved items in the queue (slice 4).
+- "Already saved · no overview yet" and "Already in your queue" under the field (358c-2).
 - Kept links at the server cap, the queue's new home, and the extension's banner.
 - The @ picker's muted row, the events and the "Kept links" dashboard.
