@@ -31,14 +31,14 @@ test("filtering names a topic by its id and a verdict by its value, and says whe
   seed(backendSimulator);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
 
-  await library.filterPanel.clickTopicChip(ENERGY.id);
-  await library.filterPanel.clickNoveltyChip("common_knowledge");
+  await library.filterMenu.clickTopicChip(ENERGY.id);
+  await library.filterMenu.clickNoveltyChip("common_knowledge");
 
   await expect
     .poll(() => libraryEvents(backendSimulator))
     .toEqual([
+      { name: "library.filterSheet.opened", props: {} },
       { name: "library.filters.topicChosen", props: { topicId: ENERGY.id, from: "panel" } },
-      { name: "library.filters.moreShown", props: { shown: true } },
       { name: "library.filters.noveltySwitched", props: { novelty: "common_knowledge", on: true, from: "panel" } },
     ]);
 });

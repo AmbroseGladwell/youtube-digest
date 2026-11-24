@@ -102,18 +102,17 @@ test("a recipe with no yield scales by a multiplier, and one with no times shows
   await expect(page.getByTestId("RecipeIngredients.line").nth(1)).toHaveText("6 tbsp olive oil, plus extra to serve");
 });
 
-test("the library files recipes as their own source once there are others", async ({ page, launcher, backendSimulator }) => {
+test("the library files recipes as their own kind once there are others", async ({ page, launcher, backendSimulator }) => {
   await page.setViewportSize({ width: 1280, height: 1100 });
   backendSimulator.overviews.seed(makeRecipeOverview());
   backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "A video about pricing" } }));
   const library = await launcher.launchExpectingLibrary();
 
-  await page.getByTestId("FilterPanel.moreFiltersButton").click();
-  await page.getByTestId("FilterPanel.source.recipe").click();
+  await library.filterMenu.clickKind("recipe");
 
   await library.expectCardCountToBe(1);
   await library.verifyCardOrder(["Charred leek and white bean stew"]);
-  await expect(page.getByTestId("FilterPanel.moreFiltersSummary")).toHaveText("Recipes · Any verdict");
+  await library.verifyChipsRead(["Recipe"]);
 });
 
 test("copy recipe gives the page's recipe with its source, and never the summary", async ({

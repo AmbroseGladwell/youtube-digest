@@ -49,7 +49,7 @@ test("the novelty filter narrows the visible cards", async ({ launcher, backendS
   const library = await launcher.launchExpectingLibrary();
   await library.expectCardCountToBe(2);
 
-  await library.filterPanel.clickNoveltyChip("original");
+  await library.filterMenu.clickNoveltyChip("original");
   await library.expectCardCountToBe(1);
   await library.cardWithTitle("Original video").verifyTitle("Original video");
 });
@@ -65,7 +65,7 @@ test("the read-status filter is on from the start, and turning it off shows what
   await library.expectCardCountToBe(1);
   await library.cardWithTitle("Unread video").verifyTitle("Unread video");
 
-  await library.filterPanel.clickStatusChip("unread");
+  await library.filterMenu.clickStatusChip("unread");
   await library.expectCardCountToBe(2);
 });
 
@@ -105,7 +105,7 @@ test("filters combine with AND: a video matching only one active filter stays hi
   backendSimulator.overviews.seed(matchesNeither);
 
   const library = await launcher.launchExpectingLibrary();
-  await library.filterPanel.clickNoveltyChip("original");
+  await library.filterMenu.clickNoveltyChip("original");
   await library.verifyEmptyState();
 });
 

@@ -23,29 +23,21 @@ test("the filter sheet opens clear of the bar, rather than sliding its head unde
   await library.verifyFilterSheetClearsTheBar();
 });
 
-test("the closed sheet is out of reach of screen readers and the keyboard, and back in reach once opened", async ({
+test("on a wide screen the filters open as a popover under the button, and Escape gives the keyboard back to it", async ({
   launcher,
   backendSimulator,
   page,
 }) => {
   backendSimulator.overviews.seed(makeOverview());
-  await page.setViewportSize(PHONE);
-  const library = await launcher.launchExpectingLibrary();
-  await library.verifyFilterSheetIsReachable(false);
-
-  await library.openFilters();
-  await library.verifyFilterSheetIsReachable(true);
-
-  await library.closeFiltersWithEscape();
-  await library.verifyFilterSheetIsReachable(false);
-});
-
-test("on a wide screen the filters stay in reach, as a rail rather than a sheet", async ({ launcher, backendSimulator, page }) => {
-  backendSimulator.overviews.seed(makeOverview());
   await page.setViewportSize({ width: 1280, height: 800 });
   const library = await launcher.launchExpectingLibrary();
 
-  await library.verifyFilterSheetIsReachable(true);
+  await library.openFilters();
+  await library.verifyFiltersAreOpen(true);
+  await library.filterMenu.verifyCountReads("1 overview");
+
+  await library.closeFiltersWithEscape();
+  await library.verifyFocusIsOnTheFilterButton();
 });
 
 test("the open sheet holds the keyboard, and gives it back to the button that opened it", async ({ launcher, backendSimulator, page }) => {
@@ -73,27 +65,14 @@ test("the button beside the search marks filters changed from the default, and t
   await library.verifyFilterButtonSays("Filters");
 
   await library.openFilters();
-  await library.filterPanel.clickTagChip("saas");
+  await library.filterMenu.clickTagChip("saas");
   await library.showResults("Show 1 overview");
 
-  await library.verifyFilterButtonSays("Filters, 1 changed");
+  await library.verifyFilterButtonSays("Filters, 1 applied");
   await library.expectCardCountToBe(1);
 });
 
-test("a filter applied from the sheet glides the list beneath the sheet, never over it", async ({ launcher, backendSimulator, page }) => {
-  backendSimulator.overviews.seed(makeOverview({ tags: ["saas"] }));
-  backendSimulator.overviews.seed(makeOverview({ tags: ["energy"] }));
-  await page.setViewportSize(PHONE);
-  const library = await launcher.launchExpectingLibrary();
-  await library.openFilters();
-
-  await library.verifyTheGlideCapturesTheFilterSheet(() => library.filterPanel.clickTagChip("saas"));
-
-  await library.verifyFiltersAreOpen(true);
-  await library.showResults("Show 1 overview");
-});
-
-test("on a phone the chips under the search keep to one line, with +N opening the sheet for the rest", async ({
+test("on a phone the chips under the search keep to one line, with +N opening Applied filters for the rest", async ({
   launcher,
   backendSimulator,
   page,
@@ -104,12 +83,12 @@ test("on a phone the chips under the search keep to one line, with +N opening th
   const library = await launcher.launchExpectingLibrary();
 
   await library.openFilters();
-  await library.filterPanel.clickTagChip("founder-interview");
-  await library.filterPanel.clickTopicChip(BUSINESS.id);
-  await library.filterPanel.clickNoveltyChip("fresh_angle");
+  await library.filterMenu.clickTagChip("founder-interview");
+  await library.filterMenu.clickTopicChip(BUSINESS.id);
+  await library.filterMenu.clickNoveltyChip("fresh_angle");
   await library.showResults("Show 1 overview");
 
-  await library.verifyChipsRead(["#founder-interview", "+2"]);
+  await library.verifyChipsRead(["Business", "+2"]);
   await library.verifySearchPlaceholderReads("Search within these");
   await library.openMoreChips();
 });

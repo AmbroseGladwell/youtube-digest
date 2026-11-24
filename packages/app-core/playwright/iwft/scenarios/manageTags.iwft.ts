@@ -26,7 +26,7 @@ test("Manage tags lists every tag with how many overviews use it, most used firs
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
-  const dialog = await library.filterPanel.openManageTags();
+  const dialog = await library.filterMenu.openManageTags();
 
   await dialog.verifySummaryReads("7 tags on 5 overviews. Changes apply to every overview that uses the tag.");
   await dialog.verifyRowsRead([
@@ -50,7 +50,7 @@ test("merging keeps the most used name unless told otherwise, rewrites every ove
 }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
-  const dialog = await library.filterPanel.openManageTags();
+  const dialog = await library.filterMenu.openManageTags();
 
   await dialog.select("saas", "micro-saas", "ai-saas");
   await dialog.openMerge();
@@ -70,7 +70,7 @@ test("merging keeps the most used name unless told otherwise, rewrites every ove
 test("a merge can keep a new name instead", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
-  const dialog = await library.filterPanel.openManageTags();
+  const dialog = await library.filterMenu.openManageTags();
 
   await dialog.select("saas", "micro-saas");
   await dialog.openMerge();
@@ -86,7 +86,7 @@ test("renaming says what it will save as, refuses a name with nothing in it, and
 }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
-  const dialog = await library.filterPanel.openManageTags();
+  const dialog = await library.filterMenu.openManageTags();
 
   await dialog.select("micro-saas");
   await dialog.startRename();
@@ -108,7 +108,7 @@ test("renaming says what it will save as, refuses a name with nothing in it, and
 test("deleting takes the tag off every overview, and Undo puts it and everything else back", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
-  const dialog = await library.filterPanel.openManageTags();
+  const dialog = await library.filterMenu.openManageTags();
 
   await dialog.select("nuclear");
   await dialog.delete();
@@ -126,7 +126,7 @@ test("a tag the reader added is merged with the note's own", async ({ launcher, 
   seedLibrary(backendSimulator);
   backendSimulator.overviews.seedState(makeOverviewState(NUCLEAR.id, { userTags: ["micro-saas"] }));
   const library = await launcher.launchExpectingLibrary();
-  const dialog = await library.filterPanel.openManageTags();
+  const dialog = await library.filterMenu.openManageTags();
 
   await dialog.select("micro-saas");
   await dialog.startRename();
@@ -139,7 +139,7 @@ test("a tag the reader added is merged with the note's own", async ({ launcher, 
 test("Escape backs out of a step before it closes the dialog", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
-  const dialog = await library.filterPanel.openManageTags();
+  const dialog = await library.filterMenu.openManageTags();
 
   await dialog.select("saas", "pricing");
   await dialog.openMerge();
@@ -163,6 +163,5 @@ test("with no tags anywhere there is nothing to manage", async ({ launcher, back
   backendSimulator.overviews.seed(titled("Untagged", []));
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.openMoreFilters();
-  await library.filterPanel.verifyOffersNoManageTags();
+  await library.filterMenu.verifyOffersNoManageTags();
 });

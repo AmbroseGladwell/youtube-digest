@@ -296,6 +296,11 @@ the app does not. The steppers wrap round rather than stopping at either end, wh
 
 ## The filter sheet
 
+Superseded by OV-399: the filters are a popover on wide screens and the shared `BottomSheet`
+under 48rem (`library-filters.md`, "The menu"). What follows is how the rail's sheet worked,
+and the rules it set still hold for the new sheet: never under the bar, the whole sheet
+scrolling on a short screen, and the keyboard held while it is open.
+
 On the wide layout the filter rail is part of the page. Under 992px it is a bottom sheet
 that rises over it, opened from the filter button beside the search ("OV-84 2 Library
 Filter" 84i), with "Clear all" and "Show N overviews" at its foot. Two things follow from

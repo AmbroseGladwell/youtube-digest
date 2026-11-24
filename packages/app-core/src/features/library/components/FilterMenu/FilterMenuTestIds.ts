@@ -1,0 +1,16 @@
+export const filterMenuTestIds = {
+  root: "FilterMenu.root",
+  group: (group: string) => `FilterMenu.group.${group}`,
+  fold: (group: string) => `FilterMenu.fold.${group}`,
+  foldValue: (group: string) => `FilterMenu.foldValue.${group}`,
+  choice: (group: string, value: string) => `FilterMenu.choice.${group}.${value}`,
+  search: (group: string) => `FilterMenu.search.${group}`,
+  showAll: (group: string) => `FilterMenu.showAll.${group}`,
+  newTopic: "FilterMenu.newTopic",
+  manageTags: "FilterMenu.manageTags",
+  reset: "FilterMenu.reset",
+  count: "FilterMenu.count",
+  showResults: "FilterMenu.showResults",
+  matches: "FilterMenu.matches",
+  done: "FilterMenu.done",
+};

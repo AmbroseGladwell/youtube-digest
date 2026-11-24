@@ -3,4 +3,5 @@ export const libraryFilterChipsTestIds = {
   chip: (key: string) => `LibraryFilterChips.chip.${key}`,
   removeButton: (key: string) => `LibraryFilterChips.removeButton.${key}`,
   moreButton: "LibraryFilterChips.moreButton",
+  resetButton: "LibraryFilterChips.resetButton",
 };

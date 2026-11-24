@@ -208,7 +208,7 @@ test.describe("selecting on the web", () => {
     seed(backendSimulator);
     backendSimulator.overviews.seedState({ overviewId: sink.id, read: true, favourite: true, userTags: [], asked: [] });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-    await library.filterPanel.clickStatusChip("unread");
+    await library.filterMenu.clickStatusChip("unread");
     await library.startSelecting();
     await pickAll(library, ["What moving a sink", "How to read a builder"]);
 

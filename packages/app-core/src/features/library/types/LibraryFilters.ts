@@ -4,10 +4,10 @@ export const LIBRARY_KINDS = ["video", "article", "podcast", "recipe"] as const;
 export type LibraryKind = (typeof LIBRARY_KINDS)[number];
 
 export const LIBRARY_KIND_LABEL: Record<LibraryKind, string> = {
-  video: "Videos",
-  article: "Articles",
-  podcast: "Podcasts",
-  recipe: "Recipes",
+  video: "Video",
+  article: "Article",
+  podcast: "Podcast",
+  recipe: "Recipe",
 };
 
 export const LIBRARY_ADDED = ["any", "today", "7d", "30d", "3m", "6m"] as const;

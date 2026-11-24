@@ -5,7 +5,7 @@ import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.te
 
 const NAMES = ["one", "two", "three", "four", "five", "six", "seven", "eight"];
 const TOPICS = NAMES.map((name) => makeTopic({ name }));
-const FIRST_SIX = NAMES.slice(0, 6);
+const FIRST_SEVEN = NAMES.slice(0, 7);
 
 const seedTopics = (backendSimulator: BackendSimulator, count: number) => {
   for (const topic of TOPICS.slice(0, count)) {
@@ -19,39 +19,39 @@ test("a handful of topics are all listed, with nothing held back", async ({ laun
 
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.verifyListsTopics(NAMES.slice(0, 4));
-  await library.filterPanel.verifyOffersNoShowAll();
+  await library.filterMenu.verifyListsTopics(NAMES.slice(0, 4));
+  await library.filterMenu.verifyOffersNoShowAll();
 });
 
-test("a long list stops at six, and says how many there are in total", async ({ launcher, backendSimulator }) => {
+test("a long list stops at seven, and says how many there are in total", async ({ launcher, backendSimulator }) => {
   seedTopics(backendSimulator, 8);
 
   const library = await launcher.launchExpectingLibrary();
 
-  await library.filterPanel.verifyListsTopics(FIRST_SIX);
-  await library.filterPanel.verifyShowAllReads("Show all 8 topics");
+  await library.filterMenu.verifyListsTopics(FIRST_SEVEN);
+  await library.filterMenu.verifyShowAllReads("Show all 8 topics");
 });
 
 test("showing all reveals the rest, and the same control puts them away again", async ({ launcher, backendSimulator }) => {
   seedTopics(backendSimulator, 8);
 
   const library = await launcher.launchExpectingLibrary();
-  await library.filterPanel.clickShowAllTopics();
+  await library.filterMenu.clickShowAllTopics();
 
-  await library.filterPanel.verifyListsTopics(NAMES);
-  await library.filterPanel.verifyShowAllReads("Show fewer");
+  await library.filterMenu.verifyListsTopics(NAMES);
+  await library.filterMenu.verifyShowAllReads("Show fewer");
 
-  await library.filterPanel.clickShowAllTopics();
-  await library.filterPanel.verifyListsTopics(FIRST_SIX);
+  await library.filterMenu.clickShowAllTopics();
+  await library.filterMenu.verifyListsTopics(FIRST_SEVEN);
 });
 
-test("the topic being filtered by stays listed even from beyond the sixth", async ({ launcher, backendSimulator }) => {
+test("the topic being filtered by stays listed even from beyond the seventh", async ({ launcher, backendSimulator }) => {
   seedTopics(backendSimulator, 8);
 
   const library = await launcher.launchExpectingLibrary();
-  await library.filterPanel.clickShowAllTopics();
-  await library.filterPanel.clickTopicChip(TOPICS[7]!.id);
-  await library.filterPanel.clickShowAllTopics();
+  await library.filterMenu.clickShowAllTopics();
+  await library.filterMenu.clickTopicChip(TOPICS[7]!.id);
+  await library.filterMenu.clickShowAllTopics();
 
-  await library.filterPanel.verifyListsTopics([...FIRST_SIX, "eight"]);
+  await library.filterMenu.verifyListsTopics([...FIRST_SEVEN, "eight"]);
 });

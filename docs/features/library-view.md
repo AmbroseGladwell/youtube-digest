@@ -38,14 +38,13 @@ The pill's width changes at once, and a `clip-path` animates the growth from the
 circle, so no frame of the animation lays out the row again. Closing keeps the wide box
 until the clip has folded, then narrows it.
 
-## Show all, Reset, caught up
+## Reset, caught up
 
-On a wide screen a line over the list states the view in text ("Showing: Unread · Newest
-saved first"), with **Reset** (back to the default view) and **Show all** (every filter off,
-order kept). Below 992px that line is gone: the chips under the search and the sheet's Clear
-all do its job (`tag-reuse.md`).
-The sheet's old "Clear all" is now "Show all". With Unread on and nothing unread, the list
-says "You're all caught up" and offers "Show all overviews". A brand-new library still
+Since OV-399 (design 399o) the "Showing:" line and its Show all are gone at every width. The
+chips under the search say what is set, and **Reset** at the end of the chip line, in the
+filter menu's foot and under "Nothing matches" puts the filters back to the default view (Unread
+on) and keeps the order and the search (`library-filters.md`, "The menu"). With Unread on and
+nothing unread, the list says "You're all caught up" and offers "Show all overviews". A brand-new library still
 gets the first-run hero.
 
 A row marked read or favourited from the list stays in place until the view changes,

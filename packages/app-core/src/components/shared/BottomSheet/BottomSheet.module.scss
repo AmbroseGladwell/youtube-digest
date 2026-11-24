@@ -1,0 +1,123 @@
+@use "../../../theme/shortScreens.scss";
+
+.dialog {
+  position: fixed;
+  inset: auto 0 0;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+
+  &::backdrop {
+    background: var(--scrim);
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  max-height: 85dvh;
+  border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+  background: var(--dialog);
+  box-shadow: var(--shadow-dialog);
+  transition:
+    transform var(--motion-travel) var(--motion-ease),
+    max-height var(--motion-travel) var(--motion-ease);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.full {
+  max-height: 100dvh;
+  height: 100dvh;
+  border-radius: 0;
+}
+
+.dragging {
+  transition: none;
+}
+
+.grip {
+  flex: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+.handle {
+  display: block;
+  width: 2.25rem;
+  height: 5px;
+  margin: 0.625rem auto 0.5rem;
+  border-radius: 3px;
+  background: var(--surface);
+
+  .dragging & {
+    width: 3rem;
+    background: var(--muted);
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1rem 0.625rem 1.25rem;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: 400 1.3125rem var(--font-heading);
+}
+
+.round {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1rem;
+  overscroll-behavior: contain;
+}
+
+// On a short screen the head and foot scroll with the body, so the body never shrinks to a sliver.
+@include shortScreens.short-screen {
+  .panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .body {
+    flex: none;
+    overflow-y: visible;
+  }
+}
+
+.foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--surface);
+}

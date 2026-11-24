@@ -372,11 +372,11 @@ test.describe("the verdict filter", () => {
       }),
     );
     const library = await launcher.launchExpectingLibrary();
-    await library.filterPanel.verifyVerdictIsFolded();
-    await library.filterPanel.verifyMoreFiltersSummaryReads("Any verdict");
+    await library.filterMenu.verifyFoldReads("verdict", "Any");
+    await library.filterMenu.verifyFoldIsOpen("verdict", false);
 
-    await library.filterPanel.clickDubiousChip();
+    await library.filterMenu.clickDubiousChip();
 
-    await library.filterPanel.verifyMoreFiltersSummaryReads("Dubious only");
+    await library.filterMenu.verifyFoldReads("verdict", "Dubious");
   });
 });

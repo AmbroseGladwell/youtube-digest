@@ -109,6 +109,10 @@ A note's tags, here and when matching, are its own and the reader's `userTags` t
 
 ## Filtering the library by tag (design 84g–84i, 84o–84v)
 
+Since OV-399 the tags are a folded group in the filter menu, with a search, the top 5 and Show
+all, and Manage tags at its foot; a link to a tag no longer opens anything, since its chip says
+it is set (`library-filters.md`, "The menu"). The rest of this section is how the rail did it.
+
 Tags join Verdict under **More filters** in the rail, as rows like the topic rows, `#saas`
 and its count, most used first and capped at six behind `Show all N`, with the active tag
 always listed (`cappedTags`, as `cappedTopics`). A library with no tags has no Tags group at
@@ -126,6 +130,11 @@ matches one, as it never matches a topic. The tag is not part of the saved view
 (`library-view.md`).
 
 ## The library's head and its chips (option C, 84o, 84r, 84v)
+
+Since OV-399 the chips run in the menu's group order (Show, Added, Kind, Source, Topic, Tags,
+Verdict), Reset sits at the end of the line at every width, +N opens Applied filters, and the
+filter button counts what is set ("Filters, 2 applied"). The "Showing:" line is gone
+(`library-filters.md`, "The menu").
 
 The first cut put the tag in the search field and the count line read "14 tagged
 #founder-interview · 0m saved" beside the sort pill, which broke into three ragged lines on a

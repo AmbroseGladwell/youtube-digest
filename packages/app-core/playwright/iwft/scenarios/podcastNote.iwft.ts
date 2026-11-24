@@ -1,5 +1,5 @@
 import { VideoId, sourceKey } from "@overview/domain";
-import { expect, test } from "../../support/fixtures.testHelper.js";
+import { test } from "../../support/fixtures.testHelper.js";
 import { makeOverview, makePodcastOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { silentWavDataUri } from "../../../src/features/player/util/silentWavDataUri.js";
@@ -92,10 +92,9 @@ test("a library row names an episode by its chip and length, and the library fil
   await row.verifyKindChipReads("Podcast");
   await row.verifyMetaEndsWith("1 hr 56 min episode");
 
-  await page.getByTestId("FilterPanel.moreFiltersButton").click();
-  await page.getByTestId("FilterPanel.source.podcast").click();
+  await library.filterMenu.clickKind("podcast");
 
   await library.expectCardCountToBe(1);
   await library.verifyCardOrder(["Why your parents’ decline is a preview"]);
-  await expect(page.getByTestId("FilterPanel.moreFiltersSummary")).toHaveText("Podcasts · Any verdict");
+  await library.verifyChipsRead(["Podcast"]);
 });
