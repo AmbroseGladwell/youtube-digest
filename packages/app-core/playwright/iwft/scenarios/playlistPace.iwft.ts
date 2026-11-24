@@ -92,9 +92,7 @@ test("a paced playlist makes its number for the day, the rest of the queue carri
   await expect.poll(() => overviewCount(backendSimulator)).toBe(2);
   const made = (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.source.id).sort();
   expect(made).toEqual(["otherVideo1", "paceVideo01"]);
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("Done for today", "2 waiting for tomorrow, at each playlist’s pace");
-  await strip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.verifyContinuesTomorrow("Continues tomorrow · 2", [VIDEOS[1].title, VIDEOS[2].title]);
   await queuePage.verifyPacedGroupMeta(["Up to 1 a day · 1 made today · 2 waiting"]);
@@ -132,9 +130,8 @@ test("Make now makes a paced video next without counting toward its pace, which 
 
   await launcher.launch(SIGNED_IN);
 
-  await launcher.appShell.queueStrip.verifyReads("Done for today", "2 waiting for tomorrow, at each playlist’s pace");
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
 
   await queuePage.makeNow(VIDEOS[0].title);
@@ -158,10 +155,8 @@ test("a playlist made only when chosen waits for the reader, who can choose seve
 
   await launcher.launch(SIGNED_IN);
 
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("Queue done · 3 waiting for you", "From Psychology, made when you choose them");
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
-  await strip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.verifyWaitingForYou(
     "Waiting for you · 3",
@@ -205,8 +200,7 @@ test("a video waiting for the reader that the library already has is neither sho
 
   await launcher.launch(SIGNED_IN);
 
-  await launcher.appShell.queueStrip.verifyReads("Queue done · 2 waiting for you", "From Psychology, made when you choose them");
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.verifyWaitingForYou("Waiting for you · 2", [VIDEOS[1].title, VIDEOS[2].title]);
   await expect

@@ -289,10 +289,8 @@ export const CapturePage = () => {
         <CaptureQueueStripView
           strip={captureQueue.strip}
           compact
-          folded={null}
           onPause={() => captureQueue.setPaused(true)}
           onResume={() => captureQueue.setPaused(false)}
-          onDetails={() => undefined}
           onDismiss={captureQueue.dismissStrip}
         />
       );

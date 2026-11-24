@@ -10,7 +10,6 @@ export const generateOverviewFormTestIds = {
   runError: runErrorMessageTestIds("GenerateOverviewForm"),
   root: "GenerateOverviewForm.root",
   urlInput: "GenerateOverviewForm.urlInput",
-  pasteButton: "GenerateOverviewForm.pasteButton",
   watchingButton: "GenerateOverviewForm.watchingButton",
   watchingNote: "GenerateOverviewForm.watchingNote",
   cancelButton: "GenerateOverviewForm.cancelButton",

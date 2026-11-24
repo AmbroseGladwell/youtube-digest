@@ -75,9 +75,7 @@ test("on Free with no key and our key's 5 spent, the queue waits for the month, 
   followingAt(backendSimulator, "asTheyCome", [queued(0), queued(1)]);
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
 
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("Queue waiting · 2 videos", "This month's 5 are made. Resumes 1 November, or when you add a key.");
-  await strip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.verifyMonthHeldNote(
     "This month's 5 are made, so the queue is waiting. It carries on by itself on 1 November, as soon as you add a key or if your plan changes.",
@@ -98,10 +96,8 @@ test("a key added at the month's limit starts the queue again at once", async ({
   backendSimulator.ourKey.monthHasMade({ ours: 5 });
   followingAt(backendSimulator, "asTheyCome", [queued(0)]);
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
-  await launcher.appShell.queueStrip.verifyReads(
-    "Queue waiting · 1 video",
-    "This month's 5 are made. Resumes 1 November, or when you add a key.",
-  );
+  await launcher.appShell.openQueue();
+  await (await launcher.appShell.queuePage.verifyIsShown()).verifyWaitingLabel("Waiting · 1 · resumes 1 November");
 
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
   await settings.apiKeysPanel.addKey("anthropic", "sk-ant-api03-simulated-key-for-the-limit");
@@ -118,10 +114,8 @@ test("as the month turns, the queue asks for the counts again and carries on", a
   backendSimulator.ourKey.monthHasMade({ ours: 5 });
   followingAt(backendSimulator, "asTheyCome", [queued(0)]);
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
-  await launcher.appShell.queueStrip.verifyReads(
-    "Queue waiting · 1 video",
-    "This month's 5 are made. Resumes 1 November, or when you add a key.",
-  );
+  await launcher.appShell.openQueue();
+  await (await launcher.appShell.queuePage.verifyIsShown()).verifyWaitingLabel("Waiting · 1 · resumes 1 November");
 
   backendSimulator.ourKey.monthHasMade({});
   await page.clock.fastForward(3 * 60 * 60 * 1000);
@@ -137,9 +131,7 @@ test("refused at the limit mid-run, the video stays waiting with the queue, not 
   followingAt(backendSimulator, "asTheyCome", [queued(0), queued(1)]);
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
 
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("Queue waiting · 2 videos", "This month's overviews are made. Resumes 1 November.");
-  await strip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.verifyWaitingStatuses(["Waiting for 1 November", "Waiting for 1 November"]);
   await queuePage.verifyTryAgainIsOffered(false);
@@ -155,7 +147,7 @@ test("the month's limit wins over a playlist's pace: Choose is not offered while
   followingAt(backendSimulator, "whenChosen", [queued(0), queued(1)]);
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
 
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.verifyChooseIsOffered(false);
 });
@@ -165,7 +157,7 @@ test("choosing more than the month has left makes what it can now and says when 
   followingAt(backendSimulator, "whenChosen", [queued(0), queued(1), queued(2)]);
   await launcher.launch(SIGNED_IN);
 
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
   await queuePage.startChoosing();
   for (const video of VIDEOS) {

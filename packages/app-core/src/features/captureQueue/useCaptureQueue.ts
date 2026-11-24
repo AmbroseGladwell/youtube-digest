@@ -88,7 +88,6 @@ export interface CaptureQueueController {
   making: QueueMaking | null;
   strip: CaptureQueueStrip | null;
   paused: boolean;
-  folded: boolean;
   needsKey: boolean;
   // When the queue holds, and until when: docs/features/capture-queue.md, "Waiting at a limit".
   hold: QueueHold | null;
@@ -97,7 +96,6 @@ export interface CaptureQueueController {
   // True in a shell with no free rung, where the extension would get round a hold.
   viaExtension: boolean;
   setPaused: (paused: boolean) => void;
-  setFolded: (folded: boolean) => void;
   remove: (videoId: VideoId) => void;
   makeNow: (videoIds: readonly VideoId[]) => Promise<void>;
   removeMany: (videoIds: readonly VideoId[]) => Promise<void>;
@@ -646,13 +644,11 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
       making,
       strip,
       paused,
-      folded: preferences.folded,
       needsKey,
       hold,
       limit,
       viaExtension: youTubeFetch === null,
       setPaused,
-      setFolded: (folded: boolean) => savePreferences({ folded }),
       remove,
       makeNow,
       removeMany,

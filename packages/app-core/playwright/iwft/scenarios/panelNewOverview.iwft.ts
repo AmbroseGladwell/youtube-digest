@@ -36,7 +36,7 @@ for (const [name, viewport] of [
     await page.setViewportSize(viewport);
     await launcher.launchPanel(PANEL_OPTIONS);
     const dialog = await launcher.appShell.openNewOverview();
-    await dialog.verifyCloseHasFocus();
+    await dialog.verifyFieldHasFocus();
 
     await dialog.pressEscape();
 

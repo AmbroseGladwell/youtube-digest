@@ -91,9 +91,7 @@ test("a video with no captions fails, says why, and can be tried again or dismis
   backendSimulator.playlists.seedQueued(queued("noCaptions1", "Live Q&A: Ask Me Anything"));
   await launcher.launch({ apiKeys: API_KEYS });
 
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("Queue done · 1 need attention", "1 failed");
-  await strip.openQueue();
+  await launcher.appShell.openQueue();
   const queue = await launcher.appShell.queuePage.verifyIsShown();
   await queue.verifyAttention([
     {
@@ -120,7 +118,7 @@ test("a video tried again keeps its place and runs before what was already waiti
     queued("secondVideo1", "How Your Brain Fills In the Gaps", { queuedAt: "2026-10-05T09:00:00.001Z" }),
   );
   await launcher.launch({});
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   const queue = await launcher.appShell.queuePage.verifyIsShown();
   await queue.verifyWaiting(["How Your Brain Fills In the Gaps"]);
 
@@ -144,11 +142,7 @@ test("past our server's daily cap, the queue waits with the reason and resume ti
   );
   await launcher.launch({ apiKeys: API_KEYS });
 
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("Waiting for our server", `2 waiting · these continue after ${RESUME_TIME}, or now with the extension`);
-  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
-  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
-  await strip.openQueue();
+  await launcher.appShell.openQueue();
   const queue = await launcher.appShell.queuePage.verifyIsShown();
   await queue.verifyHeldNoteReads(
     `Our server has fetched as many transcripts for you as it can today. These continue after ${RESUME_TIME}, or now with the extension. Nothing has failed.`,
@@ -156,6 +150,8 @@ test("past our server's daily cap, the queue waits with the reason and resume ti
   await queue.verifyWaiting(["The Simulated Video", "How Your Brain Fills In the Gaps"]);
   await queue.verifyWaitingStatuses([`Continues after ${RESUME_TIME}`, `Continues after ${RESUME_TIME}`]);
   await queue.verifyTryAgainIsOffered(false);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
   await expect
     .poll(() =>
       backendSimulator.errors
@@ -190,17 +186,13 @@ test("a hold outlives reopening: the queue waits without asking our server again
 }) => {
   await page.clock.install({ time: EVENING });
   const hold = { reason: "serverCap", resumesAt: EVENING.getTime() + CAP_RESETS_IN_SECONDS * 1000 };
-  await page.evaluate(
-    (stored) => localStorage.setItem("overview.captureQueue.noAccount", stored),
-    JSON.stringify({ paused: false, folded: false, hold }),
-  );
+  await page.evaluate((stored) => localStorage.setItem("overview.captureQueue.noAccount", stored), JSON.stringify({ paused: false, hold }));
   backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
   await launcher.launch({ apiKeys: API_KEYS });
 
-  await launcher.appShell.queueStrip.verifyReads(
-    "Waiting for our server",
-    `1 waiting · it continues after ${RESUME_TIME}, or now with the extension`,
-  );
+  await launcher.appShell.openQueue();
+  const queue = await launcher.appShell.queuePage.verifyIsShown();
+  await queue.verifyWaitingStatuses([`Continues after ${RESUME_TIME}`]);
   expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
 
   await page.clock.fastForward(CAP_RESETS_IN_SECONDS * 1000);
@@ -219,9 +211,7 @@ test("asked to slow down, the queue waits a moment and carries on, rather than f
   await launcher.launch({ apiKeys: API_KEYS });
 
   const resumeTime = new Date(EVENING.getTime() + 45_000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("Waiting for our server", `1 waiting · it asked us to slow down · it continues after ${resumeTime}`);
-  await strip.openQueue();
+  await launcher.appShell.openQueue();
   const queue = await launcher.appShell.queuePage.verifyIsShown();
   await queue.verifyHeldNoteReads(
     `Our server asked us to slow down for a moment. The waiting video continues after ${resumeTime}. Nothing has failed.`,
@@ -261,7 +251,7 @@ test("a backfill queues private and deleted videos as skipped, saying so", async
   await launcher.appShell.playlistFlow.followWithBackfill();
 
   await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(1);
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
   const queue = await launcher.appShell.queuePage.verifyIsShown();
   await queue.verifyAttention([
     { tag: "Skipped", title: "Private video", reason: "Made private on YouTube, so we can’t read it. From Psychology." },
@@ -275,9 +265,7 @@ test("without an API key, the queue waits and says so rather than seeming to wor
   );
   await launcher.launch({});
 
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("2 videos are waiting for an API key", "Nothing can be made without one");
-  await strip.openQueue();
+  await launcher.appShell.openQueue();
   const queue = await launcher.appShell.queuePage.verifyIsShown();
   await queue.verifyNoKeyNote();
   await queue.verifyPauseIsOffered(false);
@@ -291,16 +279,17 @@ test("pausing keeps the video unmade at the top of the queue until the reader re
   backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
   await launcher.launch({ apiKeys: API_KEYS });
 
-  const strip = launcher.appShell.queueStrip;
-  await strip.verifyReads("Making 1 of 1", "Fetching the transcript · The Simulated Video");
-  await strip.pause();
+  await launcher.appShell.openQueue();
+  const queue = await launcher.appShell.queuePage.verifyIsShown();
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
+  await queue.pause();
   await backendSimulator.releaseEndpoint(EndpointKey.SERVICE_TRANSCRIPT);
-  await strip.verifyReads("Queue paused", "1 waiting · nothing is made until you resume");
+  await queue.verifyWaiting(["The Simulated Video"]);
   expect(await backendSimulator.overviewStore.listOverviews()).toEqual([]);
 
-  await strip.resume();
+  await queue.resume();
   await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(1);
-  await strip.verifyReads("Queue done · 1 made");
+  await queue.verifyNothingWaiting();
 });
 
 test("pausing on one device pauses the account's queue, so every device holds it", async ({ launcher, backendSimulator }) => {
@@ -308,7 +297,9 @@ test("pausing on one device pauses the account's queue, so every device holds it
   backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
   await launcher.launch({ apiKeys: API_KEYS });
 
-  await launcher.appShell.queueStrip.pause();
+  await launcher.appShell.openQueue();
+  const queue = await launcher.appShell.queuePage.verifyIsShown();
+  await queue.pause();
 
   await expect.poll(async () => (await backendSimulator.settingsStore.get()).queuePaused).toBe(true);
 });
@@ -329,7 +320,7 @@ test("clearing the queue removes what waits and leaves the playlists followed", 
   backendSimulator.playlists.seedFollowed(followed());
   backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
   await launcher.launch({});
-  await launcher.appShell.queueStrip.openQueue();
+  await launcher.appShell.openQueue();
 
   const queue = await launcher.appShell.queuePage.verifyIsShown();
   await queue.clear();

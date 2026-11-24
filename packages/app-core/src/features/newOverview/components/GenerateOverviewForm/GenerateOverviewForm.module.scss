@@ -78,14 +78,6 @@
   cursor: pointer;
 }
 
-.pasteButton {
-  @include controls.ghost-pill;
-  @include controls.pill-sm;
-
-  align-self: flex-start;
-  color: var(--muted);
-}
-
 .watchingButton {
   align-self: flex-start;
 
@@ -93,8 +85,7 @@
   @include controls.pill-sm;
 }
 
-.provenance,
-.note {
+.provenance {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.6;
@@ -126,7 +117,6 @@
 }
 
 @media (max-width: 47.9375rem) {
-  .pasteButton,
   .watchingButton {
     align-self: stretch;
     min-height: 2.75rem;

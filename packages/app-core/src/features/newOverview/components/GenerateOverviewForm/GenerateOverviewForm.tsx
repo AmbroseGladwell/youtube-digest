@@ -5,7 +5,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { JustNowList } from "../JustNowList/JustNowList.js";
 import { newOverviewDialogTestIds } from "../NewOverviewDialog/NewOverviewDialogTestIds.js";
 import { SavedForNow } from "../SoftWall/SavedForNow.js";
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { DEFAULT_PLAN, domainOf, SOCIAL_PLATFORM_NAME, socialTitle, tiktokTitle } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { keyPromptDetail } from "../../../transcripts/transcriptSourceNote.js";
@@ -30,8 +30,7 @@ import { useStartArticleFromLink } from "../../useStartArticleFromLink.js";
 import { PastedLinkStatus } from "../PastedLinkStatus/PastedLinkStatus.js";
 import { isPlatformPodcastLink, usePodcastLink } from "../../usePodcastLink.js";
 import { isTikTokLink, useTikTokLink } from "../../useTikTokLink.js";
-import { isSocialLink, useSocialLink, type SocialLink } from "../../useSocialLink.js";
-import type { EpisodeAction } from "../../../podcasts/util/episodeActionOf.js";
+import { isSocialLink, useSocialLink } from "../../useSocialLink.js";
 import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { pastedLinkState } from "../../util/pastedLinkState.js";
 import { resetDate } from "../../util/usageLine.js";
@@ -70,21 +69,11 @@ export const playlistTargetOf = (url: string): PlaylistTarget | null => {
 
 const MAKE_LABEL = "Make my overview";
 
-const canReadClipboard = (): boolean => typeof navigator.clipboard?.readText === "function";
-
 const urlPlaceholder = (articleAvailable: boolean, playlistsAvailable: boolean): string => {
   if (articleAvailable) {
     return "Paste a YouTube, podcast or article link";
   }
   return playlistsAvailable ? "Paste a YouTube video or playlist link" : "Paste a YouTube link";
-};
-
-// A post is read for its description; a video's words come with it, or are transcribed when chosen.
-const socialReadsWhat = (link: SocialLink, action: EpisodeAction | null): string => {
-  if (link.status === "found" && link.post.media !== "video") {
-    return "Reads the post’s description";
-  }
-  return action?.kind === "transcribe" || action?.kind === "free" ? "Transcribes the video’s sound" : "Reads the video’s captions";
 };
 
 export const GenerateOverviewForm = ({
@@ -114,6 +103,14 @@ export const GenerateOverviewForm = ({
   const watchedTranscript = useWatchedTranscriptQuery();
   const readiness = useGenerationReadiness();
   const keysReady = readiness.ready;
+  const field = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (!active || !keysReady) {
+      return;
+    }
+    const frame = requestAnimationFrame(() => field.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [active, keysReady]);
   const limit = useLimitMessage();
   const next = useNextQuota();
   const usage = useOverviewUsageQuery().data;
@@ -259,24 +256,6 @@ export const GenerateOverviewForm = ({
     return { kicker: isYouTubeUrl(url) ? "YouTube · Video" : null, title: url.trim() };
   };
 
-  const readsWhat = () => {
-    if (tiktokShown) {
-      return episodeAction?.kind === "transcribe" || episodeAction?.kind === "free"
-        ? "Transcribes the TikTok’s sound"
-        : "Reads the TikTok’s captions";
-    }
-    if (socialShown) {
-      return socialReadsWhat(social.link, episodeAction);
-    }
-    if (podcastShown) {
-      return "Finds the episode’s transcript";
-    }
-    if (article.link.status === "none") {
-      return "Fetches the transcript";
-    }
-    return article.link.status === "found" && article.link.article.recipe !== null ? "Reads the recipe" : "Reads the article";
-  };
-
   const limitOrNote = () => {
     if (limit !== null && walled === null) {
       return (
@@ -290,7 +269,7 @@ export const GenerateOverviewForm = ({
       );
     }
     if (keysReady) {
-      return <p className={styles.note}>{readsWhat()}, then writes the overview. Nothing is saved to your library unless both succeed.</p>;
+      return null;
     }
     return (
       <KeyPromptNote
@@ -380,6 +359,7 @@ export const GenerateOverviewForm = ({
               }
             }}
             disabled={!keysReady}
+            ref={field}
             autoFocus
             data-testid={generateOverviewFormTestIds.urlInput}
           />
@@ -443,21 +423,6 @@ export const GenerateOverviewForm = ({
           data-testid={generateOverviewFormTestIds.watchingButton}
         >
           Use the video you're watching
-        </button>
-      )}
-
-      {canReadClipboard() && (
-        <button
-          type="button"
-          className={styles.pasteButton}
-          onClick={() => {
-            analytics.capture.newOverviewForm.clipboardPasted();
-            void navigator.clipboard.readText().then(takeLink);
-          }}
-          disabled={!keysReady}
-          data-testid={generateOverviewFormTestIds.pasteButton}
-        >
-          Paste from clipboard
         </button>
       )}
 

@@ -3,13 +3,10 @@ export const captureQueueStripViewTestIds = {
   title: "CaptureQueueStripView.title",
   meta: "CaptureQueueStripView.meta",
   after: "CaptureQueueStripView.after",
-  attention: "CaptureQueueStripView.attention",
-  detailsButton: "CaptureQueueStripView.detailsButton",
   pauseButton: "CaptureQueueStripView.pauseButton",
   resumeButton: "CaptureQueueStripView.resumeButton",
   queueLink: "CaptureQueueStripView.queueLink",
   addKeyLink: "CaptureQueueStripView.addKeyLink",
   seePlansLink: "CaptureQueueStripView.seePlansLink",
-  showQueueButton: "CaptureQueueStripView.showQueueButton",
   dismissButton: "CaptureQueueStripView.dismissButton",
 };

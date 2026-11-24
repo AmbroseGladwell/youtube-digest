@@ -552,3 +552,12 @@
   font-size: 0.8125rem;
   color: var(--muted);
 }
+
+.heroQueue {
+  width: fit-content;
+  margin-top: 1rem;
+
+  &:empty {
+    display: none;
+  }
+}

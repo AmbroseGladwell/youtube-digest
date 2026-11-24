@@ -36,8 +36,6 @@ import { useHistoryTrail } from "./useHistoryTrail.js";
 import { CaptureQueueProvider } from "../../features/captureQueue/CaptureQueueContext.js";
 import { KeptLinksProvider } from "../../features/captures/KeptLinksContext.js";
 import { useKeptLinks } from "../../features/captures/useKeptLinks.js";
-import { CaptureQueueStripView } from "../../features/captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
-import { QueueRunDialog } from "../../features/captureQueue/components/QueueRunDialog/QueueRunDialog.js";
 import { useCaptureQueue } from "../../features/captureQueue/useCaptureQueue.js";
 import { navigationDirection, shouldAnimateNavigation, useShouldAnimateNavigation } from "../../util/viewTransitions.js";
 import styles from "./AppShell.module.scss";
@@ -71,7 +69,6 @@ export const AppShell = () => {
   const sync = useSync();
   const onAuthPage = pathname === Routes.signIn() || pathname === Routes.createAccount();
   const belowWriteFloor = sync.status.phase === "unsupported";
-  const onHome = pathname === Routes.home();
   // Why signed out sees no overviews: docs/architecture/tiers.md, "Signed out".
   const accountNeeded = useAccountNeeded();
   const gated = accountNeeded && (pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
@@ -101,7 +98,6 @@ export const AppShell = () => {
   const readerRunActive = readerRun !== null && readerRun.overview === null && readerRun.error === null;
   const captureQueue = useCaptureQueue({ readerRunActive });
   const keptLinks = useKeptLinks({ busy: readerRunActive });
-  const [queueDetailsOpen, setQueueDetailsOpen] = useState(false);
 
   const [headBackLink, setHeadBackLink] = useState<HeadBackLink | null>(null);
   const handoff = useMemo(() => ({ register: setHeadBackLink }), []);
@@ -165,7 +161,7 @@ export const AppShell = () => {
     );
   }
 
-  const runOrQueueStrip = () => {
+  const runStripOrNotice = () => {
     if (!isPanel && newOverview.run && !newOverview.dialogOpen) {
       return (
         <GenerationStatusStrip
@@ -173,23 +169,6 @@ export const AppShell = () => {
           onDetails={newOverview.open}
           onDismiss={newOverview.dismiss}
           onReadOverview={readOverview}
-        />
-      );
-    }
-    if (!isPanel && !newOverview.run && captureQueue.strip !== null) {
-      return (
-        <CaptureQueueStripView
-          strip={captureQueue.strip}
-          compact={isPhone}
-          folded={
-            onHome && captureQueue.folded
-              ? { attention: captureQueue.attention.length, onUnfold: () => captureQueue.setFolded(false) }
-              : null
-          }
-          onPause={() => captureQueue.setPaused(true)}
-          onResume={() => captureQueue.setPaused(false)}
-          onDetails={() => setQueueDetailsOpen(true)}
-          onDismiss={captureQueue.dismissStrip}
         />
       );
     }
@@ -345,7 +324,7 @@ export const AppShell = () => {
                     <OnThisTabLine tab={onThisTab} onStartVideo={(url) => newOverview.start(url, { from: "panel" })} />
                   )}
 
-                  {runOrQueueStrip()}
+                  {runStripOrNotice()}
                 </header>
 
                 <div className={styles.pane} data-testid={appShellTestIds.pane}>
@@ -379,8 +358,6 @@ export const AppShell = () => {
                     onCaptureReasonCommit={newOverview.commitCaptureReason}
                   />
                 )}
-
-                <QueueRunDialog making={captureQueue.making} open={queueDetailsOpen} onClose={() => setQueueDetailsOpen(false)} />
               </div>
             </BackLinkHandoffProvider>
           </HistoryTrailProvider>

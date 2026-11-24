@@ -50,6 +50,13 @@ test("each step reports what it produced, and there is no audio step because nob
   await dialog.verifyStepState("02", "done");
 });
 
+test("Create opens with the link field ready to paste into", async ({ launcher }) => {
+  await launcher.launch({ apiKeys: API_KEYS });
+  const dialog = await launcher.appShell.openNewOverview();
+
+  await dialog.verifyFieldHasFocus();
+});
+
 test("a finished generation opens in the reader from the dialog, and leaves no strip behind", async ({ launcher }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
   const dialog = launcher.appShell.newOverviewDialog;
