@@ -1,4 +1,12 @@
-import { formatClock, overviewMarkdown, type ChatSource, type OtherOverviewCitation, type Overview, type Project } from "@overview/domain";
+import {
+  formatClock,
+  overviewMarkdown,
+  type ChatSource,
+  type OtherOverviewCitation,
+  type Overview,
+  type Project,
+  type Topic,
+} from "@overview/domain";
 import type { Passage } from "./transcriptPassages.js";
 
 export interface SourcesTurn {
@@ -23,6 +31,7 @@ export const otherSourcesInPrompt = (
   turns: readonly SourcesTurn[],
   overviews: ReadonlyMap<string, Overview>,
   projects: ReadonlyMap<string, Project>,
+  topics: ReadonlyMap<string, Topic> = new Map(),
 ): OtherSourcesInPrompt => {
   const labels = new Map<string, LabelledSource>();
   const minuteLabels = new Map<string, OtherOverviewCitation>();
@@ -63,7 +72,7 @@ export const otherSourcesInPrompt = (
       return [{ label, title: source.title, passages }];
     });
     const parts = [
-      present.length === 0 ? null : sourcesBlock(present, projects, !shown),
+      present.length === 0 ? null : sourcesBlock(present, projects, topics, !shown),
       shownMinutes.length === 0 ? null : minutesBlock(shownMinutes),
       setAside.length === 0 ? null : setAsideBlock(setAside.map((label) => `${label} (${titles.get(label) ?? "an overview"})`)),
     ].filter((part) => part !== null);
@@ -104,15 +113,22 @@ const LATER_LEAD = `# More overviews from the reader's library
 
 Added for this question, labelled and cited as before.`;
 
-const sourcesBlock = (present: readonly LabelledSource[], projects: ReadonlyMap<string, Project>, first: boolean): string => {
+const sourcesBlock = (
+  present: readonly LabelledSource[],
+  projects: ReadonlyMap<string, Project>,
+  topics: ReadonlyMap<string, Topic>,
+  first: boolean,
+): string => {
   const pinned = present
-    .filter(({ source }) => source.how === "pinned" && source.projectId === undefined)
+    .filter(({ source }) => source.how === "pinned" && source.projectId === undefined && source.topicId === undefined)
     .map(({ source }) => source.label);
   const projectIds = [...new Set(present.flatMap(({ source }) => (source.projectId === undefined ? [] : [source.projectId])))];
+  const topicIds = [...new Set(present.flatMap(({ source }) => (source.topicId === undefined ? [] : [source.topicId])))];
   const anyBrief = present.some(({ source }) => source.brief === true);
   const lines = [
     pinned.length === 0 ? null : `The reader pinned ${listed(pinned)} to this conversation with "@".`,
     ...projectIds.map((projectId) => projectLead(projects.get(projectId), present, projectId)),
+    ...topicIds.map((topicId) => topicLead(topics.get(topicId), present, topicId)),
     anyBrief ? "Cite an overview listed in brief by its label alone (such as S7)." : null,
   ].filter((line) => line !== null);
   const whole = present
@@ -127,22 +143,41 @@ const sourcesBlock = (present: readonly LabelledSource[], projects: ReadonlyMap<
     }
     return [`# The rest of ${projectName(projects.get(projectId))}, in brief\n\n${brief.map(briefLine).join("\n\n")}`];
   });
-  return [first ? FIRST_LEAD : LATER_LEAD, lines.join("\n"), ...whole, ...briefs].filter((part) => part !== "").join("\n\n");
+  const topicBriefs = topicIds.flatMap((topicId) => {
+    const brief = present.filter(({ source }) => source.topicId === topicId && source.brief === true);
+    if (brief.length === 0) {
+      return [];
+    }
+    return [`# The rest of ${topicName(topics.get(topicId))}, in brief\n\n${brief.map(briefLine).join("\n\n")}`];
+  });
+  return [first ? FIRST_LEAD : LATER_LEAD, lines.join("\n"), ...whole, ...briefs, ...topicBriefs]
+    .filter((part) => part !== "")
+    .join("\n\n");
 };
 
 const projectName = (project: Project | undefined): string => (project === undefined ? "the project" : `"${project.name}"`);
 
-const projectLead = (project: Project | undefined, present: readonly LabelledSource[], projectId: string): string => {
-  const members = present.filter(({ source }) => source.projectId === projectId);
+const membersLine = (members: readonly LabelledSource[]): string => {
   const whole = members.filter(({ source }) => source.brief !== true).map(({ source }) => source.label);
-  const purpose = project?.purpose === null || project?.purpose === undefined ? "" : `, which they keep for this: "${project.purpose}"`;
-  const name = project === undefined ? "one of their projects" : `their project "${project.name}"`;
   const brief = members.length > whole.length;
-  return `The reader pinned ${name} to this conversation${purpose}. Its overviews are ${listed(members.map(({ source }) => source.label))}.${
+  return `Its overviews are ${listed(members.map(({ source }) => source.label))}.${
     brief
       ? ` The ${whole.length === 1 ? "one" : "few"} closest to the question (${listed(whole)}) ${whole.length === 1 ? "is" : "are"} given in full; the rest are listed in brief, by title, big picture and core claim.`
       : ""
   }`;
+};
+
+const projectLead = (project: Project | undefined, present: readonly LabelledSource[], projectId: string): string => {
+  const purpose = project?.purpose === null || project?.purpose === undefined ? "" : `, which they keep for this: "${project.purpose}"`;
+  const name = project === undefined ? "one of their projects" : `their project "${project.name}"`;
+  return `The reader pinned ${name} to this conversation${purpose}. ${membersLine(present.filter(({ source }) => source.projectId === projectId))}`;
+};
+
+const topicName = (topic: Topic | undefined): string => (topic === undefined ? "the topic" : `the topic "${topic.name}"`);
+
+const topicLead = (topic: Topic | undefined, present: readonly LabelledSource[], topicId: string): string => {
+  const name = topic === undefined ? "one of their topics" : `their topic "${topic.name}"`;
+  return `The reader pinned ${name} to this conversation. ${membersLine(present.filter(({ source }) => source.topicId === topicId))}`;
 };
 
 const briefLine = ({ source, overview }: LabelledSource): string =>

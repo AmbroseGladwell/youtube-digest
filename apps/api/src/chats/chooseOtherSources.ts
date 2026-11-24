@@ -8,11 +8,14 @@ import {
   ProjectMember,
   readStoredRecord,
   stampSchemaVersion,
+  Topic,
+  TOPIC_MIGRATIONS,
   type ChatQuestionRequest,
   type ChatSource,
   type OverviewId,
   type ProjectId,
   type RecordMigration,
+  type TopicId,
 } from "@overview/domain";
 import type { z } from "zod";
 import type { AccountId } from "../auth/AccountId.js";
@@ -47,12 +50,30 @@ const readAll = <T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrati
   });
 };
 
+type PinnedVia = { projectId: ProjectId } | { topicId: TopicId };
+
 interface Candidate {
   overviewId: OverviewId;
   how: ChatSource["how"];
   projectId?: ProjectId;
+  topicId?: TopicId;
   brief?: boolean;
 }
+
+// A pinned project or topic: whole when small, else the closest in full and the rest in brief.
+const pinnedGroup = async (
+  meaningSearch: MeaningSearch | null,
+  accountId: AccountId,
+  text: string,
+  ids: readonly OverviewId[],
+  via: PinnedVia,
+): Promise<Candidate[]> => {
+  const whole = ids.length <= PINNED_PROJECT_WHOLE ? [...ids] : await closestPinnedProjectMembers(meaningSearch, accountId, text, ids);
+  return [
+    ...whole.map((overviewId): Candidate => ({ overviewId, how: "pinned", ...via })),
+    ...ids.filter((id) => !whole.includes(id)).map((overviewId): Candidate => ({ overviewId, how: "pinned", ...via, brief: true })),
+  ];
+};
 
 // What a question adds, and what it never adds: docs/features/chats.md, "Other overviews".
 export const chooseOtherSources = async (
@@ -79,13 +100,17 @@ export const chooseOtherSources = async (
       ).map((overview) => overview.id),
     );
     const ids = members.map((member) => member.overviewId).filter((id) => live.has(id));
-    const whole =
-      ids.length <= PINNED_PROJECT_WHOLE ? ids : await closestPinnedProjectMembers(meaningSearch, accountId, question.text, ids);
-    for (const overviewId of whole) {
-      candidates.push({ overviewId, how: "pinned", projectId: project.id });
-    }
-    for (const overviewId of ids.filter((id) => !whole.includes(id))) {
-      candidates.push({ overviewId, how: "pinned", projectId: project.id, brief: true });
+    candidates.push(...(await pinnedGroup(meaningSearch, accountId, question.text, ids, { projectId: project.id })));
+  }
+
+  const topics = readAll(await records.readLive(accountId, "topic", question.pins.topics), Topic, TOPIC_MIGRATIONS);
+  if (topics.length > 0) {
+    const newestFirst = readAll(await records.listLive(accountId, "overview", "%"), Overview, OVERVIEW_MIGRATIONS)
+      .filter((overview) => overview.id !== home)
+      .sort((left, right) => right.savedAt.localeCompare(left.savedAt));
+    for (const topic of topics) {
+      const ids = newestFirst.filter((overview) => overview.topicIds.includes(topic.id)).map((overview) => overview.id);
+      candidates.push(...(await pinnedGroup(meaningSearch, accountId, question.text, ids, { topicId: topic.id })));
     }
   }
 
@@ -126,6 +151,7 @@ export const chooseOtherSources = async (
       title: overview.source.title,
       how: candidate.how,
       ...(candidate.projectId === undefined ? {} : { projectId: candidate.projectId }),
+      ...(candidate.topicId === undefined ? {} : { topicId: candidate.topicId }),
       ...(candidate.brief === true ? { brief: true } : {}),
     });
   }

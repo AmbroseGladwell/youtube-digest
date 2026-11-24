@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import type { ChatSource, Overview, OverviewId, Project, ProjectId } from "@overview/domain";
+import type { ChatSource, Overview, OverviewId, Project, ProjectId, Topic, TopicId } from "@overview/domain";
 import { makeOverview, makeProject } from "@overview/store-conformance";
 import { otherSourcesInPrompt } from "./otherSourcesInPrompt.js";
 
@@ -93,4 +93,24 @@ test("pins are named, and a pinned project leads with its name and purpose and l
   );
   assert.match(block, /# The rest of "Healthy eating", in brief\n\n## \[S3\] Sleep first/);
   assert.equal(block.match(/^## S\d+$/gm)?.length, 2);
+});
+
+test("a pinned topic leads with its name and lists the rest in brief, as a project does", () => {
+  const topicId = "33333333-3333-4333-8333-333333333333" as TopicId;
+  const topic: Topic = { id: topicId, name: "Cooking", description: null, createdAt: "2026-09-01" };
+  const { blocks } = otherSourcesInPrompt(
+    [
+      {
+        sources: [source("S1", plants, { how: "pinned", topicId }), source("S2", sleep, { how: "pinned", topicId, brief: true })],
+        setAside: [],
+      },
+    ],
+    overviews,
+    new Map(),
+    new Map([[topicId as string, topic]]),
+  );
+  const block = blocks[0]!;
+  assert.match(block, /The reader pinned their topic "Cooking" to this conversation\. Its overviews are S1 and S2\. The one closest/);
+  assert.match(block, /# The rest of the topic "Cooking", in brief\n\n## \[S2\] Sleep first/);
+  assert.doesNotMatch(block, /with "@"/);
 });

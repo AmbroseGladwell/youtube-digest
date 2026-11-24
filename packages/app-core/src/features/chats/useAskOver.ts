@@ -73,6 +73,7 @@ export const useAskOver = (owner: AskOwner, api?: ChatApi) => {
         newConversation: !known.some((chat) => chat.id === chatId),
         pinnedOverviews: extras.pins.overviews.length,
         pinnedProjects: extras.pins.projects.length,
+        pinnedTopics: extras.pins.topics.length,
         setAside: extras.setAside.length,
       });
       setState({ status: "answering", conversationId, question, picking: null, picked: [], text: "", sources: null, sections: [] });

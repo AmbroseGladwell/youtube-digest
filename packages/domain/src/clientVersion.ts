@@ -1,5 +1,5 @@
 // Bumped only when the write floor must be able to exclude a change (docs/architecture/api.md).
-export const CLIENT_VERSION = 31;
+export const CLIENT_VERSION = 32;
 
 // The first client that reserves before pushing: docs/architecture/tiers.md, "Counting".
 export const FIRST_RESERVING_CLIENT_VERSION = 7;

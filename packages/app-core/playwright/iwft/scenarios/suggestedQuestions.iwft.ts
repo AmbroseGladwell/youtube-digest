@@ -180,7 +180,7 @@ test.describe("Suggested questions on the Ask page", () => {
     expect(backendSimulator.chats.questions()[0]).toMatchObject({
       overviewId: "library",
       text: FIRST,
-      pins: { overviews: [...questions[0]!.overviewIds], projects: [] },
+      pins: { overviews: [...questions[0]!.overviewIds], projects: [], topics: [] },
     });
     await ask.verifyPinnedRead(0, titlesOf(questions[0]!));
     await expect

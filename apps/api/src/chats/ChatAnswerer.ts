@@ -15,6 +15,8 @@ import {
   overviewMarkdown,
   PROJECT_MIGRATIONS,
   Project,
+  Topic,
+  TOPIC_MIGRATIONS,
   overviewParts,
   readStoredRecord,
   sourceKey,
@@ -409,12 +411,19 @@ export class ChatAnswerer {
         return read.status === "read" ? [[read.record.id as string, read.record] as const] : [];
       }),
     );
+    const topicIds = [...new Set(sources.flatMap((source) => (source.topicId === undefined ? [] : [source.topicId])))];
+    const topics = new Map(
+      (await records.readLive(accountId, "topic", topicIds)).flatMap((record) => {
+        const read = readStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), Topic, TOPIC_MIGRATIONS);
+        return read.status === "read" ? [[read.record.id as string, read.record] as const] : [];
+      }),
+    );
     return {
       added,
       setAside,
       minutes,
       searched: choice.searched,
-      inPrompt: otherSourcesInPrompt([...pastWithMinutes, { sources: added, setAside, minutes }], overviews, projects),
+      inPrompt: otherSourcesInPrompt([...pastWithMinutes, { sources: added, setAside, minutes }], overviews, projects, topics),
     };
   }
 

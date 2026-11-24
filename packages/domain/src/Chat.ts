@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OverviewId, ProjectId } from "./Brands.js";
+import { OverviewId, ProjectId, TopicId } from "./Brands.js";
 import { OVERVIEW_PARTS } from "./overviewParts.js";
 
 export const MAX_CHAT_QUESTIONS = 50;
@@ -85,6 +85,7 @@ export const ChatSource = z.object({
   title: z.string(),
   how: z.enum(["pinned", "found"]),
   projectId: ProjectId.optional(),
+  topicId: TopicId.optional(),
   brief: z.boolean().optional(),
 });
 export type ChatSource = z.infer<typeof ChatSource>;

@@ -82,6 +82,7 @@ const allowProjectAndLibraryChatsWithSections: RecordMigration = { newSchemaVers
 const allowSourceMinuteCitations: RecordMigration = { newSchemaVersion: 5 };
 const turnPointsIntoParagraphsAndLists: RecordMigration = { newSchemaVersion: 6, alterRecord: sectionsAsLists };
 const giveListItemsTheirOwnSources: RecordMigration = { newSchemaVersion: 7, alterRecord: listItemsWithSources };
+const allowTopicPinnedSources: RecordMigration = { newSchemaVersion: 8 };
 
 export const CHAT_MIGRATIONS: readonly RecordMigration[] = [
   allowOverviewItemCitations,
@@ -90,6 +91,7 @@ export const CHAT_MIGRATIONS: readonly RecordMigration[] = [
   allowSourceMinuteCitations,
   turnPointsIntoParagraphsAndLists,
   giveListItemsTheirOwnSources,
+  allowTopicPinnedSources,
 ];
 
 export const CURRENT_CHAT_SCHEMA_VERSION = currentSchemaVersion(CHAT_MIGRATIONS);
