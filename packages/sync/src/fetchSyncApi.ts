@@ -6,6 +6,8 @@ import { isSyncRequestError } from "./SyncRequestError.js";
 
 export type FetchSyncApiOptions = ApiRequesterOptions;
 
+const editedFlag = (edited: boolean): { edited?: true } => (edited ? { edited: true } : {});
+
 export const createFetchSyncApi = (options: FetchSyncApiOptions): SyncApi => {
   const request = createApiRequester(options);
   const written = answered<WrittenRecord>;
@@ -17,12 +19,14 @@ export const createFetchSyncApi = (options: FetchSyncApiOptions): SyncApi => {
     reserveOverview: async (overviewId) => {
       await request("POST", "/overview-reservations", z.unknown(), { body: { overviewId } });
     },
-    setOverviewTopics: (id, topicIds, updatedAt) =>
-      written(request("PUT", `/overviews/${id}/topics`, WrittenRecord, { body: { topicIds, updatedAt } })),
-    setOverviewCaptureReason: (id, captureReason, updatedAt) =>
-      written(request("PUT", `/overviews/${id}/capture-reason`, WrittenRecord, { body: { captureReason, updatedAt } })),
-    setOverviewTags: (id, tags, updatedAt) =>
-      written(request("PUT", `/overviews/${id}/tags`, WrittenRecord, { body: { tags, updatedAt } })),
+    setOverviewTopics: (id, topicIds, updatedAt, edited = false) =>
+      written(request("PUT", `/overviews/${id}/topics`, WrittenRecord, { body: { topicIds, updatedAt, ...editedFlag(edited) } })),
+    setOverviewCaptureReason: (id, captureReason, updatedAt, edited = false) =>
+      written(
+        request("PUT", `/overviews/${id}/capture-reason`, WrittenRecord, { body: { captureReason, updatedAt, ...editedFlag(edited) } }),
+      ),
+    setOverviewTags: (id, tags, updatedAt, edited = false) =>
+      written(request("PUT", `/overviews/${id}/tags`, WrittenRecord, { body: { tags, updatedAt, ...editedFlag(edited) } })),
     setOverviewState: (id, patch, updatedAt) =>
       written(request("PUT", `/overviews/${id}/state`, WrittenRecord, { body: { ...patch, updatedAt } })),
     deleteOverview: (id) => request("DELETE", `/overviews/${id}`, WrittenRecord),

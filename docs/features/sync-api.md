@@ -89,6 +89,8 @@ an `ApiError`, and they are the whole of the write rules:
 | `decideMerge` | the field writes and both upserts | absent and no defaults → `not_found`; `If-Match` mismatch; floor; migrate the stored body to the caller's version; merge; validate |
 | `decideTombstone` | `DELETE /overviews/:id` | absent or already deleted → nothing (204); `If-Match` mismatch; floor |
 
+The overview's topics, tags and capture-reason writes take an optional `edited: true`: the reader made the change, so the merge also sets `editedAt` to the write's `updatedAt` (`library-sort.md`, "Updated").
+
 **The floor** is `record_newer_than_client`: the stored `schema_version` exceeds the
 caller's for that kind. It applies to every write onto an existing record, whole-record
 replace and delete included, which closes a gap the local store still has: there,

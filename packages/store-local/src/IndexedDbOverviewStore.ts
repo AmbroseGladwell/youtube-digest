@@ -144,11 +144,11 @@ export class IndexedDbOverviewStore implements OverviewStore {
     const now = new Date();
     await this.#write(
       OVERVIEWS_STORE,
-      stampStoredRecord({ ...current, topicIds }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
+      stampStoredRecord({ ...current, topicIds, editedAt: now.toISOString() }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
       "overview",
       overviewId,
       now,
-      { op: "topics", topicIds },
+      { op: "topics", topicIds, edited: true },
     );
   }
 
@@ -161,11 +161,11 @@ export class IndexedDbOverviewStore implements OverviewStore {
     const now = new Date();
     await this.#write(
       OVERVIEWS_STORE,
-      stampStoredRecord({ ...current, captureReason }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
+      stampStoredRecord({ ...current, captureReason, editedAt: now.toISOString() }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
       "overview",
       overviewId,
       now,
-      { op: "captureReason", captureReason },
+      { op: "captureReason", captureReason, edited: true },
     );
   }
 
@@ -178,11 +178,11 @@ export class IndexedDbOverviewStore implements OverviewStore {
     const now = new Date();
     await this.#write(
       OVERVIEWS_STORE,
-      stampStoredRecord({ ...current, tags }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
+      stampStoredRecord({ ...current, tags, editedAt: now.toISOString() }, CURRENT_OVERVIEW_SCHEMA_VERSION, now),
       "overview",
       overviewId,
       now,
-      { op: "tags", tags },
+      { op: "tags", tags, edited: true },
     );
   }
 

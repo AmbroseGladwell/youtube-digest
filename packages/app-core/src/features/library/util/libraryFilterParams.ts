@@ -8,12 +8,35 @@ import {
   type LibrarySourceId,
   type LibraryTopicFilter,
 } from "../types/LibraryFilters.js";
-import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS, type LibrarySort } from "../types/LibrarySort.js";
+import {
+  DEFAULT_LIBRARY_SORT,
+  LIBRARY_SORT_DIRECTIONS,
+  LIBRARY_SORT_FIELDS,
+  LIBRARY_SORT_PRESET,
+  defaultDirectionOf,
+  groupsFor,
+  type LibrarySort,
+} from "../types/LibrarySort.js";
 import type { LibraryView } from "../types/LibraryView.js";
 
 const STATUS_VALUES = new Set(["all", "read", "unread"]);
 const SOURCE_ID = /^(?:[a-zA-Z]+|site:[^,\s]+)$/;
-const LIBRARY_VIEW_PARAMS = ["kind", "source", "added", "topic", "verdict", "status", "fav", "pending", "dubious", "tag", "q", "sort"];
+const LIBRARY_VIEW_PARAMS = [
+  "kind",
+  "source",
+  "added",
+  "topic",
+  "verdict",
+  "status",
+  "fav",
+  "pending",
+  "dubious",
+  "tag",
+  "q",
+  "sort",
+  "dir",
+  "group",
+];
 
 const listParam = (searchParams: URLSearchParams, name: string): string[] => {
   const value = searchParams.get(name);
@@ -90,14 +113,33 @@ export const applyLibraryFilterPatch = (current: URLSearchParams, patch: Partial
   return next;
 };
 
+const LEGACY_SORT: Record<string, LibrarySort> = {
+  newest: LIBRARY_SORT_PRESET.newest,
+  oldest: LIBRARY_SORT_PRESET.oldest,
+};
+
+// ?sort=published&dir=asc&group=month; an old ?sort=oldest still reads: docs/features/library-sort.md, "In the URL".
 export const parseLibrarySort = (searchParams: URLSearchParams): LibrarySort => {
-  const sortParam = searchParams.get("sort");
-  return LIBRARY_SORTS.find((sort) => sort === sortParam) ?? DEFAULT_LIBRARY_SORT;
+  const sortParam = searchParams.get("sort") ?? "";
+  const legacy = LEGACY_SORT[sortParam];
+  if (legacy !== undefined) {
+    return legacy;
+  }
+  const field = LIBRARY_SORT_FIELDS.find((candidate) => candidate === sortParam) ?? DEFAULT_LIBRARY_SORT.field;
+  const dirParam = searchParams.get("dir");
+  const groupParam = searchParams.get("group");
+  return {
+    field,
+    direction: LIBRARY_SORT_DIRECTIONS.find((direction) => direction === dirParam) ?? defaultDirectionOf(field),
+    group: groupsFor(field).find((group) => group === groupParam) ?? "none",
+  };
 };
 
 export const applyLibrarySort = (current: URLSearchParams, sort: LibrarySort): URLSearchParams => {
   const next = new URLSearchParams(current);
-  setOrDelete(next, "sort", sort === DEFAULT_LIBRARY_SORT ? undefined : sort);
+  setOrDelete(next, "sort", sort.field === DEFAULT_LIBRARY_SORT.field ? undefined : sort.field);
+  setOrDelete(next, "dir", sort.direction === defaultDirectionOf(sort.field) ? undefined : sort.direction);
+  setOrDelete(next, "group", sort.group === "none" ? undefined : sort.group);
   return next;
 };
 

@@ -1,7 +1,16 @@
 import { z } from "zod";
 import { Novelty, TopicId } from "@overview/domain";
 import { LIBRARY_ADDED, LIBRARY_KINDS, NO_LIBRARY_FILTERS } from "./types/LibraryFilters.js";
-import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS } from "./types/LibrarySort.js";
+import {
+  DEFAULT_LIBRARY_SORT,
+  LIBRARY_GROUPS,
+  LIBRARY_SORT_DIRECTIONS,
+  LIBRARY_SORT_FIELDS,
+  LIBRARY_SORT_PRESET,
+  LIBRARY_SORT_PRESETS,
+  groupsFor,
+  type LibrarySort,
+} from "./types/LibrarySort.js";
 import type { LibraryView, SavedLibraryViewField } from "./types/LibraryView.js";
 
 const VERSION = 2;
@@ -17,7 +26,12 @@ const FIELDS = {
   status: z.enum(["all", "read", "unread"]),
   favourite: z.boolean(),
   dubious: z.boolean(),
-  sort: z.enum(LIBRARY_SORTS),
+  sort: z.union([
+    z.enum(LIBRARY_SORT_PRESETS).transform((preset): LibrarySort => LIBRARY_SORT_PRESET[preset]),
+    z
+      .object({ field: z.enum(LIBRARY_SORT_FIELDS), direction: z.enum(LIBRARY_SORT_DIRECTIONS), group: z.enum(LIBRARY_GROUPS) })
+      .refine((sort) => groupsFor(sort.field).includes(sort.group)),
+  ]),
 } satisfies Record<SavedLibraryViewField, z.ZodType>;
 
 export interface RestoredLibraryView {
@@ -27,7 +41,7 @@ export interface RestoredLibraryView {
 
 const storageKey = (accountId: string | null) => `overview.libraryView.${accountId ?? NO_ACCOUNT}`;
 
-// Version 1 held one kind as source and one verdict as novelty: docs/features/library-filters.md, "Saved view".
+// Version 1 held one kind as source and one verdict as novelty, and the sort as a name: docs/features/library-filters.md, "Saved view".
 const fromVersion1 = ({ source, novelty, ...rest }: Record<string, unknown>): Record<string, unknown> => ({
   ...rest,
   kinds: source === undefined || source === "all" ? [] : [source],

@@ -119,3 +119,37 @@ test("the menu works from the keyboard and gives focus back to the pill", async 
   await sortPill.verifyReads("Oldest saved first");
   await library.verifyCardOrder(["Older video", "Newer video"]);
 });
+
+test("a link can sort by Updated, where the reader's own edit counts, and by Published either way", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(
+    makeOverview({
+      savedAt: "2026-09-01T00:00:00.000Z",
+      editedAt: "2026-10-05T00:00:00.000Z",
+      source: { ...makeOverview().source, title: "Edited lately", publishedAt: "2019-03-01T00:00:00.000Z" },
+    }),
+  );
+  backendSimulator.overviews.seed(
+    makeOverview({
+      savedAt: "2026-10-01T00:00:00.000Z",
+      source: { ...makeOverview().source, title: "Saved lately", publishedAt: null },
+    }),
+  );
+  backendSimulator.overviews.seed(
+    makeOverview({
+      savedAt: "2026-09-10T00:00:00.000Z",
+      source: { ...makeOverview().source, title: "Saved earlier", publishedAt: "2025-05-01T00:00:00.000Z" },
+    }),
+  );
+
+  const library = await launcher.launchExpectingLibrary();
+
+  await launcher.openPage("/?sort=updated");
+  await library.verifyCardOrder(["Edited lately", "Saved lately", "Saved earlier"]);
+
+  await launcher.openPage("/?sort=published&dir=asc");
+  await library.verifyCardOrder(["Edited lately", "Saved earlier", "Saved lately"]);
+  await library.sortPill.verifyReads("Published, oldest first");
+});

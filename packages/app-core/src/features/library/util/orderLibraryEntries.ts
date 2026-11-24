@@ -1,6 +1,7 @@
 import { libraryEntrySavedAt, libraryEntryTitle, type LibraryEntry } from "../../overviews/types/LibraryEntry.js";
-import { orderLibraryEntriesBySavedAt } from "../../overviews/util/orderLibraryEntriesBySavedAt.js";
 import type { LibrarySort } from "../types/LibrarySort.js";
+import { libraryEntryDate, NO_LIBRARY_ACTIVITY, type LibraryActivity } from "./libraryEntryDate.js";
+import { libraryTitleKey } from "./libraryTitleKey.js";
 
 type Compare = (a: LibraryEntry, b: LibraryEntry) => number;
 
@@ -18,19 +19,31 @@ const unknownLast =
     return compare(left, right);
   };
 
-const byTitle = unknownLast(libraryEntryTitle, (left, right) =>
-  left.localeCompare(right, undefined, { sensitivity: "base", numeric: true }),
-);
-const oldestFirst = unknownLast(libraryEntrySavedAt, (left, right) => left.localeCompare(right));
+const titleOf = (entry: LibraryEntry): string | null => {
+  const title = libraryEntryTitle(entry);
+  return title === null ? null : libraryTitleKey(title);
+};
 
-export const orderLibraryEntries = <T extends LibraryEntry>(entries: T[], sort: LibrarySort): T[] => {
-  const newest = orderLibraryEntriesBySavedAt(entries);
-  switch (sort) {
-    case "newest":
-      return newest;
-    case "oldest":
-      return [...entries].sort(oldestFirst);
-    case "title":
-      return newest.sort(byTitle);
+const compareTitles = (left: string, right: string): number => left.localeCompare(right, undefined, { sensitivity: "base", numeric: true });
+
+const newestSavedFirst = unknownLast(libraryEntrySavedAt, (left, right) => right.localeCompare(left));
+
+// Unknown last whichever way it runs, ties newest saved first: docs/features/library-sort.md.
+export const orderLibraryEntries = <T extends LibraryEntry>(
+  entries: T[],
+  sort: LibrarySort,
+  activity: LibraryActivity = NO_LIBRARY_ACTIVITY,
+): T[] => {
+  const sign = sort.direction === "asc" ? 1 : -1;
+  if (sort.field === "title") {
+    const byTitle = unknownLast(titleOf, (left, right) => sign * compareTitles(left, right));
+    return [...entries].sort((a, b) => byTitle(a, b) || newestSavedFirst(a, b));
   }
+  const { field } = sort;
+  const dated = new Map(entries.map((entry) => [entry, libraryEntryDate(entry, field, activity)] as const));
+  const byDate = unknownLast(
+    (entry) => dated.get(entry as T) ?? null,
+    (left: number, right: number) => sign * (left - right),
+  );
+  return [...entries].sort((a, b) => byDate(a, b) || newestSavedFirst(a, b));
 };

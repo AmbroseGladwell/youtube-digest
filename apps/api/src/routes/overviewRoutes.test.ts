@@ -437,3 +437,21 @@ test("two overviews of different videos sit side by side, and one of a video wit
   );
   await testApp.close();
 });
+
+test("a field write the reader made dates editedAt by its own time; one the app made leaves it alone", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const overview = storedOverview();
+  await account.inject({ method: "POST", url: "/api/overviews", body: overview });
+
+  await account.inject({ method: "PUT", url: `/api/overviews/${overview.id}/tags`, body: { tags: ["saas"], updatedAt: UPDATED_AT } });
+  assert.equal("editedAt" in (await account.change("overview", overview.id)).body!, false);
+
+  await account.inject({
+    method: "PUT",
+    url: `/api/overviews/${overview.id}/capture-reason`,
+    body: { captureReason: "Because", updatedAt: UPDATED_AT, edited: true },
+  });
+  assert.equal((await account.change("overview", overview.id)).body!.editedAt, UPDATED_AT);
+  await testApp.close();
+});

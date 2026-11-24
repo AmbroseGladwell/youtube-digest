@@ -57,3 +57,11 @@ test("a pending whole-record replace keeps the local record rather than the pull
 test("a pending delete means the pulled record must not come back", () => {
   assert.equal(rebasePendingChanges(remote, [entry({ op: "delete" })]), null);
 });
+
+test("a pending edit of the reader's own dates the record's editedAt; the app's fold of duplicates doesn't", () => {
+  const edited = rebasePendingChanges(remote, [entry({ op: "tags", tags: ["saas"], edited: true }, "2026-09-26T10:05:00.000Z")]);
+  assert.equal(edited?.editedAt, "2026-09-26T10:05:00.000Z");
+
+  const folded = rebasePendingChanges(remote, [entry({ op: "tags", tags: ["saas"] })]);
+  assert.equal(folded?.editedAt, undefined);
+});
