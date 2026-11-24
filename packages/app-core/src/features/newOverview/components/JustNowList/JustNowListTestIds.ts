@@ -7,4 +7,7 @@ export const justNowListTestIds = {
   addReason: "JustNowList.addReason",
   readOverview: newOverviewDialogTestIds.readOverviewButton,
   openSaved: "JustNowList.openSaved",
+  keepNotice: "JustNowList.keepNotice",
+  keepIt: "JustNowList.keepIt",
+  kept: "JustNowList.kept",
 };

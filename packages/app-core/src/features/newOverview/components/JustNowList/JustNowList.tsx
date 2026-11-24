@@ -1,3 +1,4 @@
+import { resumeTimeText } from "../../../transcripts/util/resumeTime.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { newOverviewDialogTestIds } from "../NewOverviewDialog/NewOverviewDialogTestIds.js";
 import { useState } from "react";
@@ -22,7 +23,57 @@ export interface JustNowListProps {
   onOpenSaved: (capture: SavedCapture) => void;
   onCaptureReasonChange: (reason: string) => void;
   onCaptureReasonCommit: () => void;
+  onKeep: (run: NewOverviewRun) => void;
 }
+
+interface KeepNoticeProps {
+  run: NewOverviewRun;
+  onKeep: (run: NewOverviewRun) => void;
+}
+
+// Design 358g: the run stopped at our server's cap, and the link can wait for it, or for the extension.
+const KeepNotice = ({ run, onKeep }: KeepNoticeProps) => {
+  const [declined, setDeclined] = useState(false);
+  const time = resumeTimeText(new Date(run.keepable!.resumesAt));
+  if (run.kept === true) {
+    return (
+      <div className={styles.keep} data-testid={justNowListTestIds.kept}>
+        <b>Kept. It’ll be made after {time}.</b>
+        <span>Or sooner: the moment the extension is open on a computer, it makes it there. You don’t need to come back for it.</span>
+        <span className={styles.chip}>
+          <StrokeIcon name="clock" size={12} />
+          Continues after {time}
+        </span>
+      </div>
+    );
+  }
+  if (declined) {
+    return null;
+  }
+  return (
+    <div className={styles.keep} data-testid={justNowListTestIds.keepNotice}>
+      <b>This one can’t be fetched right now.</b>
+      <span>
+        Fetching from YouTube is paused on us until {time}. Keep it, and it’s made after {time}, or as soon as you open the extension on a
+        computer, whichever comes first.
+      </span>
+      <span className={styles.keepActions}>
+        <button
+          type="button"
+          className={styles.keepButton}
+          onClick={() => onKeep(run)}
+          aria-label={`Keep it: made after ${time} or in the extension`}
+          data-testid={justNowListTestIds.keepIt}
+        >
+          Keep it
+        </button>
+        <button type="button" className={styles.link} onClick={() => setDeclined(true)}>
+          Not now
+        </button>
+      </span>
+    </div>
+  );
+};
 
 interface HeadProps {
   run: NewOverviewRun;
@@ -56,6 +107,7 @@ export const JustNowList = ({
   onOpenSaved,
   onCaptureReasonChange,
   onCaptureReasonCommit,
+  onKeep,
 }: JustNowListProps) => {
   const phone = useIsPhone();
   const surface = useSurface();
@@ -132,7 +184,7 @@ export const JustNowList = ({
             </button>
           </div>
         )}
-        {row.stage === "failed" && failure(run)}
+        {row.stage === "failed" && (run.keepable == null ? failure(run) : <KeepNotice run={run} onKeep={onKeep} />)}
         {(inProgress || row.stage === "done") &&
           run.startedAt === current?.startedAt &&
           !phone &&

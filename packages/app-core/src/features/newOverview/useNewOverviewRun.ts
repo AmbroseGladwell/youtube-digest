@@ -1,4 +1,4 @@
-import { queueProblemOf } from "../captureQueue/util/queueProblemOf.js";
+import { queueHoldOf, queueProblemOf } from "../captureQueue/util/queueProblemOf.js";
 import { useNextQuota } from "./useNextQuota.js";
 import { usePrefetchVideo } from "./useRunOverviewGeneration.js";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   heldOverviewOf,
   OverviewId,
+  SourceKey,
   type ArticleRead,
   type CaptureEntry,
   type CaptureTranscriptSource,
@@ -51,6 +52,8 @@ export interface StartOverviewRunOptions {
   saveInstead?: boolean | undefined;
   // Its overview from what it kept: docs/features/kept-links.md, "Opening one".
   savedCapture?: SavedCapture | undefined;
+  // Waits its turn behind what's being made, as Create's links do.
+  queued?: boolean | undefined;
 }
 
 export interface ArticleRunRequest extends StartOverviewRunOptions {
@@ -100,6 +103,8 @@ export interface NewOverviewRunController {
   startTikTok: (request: TikTokRunRequest & StartOverviewRunOptions) => void;
   startSocial: (request: SocialRunRequest & StartOverviewRunOptions) => void;
   startFromSaved: (capture: SavedCapture) => void;
+  makeAllSaved: (captures: readonly SavedCapture[]) => void;
+  keep: (run: NewOverviewRun) => Promise<void>;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
@@ -120,7 +125,7 @@ const noteKindOf = (overview: Overview): "recipe" | "process" | "default" => {
 // Owned by the AppShell, which stays mounted, so a generation outlives the dialog that started it.
 export const useNewOverviewRun = (): NewOverviewRunController => {
   const { apiKeys } = useApiKeys();
-  const { overviewStore } = useStores();
+  const { overviewStore, captureStore } = useStores();
   const { mutate } = useGenerateOverviewMutation(apiKeys);
   const { mutate: mutateCaptureReason } = useSetOverviewCaptureReasonMutation();
   const analytics = useAnalytics();
@@ -444,6 +449,11 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
               const { provider, model, reason, status } = error;
               reporter.warn({ name: "chosenModelFailed", provider, model, reason, ...(status === null ? {} : { status }) });
             }
+            const problem = queueProblemOf(error);
+            const keepable =
+              (problem === "serverCap" || problem === "serverBusy") && isYouTubeUrl(url)
+                ? { resumesAt: new Date(queueHoldOf(error, problem, new Date()).resumesAt).toISOString() }
+                : null;
             if (isCurrent()) {
               analytics.capture.newOverview.failed({
                 from,
@@ -466,6 +476,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
                         podcastRequest !== null,
                       ),
                       finishedAt: Date.now(),
+                      keepable,
                     },
               );
             }
@@ -479,7 +490,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   // One at a time from Create; the rest wait their turn: docs/features/kept-links.md, "Several in a row".
   const launch = useCallback(
     (url: string, options: StartOverviewRunOptions, go: (runId: number, saveInstead: boolean) => void) => {
-      if (options.from === "dialog" && busyRef.current) {
+      if ((options.from === "dialog" || options.queued === true) && busyRef.current) {
         const key = (waitingKeyRef.current += 1);
         setWaiting((current) => [...current, { key, url, video: null, go }]);
         if (isYouTubeUrl(url)) {
@@ -525,6 +536,42 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     [alreadyHeld, analytics, generate, launch],
   );
 
+  const keep = useCallback(
+    async (kept: NewOverviewRun) => {
+      if (kept.keepable == null) {
+        return;
+      }
+      const videoId = extractYouTubeVideoId(kept.url);
+      if (videoId === null) {
+        return;
+      }
+      const at = new Date().toISOString();
+      await captureStore.saveCapture({
+        id: OverviewId.parse(globalThis.crypto.randomUUID()),
+        sourceKey: SourceKey.parse(videoId),
+        url: kept.url,
+        keptAt: at,
+        keptFrom: captureSurfaceOf(surface),
+        captureReason: kept.captureReason.trim() === "" ? null : kept.captureReason.trim(),
+        title: kept.video?.title ?? null,
+        thumbnailUrl: kept.video?.thumbnailUrl ?? null,
+        fromPlaylist: null,
+        addedAt: null,
+        playlistIndex: null,
+        chosenAt: null,
+        stage: "kept",
+        source: null,
+        waitingFor: "server",
+        resumesAt: kept.keepable.resumesAt,
+        queueStatus: "waiting",
+        problem: null,
+      });
+      setJustNow((current) => current.map((done) => (done.startedAt === kept.startedAt ? { ...done, kept: true } : done)));
+      void queryClient.invalidateQueries({ queryKey: captureKeys.all });
+    },
+    [captureStore, surface, queryClient],
+  );
+
   const startFromSaved = useCallback(
     (capture: SavedCapture) => {
       const runId = (runIdRef.current += 1);
@@ -532,6 +579,17 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       generate(capture.url, { from: "regenerate", savedCapture: capture, captureReason: capture.captureReason }, runId);
     },
     [generate],
+  );
+
+  // Make all on Show › No overview yet: one after another (docs/features/kept-links.md, "Opening one").
+  const makeAllSaved = useCallback(
+    (captures: readonly SavedCapture[]) => {
+      for (const capture of captures) {
+        const options = { from: "regenerate" as const, savedCapture: capture, captureReason: capture.captureReason, queued: true };
+        launch(capture.url, options, (runId) => generate(capture.url, options, runId));
+      }
+    },
+    [generate, launch],
   );
 
   const startArticle = useCallback(
@@ -662,6 +720,8 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     startTikTok,
     startSocial,
     startFromSaved,
+    makeAllSaved,
+    keep,
     dismiss,
     setCaptureReason,
     commitCaptureReason,

@@ -40,6 +40,10 @@ devices showed different queues, paused separately, and could both make the same
 Its copy still says where it runs: *on this computer*, *on this phone*, *while this panel or
 the extension is open*, since the device that's open is the one making.
 
+Since OV-358 the queue is no longer a group on the Overviews list: a **Queue** entry at the
+top of the sidebar (the Filters sheet on a phone) leads to the Queue page while anything
+waits, and kept links have their own groups there (`kept-links.md`, "Kept links").
+
 ## One at a time, in the playlist's order
 
 `useCaptureQueue`, owned by the `AppShell` like the reader's own run, makes the first

@@ -34,6 +34,8 @@ import { useBackInBar } from "./useBackInBar.js";
 import { PageScrolledSentinel } from "../../components/shared/PageScrolledSentinel/PageScrolledSentinel.js";
 import { useHistoryTrail } from "./useHistoryTrail.js";
 import { CaptureQueueProvider } from "../../features/captureQueue/CaptureQueueContext.js";
+import { KeptLinksProvider } from "../../features/captures/KeptLinksContext.js";
+import { useKeptLinks } from "../../features/captures/useKeptLinks.js";
 import { CaptureQueueStripView } from "../../features/captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
 import { QueueRunDialog } from "../../features/captureQueue/components/QueueRunDialog/QueueRunDialog.js";
 import { useCaptureQueue } from "../../features/captureQueue/useCaptureQueue.js";
@@ -96,9 +98,9 @@ export const AppShell = () => {
   const askTip = useLongPressTip(isPhone);
   const newTip = useLongPressTip(isPhone);
   const readerRun = newOverview.run;
-  const captureQueue = useCaptureQueue({
-    readerRunActive: readerRun !== null && readerRun.overview === null && readerRun.error === null,
-  });
+  const readerRunActive = readerRun !== null && readerRun.overview === null && readerRun.error === null;
+  const captureQueue = useCaptureQueue({ readerRunActive });
+  const keptLinks = useKeptLinks({ busy: readerRunActive });
   const [queueDetailsOpen, setQueueDetailsOpen] = useState(false);
 
   const [headBackLink, setHeadBackLink] = useState<HeadBackLink | null>(null);
@@ -152,10 +154,12 @@ export const AppShell = () => {
     return (
       <NewOverviewRunProvider value={newOverview}>
         <CaptureQueueProvider value={captureQueue}>
-          <HistoryTrailProvider value={trail}>
-            <Outlet />
-            <ScrollRestoration />
-          </HistoryTrailProvider>
+          <KeptLinksProvider value={keptLinks}>
+            <HistoryTrailProvider value={trail}>
+              <Outlet />
+              <ScrollRestoration />
+            </HistoryTrailProvider>
+          </KeptLinksProvider>
         </CaptureQueueProvider>
       </NewOverviewRunProvider>
     );
@@ -202,181 +206,185 @@ export const AppShell = () => {
   return (
     <NewOverviewRunProvider value={newOverview}>
       <CaptureQueueProvider value={captureQueue}>
-        <HistoryTrailProvider value={trail}>
-          <BackLinkHandoffProvider value={handoff}>
-            <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
-              <PageScrolledSentinel />
-              <header className={styles.masthead} ref={measureBand} data-sticky-fade="" data-testid={appShellTestIds.masthead}>
-                <div className={styles.bar}>
-                  <div
-                    className={`${styles.brandSlot} ${handoffLive ? styles.brandSlotLive : ""} ${backInBar ? styles.brandSlotBack : ""}`}
-                    data-testid={appShellTestIds.brandSlot}
-                  >
-                    <PageLink
-                      ref={brandLink}
-                      className={styles.brand}
-                      to={Routes.home()}
-                      onClick={() => analytics.app.masthead.homeChosen()}
-                      inert={backInBar}
-                      aria-hidden={backInBar || undefined}
-                      data-testid={appShellTestIds.brand}
+        <KeptLinksProvider value={keptLinks}>
+          <HistoryTrailProvider value={trail}>
+            <BackLinkHandoffProvider value={handoff}>
+              <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
+                <PageScrolledSentinel />
+                <header className={styles.masthead} ref={measureBand} data-sticky-fade="" data-testid={appShellTestIds.masthead}>
+                  <div className={styles.bar}>
+                    <div
+                      className={`${styles.brandSlot} ${handoffLive ? styles.brandSlotLive : ""} ${backInBar ? styles.brandSlotBack : ""}`}
+                      data-testid={appShellTestIds.brandSlot}
                     >
-                      <span className={styles.mark}>
-                        <OverviewMark />
-                      </span>
-                      <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>The Overview</h1>
-                    </PageLink>
-                    {handoffLive && (
                       <PageLink
-                        ref={barBackLink}
-                        className={styles.backLink}
-                        to={headBackLink.to}
-                        onClick={headBackLink.follow}
-                        inert={!backInBar}
-                        aria-hidden={!backInBar || undefined}
-                        data-testid={appShellTestIds.backLink}
+                        ref={brandLink}
+                        className={styles.brand}
+                        to={Routes.home()}
+                        onClick={() => analytics.app.masthead.homeChosen()}
+                        inert={backInBar}
+                        aria-hidden={backInBar || undefined}
+                        data-testid={appShellTestIds.brand}
                       >
-                        <span className={styles.arrow}>
-                          <StrokeIcon name="arrowLeft" size={17} />
+                        <span className={styles.mark}>
+                          <OverviewMark />
                         </span>
-                        <span className={styles.backLabel}>{headBackLink.label}</span>
+                        <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>The Overview</h1>
                       </PageLink>
-                    )}
-                  </div>
-
-                  {isPanel ? (
-                    <span className={styles.panelActions}>
-                      {!accountNeeded && (
-                        <button
-                          type="button"
-                          className={styles.newOverviewButton}
-                          onClick={() => {
-                            analytics.capture.newOverviewDialog.opened({ from: "newButton" });
-                            newOverview.open();
-                          }}
-                          aria-haspopup="dialog"
-                          aria-expanded={newOverview.dialogOpen}
-                          data-testid={appShellTestIds.newOverviewButton}
+                      {handoffLive && (
+                        <PageLink
+                          ref={barBackLink}
+                          className={styles.backLink}
+                          to={headBackLink.to}
+                          onClick={headBackLink.follow}
+                          inert={!backInBar}
+                          aria-hidden={!backInBar || undefined}
+                          data-testid={appShellTestIds.backLink}
                         >
-                          <StrokeIcon name="plus" />
-                          New
-                        </button>
+                          <span className={styles.arrow}>
+                            <StrokeIcon name="arrowLeft" size={17} />
+                          </span>
+                          <span className={styles.backLabel}>{headBackLink.label}</span>
+                        </PageLink>
                       )}
-                      <AccountMenu />
-                    </span>
-                  ) : (
-                    <>
-                      <nav className={styles.nav} aria-label="Sections">
-                        <NavLink
-                          className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
-                          to={Routes.home()}
-                          viewTransition={animateNavigation}
-                          onClick={() => analytics.app.masthead.overviewsChosen()}
-                          end
-                        >
-                          Overviews
-                        </NavLink>
-                      </nav>
+                    </div>
 
-                      <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
-                        {!accountNeeded && signedIn && (
-                          <span className={styles.tipHost} {...askTip}>
-                            <PageLink
-                              className={styles.askButton}
-                              to={Routes.ask()}
-                              aria-label="Ask your library"
-                              aria-current={pathname === Routes.ask() ? "page" : undefined}
-                              data-testid={appShellTestIds.askButton}
-                            >
-                              <StrokeIcon name="messageSquare" />
-                              <span className={styles.buttonLabel}>Ask</span>
-                            </PageLink>
-                            <span className={styles.tip} aria-hidden="true">
-                              Ask your library
-                            </span>
-                          </span>
-                        )}
+                    {isPanel ? (
+                      <span className={styles.panelActions}>
                         {!accountNeeded && (
-                          <span className={styles.tipHost} {...newTip}>
-                            <button
-                              type="button"
-                              className={`${styles.newOverviewButton} ${styles.iconOnPhone}`}
-                              aria-label="New overview"
-                              onClick={() => {
-                                analytics.capture.newOverviewDialog.opened({ from: "newButton" });
-                                newOverview.open();
-                              }}
-                              aria-haspopup="dialog"
-                              aria-expanded={newOverview.dialogOpen}
-                              data-testid={appShellTestIds.newOverviewButton}
-                            >
-                              <StrokeIcon name="plus" />
-                              <span className={styles.buttonLabel}>New</span>
-                            </button>
-                            <span className={styles.tip} aria-hidden="true">
-                              New overview
-                            </span>
-                          </span>
+                          <button
+                            type="button"
+                            className={styles.newOverviewButton}
+                            onClick={() => {
+                              analytics.capture.newOverviewDialog.opened({ from: "newButton" });
+                              newOverview.open();
+                            }}
+                            aria-haspopup="dialog"
+                            aria-expanded={newOverview.dialogOpen}
+                            data-testid={appShellTestIds.newOverviewButton}
+                          >
+                            <StrokeIcon name="plus" />
+                            New
+                          </button>
                         )}
                         <AccountMenu />
                       </span>
-                      {onAuthPage && (
-                        <PageLink
-                          className={styles.notNowLink}
-                          to={Routes.home()}
-                          onClick={() => analytics.app.masthead.notNowChosen()}
-                          data-testid={appShellTestIds.notNowLink}
-                        >
-                          Not now
-                        </PageLink>
-                      )}
-                    </>
+                    ) : (
+                      <>
+                        <nav className={styles.nav} aria-label="Sections">
+                          <NavLink
+                            className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
+                            to={Routes.home()}
+                            viewTransition={animateNavigation}
+                            onClick={() => analytics.app.masthead.overviewsChosen()}
+                            end
+                          >
+                            Overviews
+                          </NavLink>
+                        </nav>
+
+                        <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
+                          {!accountNeeded && signedIn && (
+                            <span className={styles.tipHost} {...askTip}>
+                              <PageLink
+                                className={styles.askButton}
+                                to={Routes.ask()}
+                                aria-label="Ask your library"
+                                aria-current={pathname === Routes.ask() ? "page" : undefined}
+                                data-testid={appShellTestIds.askButton}
+                              >
+                                <StrokeIcon name="messageSquare" />
+                                <span className={styles.buttonLabel}>Ask</span>
+                              </PageLink>
+                              <span className={styles.tip} aria-hidden="true">
+                                Ask your library
+                              </span>
+                            </span>
+                          )}
+                          {!accountNeeded && (
+                            <span className={styles.tipHost} {...newTip}>
+                              <button
+                                type="button"
+                                className={`${styles.newOverviewButton} ${styles.iconOnPhone}`}
+                                aria-label="New overview"
+                                onClick={() => {
+                                  analytics.capture.newOverviewDialog.opened({ from: "newButton" });
+                                  newOverview.open();
+                                }}
+                                aria-haspopup="dialog"
+                                aria-expanded={newOverview.dialogOpen}
+                                data-testid={appShellTestIds.newOverviewButton}
+                              >
+                                <StrokeIcon name="plus" />
+                                <span className={styles.buttonLabel}>New</span>
+                              </button>
+                              <span className={styles.tip} aria-hidden="true">
+                                New overview
+                              </span>
+                            </span>
+                          )}
+                          <AccountMenu />
+                        </span>
+                        {onAuthPage && (
+                          <PageLink
+                            className={styles.notNowLink}
+                            to={Routes.home()}
+                            onClick={() => analytics.app.masthead.notNowChosen()}
+                            data-testid={appShellTestIds.notNowLink}
+                          >
+                            Not now
+                          </PageLink>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <StaleClientBanner />
+
+                  {onThisTab !== null && (
+                    <OnThisTabLine tab={onThisTab} onStartVideo={(url) => newOverview.start(url, { from: "panel" })} />
                   )}
+
+                  {runOrQueueStrip()}
+                </header>
+
+                <div className={styles.pane} data-testid={appShellTestIds.pane}>
+                  {paneContent()}
                 </div>
 
-                <StaleClientBanner />
+                <CookingTimerDock>
+                  <MiniPlayer />
+                </CookingTimerDock>
 
-                {onThisTab !== null && <OnThisTabLine tab={onThisTab} onStartVideo={(url) => newOverview.start(url, { from: "panel" })} />}
+                <SignOutNotice />
 
-                {runOrQueueStrip()}
-              </header>
+                <ScrollRestoration />
 
-              <div className={styles.pane} data-testid={appShellTestIds.pane}>
-                {paneContent()}
+                {/* Unmounted in the panel when closed, or the run's progress would show twice. */}
+                {!accountNeeded && (!isPanel || newOverview.dialogOpen) && (
+                  <NewOverviewDialog
+                    open={newOverview.dialogOpen}
+                    prefill={newOverview.prefill}
+                    run={newOverview.run}
+                    held={newOverview.held}
+                    onSubmit={(url, options) => newOverview.start(url, { from: "dialog", saveInstead: options?.saveInstead })}
+                    onOpenHeld={(overviewId) => {
+                      newOverview.dismiss();
+                      void navigate(Routes.overview(overviewId), { viewTransition: shouldAnimateNavigation() });
+                    }}
+                    onClose={newOverview.close}
+                    onDismiss={newOverview.dismiss}
+                    onReadOverview={readOverview}
+                    onCaptureReasonChange={newOverview.setCaptureReason}
+                    onCaptureReasonCommit={newOverview.commitCaptureReason}
+                  />
+                )}
+
+                <QueueRunDialog making={captureQueue.making} open={queueDetailsOpen} onClose={() => setQueueDetailsOpen(false)} />
               </div>
-
-              <CookingTimerDock>
-                <MiniPlayer />
-              </CookingTimerDock>
-
-              <SignOutNotice />
-
-              <ScrollRestoration />
-
-              {/* Unmounted in the panel when closed, or the run's progress would show twice. */}
-              {!accountNeeded && (!isPanel || newOverview.dialogOpen) && (
-                <NewOverviewDialog
-                  open={newOverview.dialogOpen}
-                  prefill={newOverview.prefill}
-                  run={newOverview.run}
-                  held={newOverview.held}
-                  onSubmit={(url, options) => newOverview.start(url, { from: "dialog", saveInstead: options?.saveInstead })}
-                  onOpenHeld={(overviewId) => {
-                    newOverview.dismiss();
-                    void navigate(Routes.overview(overviewId), { viewTransition: shouldAnimateNavigation() });
-                  }}
-                  onClose={newOverview.close}
-                  onDismiss={newOverview.dismiss}
-                  onReadOverview={readOverview}
-                  onCaptureReasonChange={newOverview.setCaptureReason}
-                  onCaptureReasonCommit={newOverview.commitCaptureReason}
-                />
-              )}
-
-              <QueueRunDialog making={captureQueue.making} open={queueDetailsOpen} onClose={() => setQueueDetailsOpen(false)} />
-            </div>
-          </BackLinkHandoffProvider>
-        </HistoryTrailProvider>
+            </BackLinkHandoffProvider>
+          </HistoryTrailProvider>
+        </KeptLinksProvider>
       </CaptureQueueProvider>
     </NewOverviewRunProvider>
   );

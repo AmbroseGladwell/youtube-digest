@@ -1,0 +1,86 @@
+import { OverviewId, SourceKey, VideoId, youTubeSource, type Capture } from "@overview/domain";
+import { test, expect } from "../../support/fixtures.testHelper.js";
+import { IWFT_VIDEO_ID, makeServiceTranscriptFixture } from "../../network/fixtures/innerTubeFixtures.js";
+import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { Routes } from "../../../src/app/Routes.js";
+import { keptLinksSectionTestIds } from "../../../src/features/captures/components/KeptLinksSection/KeptLinksSectionTestIds.js";
+import { makeAllSavedTestIds } from "../../../src/features/captures/components/MakeAllSaved/MakeAllSavedTestIds.js";
+import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
+
+const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
+const EVENING = new Date("2026-10-06T21:30:00.000Z");
+const CAP_RESETS_IN_SECONDS = 2.5 * 60 * 60;
+const RESUME_TIME = new Date(EVENING.getTime() + CAP_RESETS_IN_SECONDS * 1000).toLocaleTimeString("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+const SIGNED_IN = {
+  sync: true,
+  syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL },
+};
+
+const saved = (videoId: string, title: string, id: string): Capture => ({
+  id: OverviewId.parse(id),
+  sourceKey: SourceKey.parse(videoId),
+  url: `https://www.youtube.com/watch?v=${videoId}`,
+  keptAt: "2026-10-01T09:00:00.000Z",
+  keptFrom: "phone",
+  captureReason: null,
+  title,
+  thumbnailUrl: null,
+  fromPlaylist: null,
+  addedAt: null,
+  playlistIndex: null,
+  chosenAt: null,
+  stage: "saved",
+  source: youTubeSource({ ...makeOverview().source, id: VideoId.parse(videoId), url: `https://www.youtube.com/watch?v=${videoId}`, title }),
+  savedAt: "2026-10-01T09:00:00.000Z",
+  notes: null,
+});
+
+test("stopped at our server's cap, Keep it keeps the link, and it is made by itself once the server can fetch again", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  await page.clock.install({ time: EVENING });
+  backendSimulator.transcripts.serviceCapReached(CAP_RESETS_IN_SECONDS);
+  await launcher.launch({ apiKeys: ANTHROPIC_KEY });
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+
+  await dialog.verifyKeepOffered(RESUME_TIME);
+  await dialog.keepIt();
+  await dialog.verifyKept(RESUME_TIME);
+  const [kept] = await backendSimulator.captureStore.list();
+  expect(kept).toMatchObject({ stage: "kept", waitingFor: "server", sourceKey: IWFT_VIDEO_ID });
+
+  await launcher.openPage(Routes.queue());
+  await expect(page.getByTestId(keptLinksSectionTestIds.server)).toContainText(`Continues after ${RESUME_TIME} · 1`);
+
+  backendSimulator.transcripts.serviceAnswersAgain();
+  await page.clock.fastForward(CAP_RESETS_IN_SECONDS * 1000 + 61_000);
+
+  await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.id)).toEqual([kept!.id]);
+  expect(await backendSimulator.captureStore.list()).toEqual([]);
+});
+
+test("once overviews are back, Make all on No overview yet makes every saved one, one after another", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.captureStore.seed(saved(IWFT_VIDEO_ID, "The Simulated Video", "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"));
+  backendSimulator.captureStore.seed(saved("secondVideo1", "How Your Brain Fills In the Gaps", "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e"));
+  backendSimulator.transcripts.seed(makeServiceTranscriptFixture(IWFT_VIDEO_ID, "The Simulated Video"));
+  backendSimulator.transcripts.seed(makeServiceTranscriptFixture("secondVideo1", "How Your Brain Fills In the Gaps"));
+  await launcher.launch(SIGNED_IN);
+  await launcher.savedItem.showOnlyWithoutOverview();
+
+  await page.getByTestId(makeAllSavedTestIds.button).click();
+
+  await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(2);
+  expect(await backendSimulator.captureStore.list()).toEqual([]);
+});

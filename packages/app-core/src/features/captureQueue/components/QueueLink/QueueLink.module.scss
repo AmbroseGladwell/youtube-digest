@@ -1,0 +1,41 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--surface);
+  }
+
+  &:focus-visible {
+    @include controls.tile-hover;
+  }
+}
+
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.attention {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--alert);
+}

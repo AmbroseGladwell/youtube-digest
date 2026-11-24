@@ -57,6 +57,9 @@ export interface NewOverviewRun {
   overview: Overview | null;
   // Saved with its words and no overview, at the month's limit (docs/features/kept-links.md).
   saved?: SavedCapture | null;
+  // Our server couldn't fetch it now; it can be kept and made later (docs/features/kept-links.md, "Kept links").
+  keepable?: { resumesAt: string } | null;
+  kept?: boolean;
   error: RunError | null;
   // Kept on the run, not the form: docs/features/capture-reason.md, "Where it is written".
   captureReason: string;

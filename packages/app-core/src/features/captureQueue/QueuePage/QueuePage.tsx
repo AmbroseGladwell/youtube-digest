@@ -1,3 +1,5 @@
+import { KeptLinksSection } from "../../captures/components/KeptLinksSection/KeptLinksSection.js";
+import { useKeptLinksController } from "../../captures/KeptLinksContext.js";
 import { useEffect, useRef, useState } from "react";
 import type { QueuedCapture, VideoId } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
@@ -29,6 +31,7 @@ const introFor = (isPanel: boolean, isPhone: boolean): string => {
 };
 
 export const QueuePage = () => {
+  const kept = useKeptLinksController();
   const queue = useCaptureQueueController();
   const analytics = useAnalytics();
   const isPanel = useIsPanel();
@@ -388,7 +391,9 @@ export const QueuePage = () => {
         </div>
       )}
 
-      {queue.making === null && waitingCount === 0 && queue.attention.length === 0 && (
+      {kept !== null && <KeptLinksSection controller={kept} />}
+
+      {queue.making === null && waitingCount === 0 && queue.attention.length === 0 && (kept === null || kept.links.length === 0) && (
         <div className={styles.empty} data-testid={queuePageTestIds.empty}>
           <p className={styles.emptyTitle}>Nothing is waiting</p>
           <p className={styles.emptyBody}>

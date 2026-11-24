@@ -1,3 +1,5 @@
+import { MakeAllSaved } from "../../captures/components/MakeAllSaved/MakeAllSaved.js";
+import { QueueLink } from "../../captureQueue/components/QueueLink/QueueLink.js";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { timeSavedName, timeSavedSummary, type Overview, type OverviewId, type SelectionAction, type TopicId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
@@ -67,7 +69,6 @@ import { LearnedNotice } from "../../settings/components/LearnedNotice/LearnedNo
 import { libraryCountLine } from "../util/libraryCountLine.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
-import { LibraryQueueGroup } from "../../captureQueue/components/LibraryQueueGroup/LibraryQueueGroup.js";
 import { useLibraryProjects } from "../../projects/useLibraryProjects.js";
 import { WHOLE_LIBRARY, type LibraryPlace } from "../types/LibraryPlace.js";
 import { DEFAULT_LIBRARY_SORT } from "../types/LibrarySort.js";
@@ -526,7 +527,13 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         )
       );
     }
-    return <LibraryList entries={visible} keyOf={libraryEntryId} row={row} testId={libraryPageTestIds.list} />;
+    const savedShown = filters.withoutOverview ? visible.flatMap((entry) => (entry.kind === "capture" ? [entry.capture] : [])) : [];
+    return (
+      <>
+        {savedShown.length > 0 && <MakeAllSaved saved={savedShown} />}
+        <LibraryList entries={visible} keyOf={libraryEntryId} row={row} testId={libraryPageTestIds.list} />
+      </>
+    );
   };
 
   return (
@@ -554,6 +561,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
             </button>
           </div>
           <div className={styles.railBody} data-testid={libraryPageTestIds.railBody}>
+            <QueueLink />
             <FilterPanel
               filters={filters}
               topics={topics}
@@ -721,8 +729,6 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                   </div>
                 </>
               )}
-
-              {projects.current === null && <LibraryQueueGroup />}
 
               {railIsSheet && projects.current === null && milestoneStack}
 
