@@ -1,0 +1,189 @@
+@use "../../../../theme/tip.scss";
+
+$outline: color-mix(in srgb, var(--surface) 80%, var(--ink));
+
+$thumb-tuck: -4px;
+$thumb-ring: 1.5px;
+
+// Design 350b-3, OV-397: the menu hangs from the card, under the button.
+.root {
+  display: flex;
+}
+
+.button {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  min-width: 28px;
+  height: var(--references-height, 28px);
+  padding: 0 8px 0 7px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px $outline;
+  color: var(--ink);
+  cursor: pointer;
+
+  &.open {
+    --bubble: var(--ground);
+
+    background: var(--ground);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      --bubble: var(--ground);
+
+      background: var(--ground);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  &:not(.open) {
+    @include tip.shows(".tip") {
+      @include tip.label-shown;
+    }
+  }
+}
+
+.tip {
+  @include tip.label-above;
+}
+
+// OV-397: the first tucked under the second, a ring of the bubble between them.
+.thumbs {
+  display: inline-flex;
+  align-items: center;
+
+  > * {
+    position: relative;
+    box-shadow: 0 0 0 $thumb-ring var(--bubble, var(--surface));
+  }
+
+  > * + * {
+    margin-left: $thumb-tuck;
+  }
+
+  > .blank {
+    box-shadow:
+      0 0 0 $thumb-ring var(--bubble, var(--surface)),
+      inset 0 0 0 1px $outline;
+  }
+}
+
+.thumb {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.wide {
+  width: 20px;
+  border-radius: 3px;
+}
+
+.blank {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px $outline;
+}
+
+.chevron {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.menu {
+  position: absolute;
+  top: calc(var(--references-top, 0px) + var(--references-height, 28px) + 8px);
+  right: 8px;
+  z-index: 6;
+  box-sizing: border-box;
+  width: 320px;
+  max-width: calc(100% - 16px);
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--dialog);
+  box-shadow: var(--shadow-menu);
+  text-align: left;
+}
+
+.header {
+  margin: 0;
+  padding: 4px 12px 2px;
+  color: var(--label);
+  font: 600 0.71875rem/normal var(--font-body);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 1px 12px;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 5px 10px 5px 12px;
+  border-radius: 12px;
+  color: var(--ink);
+  font: 500 0.875rem/normal var(--font-body);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+  }
+}
+
+.title {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kind {
+  grid-column: 2;
+  color: var(--muted);
+  font: 500 0.75rem/normal var(--font-body);
+}
+
+.separator {
+  height: 1px;
+  margin: 6px 10px;
+  background: var(--divider);
+}
+
+// OV-397: the question's feedback, under the overviews it draws on.
+.action {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.icon {
+  display: inline-flex;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.checked .icon {
+  color: var(--ink);
+
+  svg {
+    fill: currentColor;
+  }
+}

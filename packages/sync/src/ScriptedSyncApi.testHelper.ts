@@ -111,6 +111,14 @@ export class ScriptedSyncApi implements SyncApi {
     return this.#answer("deleteFollowedPlaylist", [id], () => null);
   }
 
+  async saveCapture(record: Record<string, unknown>, ifMatch: number | null) {
+    return this.#answer("saveCapture", [record, ifMatch], () => this.#written(String(record.id)));
+  }
+
+  async deleteCapture(id: string) {
+    return this.#answer("deleteCapture", [id], () => null);
+  }
+
   async createProject(record: Record<string, unknown>) {
     return this.#answer("createProject", [record], () => this.#written(String(record.id)));
   }

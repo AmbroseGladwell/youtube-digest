@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
-import { NOVELTY_LABEL, type Overview, sourceName, sourceUrl, articleReadMinutes, type WebSource } from "@overview/domain";
+import { isClipSource, NOVELTY_LABEL, type Overview, sourceName, sourceUrl, articleReadMinutes, type WebSource } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
@@ -248,12 +248,12 @@ export const ReaderMasthead = ({
               {!isArticle && overview.recipe === null && (
                 <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
                   {sourceName(overview.source)}
-                  {overview.source.kind === "tiktok" && overview.source.authorName.trim() !== "" && (
+                  {isClipSource(overview.source) && overview.source.authorName.trim() !== "" && overview.source.handle !== null && (
                     <small className={styles.handle}> @{overview.source.handle}</small>
                   )}
                 </span>
               )}
-              {(overview.source.kind === "podcast" || overview.source.kind === "tiktok") && <KindChip overview={overview} />}
+              {(overview.source.kind === "podcast" || isClipSource(overview.source)) && <KindChip overview={overview} />}
               {!isArticle && overview.verdict && <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>}
               {!isArticle && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
               {overview.verdict?.dubious && (

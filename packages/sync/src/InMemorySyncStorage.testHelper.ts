@@ -14,6 +14,7 @@ import {
   type RecordChange,
   type StoredTranscript,
   type SyncStorage,
+  type SyncedRecordKind,
   type WriteAcknowledgement,
 } from "@overview/domain";
 
@@ -127,6 +128,12 @@ export class InMemorySyncStorage implements SyncStorage {
           : entry,
       );
     return { from, into };
+  }
+
+  async forgetRecord(kind: SyncedRecordKind, id: string) {
+    this.records.delete(recordKey(kind, id));
+    this.revisions.delete(recordKey(kind, id));
+    this.outbox = this.outbox.filter((entry) => !(entry.kind === kind && entry.id === id));
   }
 
   async applyChanges(changes: RecordChange[], next: number) {

@@ -10,6 +10,7 @@ import {
   type Overview,
   type OverviewPart,
   type OverviewPartCitation,
+  isWrittenSource,
 } from "@overview/domain";
 
 export type OverviewCitationView =
@@ -23,7 +24,7 @@ const anywaySectionOf = (overview: Overview): string => {
   if (overview.source.kind === "podcast") {
     return LISTEN_ANYWAY_HEADING;
   }
-  return overview.source.kind === "web" ? READ_ANYWAY_SECTION : WATCH_ANYWAY_SECTION;
+  return isWrittenSource(overview.source) ? READ_ANYWAY_SECTION : WATCH_ANYWAY_SECTION;
 };
 
 const sectionOf = (part: OverviewPart, overview: Overview): string =>

@@ -16,6 +16,7 @@ import {
   type LearnedItems,
   type PodcastEpisode,
   type TikTokVideo,
+  type SocialPost,
   podcastSourceId,
   ProjectId,
 } from "@overview/domain";
@@ -27,11 +28,13 @@ import {
   makeOverview,
   makePodcastOverview,
   makeTikTokOverview,
+  makeSocialOverview,
 } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
 import { InMemoryProjectStore } from "../../projects/types/InMemoryProjectStore.testHelper.js";
 import { makeProject } from "../../projects/types/ProjectFactory.testHelper.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
+import { SocialPostTooShortError } from "./SocialPostTooShortError.js";
 import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
@@ -40,6 +43,8 @@ import {
   runOverviewGeneration,
   runPodcastOverviewGeneration,
   runTikTokOverviewGeneration,
+  runSocialOverviewGeneration,
+  type SocialWords,
   type GenerationPipelineDeps,
   type GenerationProgress,
   type TikTokWords,
@@ -604,6 +609,110 @@ describe("runTikTokOverviewGeneration", () => {
     await expect(
       runTikTokOverviewGeneration(
         clip,
+        async () => {
+          asked = true;
+          return words;
+        },
+        deps,
+      ),
+    ).rejects.toBeInstanceOf(ArticleAlreadyHeldError);
+    expect(asked).toBe(false);
+    expect(made).toHaveLength(0);
+  });
+});
+
+describe("runSocialOverviewGeneration", () => {
+  const lastLine = "Fifth: turn the pot a quarter each morning.";
+  const reel: SocialPost = {
+    platform: "instagram",
+    id: "DAbCdEfGh12",
+    url: "https://www.instagram.com/reel/DAbCdEfGh12/",
+    handle: "windowsillgarden",
+    authorName: "Windowsill Garden",
+    description: `Five ways to keep basil alive on a windowsill\n\n${"Water from below, never over the leaves. ".repeat(20)}${lastLine}`,
+    media: "video",
+    durationSeconds: 59,
+    coverUrl: null,
+    postedAt: null,
+  };
+  const words: SocialWords = {
+    transcript: {
+      videoId: "instagram:DAbCdEfGh12" as StoredTranscript["videoId"],
+      segments: [{ startMs: 0, endMs: 4_000, text: "Pinch the top leaves first." }],
+      generated: true,
+      fetchedAt: "2026-11-23T09:00:00.000Z",
+    },
+    source: "social-transcribed",
+  };
+
+  const setUp = (held: Overview[] = []) => {
+    const made: unknown[] = [];
+    const kept: StoredTranscript[] = [];
+    const store = {
+      listTopics: async () => [],
+      listClaims: async () => [],
+      listUnreadable: async () => [],
+      getOverview: async () => null,
+      saveOverview: async () => {},
+      listOverviews: async () => held,
+    } as unknown as OverviewStore;
+    const deps = {
+      overviewStore: store,
+      settingsStore: { get: async () => DEFAULT_SETTINGS },
+      transcriptStore: {
+        getTranscript: async () => null,
+        saveTranscript: async (transcript: StoredTranscript) => {
+          kept.push(transcript);
+        },
+        deleteTranscript: async () => {},
+      } satisfies TranscriptStore,
+      makeOverview: (async (input, { id }) => {
+        made.push(input);
+        return makeSocialOverview({ id });
+      }) satisfies GenerationPipelineDeps["makeOverview"],
+    };
+    return { deps, made, kept };
+  };
+
+  it("keeps the words under the post's key and writes it as the post, with its whole description", async () => {
+    const { deps, made, kept } = setUp();
+    let progress: GenerationProgress | null = null;
+    await runSocialOverviewGeneration(reel, async () => words, deps, { onProgress: (reported) => (progress = reported) });
+    expect(kept[0]?.videoId).toBe("instagram:DAbCdEfGh12");
+    const input = made[0] as { social: { kind: string; title: string }; video: { channel: string; fullDescription: string } };
+    expect(input.social).toMatchObject({ kind: "instagram", title: "Five ways to keep basil alive on a windowsill" });
+    expect(input.video.channel).toBe("Windowsill Garden");
+    expect(input.video.fullDescription.endsWith(lastLine)).toBe(true);
+    expect(progress).toMatchObject({ transcriptWords: 5, transcriptSource: "social-transcribed" });
+  });
+
+  it("writes a photo post from its description alone, as an article, never asking for words", async () => {
+    const { deps, made, kept } = setUp();
+    const findWords = async (): Promise<SocialWords> => {
+      throw new Error("a photo post has no words to find");
+    };
+    await runSocialOverviewGeneration({ ...reel, media: "photo", durationSeconds: null }, findWords, deps);
+    const input = made[0] as { social: { media: string }; article: { siteName: string; sections: { text: string }[] } };
+    expect(input.social.media).toBe("photo");
+    expect(input.article.siteName).toBe("Instagram");
+    expect(input.article.sections[0]?.text.endsWith(lastLine)).toBe(true);
+    expect(kept).toHaveLength(0);
+  });
+
+  it("refuses a photo post with too few words to write from, before spending anything", async () => {
+    const { deps, made } = setUp();
+    await expect(
+      runSocialOverviewGeneration({ ...reel, media: "text", durationSeconds: null, description: "Sunday vibes" }, async () => words, deps),
+    ).rejects.toBeInstanceOf(SocialPostTooShortError);
+    expect(made).toHaveLength(0);
+  });
+
+  it("refuses a post already in the library before asking for its words", async () => {
+    const { deps, made } = setUp([makeSocialOverview()]);
+    let asked = false;
+    await expect(
+      runSocialOverviewGeneration(
+        reel,
         async () => {
           asked = true;
           return words;

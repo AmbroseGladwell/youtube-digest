@@ -9,6 +9,8 @@ export type PushOutcome =
   | { result: "sent" }
   // An outcome to resolve, not a failure to park (docs/features/one-overview-per-video.md).
   | { result: "held"; by: string }
+  // A second copy of a source the account already holds, to forget here (docs/features/kept-links.md).
+  | { result: "superseded" }
   // Past the own-key quota: it waits in the outbox until the month turns.
   | { result: "waiting"; until: string }
   | { result: "stuck"; failure: OutboxFailure }
@@ -56,6 +58,8 @@ const send = async (
           return replaceWithRetry((ifMatch) => api.saveFollowedPlaylist(change.record, ifMatch), knownRev);
         case "project":
           return createOnce(() => api.createProject(change.record));
+        case "capture":
+          return saveCapture(api, change.record, knownRev);
         default:
           return createOverview(api, change.record, knownRev);
       }
@@ -149,6 +153,19 @@ const createOverview = async (api: SyncApi, record: Record<string, unknown>, kno
   }
 };
 
+const HELD_ELSEWHERE = new Set(["video_already_held", "capture_already_held"]);
+
+const saveCapture = async (api: SyncApi, record: Record<string, unknown>, knownRev: number | null): Promise<PushOutcome> => {
+  try {
+    return await replaceWithRetry((ifMatch) => api.saveCapture(record, ifMatch), knownRev);
+  } catch (error) {
+    if (isSyncRequestError(error) && HELD_ELSEWHERE.has(error.code)) {
+      return { result: "superseded" };
+    }
+    throw error;
+  }
+};
+
 const reserve = async (api: SyncApi, overviewId: string): Promise<PushOutcome | null> => {
   try {
     await api.reserveOverview(overviewId);
@@ -171,6 +188,8 @@ const deleteFor = (api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | nu
       return api.deleteProject(entry.id);
     case "chat":
       return api.deleteChat(entry.id);
+    case "capture":
+      return api.deleteCapture(entry.id);
     default:
       return api.deleteOverview(entry.id);
   }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Handshake, RecordChangesPage, StoredTranscript, WrittenRecord } from "@overview/domain";
+import { CAPTURES_PATH, Handshake, RecordChangesPage, StoredTranscript, WrittenRecord } from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 import type { SyncApi } from "./SyncApi.js";
 import { isSyncRequestError } from "./SyncRequestError.js";
@@ -30,6 +30,8 @@ export const createFetchSyncApi = (options: FetchSyncApiOptions): SyncApi => {
     updateSettings: (patch, updatedAt) => written(request("PUT", "/settings", WrittenRecord, { body: { ...patch, updatedAt } })),
     saveFollowedPlaylist: (record, ifMatch) => written(request("POST", "/followed-playlists", WrittenRecord, { body: record, ifMatch })),
     deleteFollowedPlaylist: (id) => request("DELETE", `/followed-playlists/${encodeURIComponent(id)}`, WrittenRecord),
+    saveCapture: (record, ifMatch) => written(request("POST", CAPTURES_PATH, WrittenRecord, { body: record, ifMatch })),
+    deleteCapture: (id) => request("DELETE", `${CAPTURES_PATH}/${encodeURIComponent(id)}`, WrittenRecord),
     createProject: (record) => written(request("POST", "/projects", WrittenRecord, { body: record })),
     updateProject: (id, patch, updatedAt) => written(request("PUT", `/projects/${id}`, WrittenRecord, { body: { ...patch, updatedAt } })),
     deleteProject: (id) => request("DELETE", `/projects/${id}`, WrittenRecord),

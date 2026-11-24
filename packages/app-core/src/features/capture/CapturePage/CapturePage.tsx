@@ -46,7 +46,10 @@ import { isPlatformPodcastLink } from "../../newOverview/usePodcastLink.js";
 import { useEpisodeTab, type EpisodeTabState } from "../useEpisodeTab.js";
 import { useTikTokTab } from "../useTikTokTab.js";
 import { TikTokOffer } from "../components/TikTokOffer/TikTokOffer.js";
+import { useSocialTab } from "../useSocialTab.js";
+import { SocialOffer } from "../components/SocialOffer/SocialOffer.js";
 import { isTikTokLink } from "../../newOverview/useTikTokLink.js";
+import { isSocialLink } from "../../newOverview/useSocialLink.js";
 import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
@@ -97,13 +100,18 @@ export const CapturePage = () => {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
   const pages = useArticlePages();
-  // Never an article: a Spotify or Apple tab is an episode or a show (106k), and our server doesn't read TikTok (130i).
+  // Never an article: Spotify or Apple is an episode (106k); TikTok, Instagram and Facebook pages are never read (130i, OV-365).
   const offeredPage =
-    activeVideoUrl === null && isOfferedPage(activePage) && !isPlatformPodcastLink(activePage.url) && !isTikTokLink(activePage.url)
+    activeVideoUrl === null &&
+    isOfferedPage(activePage) &&
+    !isPlatformPodcastLink(activePage.url) &&
+    !isTikTokLink(activePage.url) &&
+    !isSocialLink(activePage.url)
       ? activePage
       : null;
   const episodeTab = useEpisodeTab();
   const tiktokTab = useTikTokTab();
+  const socialTab = useSocialTab();
   const pageAccess = usePageAccess(offeredPage?.url ?? null);
   const startArticleRun = useStartArticleRun();
   const controller = useNewOverviewRunController();
@@ -261,10 +269,12 @@ export const CapturePage = () => {
       ? overviewForVideoUrl(overviewsQuery.data ?? [], activeVideoUrl)
       : overviewForPageUrl(overviewsQuery.data ?? [], offeredPage.url);
   const tiktokHeldId = tiktokTab?.state.status === "held" ? tiktokTab.state.overviewId : null;
-  const heldId = episodeTab?.status === "held" ? episodeTab.overviewId : (tiktokHeldId ?? alreadyHeld?.id ?? null);
-  const nothingToTake = activeVideoUrl === null && offeredPage === null && episodeTab === null && tiktokTab === null;
+  const socialHeldId = socialTab?.state.status === "held" ? socialTab.state.overviewId : null;
+  const heldId = episodeTab?.status === "held" ? episodeTab.overviewId : (tiktokHeldId ?? socialHeldId ?? alreadyHeld?.id ?? null);
+  const nothingToTake = activeVideoUrl === null && offeredPage === null && episodeTab === null && tiktokTab === null && socialTab === null;
   // The offer carries its own button, inside the click that asks Chrome for TikTok (130i).
   const tiktokOffered = tiktokTab !== null && heldId === null;
+  const socialOffered = socialTab !== null && heldId === null;
   const episodeStopped =
     episodeTab !== null &&
     (episodeWithoutWords || episodeTab.status === "show" || episodeTab.status === "failed" || episodeTab.status === "unreachable");
@@ -305,7 +315,22 @@ export const CapturePage = () => {
     }
   };
 
+  const makeSocial = () => {
+    analytics.capture.panel.createChosen({ again: false });
+    socialTab?.make((post, words) => controller.startSocial({ post, words, from: "panel" }));
+  };
+
+  const transcribeSocial = (transcribe: TranscribeChoice) => {
+    if (socialTab?.state.status === "transcribable") {
+      analytics.capture.panel.createChosen({ again: false });
+      controller.startSocial({ post: socialTab.state.post, words: null, transcribe, from: "panel" });
+    }
+  };
+
   const openingOffer = () => {
+    if (socialOffered) {
+      return <SocialOffer tab={socialTab} ready={keysReady && limit === null} onMake={makeSocial} onTranscribe={transcribeSocial} />;
+    }
     if (tiktokOffered) {
       return <TikTokOffer tab={tiktokTab} ready={keysReady && limit === null} onMake={makeTikTok} onTranscribe={transcribeTikTok} />;
     }
@@ -397,7 +422,8 @@ export const CapturePage = () => {
     }
     return (
       !nothingToTake &&
-      !tiktokOffered && (
+      !tiktokOffered &&
+      !socialOffered && (
         <button
           type="button"
           className={styles.primary}
@@ -505,7 +531,7 @@ const RunInProgress = ({ run, onDismiss, onCaptureReasonChange, onCaptureReasonC
           className={styles.error}
           testId={capturePageTestIds.error}
           testIds={capturePageTestIds.runError}
-          episodeSeconds={run.podcast?.durationSeconds ?? run.tiktok?.durationSeconds ?? null}
+          episodeSeconds={run.podcast?.durationSeconds ?? run.tiktok?.durationSeconds ?? run.social?.post.durationSeconds ?? null}
           onTranscribe={onTranscribe}
           onNotNow={onDismiss}
         />

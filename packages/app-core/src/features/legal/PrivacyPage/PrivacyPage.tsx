@@ -86,22 +86,24 @@ const sections: readonly LegalSection[] = [
     body: (
       <>
         <p>
-          An overview is a note about a video, an article, a podcast episode or a TikTok: its big picture, claims, verdict, key points, the
-          steps it gives, chapters and tags, plus the video's, page's or episode's title, link, channel, site or show and thumbnail or
-          artwork link, and for an article up to five of the links the page makes, with their words and a line on why each is worth opening.
-          For an episode it also keeps the address of its show's feed and audio, and the Apple Podcasts, Spotify or show page link you
-          pasted, with the code Spotify adds to say who shared it removed; a shared link shows that link. For a TikTok it keeps the video's
-          address, its creator's name and handle, the caption, its length, when it was posted and the link to its cover. Beside it you may
-          add a reason you saved it, file it under topics, put it in projects of your own, and mark it read or favourite. When you take one
-          of its questions to ask next to an assistant, it notes which question, which assistant and when, so the overview can show it. When
-          you ask questions about it, each conversation keeps your questions and the answers, with the moments in the video or episode, or
-          in another of your conversations about it, that each answer drew on. A project holds its name, a line on what it is for, and for
-          each overview in it whether you, a connected assistant or filing as the overview was made put it there, and when, and which
-          overviews were taken out of it or that you said aren't for it, so they aren't offered to it again. Your settings travel with the
-          account too: the narration voice, whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent
-          colour, which sections an overview shows, whether new overviews are put in your projects, whether questions to ask next are
-          answered here or open in an assistant and which one, the About you sentence that personalises overviews and what we have learned
-          from your overviews, the tags you have merged, the playlists you follow, and the running total of time saved with its milestones.
+          An overview is a note about a video, an article, a podcast episode, a TikTok or an Instagram or Facebook post: its big picture,
+          claims, verdict, key points, the steps it gives, chapters and tags, plus the video's, page's or episode's title, link, channel,
+          site or show and thumbnail or artwork link, and for an article up to five of the links the page makes, with their words and a line
+          on why each is worth opening. For an episode it also keeps the address of its show's feed and audio, and the Apple Podcasts,
+          Spotify or show page link you pasted, with the code Spotify adds to say who shared it removed; a shared link shows that link. For
+          a TikTok it keeps the video's address, its creator's name and handle, the caption, its length, when it was posted and the link to
+          its cover. For an Instagram or Facebook post it keeps the same about the post, with the whole of its description, and whether it
+          is a video, a photo or text. Beside it you may add a reason you saved it, file it under topics, put it in projects of your own,
+          and mark it read or favourite. When you take one of its questions to ask next to an assistant, it notes which question, which
+          assistant and when, so the overview can show it. When you ask questions about it, each conversation keeps your questions and the
+          answers, with the moments in the video or episode, or in another of your conversations about it, that each answer drew on. A
+          project holds its name, a line on what it is for, and for each overview in it whether you, a connected assistant or filing as the
+          overview was made put it there, and when, and which overviews were taken out of it or that you said aren't for it, so they aren't
+          offered to it again. Your settings travel with the account too: the narration voice, whether cooking step by step reads the steps
+          aloud, the cooking timer sound, theme and accent colour, which sections an overview shows, whether new overviews are put in your
+          projects, whether questions to ask next are answered here or open in an assistant and which one, the About you sentence that
+          personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, and the
+          running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
@@ -184,6 +186,24 @@ const sections: readonly LegalSection[] = [
           kind of link it was and how the read went, never the link, the creator or the video. In the side panel, nothing is read until you
           press, except that a TikTok you have already allowed is read in your own browser to show it. Before you have an account, a read is
           counted against the device's trial reads, as an article's is.
+        </p>
+        <p>
+          <strong>Instagram and Facebook posts.</strong> When you paste an Instagram or Facebook link, or press Make an overview of this
+          post in the extension's side panel on one, our server sends the link to ScrapeCreators, which reads the post from Instagram or
+          Facebook and sends it back: who posted it, its description, whether it is a video, a photo or text, a video's length and the link
+          to its cover, and for a Facebook video any captions Facebook has. It is sent the link and nothing about you, and may keep the
+          links it is sent and what it sends back, under its own privacy policy. Our server never reads Instagram's or Facebook's pages
+          itself, and neither does the extension: a post's page is never read in your browser. The post's description is kept whole and
+          sent, with any words, to the model that writes the overview, because on these sites the description often carries the post.{" "}
+          <strong>Comments are never read or kept.</strong> ScrapeCreators' answer about an Instagram post includes some of its comments;
+          our server reads only the fields above and drops the rest at once, so comments are never stored, logged, sent to a model or shown.
+          If a video has no words, you can ask us to transcribe it, and nothing is transcribed unless you ask: our server asks
+          ScrapeCreators again for the post and the address of its video file, and sends Modal that address and nothing about you. Modal
+          downloads the file and transcribes it as it does an episode (below), against the same allowance. A photo or text post is written
+          from its description alone. Showing a post's cover loads the picture from Instagram's or Facebook's servers in your browser, which
+          see your network address and your browser's details. We record what each read cost in the cost tally, and our logs say only what
+          kind of link it was and how the read went, never the link, the account, the description or the words. Before you have an account,
+          a read is counted against the device's trial reads, as an article's is. In the side panel, nothing is read until you press.
         </p>
         <p>
           <strong>Transcribing an episode.</strong> When an episode has no transcript and isn't on YouTube, you can ask us to transcribe it;
@@ -586,12 +606,12 @@ const sections: readonly LegalSection[] = [
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
             [
               "ScrapeCreators",
-              "reads a TikTok video and its captions for our server when your browser can't; sent only the TikTok's link, which it may keep with what it returns",
+              "reads a TikTok video and its captions for our server when your browser can't, and reads Instagram and Facebook posts; sent only the link, which it may keep with what it returns",
               UNITED_STATES,
             ],
             [
               "Modal",
-              "runs our speech-to-text model when you ask for a podcast episode or a TikTok to be transcribed; sent only the address of the episode's audio or the TikTok's video file",
+              "runs our speech-to-text model when you ask for a podcast episode, a TikTok or an Instagram or Facebook video to be transcribed; sent only the address of the episode's audio or the video's file",
               UNITED_STATES,
             ],
             [

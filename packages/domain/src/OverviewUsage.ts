@@ -10,6 +10,7 @@ export const OverviewUsage = z.object({
   resetsOn: z.iso.date(),
   ours: Allowance,
   own: Allowance,
+  saves: Allowance.optional(),
   transcription: TranscriptionUsage.optional(),
 });
 export type OverviewUsage = z.infer<typeof OverviewUsage>;

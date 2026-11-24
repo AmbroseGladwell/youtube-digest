@@ -15,6 +15,7 @@ import {
   sourceName,
   sourceUrl,
   type Source,
+  isWrittenPost,
 } from "@overview/domain";
 import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
@@ -41,6 +42,8 @@ const MACHINE_WORDS: Record<Exclude<Source["kind"], "web">, string> = {
   youtube: "Machine-transcribed: the video had no captions of its own",
   podcast: "Machine-transcribed",
   tiktok: "TikTok's machine captions",
+  instagram: "Machine-transcribed",
+  facebook: "Machine-transcribed or Facebook's machine captions",
 };
 
 export const LISTING_PAGE_SIZE = 50;
@@ -289,6 +292,9 @@ const getTranscript = mcpTool({
       return toolError(`There is no overview with id ${id} in this library.`);
     }
     const { source } = entry.overview;
+    if (isWrittenPost(source)) {
+      return toolError("Photo and text posts have no transcript: the overview was written from the post's description.");
+    }
     if (source.kind === "web") {
       return toolError(
         entry.overview.recipe === null

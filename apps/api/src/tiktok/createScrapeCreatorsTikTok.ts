@@ -21,7 +21,7 @@ export const SCRAPECREATORS_PRICE = {
   source: "ScrapeCreators Freelance, $47 for 25,000 credits, from its homepage (docs/features/tiktok-links.md)",
 };
 
-const BASE_URL = "https://api.scrapecreators.com";
+export const SCRAPECREATORS_BASE_URL = "https://api.scrapecreators.com";
 const TIMEOUT_MS = 30_000;
 
 const Answer = z.object({
@@ -111,7 +111,7 @@ const videoFromAweme = (detail: unknown): TikTokVideo | "not-a-video" | null => 
 export const createScrapeCreatorsTikTok = ({
   apiKey,
   fetch: fetchVendor = globalThis.fetch,
-  baseUrl = BASE_URL,
+  baseUrl = SCRAPECREATORS_BASE_URL,
 }: ScrapeCreatorsOptions): TikTokVendor => {
   return {
     async video(url, { withTranscript }) {

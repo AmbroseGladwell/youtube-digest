@@ -5,6 +5,7 @@ import {
   OverviewId,
   parsePodcastLink,
   parseTikTokLink,
+  parseSocialPostLink,
   podcastSourceId,
   sourceKey,
   type PodcastEpisode,
@@ -51,7 +52,13 @@ export const isPodcastShowLink = (link: string): boolean => {
 
 // docs/features/podcast-links.md, "From a link to an episode".
 const mayBeEpisodeLink = (link: string): boolean => {
-  if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null || parseTikTokLink(link) !== null) {
+  if (
+    link === "" ||
+    isYouTubeUrl(link) ||
+    youTubeLink(link) !== null ||
+    parseTikTokLink(link) !== null ||
+    parseSocialPostLink(link) !== null
+  ) {
     return false;
   }
   return parsePodcastLink(link) !== null;

@@ -159,10 +159,12 @@ export const CaptureTranscriptSource = z.enum([
   "tiktok-tab",
   "tiktok-vendor",
   "tiktok-transcribed",
+  "social-vendor",
+  "social-transcribed",
 ]);
 export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
 // Left out for an episode, which every transcription was before TikToks.
-export const TranscribedSource = z.enum(["podcast", "tiktok"]);
+export const TranscribedSource = z.enum(["podcast", "tiktok", "instagram", "facebook"]);
 export type TranscribedSource = z.infer<typeof TranscribedSource>;
 // A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
 export const CaptureFailure = z.enum([

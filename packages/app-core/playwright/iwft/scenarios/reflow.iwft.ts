@@ -8,6 +8,7 @@ import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { applyReflowCondition, reflowConditions } from "../../support/reflowConditions.testHelper.js";
+import { SUGGESTED_TEXTS, seedSuggestedQuestions } from "../../support/seedSuggestedQuestions.testHelper.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -134,6 +135,17 @@ const screens: Screen[] = [
     open: async (launcher, backendSimulator) => {
       await openLibrary(launcher, backendSimulator);
       return launcher.appShell.openAsk();
+    },
+    verify: (ask) => ask.verifyReflows(),
+  }),
+  screen({
+    name: "the Ask page's suggested questions",
+    open: async (launcher, backendSimulator) => {
+      seedSuggestedQuestions(backendSimulator);
+      await openLibrary(launcher, backendSimulator);
+      const ask = await launcher.appShell.openAsk();
+      await ask.verifyQuestionCardsRead(SUGGESTED_TEXTS.slice(0, 3));
+      return ask;
     },
     verify: (ask) => ask.verifyReflows(),
   }),

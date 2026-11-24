@@ -264,7 +264,7 @@ test("a client built before suggested questions is never sent one", async (t) =>
   const [first, second] = [await withOverview(account), await withOverview(account)];
   await write([{ scope: LIBRARY, overviewIds: [first, second], text: TEXT }]);
 
-  const response = await account.inject({ method: "GET", url: "/api/changes?since=0&limit=200", clientVersion: CLIENT_VERSION - 1 });
+  const response = await account.inject({ method: "GET", url: "/api/changes?since=0&limit=200", clientVersion: 29 });
 
   const kinds = (response.json() as { changes: Array<{ kind: string }> }).changes.map((change) => change.kind);
   assert.ok(kinds.includes("overview"));

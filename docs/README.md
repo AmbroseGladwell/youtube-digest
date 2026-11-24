@@ -208,6 +208,10 @@ Five folders, five different questions.
   ideas connect (OV-350): one synced `suggestedQuestion` record each, written by the server;
   what became of it (shown, asked, dismissed, glad or obvious) through a merge that
   commutes; swept with either overview, its project, or an overview leaving the project.
+- `kept-links.md` — sources before their overview (OV-358): the synced `capture` record, kept
+  as a link while our server or the extension is in the way, or saved with its transcript
+  once the month's overviews are made; one live item per source, becoming an overview under
+  the same id, its transcript kept on the server, and the monthly save limit counted there.
 - `capture-queue.md` — the videos waiting on this device to become overviews: made one at a
   time, oldest first, while the app is open; the library's queue group, the queue page and
   the strip's seven states; what needs attention and why; waiting without a key; and
@@ -264,6 +268,9 @@ Five folders, five different questions.
 - `tiktok-links.md` — a TikTok link turned into one video and its words: the extension reading the
   reader's own tab, ScrapeCreators everywhere else, TikTok's auto-captions as the transcript,
   failures by name, cost, and the terms question (OV-130).
+- `social-posts.md` — an Instagram or Facebook link turned into a post through ScrapeCreators: the
+  whole description for video, photo and text posts, a Facebook video's captions, transcribing a video, and
+  never the comments.
 - `appearance.md` — Settings › Appearance: the theme and the eight accent colours on the
   account, what each role must clear and the test that holds it, why failure is a fixed
   `--alert`, the script that stops a flash, the signed-out rule, and where the logo follows

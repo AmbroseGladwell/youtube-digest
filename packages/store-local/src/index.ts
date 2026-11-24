@@ -8,6 +8,7 @@ export * from "./IndexedDbFollowedPlaylistStore.js";
 export * from "./IndexedDbProjectStore.js";
 export * from "./IndexedDbChatStore.js";
 export * from "./IndexedDbSuggestedQuestionStore.js";
+export * from "./IndexedDbCaptureStore.js";
 export * from "./IndexedDbCaptureQueueStore.js";
 export * from "./IndexedDbSyncStorage.js";
 export * from "./localDatabaseName.js";

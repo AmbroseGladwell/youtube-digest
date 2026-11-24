@@ -1,11 +1,21 @@
 import { isSyncRequestError } from "@overview/sync";
-import type { PodcastReadFailure, TikTokReadFailure, TranscribedSource, TranscriptionFailure, VideoReadFailure } from "@overview/domain";
+import type {
+  PodcastReadFailure,
+  SocialReadFailure,
+  TikTokReadFailure,
+  TranscribedSource,
+  TranscriptionFailure,
+  VideoReadFailure,
+} from "@overview/domain";
 import { ArticleReadError, type ArticleFailure } from "../../newOverview/api/ArticleReadError.js";
 import { PodcastNoTranscriptError, PodcastReadError } from "../../newOverview/api/PodcastReadError.js";
 import { TranscriptionFailedError } from "../../podcasts/api/TranscriptionFailedError.js";
 import { VideoReadError } from "../../newOverview/api/VideoReadError.js";
 import { TikTokNoCaptionsError, TikTokReadError } from "../../newOverview/api/TikTokReadError.js";
 import { TranscriptionRefusedError } from "../../podcasts/api/TranscriptionRefusedError.js";
+import { SocialPostReadError } from "../../newOverview/api/SocialPostReadError.js";
+import { SocialNoWordsError } from "../../newOverview/api/SocialNoWordsError.js";
+import { SocialPostTooShortError } from "../../newOverview/api/SocialPostTooShortError.js";
 
 export type OnboardingFailure =
   | { kind: "read"; failure: ArticleFailure }
@@ -14,6 +24,9 @@ export type OnboardingFailure =
   | { kind: "podcastNoTranscript" }
   | { kind: "tiktokRead"; reason: TikTokReadFailure }
   | { kind: "tiktokNoCaptions" }
+  | { kind: "socialRead"; reason: SocialReadFailure }
+  | { kind: "socialNoWords" }
+  | { kind: "socialTooShort" }
   | { kind: "podcastNeedsTranscribing"; episodeSeconds: number | null }
   | { kind: "transcriptionFailed"; reason: TranscriptionFailure | "no-audio"; source: TranscribedSource }
   | { kind: "transcriptionRefused"; refusal: "not-enough" | "too-long"; episodeSeconds: number | null }
@@ -33,6 +46,15 @@ export const onboardingFailureOf = (error: unknown): OnboardingFailure => {
   }
   if (error instanceof TikTokNoCaptionsError) {
     return { kind: "tiktokNoCaptions" };
+  }
+  if (error instanceof SocialPostReadError) {
+    return { kind: "socialRead", reason: error.reason };
+  }
+  if (error instanceof SocialNoWordsError) {
+    return { kind: "socialNoWords" };
+  }
+  if (error instanceof SocialPostTooShortError) {
+    return { kind: "socialTooShort" };
   }
   if (error instanceof PodcastReadError) {
     return { kind: "podcastRead", reason: error.reason, showName: error.showName };

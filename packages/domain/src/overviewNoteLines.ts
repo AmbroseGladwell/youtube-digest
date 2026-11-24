@@ -1,4 +1,4 @@
-import type { Source } from "./Source.js";
+import { sourceKindWord } from "./sourceFacts.js";
 import type { NoteLine } from "./NoteLine.js";
 import { NOVELTY_LABEL, REASONING_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
 import type { SharedNote } from "./SharedNote.js";
@@ -12,8 +12,6 @@ import { spokenMeasures } from "./spokenMeasures.js";
 import type { ReadAnyway } from "./ArticleDetails.js";
 import type { TimeRange, WatchAnswer, WatchAnyway } from "./WatchAnyway.js";
 import { LISTEN_ANYWAY_LABEL, WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
-
-const SOURCE_WORD: Record<Source["kind"], string> = { youtube: "video", web: "article", podcast: "episode", tiktok: "video" };
 
 export const SUMMARY_SECTION = "Summary";
 export const BIG_PICTURE_SECTION = "Big picture";
@@ -117,12 +115,12 @@ const spokenWatchAnswer = ({ answer, range }: WatchAnyway, episode: boolean) => 
 
 const READ_ANYWAY_LABEL: Record<WatchAnswer, string> = { no: "No", yes: "Yes", partial: "Just part of it" };
 
-const spokenReadAnswer = ({ answer }: ReadAnyway, chapters: readonly string[]) => {
+const spokenReadAnswer = ({ answer }: ReadAnyway, chapters: readonly string[], sourceWord: string) => {
   if (answer === "yes") {
     return "Yes, it's worth reading.";
   }
   if (answer === "no") {
-    return "No, you can probably skip the article, the overview covers it.";
+    return `No, you can probably skip the ${sourceWord}, the overview covers it.`;
   }
   return chapters.length === 0 ? "Yes, it's worth reading one part." : `Yes, it's worth reading part of it: ${chapters.join(", and ")}.`;
 };
@@ -221,7 +219,7 @@ export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts 
     ),
     true,
   );
-  const sourceWord = SOURCE_WORD[overview.source.kind];
+  const sourceWord = sourceKindWord(overview.source);
   const steps = shown.steps === false ? [] : (overview.sourceSteps?.items ?? []);
   section(
     SOURCE_STEPS_SECTION,
@@ -278,7 +276,10 @@ export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts 
     const titles = readAnyway.chapterIndexes.flatMap((index) => overview.article?.chapters[index]?.title ?? []);
     const body = `${readAnyway.reason} ${readAnyway.leftOut}`.trim();
     section(READ_ANYWAY_SECTION, { text: READ_ANYWAY_SECTION, spoken: "Should you read it anyway?" }, [
-      { text: `${READ_ANYWAY_LABEL[readAnyway.answer]}. ${body}`, spoken: `${spokenReadAnswer(readAnyway, titles)} ${body}` },
+      {
+        text: `${READ_ANYWAY_LABEL[readAnyway.answer]}. ${body}`,
+        spoken: `${spokenReadAnswer(readAnyway, titles, sourceKindWord(overview.source))} ${body}`,
+      },
     ]);
   }
 

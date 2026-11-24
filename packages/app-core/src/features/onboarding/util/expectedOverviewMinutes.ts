@@ -1,4 +1,4 @@
-import { READING_WORDS_PER_MINUTE, SPOKEN_WORDS_PER_MINUTE, type Source } from "@overview/domain";
+import { isWrittenSource, READING_WORDS_PER_MINUTE, SPOKEN_WORDS_PER_MINUTE, type Source } from "@overview/domain";
 import { noteBudget } from "@overview/generation";
 
 // How this was measured: docs/features/onboarding.md, "The flow on the web".
@@ -10,7 +10,7 @@ export interface ExpectedMinutes {
 }
 
 const sourceWordsOf = (source: Source): number | null => {
-  if (source.kind === "web") {
+  if (isWrittenSource(source)) {
     return source.wordCount;
   }
   return source.durationMs === null ? null : Math.round((source.durationMs / 60_000) * SPOKEN_WORDS_PER_MINUTE);
@@ -21,7 +21,7 @@ export const expectedOverviewMinutes = (source: Source): ExpectedMinutes | null 
   if (sourceWords === null || sourceWords <= 0) {
     return null;
   }
-  const budget = noteBudget(source.kind === "web" ? "written" : "spoken", sourceWords);
+  const budget = noteBudget(isWrittenSource(source) ? "written" : "spoken", sourceWords);
   const words = budget.keyPoints * budget.wordsPerKeyPoint + budget.bigPictureWords + FIXED_SECTION_WORDS;
   return {
     read: Math.max(1, Math.round(words / READING_WORDS_PER_MINUTE)),

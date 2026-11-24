@@ -6,10 +6,20 @@ import {
   type PodcastEpisode,
   type StoredTranscript,
   type TikTokVideo,
+  type SocialPost,
+  type Overview,
   type TranscriptCheck,
   type VideoSource,
 } from "@overview/domain";
-import { makeArticleOverview, makeOverview, makeTikTokOverview } from "../overviews/types/OverviewFactory.testHelper.js";
+import {
+  makeArticleOverview,
+  makeOverview,
+  makeSocialOverview,
+  makeTikTokOverview,
+} from "../overviews/types/OverviewFactory.testHelper.js";
+import { SocialPostReadError } from "../newOverview/api/SocialPostReadError.js";
+import { SocialNoWordsError } from "../newOverview/api/SocialNoWordsError.js";
+import { SocialPostTooShortError } from "../newOverview/api/SocialPostTooShortError.js";
 import { TikTokNoCaptionsError, TikTokReadError } from "../newOverview/api/TikTokReadError.js";
 import type { TikTokWords } from "../newOverview/api/generationPipeline.js";
 import { foundIn, onboardingSourceOf, onboardingSources, type OnboardingFound, type OnboardingMakers } from "./onboardingSources.js";
@@ -18,7 +28,7 @@ import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTrans
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import { EpisodeCannotBeMadeError } from "./EpisodeCannotBeMadeError.js";
 
-const kindsOfSource = Source.options.map((option) => option.shape.kind.value);
+const kindsOfSource = Source.options.flatMap(({ shape: { kind } }) => ("options" in kind ? kind.options : [kind.value]));
 
 describe("onboardingSources", () => {
   it("has an entry for every kind of source, so a new kind can't ship without its onboarding", () => {
@@ -486,6 +496,97 @@ describe("onboarding's run, before and after the account", () => {
       const found = foundIn(makeTikTokOverview());
       expect(onboardingSources.tiktok.card(found)).toEqual({ kicker: "Kitchen with Ada · TikTok", facts: { line: "0:42 · TikTok" } });
       expect(onboardingSources.tiktok.yourLink(found, null).line).toMatch(/^42 seconds from Kitchen with Ada, turned into an overview/);
+    });
+  });
+
+  describe("an Instagram or Facebook post", () => {
+    const REEL_LINK = "https://www.instagram.com/reel/DAbCdEfGh12/";
+    const reel: SocialPost = {
+      platform: "instagram",
+      id: "DAbCdEfGh12",
+      url: REEL_LINK,
+      handle: "windowsillgarden",
+      authorName: "Windowsill Garden",
+      description: "Five ways to keep basil alive on a windowsill",
+      media: "video",
+      durationSeconds: 59,
+      coverUrl: null,
+      postedAt: null,
+    };
+    const neverWritten = async (): Promise<Overview> => {
+      throw new Error("never written");
+    };
+
+    it("is taken at Start by its own platform, before the web entry can claim it, and a profile is refused", () => {
+      expect(onboardingSourceOf(REEL_LINK)).toMatchObject({ source: onboardingSources.instagram, linkKind: "video" });
+      expect(onboardingSourceOf("https://www.facebook.com/reel/1535600000000001")?.source).toBe(onboardingSources.facebook);
+      expect(onboardingSourceOf("https://www.instagram.com/windowsillgarden/")).toBeNull();
+    });
+
+    it("reads a reel and shows it, then transcribes and writes it only once there's an account", async () => {
+      const order: string[] = [];
+      const transcription = { status: "needed" as const, episodeSeconds: 59, usage: { usedSeconds: 0, limitSeconds: 18_000, episodes: 0 } };
+      const makers = {
+        readSocial: async () => {
+          order.push("read");
+          return { status: "read" as const, post: reel, transcript: null, transcription };
+        },
+        social: async ({ post, words, transcribe }) => {
+          order.push(`written ${post.id} ${words === null ? "no words" : "words"} ${transcribe}`);
+          return makeSocialOverview();
+        },
+      } as Pick<OnboardingMakers, "readSocial" | "social"> as OnboardingMakers;
+      const { open, waitToSpend } = account();
+      const found: OnboardingFound[] = [];
+
+      const run = onboardingSources.instagram.make(REEL_LINK, makers, {
+        onFound: (it) => found.push(it),
+        isCancelled: () => false,
+        waitToSpend,
+      });
+      await settle();
+
+      expect(order).toEqual(["read"]);
+      expect(found[0]?.source).toMatchObject({ kind: "instagram", title: "Five ways to keep basil alive on a windowsill" });
+      open();
+      await run;
+      expect(order).toEqual(["read", "written DAbCdEfGh12 no words chosen"]);
+    });
+
+    it("writes a photo post from its description, counting its words as the page's", async () => {
+      const description = "word ".repeat(40).trim();
+      const counted: number[] = [];
+      const makers = {
+        readSocial: async () => ({ status: "read" as const, post: { ...reel, media: "photo" as const, description }, transcript: null }),
+        social: async () => makeSocialOverview(),
+      } as Pick<OnboardingMakers, "readSocial" | "social"> as OnboardingMakers;
+
+      await onboardingSources.instagram.make(REEL_LINK, makers, {
+        onFound: () => {},
+        isCancelled: () => false,
+        waitToSpend: async () => {},
+        onSourceWords: (words) => counted.push(words),
+      });
+
+      expect(counted).toEqual([40]);
+    });
+
+    it.each([
+      ["a post it couldn't read", { status: "failed", reason: "unavailable" }, SocialPostReadError],
+      ["a video with no words to transcribe", { status: "read", post: reel, transcript: null }, SocialNoWordsError],
+      [
+        "a photo post with too little written",
+        { status: "read", post: { ...reel, media: "photo", description: "Sunday vibes" }, transcript: null },
+        SocialPostTooShortError,
+      ],
+    ] as const)("stops at %s, having spent nothing", async (_, read, failure) => {
+      const makers = { readSocial: async () => read, social: neverWritten } as Pick<
+        OnboardingMakers,
+        "readSocial" | "social"
+      > as OnboardingMakers;
+      await expect(
+        onboardingSources.instagram.make(REEL_LINK, makers, { onFound: () => {}, isCancelled: () => false, waitToSpend: async () => {} }),
+      ).rejects.toBeInstanceOf(failure);
     });
   });
 });

@@ -1,4 +1,4 @@
-import type { Overview, PodcastPlatform, VideoSource } from "@overview/domain";
+import type { Overview, PodcastPlatform, SocialPost, VideoSource } from "@overview/domain";
 import type { EpisodeTranscription } from "../../podcasts/types/EpisodeTranscription.js";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
 import type { RunError } from "./RunError.js";
@@ -37,6 +37,12 @@ export interface TikTokRun {
   transcription: EpisodeTranscription | null;
 }
 
+export interface SocialRun {
+  post: SocialPost;
+  words: number | null;
+  transcription: EpisodeTranscription | null;
+}
+
 // It outlives the dialog: docs/features/overview-redesign.md, "Generating in the background".
 export interface NewOverviewRun {
   url: string;
@@ -46,6 +52,7 @@ export interface NewOverviewRun {
   article: ArticleRun | null;
   podcast: PodcastRun | null;
   tiktok: TikTokRun | null;
+  social: SocialRun | null;
   transcriptWords: number | null;
   overview: Overview | null;
   error: RunError | null;

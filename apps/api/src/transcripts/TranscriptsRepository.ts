@@ -4,7 +4,8 @@ import type { SqlClient } from "../db/SqlClient.js";
 import { TranscriptPassagesRepository } from "./TranscriptPassagesRepository.js";
 
 const liveNoteOn = (key: string) => `select 1 from records
-  where account_id = $1 and kind = 'overview' and not deleted and source_key = ${key}`;
+  where account_id = $1 and not deleted and source_key = ${key}
+    and (kind = 'overview' or (kind = 'capture' and body ->> 'stage' = 'saved'))`;
 
 export type Kept = "kept" | "not-noted";
 

@@ -51,7 +51,7 @@ insert, so the table never holds the raw text.
 
 ## What is stored
 
-`feedback` (`V0047`): `id`, `account_id` (cascade), `created_at`, `surface`,
+`feedback` (`V0048`): `id`, `account_id` (cascade), `created_at`, `surface`,
 `client_version`, `overview_id`, `kind`, `text`, `trail` (action names), and for triage
 `triaged_at`, `triage_outcome` (`supports`, `adds`, `new-card`, `not-for-us`) and
 `triage_note`. Both triage fields are set together, or neither is. A partial index keeps

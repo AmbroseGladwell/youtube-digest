@@ -126,3 +126,10 @@ and `sourceLength` in `sourceFacts.ts` answer the questions every card asks of a
 
 `tiktok` joined with OV-130 (`tiktok-links.md`, "A TikTok in the library"). Its id is TikTok's own
 video id, all digits, so its key is `tiktok:<id>` and never holds a second colon.
+
+## Instagram and Facebook
+
+`instagram` and `facebook` joined with OV-365 (`social-posts.md`, "A post in the library"),
+one `SocialSource` shape for both. An Instagram id is the post's shortcode
+(`instagram:<shortcode>`); a Facebook id is the video's id, or a photo post's `post_id`
+(`facebook:<id>`). Both are letters, digits, `_` and `-`, so a key never holds a second colon.

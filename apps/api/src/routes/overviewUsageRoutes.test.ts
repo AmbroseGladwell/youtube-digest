@@ -22,6 +22,7 @@ test("an account reads both of this month's counts, with their limits and the re
     resetsOn: "2026-10-01",
     ours: { used: 1, limit: 5 },
     own: { used: 2, limit: 10 },
+    saves: { used: 0, limit: 50 },
   });
   await testApp.close();
 });

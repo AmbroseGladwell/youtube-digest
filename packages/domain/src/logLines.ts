@@ -93,6 +93,11 @@ export const apiLogLines = coded("api", {
       "tiktok",
       "Whether the ScrapeCreators key is set, so our server can read TikTok links; without it /api/tiktok says it is unavailable.",
     ),
+    social: line(
+      "info",
+      "social posts",
+      "Whether the ScrapeCreators key is set, so our server can read Instagram and Facebook links; without it /api/social says it is unavailable.",
+    ),
     podcastLookups: line(
       "info",
       "podcast lookups",
@@ -221,6 +226,19 @@ export const apiLogLines = coded("api", {
       "A search looked for words said in the reader's transcripts: where from (`app` or `mcp`) and how many overviews matched. Never the query.",
     ),
   },
+  captures: {
+    saved: line(
+      "info",
+      "capture saved",
+      "A source was saved without its overview and counted against the month's saves; `used` and `limit`.",
+    ),
+    saveLimitReached: line(
+      "warn",
+      "capture save limit reached",
+      "A save without an overview was refused: the month's saves are used. `plan` and `limit`.",
+    ),
+    superseded: line("info", "captures superseded", "An overview took its source's capture with it; `count` says how many went."),
+  },
   serviceTranscripts: {
     fetched: line("info", "service transcript fetched", "Our own server fetched captions, direct or through the proxy."),
     failed: line("warn", "service transcript failed", "That fetch failed; `failure` names the kind."),
@@ -230,6 +248,11 @@ export const apiLogLines = coded("api", {
       "warn",
       "service transcript refused for spent overviews",
       "An account asked with no overview left this month on either key.",
+    ),
+    fetchedForSave: line(
+      "info",
+      "service transcript fetched for a save",
+      "With no overview left this month, a fetch went ahead for a save without an overview; `savesLeft` is what remained.",
     ),
     proxySpend: line("info", "transcript proxy spend", "Bytes billed to the residential proxy, and the day's running total."),
   },
@@ -415,6 +438,13 @@ export const apiLogLines = coded("api", {
       "info",
       "tiktok video read",
       "A TikTok link was turned into a video and its words through the vendor; `link` is the link's shape (video, short), `outcome` read or why not, `captions` how many caption tracks it has, `segments` how many lines of words came back (0 with no captions), `credits` what the vendor charged and `vendorStatus` its answer when it failed. Never the link, the handle, the video or the words.",
+    ),
+  },
+  social: {
+    read: line(
+      "info",
+      "social post read",
+      "An Instagram or Facebook link was turned into a post through the vendor; `platform` is instagram or facebook, `link` the link's shape (post, share), `outcome` read or why not, `media` video, photo or text, `segments` how many lines of a Facebook video's captions came back, `credits` what the vendor charged and `vendorStatus` its answer when it failed. Never the link, the account, the description or the words.",
     ),
   },
   transcription: {

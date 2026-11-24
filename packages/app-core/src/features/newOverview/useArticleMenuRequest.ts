@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { domainOf } from "@overview/domain";
+import { domainOf, parseSocialPostLink, parseTikTokLink } from "@overview/domain";
 import { useNavigate } from "react-router";
 import { useArticlePages } from "../../app/ArticlePagesContext.js";
 import { Routes } from "../../app/Routes.js";
@@ -7,7 +7,7 @@ import { useGenerationReadiness } from "./useGenerationReadiness.js";
 import type { NewOverviewRunController } from "./useNewOverviewRun.js";
 
 // docs/features/article-panel.md, "Right-click".
-export const useArticleMenuRequest = ({ startArticle }: Pick<NewOverviewRunController, "startArticle">): void => {
+export const useArticleMenuRequest = ({ startArticle, openWith }: Pick<NewOverviewRunController, "startArticle" | "openWith">): void => {
   const pages = useArticlePages();
   const navigate = useNavigate();
   const readiness = useGenerationReadiness();
@@ -30,6 +30,12 @@ export const useArticleMenuRequest = ({ startArticle }: Pick<NewOverviewRunContr
         void navigate(Routes.settingsSection("keys"));
         return;
       }
+      // Their pages are never read in the tab, where comments sit beside the post: the link goes to the dialog's read.
+      if (parseTikTokLink(page.url) !== null || parseSocialPostLink(page.url) !== null) {
+        openWith(page.url);
+        void navigate(Routes.home());
+        return;
+      }
       startArticle({
         url: page.url,
         title: page.title,
@@ -44,5 +50,5 @@ export const useArticleMenuRequest = ({ startArticle }: Pick<NewOverviewRunContr
     };
     take();
     return pages.subscribe(take);
-  }, [pages, readiness, navigate, startArticle]);
+  }, [pages, readiness, navigate, startArticle, openWith]);
 };

@@ -2,8 +2,10 @@ import { z } from "zod";
 import { SourceKey } from "./Brands.js";
 import type { ExtractedArticle } from "./ExtractedArticle.js";
 import type { PodcastEpisode } from "./PodcastEpisode.js";
+import { SOCIAL_PLATFORM_NAME, SocialPlatform, type SocialPost } from "./SocialPost.js";
 import type { TikTokVideo } from "./TikTokVideo.js";
 import { VideoSource } from "./VideoSource.js";
+import { wordCount } from "./wordCount.js";
 
 export const YouTubeSource = VideoSource.extend({ kind: z.literal("youtube") });
 export type YouTubeSource = z.infer<typeof YouTubeSource>;
@@ -54,7 +56,27 @@ export const TikTokSource = z.object({
 });
 export type TikTokSource = z.infer<typeof TikTokSource>;
 
-export const Source = z.discriminatedUnion("kind", [YouTubeSource, WebSource, PodcastSource, TikTokSource]);
+export const SocialMedia = z.enum(["video", "photo", "text"]);
+export type SocialMedia = z.infer<typeof SocialMedia>;
+
+// One shape for both platforms, told apart by kind; the cover's address expires like TikTok's (docs/features/social-posts.md).
+export const SocialSource = z.object({
+  kind: SocialPlatform,
+  id: SourceKey,
+  url: z.url(),
+  title: z.string(),
+  handle: z.string().min(1).nullable(),
+  authorName: z.string(),
+  media: SocialMedia,
+  // The description's, which a photo or text post is read for.
+  wordCount: z.number().int().nonnegative(),
+  durationMs: z.number().int().positive().nullable(),
+  publishedAt: z.iso.datetime().nullable(),
+  imageUrl: z.url().nullable(),
+});
+export type SocialSource = z.infer<typeof SocialSource>;
+
+export const Source = z.discriminatedUnion("kind", [YouTubeSource, WebSource, PodcastSource, TikTokSource, SocialSource]);
 export type Source = z.infer<typeof Source>;
 
 // Short, path-safe and the same for every reader (docs/features/source-identity.md).
@@ -138,3 +160,65 @@ export const tiktokSource = (video: TikTokVideo): TikTokSource => ({
   publishedAt: video.postedAt,
   imageUrl: video.coverUrl,
 });
+
+const TITLE_CHARACTERS = 120;
+const MEDIA_NOUN: Record<SocialMedia, string> = { video: "video", photo: "post", text: "post" };
+
+const cutAtWord = (line: string): string => {
+  if (line.length <= TITLE_CHARACTERS) {
+    return line;
+  }
+  const cut = line.slice(0, TITLE_CHARACTERS);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > TITLE_CHARACTERS / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
+};
+
+// The description's first line, since the rest of a long one is the post itself; none, who posted it.
+export const socialTitle = (post: Pick<SocialPost, "platform" | "description" | "media" | "handle" | "authorName">): string => {
+  const firstLine = post.description.split("\n").find((line) => line.trim() !== "") ?? "";
+  const written = firstLine.trim();
+  const words = written.replace(TRAILING_HASHTAGS, "").trim();
+  if (written !== "") {
+    return cutAtWord(words === "" ? written : words);
+  }
+  const by = post.handle === null ? post.authorName.trim() : `@${post.handle}`;
+  const what = `${post.platform === "instagram" ? "An" : "A"} ${SOCIAL_PLATFORM_NAME[post.platform]} ${MEDIA_NOUN[post.media]}`;
+  return by === "" ? what : `${what} by ${by}`;
+};
+
+export const socialSource = (post: SocialPost): SocialSource => ({
+  kind: post.platform,
+  id: post.id as SourceKey,
+  url: post.url,
+  title: socialTitle(post),
+  handle: post.handle,
+  authorName: post.authorName,
+  media: post.media,
+  wordCount: wordCount(post.description),
+  durationMs: post.durationSeconds === null ? null : post.durationSeconds * 1000,
+  publishedAt: post.postedAt,
+  imageUrl: post.coverUrl,
+});
+
+export const isSocialSource = (source: Source): source is SocialSource => source.kind === "instagram" || source.kind === "facebook";
+
+export type ClipSource = TikTokSource | SocialSource;
+
+// A short platform video or post: named by its creator, with no time in its address.
+export const isClipSource = (source: Source): source is ClipSource => source.kind === "tiktok" || isSocialSource(source);
+
+export const clipPlatformName = (source: ClipSource): string => (source.kind === "tiktok" ? "TikTok" : SOCIAL_PLATFORM_NAME[source.kind]);
+
+export type WrittenPost = SocialSource & { media: "photo" | "text" };
+
+// A photo or text post is read for its description, so its note is written as an article's is (docs/features/social-posts.md).
+export const isWrittenPost = (source: Source): source is WrittenPost => isSocialSource(source) && source.media !== "video";
+
+export type WrittenSource = WebSource | WrittenPost;
+
+export const isWrittenSource = (source: Source): source is WrittenSource => source.kind === "web" || isWrittenPost(source);
+
+export const POST_LEAST_WORDS = 30;
+
+// Under this, a note would only restate the post: nothing is spent on it.
+export const hasTooFewWords = (post: WrittenPost): boolean => post.wordCount < POST_LEAST_WORDS;

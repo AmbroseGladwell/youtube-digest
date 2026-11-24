@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { formatTimestamp, youtubeTimestampUrl, type TimeRange, type VideoSource } from "@overview/domain";
+import { formatTimestamp, youtubeMomentUrl, youtubeTimestampUrl, type TimeRange, type VideoSource } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
@@ -85,20 +85,22 @@ export const ChatCitationPill = ({ range, video, onFollowed, onOpenTranscriptAt 
           onKeyDown={moveFocus}
           data-testid={chatCitationPillTestIds.menu}
         >
-          <a
-            className={styles.item}
-            role="menuitem"
-            data-citation-item
-            href={youtubeTimestampUrl(video.url, range.startMs)}
-            target="_blank"
-            rel="noopener"
-            onClick={() => setOpen(false)}
-            aria-label={`Watch from ${start} on YouTube, opens in a new tab`}
-            data-testid={chatCitationPillTestIds.watchLink}
-          >
-            <StrokeIcon name="openOut" size={16} />
-            Watch from {start}
-          </a>
+          {youtubeMomentUrl(video.url, range.startMs) !== null && (
+            <a
+              className={styles.item}
+              role="menuitem"
+              data-citation-item
+              href={youtubeTimestampUrl(video.url, range.startMs)}
+              target="_blank"
+              rel="noopener"
+              onClick={() => setOpen(false)}
+              aria-label={`Watch from ${start} on YouTube, opens in a new tab`}
+              data-testid={chatCitationPillTestIds.watchLink}
+            >
+              <StrokeIcon name="openOut" size={16} />
+              Watch from {start}
+            </a>
+          )}
           <button
             type="button"
             className={styles.item}

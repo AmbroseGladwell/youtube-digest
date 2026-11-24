@@ -886,6 +886,10 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
       project with three or more, and how many are unread.
     - **For a project:** what it's for, where its overviews disagree, and how many are unread in it.
     - Plain questions fill any that don't apply.
+  - On a paid plan with suggested questions on the device, the reader's own questions come first and
+    the starters after them, three at a time in chat's question bubble, with Different questions under
+    them (OV-350, `suggested-questions.md`, "Slice 4: the screens"). Free plans, and readers with none
+    yet, keep the three starters as above.
 - **Asking** (`useAskOver`, `ChatApi.askOver`) posts to the library's or the project's route with
   `pins` and `setAside`; the "@" picker and the row above the field are the overview chat's
   (`ChatComposer`, with nothing excluded). Pinned shows above the question.

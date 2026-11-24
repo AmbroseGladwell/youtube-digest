@@ -27,7 +27,7 @@ here departs from one there, it says so.
 records (account_id, kind, id, schema_version, rev, seq, updated_at, stored_at, deleted, body)
   primary key (account_id, kind, id)
   unique (account_id, seq)
-  kind in ('overview', 'overviewState', 'topic', 'settings', 'followedPlaylist', 'project', 'projectMember', 'chat', 'suggestedQuestion')
+  kind in ('overview', 'overviewState', 'topic', 'settings', 'followedPlaylist', 'project', 'projectMember', 'chat', 'suggestedQuestion', 'capture')
   updated_at matches the fixed-width Z form, and is null only on a tombstone
   deleted = (body is null)
 ```
@@ -201,6 +201,11 @@ records what became of one, shown, asked, dismissed or its feedback, with
 `PUT /api/suggested-questions/<the id's parts as a path>`, through a merge that commutes.
 Deleting an overview or a project, or taking an overview out of a project, tombstones the
 questions resting on it (`suggested-questions.md`).
+
+`capture`, added at client version 31, is a source before its overview: a kept link or a
+source saved without an overview. A device writes it whole with `POST /api/captures` and
+deletes it with `DELETE /api/captures/:id`. One live overview or capture per source; an
+overview written under a capture's id tombstones it (`kept-links.md`).
 
 ## Rejected alternatives
 

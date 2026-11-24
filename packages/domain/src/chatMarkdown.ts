@@ -11,6 +11,7 @@ import {
 import { answerBlocks } from "./answerBlocks.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import type { Overview } from "./Overview.js";
+import { isWrittenSource } from "./Source.js";
 import { answeredFromOverviewAlone, chatSourceKind, type ChatSourceKind } from "./chatSourceKind.js";
 import { citedOverviewPart, type OverviewPart } from "./overviewParts.js";
 import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
@@ -55,7 +56,7 @@ const sectionOf = (overview: Overview, part: OverviewPart): string => {
   if (overview.source.kind === "podcast") {
     return "Listen to it anyway?";
   }
-  return overview.source.kind === "web" ? "Read it anyway?" : PART_SECTION.watchAnyway;
+  return isWrittenSource(overview.source) ? "Read it anyway?" : PART_SECTION.watchAnyway;
 };
 
 const overviewPartText = (overview: Overview, citation: Extract<ChatCitation, { part: OverviewPart }>): string => {

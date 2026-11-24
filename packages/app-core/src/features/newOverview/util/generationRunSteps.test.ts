@@ -173,3 +173,39 @@ describe("a TikTok's steps", () => {
     expect(found[2]?.state).toBe("running");
   });
 });
+
+describe("an Instagram or Facebook post's steps", () => {
+  const reel = {
+    platform: "instagram",
+    id: "DAbCdEfGh12",
+    url: "https://www.instagram.com/reel/DAbCdEfGh12/",
+    handle: "windowsillgarden",
+    authorName: "Windowsill Garden",
+    description: "Five ways to keep basil alive on a windowsill, and the one mistake that kills it.",
+    media: "video",
+    durationSeconds: 59,
+    coverUrl: null,
+    postedAt: null,
+  } as const;
+
+  it("a video with no words is transcribed as its own step, as a TikTok is", () => {
+    const steps = generationRunSteps(makeNewOverviewRun({ social: { post: reel, words: null, transcription: { state: "starting" } } }), 0);
+    expect(steps.map(({ label, detail }) => [label, detail])).toEqual([
+      ["Found the video", "Instagram · 0:59"],
+      ["Looked for captions", "None, so we’re making a transcript"],
+      ["Transcribing the video…", "Starting…"],
+      ["Writing the overview", "Queued"],
+    ]);
+  });
+
+  it("a photo post is found and its description read at once, then written", () => {
+    const steps = generationRunSteps(
+      makeNewOverviewRun({ social: { post: { ...reel, media: "photo", durationSeconds: null }, words: null, transcription: null } }),
+    );
+    expect(steps.map(({ label, detail, state }) => [label, detail, state])).toEqual([
+      ["Found the post", "Instagram · photo post", "done"],
+      ["Read the description", "16 words", "done"],
+      ["Writing the overview", "Summarising, scoring and filing", "running"],
+    ]);
+  });
+});

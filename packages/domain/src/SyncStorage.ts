@@ -1,3 +1,4 @@
+import type { SyncedRecordKind } from "./SchemaVersions.js";
 import type { OutboxEntry, OutboxFailure, OutboxKind } from "./OutboxEntry.js";
 import type { RecordChange } from "./RecordChange.js";
 import type { StoredTranscript } from "./StoredTranscript.js";
@@ -24,6 +25,8 @@ export interface SyncStorage {
   revisionOf(kind: OutboxKind, id: string): Promise<number | null>;
   // Null, touching nothing, until the other copy is readable here (docs/features/one-overview-per-video.md).
   foldOverview(from: string, into: string): Promise<OverviewFold | null>;
+  // A record the server refused as a second copy of what it holds, gone from here with its pending writes.
+  forgetRecord(kind: SyncedRecordKind, id: string): Promise<void>;
   // One page of the feed, applied atomically with the cursor that follows it.
   applyChanges(changes: RecordChange[], next: number): Promise<void>;
   onJournaled(listener: () => void): () => void;
