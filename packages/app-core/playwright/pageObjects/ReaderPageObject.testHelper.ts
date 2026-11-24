@@ -30,6 +30,7 @@ import { ArticleResourcesPageObject } from "./ArticleResourcesPageObject.testHel
 import { FollowUpQuestionsPageObject } from "./FollowUpQuestionsPageObject.testHelper.js";
 import { ChatPanelPageObject } from "./ChatPanelPageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
+import { FeedbackDialogPageObject } from "./FeedbackDialogPageObject.testHelper.js";
 import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
 import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.testHelper.js";
 import { ShareOverviewDialogPageObject } from "./ShareOverviewDialogPageObject.testHelper.js";
@@ -611,6 +612,23 @@ export class ReaderPageObject extends PageObject {
     this.step("verifyDubiousFlagIsFocused", () => expect(this.get(readerMastheadTestIds.dubiousFlag)).toBeFocused());
 
   verifyHasNoDubiousFlag = () => this.step("verifyHasNoDubiousFlag", () => this.expectNotToBeVisible(readerMastheadTestIds.dubiousFlag));
+
+  clickSendFeedback = (): Promise<FeedbackDialogPageObject> =>
+    this.step("clickSendFeedback", async () => {
+      await this.openActionsMenu();
+      await this.click(overviewActionsMenuTestIds.feedbackItem);
+      return new FeedbackDialogPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyOffersFeedback = (offered: boolean) =>
+    this.step(`verifyOffersFeedback ${offered}`, async () => {
+      await this.openActionsMenu();
+      await this.expectToHaveCount(overviewActionsMenuTestIds.feedbackItem, offered ? 1 : 0);
+      await this.page.keyboard.press("Escape");
+    });
+
+  verifyActionsMenuTriggerIsFocused = () =>
+    this.step("verifyActionsMenuTriggerIsFocused", () => expect(this.get(overviewActionsMenuTestIds.trigger)).toBeFocused());
 
   clickDeleteOverview = (): Promise<DeleteOverviewDialogPageObject> =>
     this.step("clickDeleteOverview", async () => {

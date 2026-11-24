@@ -25,6 +25,8 @@ export interface OverviewActionsMenuProps {
   projects: { count: number; onAdd: () => void } | null;
   onDelete: () => void;
   onChat?: (() => void) | null;
+  // Null when signed out: feedback needs an account (OV-185).
+  onFeedback?: ((returnFocusTo: HTMLElement | null) => void) | null;
 }
 
 interface WayOut {
@@ -76,6 +78,7 @@ export const OverviewActionsMenu = ({
   projects,
   onDelete,
   onChat = null,
+  onFeedback = null,
 }: OverviewActionsMenuProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
@@ -281,6 +284,21 @@ export const OverviewActionsMenu = ({
                 </span>
               </button>
             ))}
+          {onFeedback !== null && (
+            <>
+              <span className={styles.rule} aria-hidden="true" />
+              <button
+                type="button"
+                role="menuitem"
+                className={styles.item}
+                onClick={choose("sendFeedback", () => onFeedback(trigger.current))}
+                data-testid={overviewActionsMenuTestIds.feedbackItem}
+              >
+                Send feedback
+                <StrokeIcon name="chat" size={16} />
+              </button>
+            </>
+          )}
           <button
             type="button"
             role="menuitem"

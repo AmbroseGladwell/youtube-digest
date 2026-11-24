@@ -91,13 +91,46 @@ board are public-facing, so a card describes the request in general terms
 
 ## Slice 2: the screens
 
-Waits on a Claude Design round for:
+Built to the Claude Design round agreed on 23 and 24 Nov (frames 185a to 185o; the hand-off is
+linked from the card).
 
-- the box: one text box with a real label, the optional kind, a plain line saying what is sent with it
-- its confirmation: "Thanks, we read every one", announced, after which the box clears
-- the modal and the phone's bottom sheet
-- the two entry points
+**Ways in.** "Send feedback" in the account menu, after Settings and above a rule before Sign
+out (`AccountMenu`). "Send feedback" in an overview's More menu, in its own group above Delete
+(`OverviewActionsMenu`), which opens the box about that overview. Neither shows without an
+account: `FeedbackRuntime` provides the box only while sync is connected, and `useFeedbackBox`
+is null otherwise.
 
-It adds the analytics events (opened, sent with surface and kind, never the text) and IWFT
-coverage: sending from both entry points on the web and in the panel, the confirmation
-announced, and reflow at 400% zoom and on a phone.
+**The box** (`FeedbackDialog`). A native `<dialog>`: a 520px card from 600px wide, a bottom
+sheet below it, which includes phones and the extension's panel. The breakpoint is in `rem`, so
+200% text takes the sheet's layout sooner, and the box scrolls inside when it doesn't fit.
+
+- "Send feedback", or "Feedback about this overview" with an About line (the thumbnail and the title on one line).
+- "What kind? Optional": two toggle chips, Something's wrong and An idea, neither on, a second press clears.
+- A labelled text box. A count shows from 3,600 characters and turns to the alert colour from 3,950.
+- The line on what's sent grows with ", this overview" and with Something's wrong.
+- Send is `aria-disabled` until there's text, with "Write something to send" beside it.
+- **Sent:** the box becomes "Thanks, we read every one." with Done. That is a status, and focus moves to it. Done returns focus to the menu's button.
+- **Failed:** the text is kept and the message is an alert. Offline and a server error offer Send again. 20 in an hour (`429`) leaves Send off.
+
+The trail is the error reporter's (`ErrorReporter.trail()`), added by the runtime only when the
+kind is `wrong`.
+
+**Drafts.** Escape, the scrim, × and Cancel close at once. What was written stays in
+`localStorage` (`feedbackDraftStorage.ts`), per account, one for general feedback and one per
+overview. It is cleared when sent or emptied, and is never synced. Reopening says "Your draft
+from earlier is still here."
+
+**Events** (`feedback.box.*`, each with `plan`; `surface` is on every event's context):
+
+| Event    | Props                     |
+| -------- | ------------------------- |
+| `opened` | `from` (`accountMenu`, `overviewMenu`) |
+| `sent`   | `kind` (`wrong`, `idea`, `none`), `fromOverview` |
+| `failed` | `reason` (`offline`, `server`, `tooMany`) |
+| `closed` | `draftKept` |
+
+Never the text. The menus' `itemChosen` events gain `sendFeedback`.
+
+**Tests.** `feedback.iwft.ts` covers both ways in, the kind and its line, the count, the three
+failures, drafts, the card, the phone sheet and the panel. `reflow.iwft.ts` has "the feedback
+box" under every condition and axe.

@@ -1,0 +1,376 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Designs 185c to 185n: a card from 600px, a sheet below it, as DeleteOverviewDialog is.
+$enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
+
+.dialog {
+  border: 0;
+  padding: 0;
+  margin: auto;
+  max-width: none;
+  max-height: none;
+  background: transparent;
+  color: var(--ink);
+}
+
+.dialog::backdrop {
+  background: var(--scrim);
+}
+
+.dialog[open] {
+  animation: feedbackDialogFadeUp 320ms $enter-easing 60ms both;
+}
+
+.dialog[open]::backdrop {
+  animation: feedbackScrimFade 260ms ease both;
+}
+
+@keyframes feedbackScrimFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes feedbackDialogFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes feedbackSheetTravel {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.panel {
+  position: relative;
+  box-sizing: border-box;
+  width: min(32.5rem, calc(100vw - 2.5rem));
+  max-height: calc(100dvh - 2.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--dialog);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+  padding: 1.625rem 1.75rem 1.5rem;
+}
+
+.handle {
+  display: none;
+  width: 2.5rem;
+  height: 0.3125rem;
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  margin: 0 auto 0.75rem;
+}
+
+.closeButton {
+  @include controls.surface-pill;
+  @include controls.circle(2.25rem);
+
+  position: absolute;
+  top: 1.125rem;
+  right: 1.125rem;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.heading {
+  margin: 0;
+  padding-right: 3rem;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.625rem;
+  line-height: 1.15;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.lead {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.about {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.75rem;
+  background: var(--surface);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.aboutThumbnail {
+  flex: none;
+  width: 2.25rem;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.aboutTile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.aboutLabel {
+  flex: none;
+}
+
+.aboutTitle {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.label {
+  display: block;
+  margin: 0 0 -0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.optional {
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.kind {
+  @include controls.pill-shape;
+  @include controls.control-motion;
+  @include controls.control-disabled;
+
+  min-height: 2.25rem;
+  padding: 0.5rem 0.875rem;
+  gap: 0.4375rem;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--surface);
+  color: var(--ink);
+  font-size: 0.84375rem;
+  white-space: normal;
+  text-align: left;
+
+  &:hover:not(:disabled) {
+    background: var(--surface);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.kindOn,
+.kindOn:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--ground);
+  box-shadow: none;
+}
+
+.draftNote {
+  margin: -0.125rem 0 0;
+  font-size: 0.78125rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.field {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 7.5rem;
+  resize: vertical;
+  border: 2px solid transparent;
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 0.6875rem 0.8125rem;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink);
+  transition: border-color var(--motion-state) var(--motion-ease);
+
+  &::placeholder {
+    color: var(--muted);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--brand);
+  }
+
+  &:read-only {
+    opacity: 0.6;
+  }
+}
+
+.count {
+  margin: -0.5rem 0.125rem 0;
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.countWarns {
+  color: var(--alert);
+}
+
+.failure {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--surface);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--ink);
+
+  svg {
+    flex: none;
+    margin-top: 2px;
+    color: var(--alert);
+  }
+}
+
+.sentWith {
+  margin: 0;
+  font-size: 0.78125rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.footStart {
+  justify-content: flex-start;
+}
+
+.hint {
+  margin-right: auto;
+  font-size: 0.78125rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.quietAction {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+
+  min-height: 2.75rem;
+}
+
+.primaryAction {
+  @include controls.action-pill;
+  @include controls.pill-md;
+
+  min-height: 2.75rem;
+}
+
+.actionOff,
+.actionOff:hover,
+.actionOff:active {
+  opacity: 0.42;
+  background: var(--action);
+  transform: none;
+  cursor: default;
+}
+
+.spinner {
+  display: inline-flex;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: feedbackSpin 0.9s linear infinite;
+  }
+}
+
+@keyframes feedbackSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 37.4375rem) {
+  .dialog {
+    margin: auto 0 0;
+    width: 100%;
+  }
+
+  .dialog[open] {
+    animation-name: feedbackSheetTravel;
+  }
+
+  .panel {
+    width: 100%;
+    max-height: calc(100dvh - 1rem);
+    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+    padding: 0.625rem 1.25rem 1.375rem;
+  }
+
+  .handle {
+    display: block;
+  }
+
+  .closeButton {
+    top: 1.25rem;
+  }
+
+  .heading {
+    font-size: 1.4375rem;
+  }
+
+  .field {
+    min-height: 5.5rem;
+  }
+}

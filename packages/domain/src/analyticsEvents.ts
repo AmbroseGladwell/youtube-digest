@@ -18,6 +18,7 @@ import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
 import { ChosenAssistant, FollowUpAssistant } from "./FollowUpAssistant.js";
 import { OnboardingStep } from "./OnboardingStep.js";
+import { FeedbackKind } from "./FeedbackKind.js";
 
 // What onboarding's link turned out to be, on every event after Start (327s).
 const OnboardingKind = z.enum(["video", "article", "recipe", "podcast"]);
@@ -223,7 +224,16 @@ export const ErrorScreen = z.enum([
   "revertEmailFailed",
 ]);
 export type ErrorScreen = z.infer<typeof ErrorScreen>;
-export const AccountMenuItem = z.enum(["settings", "connectExtension", "signInAgain", "signOut", "enterCode", "signIn", "createAccount"]);
+export const AccountMenuItem = z.enum([
+  "settings",
+  "sendFeedback",
+  "connectExtension",
+  "signInAgain",
+  "signOut",
+  "enterCode",
+  "signIn",
+  "createAccount",
+]);
 export type AccountMenuItem = z.infer<typeof AccountMenuItem>;
 export const SettingsSection = z.enum([
   "account",
@@ -259,6 +269,7 @@ export const OverviewMenuItem = z.enum([
   "regenerate",
   "addToProject",
   "openInWebApp",
+  "sendFeedback",
   "delete",
 ]);
 export type OverviewMenuItem = z.infer<typeof OverviewMenuItem>;
@@ -1591,6 +1602,28 @@ export const analyticsEvents = {
       }),
       cardsSwitched: event("The reader turns the milestone cards on or off in Settings › Milestones", {
         shown: z.boolean(),
+      }),
+    },
+  },
+  // docs/features/feedback.md, "Slice 2: the screens". Never the text.
+  feedback: {
+    box: {
+      opened: event("The reader opens the feedback box, from the account menu or an overview's menu", {
+        plan: Plan,
+        from: z.enum(["accountMenu", "overviewMenu"]),
+      }),
+      sent: event("The reader's feedback is stored: its kind, and whether it was about an overview", {
+        plan: Plan,
+        kind: z.enum([...FeedbackKind.options, "none"]),
+        fromOverview: z.boolean(),
+      }),
+      failed: event("The reader's feedback didn't send: offline, the server, or 20 in an hour", {
+        plan: Plan,
+        reason: z.enum(["offline", "server", "tooMany"]),
+      }),
+      closed: event("The reader closes the feedback box without sending, and whether a draft was kept", {
+        plan: Plan,
+        draftKept: z.boolean(),
       }),
     },
   },

@@ -11,6 +11,7 @@ export const accountMenuTestIds = {
   enterCodeItem: "AccountMenu.enterCodeItem",
   connectExtensionItem: "AccountMenu.connectExtensionItem",
   settingsItem: "AccountMenu.settingsItem",
+  sendFeedbackItem: "AccountMenu.sendFeedbackItem",
   signOutItem: "AccountMenu.signOutItem",
   signingOut: "AccountMenu.signingOut",
   signInAgainItem: "AccountMenu.signInAgainItem",

@@ -4,6 +4,7 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { createAccountThroughSample } from "./createAccountThroughSample.testHelper.js";
 import { SignInPageObject } from "./SignInPageObject.testHelper.js";
+import { FeedbackDialogPageObject } from "./FeedbackDialogPageObject.testHelper.js";
 
 export type AccountMenuItem =
   | "Sign in"
@@ -11,6 +12,7 @@ export type AccountMenuItem =
   | "Enter code"
   | "Connect the extension"
   | "Settings"
+  | "Send feedback"
   | "Sign out"
   | "Sign in again";
 
@@ -114,6 +116,14 @@ export class AccountMenuPageObject extends PageObject {
       await this.click(accountMenuTestIds.settingsItem);
       return new SettingsPageObject(this.testContext).verifyIsShown();
     });
+
+  chooseSendFeedback = (): Promise<FeedbackDialogPageObject> =>
+    this.step("chooseSendFeedback", async () => {
+      await this.click(accountMenuTestIds.sendFeedbackItem);
+      return new FeedbackDialogPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyTriggerIsFocused = () => this.step("verifyTriggerIsFocused", () => expect(this.get(accountMenuTestIds.trigger)).toBeFocused());
 
   chooseSignOut = () => this.step("chooseSignOut", () => this.click(accountMenuTestIds.signOutItem));
 }
