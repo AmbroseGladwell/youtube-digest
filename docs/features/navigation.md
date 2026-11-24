@@ -94,6 +94,30 @@ its own: it is a top-level page.
 Page slides between the three top-level pages follow their order (Overviews, Projects, Ask):
 `navigationDirection` in `viewTransitions.ts`.
 
+## A source's page
+
+Design 399q. Choosing exactly one source, in the filter menu or by a row's site name, turns
+the list's head into the source's page, built like a project's (`SourceHead`):
+
+- "All overviews" back, which clears the source and keeps the rest of the view. On a phone
+  it is lent to the bar once it scrolls under, as a project's is.
+- "Source · seriouseats.com ↗", the domain linking out to the site in a new tab. A platform
+  (YouTube, Spotify, TikTok…) shows only "Source": no domain is shown for a platform.
+- The source's tile (our icon for a platform, the first letter for a website; no favicon is
+  fetched) and its name in Gloock as the page's heading.
+- "14 overviews · 5 unread · latest saved 18 Nov", counted over everything from the source,
+  whatever else the view narrows.
+
+Then the search row with the source as a chip, and its overviews. A second source goes back
+to the plain list with two chips. It is not a route of its own: the view's `source` in the
+URL is what makes it, so Back, reload and the saved view all work as for any filter.
+
+**A row's site name** links to the page for a website's overviews (`siteLink` on
+`LibraryOverviewCard`), with "All from Serious Eats" as its tip. Only websites: a video's or
+episode's byline is its channel or show, which isn't the source, so it stays plain text. The
+title link now holds only the title; the one-line summary still opens the overview for a
+pointer, without a second stop for the keyboard.
+
 ## Analytics
 
 - `app.nav.pageChosen` with `page` (overviews, projects, ask, queue) and `from` (masthead,
@@ -103,6 +127,8 @@ Page slides between the three top-level pages follow their order (Overviews, Pro
 - `app.sidebar.toggled` with `open` and `by` (button or key).
 - New project from the sidebar is `projects.newProjectDialog.opened` with `from: "sidebar"`
   (it was `rail`). New topic and Time saved keep their events.
+- `library.sourcePage.rowLinkFollowed`, `left` and `siteOpened`, with no props: never the
+  source or its domain.
 - Gone with the rail: `app.masthead.overviewsChosen` and `projects.rail.*`.
 
 ## Testing

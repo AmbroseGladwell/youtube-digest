@@ -46,6 +46,12 @@ export interface LibraryOverviewCardProps {
   addedBy?: { label: string; on: string; projectName: string; onRemove: () => void } | null;
   selection?: { selected: boolean; onToggle: () => void; order: number } | null;
   said?: SaidMoment | null;
+  siteLink?: SiteLink | null;
+}
+
+export interface SiteLink {
+  to: string;
+  follow: () => void;
 }
 
 const SAVED_CHIP_SHOWN_MS = 3_200;
@@ -85,6 +91,7 @@ export const LibraryOverviewCard = ({
   addedBy = null,
   selection = null,
   said = null,
+  siteLink = null,
 }: LibraryOverviewCardProps) => {
   const { overview, state } = overviewWithState;
   const readerPath = Routes.overview(overview.id);
@@ -184,10 +191,39 @@ export const LibraryOverviewCard = ({
             data-testid={libraryOverviewCardTestIds.titleLink}
           >
             <span className={styles.title}>{overview.source.title}</span>
-            <span className={styles.meta}>
-              <span className={styles.channel}>{bylineOf(overview.source)}</span> · {overview.inOneLine}
-            </span>
+            {siteLink === null && (
+              <span className={styles.meta}>
+                <span className={styles.channel}>{bylineOf(overview.source)}</span> · {overview.inOneLine}
+              </span>
+            )}
           </PageLink>
+          {siteLink !== null && (
+            <span className={styles.meta}>
+              <PageLink
+                className={`${styles.channel} ${styles.siteLink}`}
+                to={siteLink.to}
+                title={`All from ${sourceName(overview.source)}`}
+                onClick={siteLink.follow}
+                data-testid={libraryOverviewCardTestIds.siteLink}
+              >
+                {sourceName(overview.source)}
+              </PageLink>
+              {overview.source.kind === "web" && overview.source.author !== null && (
+                <span className={styles.channel}> · {overview.source.author}</span>
+              )}{" "}
+              ·{" "}
+              <PageLink
+                className={styles.oneLine}
+                to={readerPath}
+                state={readerState}
+                tabIndex={-1}
+                aria-hidden="true"
+                onClick={() => onOpen("title")}
+              >
+                {overview.inOneLine}
+              </PageLink>
+            </span>
+          )}
 
           {said !== null && (
             <PageLink

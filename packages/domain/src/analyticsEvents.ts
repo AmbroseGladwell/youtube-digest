@@ -1366,6 +1366,11 @@ export const analyticsEvents = {
       ),
       cleared: event("The reader clears the library search"),
     },
+    sourcePage: {
+      rowLinkFollowed: event("The reader follows a row's site name to the page of everything saved from that site"),
+      left: event("The reader leaves a source's page for every overview by its way back"),
+      siteOpened: event("The reader follows a source's page out to the site itself"),
+    },
     sortPill: {
       opened: event("The reader opens the library's sort menu"),
       orderChosen: event("The reader picks an order for the library: what it sorts by, which way, and how it is grouped", {
