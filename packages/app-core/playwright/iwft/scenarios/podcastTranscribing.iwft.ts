@@ -2,7 +2,6 @@ import type { PodcastEpisode, StoredTranscript } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
-import { generationStepsTestIds } from "../../../src/features/newOverview/components/GenerationSteps/GenerationStepsTestIds.js";
 import { podcastLinkStatusTestIds } from "../../../src/features/newOverview/components/PodcastLinkStatus/PodcastLinkStatusTestIds.js";
 import { transcriptionNoticeTestIds } from "../../../src/features/podcasts/components/TranscriptionNotice/TranscriptionNoticeTestIds.js";
 
@@ -64,7 +63,6 @@ test("an episode with no transcript says so on its card before Create, and Trans
   await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveText("Transcribe and create");
   await page.getByTestId(generateOverviewFormTestIds.generateButton).click();
 
-  await expect(page.getByTestId(generationStepsTestIds.stepDetail("02"))).toHaveText("None, so we’re making one");
   await expect(page.getByText("Transcribing the episode")).toBeVisible();
   await expect.poll(() => backendSimulator.ourKey.generations().length, { timeout: 20_000 }).toBe(1);
   expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([{ feedUrl: EPISODE.feedUrl, guid: EPISODE.guid }]);
@@ -114,7 +112,7 @@ test("when the check couldn't tell, Create asks before transcribing, and choosin
   await launcher.appShell.openNewOverview();
 
   await page.getByTestId(generateOverviewFormTestIds.urlInput).fill(LINK);
-  await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveText("Generate");
+  await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveText("Make my overview");
   await page.getByTestId(generateOverviewFormTestIds.generateButton).click();
 
   await expect(page.getByTestId(transcriptionNoticeTestIds.heading)).toHaveText("This episode needs transcribing");

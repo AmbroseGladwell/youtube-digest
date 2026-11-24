@@ -53,6 +53,7 @@ test("the field stays through the done state, so a reason added before Read over
 
   await form.submitUrl(VALID_URL);
   await dialog.verifyStepState("02", "done");
+  await dialog.openReason();
   await dialog.verifyAsksForAReason(true);
   await dialog.fillCaptureReason(`  ${REASON}  `);
   await dialog.clickReadOverview();
@@ -70,7 +71,7 @@ test("whatever was typed is kept through Run in background and reopening the run
   await dialog.form.submitUrl(VALID_URL);
   await dialog.verifyStepState("02", "running");
   await dialog.fillCaptureReason(REASON);
-  await dialog.clickRunInBackground();
+  await dialog.clickDone();
   await launcher.appShell.generationStatusStrip.clickDetails();
 
   await dialog.verifyCaptureReasonHolds(REASON);

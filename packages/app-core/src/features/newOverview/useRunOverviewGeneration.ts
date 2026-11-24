@@ -1,3 +1,4 @@
+import { resolveVideo } from "../transcripts/api/resolveVideo.js";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,6 +12,7 @@ import {
   type TranscribeChoice,
   type TranscribedSource,
   type SavedCapture,
+  type VideoSource,
 } from "@overview/domain";
 import type { OverviewInput } from "@overview/generation";
 import { createFetchGenerationApi, createFetchPodcastApi, createFetchSocialApi, createFetchTikTokApi } from "@overview/sync";
@@ -416,5 +418,33 @@ export const useRunSavedGeneration = (apiKeys: ApiKeys) => {
         .then((overview) => learnFrom(overview, stores))
         .finally(settled),
     [makeWith, learnFrom, settled, shown],
+  );
+};
+
+// A waiting link's words, fetched while another is written: docs/features/kept-links.md, "Several in a row".
+export const usePrefetchVideo = () => {
+  const { transcriptStore } = useStores();
+  const youTubeFetch = useYouTubeFetch();
+  const knownApiUrl = useKnownApiUrl();
+  const { connection } = useSyncConnection();
+  const reporter = useErrorReporter();
+
+  return useCallback(
+    async (url: string): Promise<VideoSource | null> => {
+      try {
+        const { video } = await resolveVideo(url, {
+          sources: createTranscriptSources({
+            youTubeFetch,
+            service: knownApiUrl === null ? null : { apiUrl: knownApiUrl, token: connection.token },
+          }),
+          transcriptStore,
+          warn: (warning) => reporter.warn(warning),
+        });
+        return video;
+      } catch {
+        return null;
+      }
+    },
+    [transcriptStore, youTubeFetch, knownApiUrl, connection.token, reporter],
   );
 };

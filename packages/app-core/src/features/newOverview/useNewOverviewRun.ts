@@ -1,10 +1,13 @@
+import { queueProblemOf } from "../captureQueue/util/queueProblemOf.js";
+import { useNextQuota } from "./useNextQuota.js";
+import { usePrefetchVideo } from "./useRunOverviewGeneration.js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { captureKeys } from "../captures/captureKeys.js";
 import { captureSurfaceOf } from "../captures/util/captureSurfaceOf.js";
 import { SavedWithoutOverview } from "./api/SavedWithoutOverview.js";
 import { SavedSourceNeedsReadingError } from "./api/SavedSourceNeedsReadingError.js";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   heldOverviewOf,
   OverviewId,
@@ -14,6 +17,7 @@ import {
   type ClientTimingReport,
   type Overview,
   type SavedCapture,
+  type VideoSource,
   podcastPlatform,
   wordCount,
 } from "@overview/domain";
@@ -33,7 +37,7 @@ import { captureFailureOf } from "./util/captureFailureOf.js";
 import { madeWithProps } from "./util/madeWithProps.js";
 import { noteBudgetProps } from "./util/noteBudgetProps.js";
 import { runErrorOf } from "./util/runErrorOf.js";
-import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
+import { extractYouTubeVideoId, isYouTubeUrl } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
 import type { EpisodeTranscription } from "../podcasts/types/EpisodeTranscription.js";
 import type { ArticleRun, NewOverviewRun } from "./types/NewOverviewRun.js";
@@ -61,8 +65,26 @@ export interface ArticleRunRequest extends StartOverviewRunOptions {
   read: () => Promise<ArticleRead>;
 }
 
+const withVideo =
+  (key: number, video: VideoSource | null) =>
+  (current: WaitingLink[]): WaitingLink[] =>
+    current.map((link) => (link.key === key ? { ...link, video } : link));
+
+export interface WaitingLinkView {
+  key: number;
+  url: string;
+  video: VideoSource | null;
+}
+
+interface WaitingLink extends WaitingLinkView {
+  go: (runId: number, saveInstead: boolean) => void;
+}
+
 export interface NewOverviewRunController {
   run: NewOverviewRun | null;
+  // What Create made just now, oldest first, and what waits its turn.
+  justNow: NewOverviewRun[];
+  waiting: WaitingLinkView[];
   held: AlreadyHeld | null;
   dialogOpen: boolean;
   // The home page's field passes a playlist link here: docs/features/playlists.md, "Pasting a link".
@@ -110,6 +132,16 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [prefill, setPrefill] = useState<string | null>(null);
   const runIdRef = useRef(0);
+  const busyRef = useRef(false);
+  const waitingKeyRef = useRef(0);
+  const [waiting, setWaiting] = useState<WaitingLink[]>([]);
+  const waitingRef = useRef<WaitingLink[]>([]);
+  waitingRef.current = waiting;
+  const [justNow, setJustNow] = useState<NewOverviewRun[]>([]);
+  const prefetchVideo = usePrefetchVideo();
+  const nextQuota = useNextQuota();
+  const monthSpentRef = useRef(false);
+  monthSpentRef.current = nextQuota?.kind === "spent";
   // The pipeline and a later blur both need the latest keystroke, not a render's.
   const draftRef = useRef("");
   const latestRun = useRef<NewOverviewRun | null>(null);
@@ -382,6 +414,10 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
             }
           },
           onError: (error) => {
+            if (isCurrent() && options.from === "dialog" && !options.saveInstead && queueProblemOf(error) === "monthSpent") {
+              generate(url, { ...options, saveInstead: true }, runId, articleRequest, podcastRequest, tiktokRequest, socialRequest);
+              return;
+            }
             if (error instanceof SavedSourceNeedsReadingError) {
               if (isCurrent()) {
                 setRun(null);
@@ -440,24 +476,53 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     [mutate, commitDraftOnto, analytics, reporter, surface, queryClient],
   );
 
+  // One at a time from Create; the rest wait their turn: docs/features/kept-links.md, "Several in a row".
+  const launch = useCallback(
+    (url: string, options: StartOverviewRunOptions, go: (runId: number, saveInstead: boolean) => void) => {
+      if (options.from === "dialog" && busyRef.current) {
+        const key = (waitingKeyRef.current += 1);
+        setWaiting((current) => [...current, { key, url, video: null, go }]);
+        if (isYouTubeUrl(url)) {
+          void prefetchVideo(url).then((video) => setWaiting(withVideo(key, video)));
+        }
+        return;
+      }
+      busyRef.current = true;
+      go((runIdRef.current += 1), false);
+    },
+    [prefetchVideo],
+  );
+
+  useEffect(() => {
+    if (run !== null && run.finishedAt === null) {
+      return;
+    }
+    busyRef.current = false;
+    if (run !== null) {
+      setJustNow((current) => (current.some((done) => done.startedAt === run.startedAt) ? current : [...current, run]));
+    }
+    const [next, ...rest] = waitingRef.current;
+    if (next === undefined) {
+      return;
+    }
+    setWaiting(rest);
+    busyRef.current = true;
+    next.go((runIdRef.current += 1), monthSpentRef.current);
+  }, [run]);
+
   const start = useCallback(
     (url: string, options: StartOverviewRunOptions) => {
-      const runId = (runIdRef.current += 1);
-      const isCurrent = () => runIdRef.current === runId;
       setHeld(null);
       void alreadyHeld(url, options).then((found) => {
-        if (!isCurrent()) {
-          return;
-        }
         if (found !== null) {
           analytics.capture.newOverview.alreadyHeld({ from: options.from, overviewId: found.overviewId });
           setHeld(found);
           return;
         }
-        generate(url, options, runId);
+        launch(url, options, (runId, saveInstead) => generate(url, { ...options, saveInstead: options.saveInstead || saveInstead }, runId));
       });
     },
-    [alreadyHeld, analytics, generate],
+    [alreadyHeld, analytics, generate, launch],
   );
 
   const startFromSaved = useCallback(
@@ -471,54 +536,58 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
 
   const startArticle = useCallback(
     (request: ArticleRunRequest) => {
-      const runId = (runIdRef.current += 1);
       setHeld(null);
-      generate(request.url, request, runId, request);
+      launch(request.url, request, (runId, saveInstead) =>
+        generate(request.url, { ...request, saveInstead: request.saveInstead || saveInstead }, runId, request),
+      );
     },
-    [generate],
+    [generate, launch],
   );
 
   const lastTranscribable = useRef<LastTranscribable | null>(null);
   const startPodcast = useCallback(
     (request: PodcastRunRequest & StartOverviewRunOptions) => {
       lastTranscribable.current = { podcast: request };
-      const runId = (runIdRef.current += 1);
       setHeld(null);
-      generate(request.sharedFrom, request, runId, null, {
-        episode: request.episode,
-        sharedFrom: request.sharedFrom,
-        transcribe: request.transcribe,
-      });
+      launch(request.sharedFrom, request, (runId, saveInstead) =>
+        generate(request.sharedFrom, { ...request, saveInstead: request.saveInstead || saveInstead }, runId, null, {
+          episode: request.episode,
+          sharedFrom: request.sharedFrom,
+          transcribe: request.transcribe,
+        }),
+      );
     },
-    [generate],
+    [generate, launch],
   );
 
   const startTikTok = useCallback(
     (request: TikTokRunRequest & StartOverviewRunOptions) => {
       lastTranscribable.current = request.words === null ? { tiktok: request } : null;
-      const runId = (runIdRef.current += 1);
       setHeld(null);
-      generate(request.video.url, request, runId, null, null, {
-        video: request.video,
-        words: request.words,
-        transcribe: request.transcribe,
-      });
+      launch(request.video.url, request, (runId, saveInstead) =>
+        generate(request.video.url, { ...request, saveInstead: request.saveInstead || saveInstead }, runId, null, null, {
+          video: request.video,
+          words: request.words,
+          transcribe: request.transcribe,
+        }),
+      );
     },
-    [generate],
+    [generate, launch],
   );
 
   const startSocial = useCallback(
     (request: SocialRunRequest & StartOverviewRunOptions) => {
       lastTranscribable.current = request.post.media === "video" && request.words === null ? { social: request } : null;
-      const runId = (runIdRef.current += 1);
       setHeld(null);
-      generate(request.post.url, request, runId, null, null, null, {
-        post: request.post,
-        words: request.words,
-        transcribe: request.transcribe,
-      });
+      launch(request.post.url, request, (runId, saveInstead) =>
+        generate(request.post.url, { ...request, saveInstead: request.saveInstead || saveInstead }, runId, null, null, null, {
+          post: request.post,
+          words: request.words,
+          transcribe: request.transcribe,
+        }),
+      );
     },
-    [generate],
+    [generate, launch],
   );
 
   const transcribeAgain = useCallback(() => {
@@ -568,6 +637,9 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   const close = useCallback(() => setDialogOpen(false), []);
   const dismiss = useCallback(() => {
     runIdRef.current += 1;
+    busyRef.current = false;
+    setWaiting([]);
+    setJustNow([]);
     setRun(null);
     setHeld(null);
     setDialogOpen(false);
@@ -575,6 +647,8 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
 
   return {
     run,
+    justNow,
+    waiting: waiting.map(({ key, url, video }) => ({ key, url, video })),
     held,
     dialogOpen,
     prefill,

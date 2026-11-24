@@ -49,7 +49,7 @@ test("a pasted Spotify episode is named before Generate, then found, written, an
   await expect(page.getByTestId(podcastLinkStatusTestIds.facts)).toHaveText("1 hr 56 min · 10 Nov 2026");
   await page.getByTestId(generateOverviewFormTestIds.generateButton).click();
 
-  await expect(page.getByText("Looking for a transcript")).toBeVisible();
+  await launcher.appShell.newOverviewDialog.verifySourceTitle(EPISODE.title);
   await expect.poll(() => backendSimulator.ourKey.generations().length).toBe(1);
   expect(backendSimulator.ourKey.generations()[0]?.input).toHaveProperty(
     "podcast.sharedFrom",

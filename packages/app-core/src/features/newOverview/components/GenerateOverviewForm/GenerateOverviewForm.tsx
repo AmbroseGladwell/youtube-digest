@@ -1,3 +1,8 @@
+import type { Overview } from "@overview/domain";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { JustNowList } from "../JustNowList/JustNowList.js";
+import { newOverviewDialogTestIds } from "../NewOverviewDialog/NewOverviewDialogTestIds.js";
+import { SavedForNow } from "../SoftWall/SavedForNow.js";
 import { useId, useState, type FormEvent } from "react";
 import { DEFAULT_PLAN, domainOf, SOCIAL_PLATFORM_NAME, socialTitle, tiktokTitle } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
@@ -10,7 +15,6 @@ import { PlaylistLinkChoice } from "../../../playlists/components/PlaylistLinkCh
 import type { PlaylistTarget } from "../../../playlists/components/PlaylistFollowFlow/PlaylistFollowFlow.js";
 import { usePlaylistApi } from "../../../playlists/usePlaylistApi.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
-import type { RunError } from "../../types/RunError.js";
 import { RunErrorMessage } from "../RunErrorMessage/RunErrorMessage.js";
 import styles from "./GenerateOverviewForm.module.scss";
 import { generateOverviewFormTestIds } from "./GenerateOverviewFormTestIds.js";
@@ -42,9 +46,12 @@ export interface GenerateOverviewFormProps {
   onCancel: () => void;
   // docs/features/playlists.md, "Pasting a link".
   onPlaylist: (target: PlaylistTarget, pastedUrl: string) => void;
-  generationError?: RunError | null;
   // So a limit message can take focus as it comes into view.
   active?: boolean;
+  onReadOverview: (overview: Overview) => void;
+  onOpen: (id: string) => void;
+  onCaptureReasonChange: (reason: string) => void;
+  onCaptureReasonCommit: () => void;
 }
 
 // Null for a video, or a link that is neither.
@@ -58,6 +65,8 @@ export const playlistTargetOf = (url: string): PlaylistTarget | null => {
   }
   return null;
 };
+
+const MAKE_LABEL = "Make my overview";
 
 const canReadClipboard = (): boolean => typeof navigator.clipboard?.readText === "function";
 
@@ -82,8 +91,11 @@ export const GenerateOverviewForm = ({
   onSubmit,
   onCancel,
   onPlaylist,
-  generationError = null,
   active = false,
+  onReadOverview,
+  onOpen,
+  onCaptureReasonChange,
+  onCaptureReasonCommit,
 }: GenerateOverviewFormProps) => {
   const playlistsAvailable = usePlaylistApi() !== null;
   const phone = useIsPhone();
@@ -117,7 +129,7 @@ export const GenerateOverviewForm = ({
   const podcast = usePodcastLink(url);
   const tiktok = useTikTokLink(url);
   const social = useSocialLink(url);
-  const { startPodcast, transcribeAgain, startTikTok, startSocial, run } = useNewOverviewRunController();
+  const { startPodcast, transcribeAgain, startTikTok, startSocial, run, justNow, waiting, held } = useNewOverviewRunController();
   const { podcastShown, tiktokShown, socialShown, reading, generateOffered, episodeAction } = pastedLinkState(
     article.link,
     podcast,
@@ -154,6 +166,13 @@ export const GenerateOverviewForm = ({
   };
 
   const begin = (saveInstead: boolean) => {
+    startLink(saveInstead);
+    if (!saveInstead) {
+      onUrlChange("");
+    }
+  };
+
+  const startLink = (saveInstead: boolean) => {
     if (tiktokShown) {
       const transcribe = transcribeChoiceOf(episodeAction);
       if (tiktok.link.status === "found" && generateOffered && (tiktok.link.words !== null || transcribe !== undefined)) {
@@ -294,6 +313,21 @@ export const GenerateOverviewForm = ({
           },
         };
 
+  if (wallShown && run?.saved != null) {
+    const saved = run.saved;
+    return (
+      <SavedForNow
+        title={saved.title ?? saved.url}
+        kicker={null}
+        resetsOn={usage === undefined ? "" : resetDate(usage.resetsOn)}
+        overviewsBack={String(usage?.ours.limit ?? "")}
+        hasTranscript={saved.source.kind !== "web"}
+        onDone={onCancel}
+        onReadTranscript={() => onOpen(saved.id)}
+      />
+    );
+  }
+
   if (wallShown && walled !== null) {
     const pasted = pastedLink();
     return (
@@ -318,31 +352,60 @@ export const GenerateOverviewForm = ({
     <form className={styles.root} onSubmit={handleSubmit} data-testid={generateOverviewFormTestIds.root}>
       <label className={styles.field}>
         <span className={styles.label}>{article.available ? "Link" : "YouTube link"}</span>
-        <input
-          id={urlFieldId}
-          name="video-url"
-          type="url"
-          autoComplete="off"
-          inputMode="url"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          className={styles.urlInput}
-          placeholder={urlPlaceholder(article.available, playlistsAvailable)}
-          value={url}
-          onChange={(event) => onUrlChange(event.target.value)}
-          onPaste={(event) => {
-            const pasted = event.clipboardData.getData("text");
-            if (playlistsAvailable && playlistTargetOf(pasted) !== null) {
-              event.preventDefault();
-              takeLink(pasted);
-            }
-          }}
-          disabled={!keysReady}
-          autoFocus
-          data-testid={generateOverviewFormTestIds.urlInput}
-        />
+        <span className={styles.fieldRow}>
+          <input
+            id={urlFieldId}
+            name="video-url"
+            type="url"
+            autoComplete="off"
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            className={styles.urlInput}
+            placeholder={urlPlaceholder(article.available, playlistsAvailable)}
+            value={url}
+            onChange={(event) => onUrlChange(event.target.value)}
+            onPaste={(event) => {
+              const pasted = event.clipboardData.getData("text");
+              if (playlistsAvailable && playlistTargetOf(pasted) !== null) {
+                event.preventDefault();
+                takeLink(pasted);
+              }
+            }}
+            disabled={!keysReady}
+            autoFocus
+            data-testid={generateOverviewFormTestIds.urlInput}
+          />
+          {choosing === null && (limit === null || walled !== null) && generateOffered && (
+            <button
+              type="submit"
+              className={styles.generateButton}
+              disabled={!keysReady || reading}
+              data-testid={generateOverviewFormTestIds.generateButton}
+            >
+              {episodeAction === null ? MAKE_LABEL : createLabelOf(episodeAction, MAKE_LABEL)}
+            </button>
+          )}
+        </span>
       </label>
+      {keysReady && limit === null && <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />}
+      {held !== null && (
+        <p className={styles.held} data-testid={newOverviewDialogTestIds.alreadyHeld}>
+          <StrokeIcon name="check" size={15} />
+          <span>
+            Already in your library.{" "}
+            <button
+              type="button"
+              className={styles.inlineLink}
+              onClick={() => onOpen(held.overviewId)}
+              data-testid={newOverviewDialogTestIds.openHeldButton}
+            >
+              Open it
+            </button>
+          </span>
+        </p>
+      )}
 
       <PastedLinkStatus
         article={article}
@@ -400,19 +463,6 @@ export const GenerateOverviewForm = ({
         </p>
       )}
 
-      {generationError && (
-        <RunErrorMessage
-          error={generationError}
-          className={styles.error}
-          testId={generateOverviewFormTestIds.generationError}
-          testIds={generateOverviewFormTestIds.runError}
-          onFollowed={onCancel}
-          episodeSeconds={run?.podcast?.durationSeconds ?? run?.tiktok?.durationSeconds ?? run?.social?.post.durationSeconds ?? null}
-          onTranscribe={transcribeAgain}
-          onNotNow={onCancel}
-        />
-      )}
-
       {choosing !== null && (
         <PlaylistLinkChoice
           playlistId={choosing.playlistId}
@@ -423,23 +473,36 @@ export const GenerateOverviewForm = ({
         />
       )}
 
+      <JustNowList
+        runs={justNow}
+        current={run}
+        waiting={waiting}
+        resetsOn={usage === undefined ? null : resetDate(usage.resetsOn)}
+        failure={(failed) => (
+          <RunErrorMessage
+            error={failed.error!}
+            className={styles.error}
+            testId={generateOverviewFormTestIds.generationError}
+            testIds={generateOverviewFormTestIds.runError}
+            onFollowed={onCancel}
+            episodeSeconds={
+              failed.podcast?.durationSeconds ?? failed.tiktok?.durationSeconds ?? failed.social?.post.durationSeconds ?? null
+            }
+            onTranscribe={transcribeAgain}
+            onNotNow={onCancel}
+          />
+        )}
+        onReadOverview={onReadOverview}
+        onOpenSaved={(capture) => onOpen(capture.id)}
+        onCaptureReasonChange={onCaptureReasonChange}
+        onCaptureReasonCommit={onCaptureReasonCommit}
+      />
+
       <div className={styles.actions}>
         <button type="button" className={styles.cancelButton} onClick={onCancel} data-testid={generateOverviewFormTestIds.cancelButton}>
-          Cancel
+          {justNow.length > 0 || waiting.length > 0 || (run !== null && run.finishedAt === null) ? "Done" : "Cancel"}
         </button>
-        {choosing === null && (limit === null || walled !== null) && generateOffered && (
-          <button
-            type="submit"
-            className={styles.generateButton}
-            disabled={!keysReady || reading}
-            data-testid={generateOverviewFormTestIds.generateButton}
-          >
-            {episodeAction === null ? "Generate" : createLabelOf(episodeAction, "Generate")}
-          </button>
-        )}
       </div>
-
-      {keysReady && limit === null && <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />}
     </form>
   );
 };

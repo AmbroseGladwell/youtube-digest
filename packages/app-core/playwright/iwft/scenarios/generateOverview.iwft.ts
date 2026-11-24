@@ -53,9 +53,8 @@ test("a stalled transcript fetch holds the first step there, with nothing claime
   await form.submitUrl(VALID_URL);
 
   await dialog.verifyStepState("01", "running");
-  await dialog.verifyStepDetail("01", "Reading captions from YouTube");
+  await dialog.verifyStatusReads(/Reading captions from YouTube/);
   await dialog.verifyStepState("02", "waiting");
-  await dialog.verifyStepDetail("02", "Queued");
 });
 
 test("a failed generation call surfaces its error without saving anything to the library", async ({ launcher, backendSimulator }) => {

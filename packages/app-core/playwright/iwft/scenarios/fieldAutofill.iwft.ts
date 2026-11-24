@@ -48,6 +48,7 @@ test("the reason asked for during a run names its field", async ({ launcher, bac
 
   await form.submitUrl(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
   await dialog.verifyStepState("02", "running");
+  await dialog.openReason();
 
   await dialog.verifyFieldsIdentifyThemselves();
   await dialog.verifyFieldAttributes("capture-reason", { autocomplete: "off" });

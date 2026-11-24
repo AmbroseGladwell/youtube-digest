@@ -2,6 +2,8 @@ import { expect } from "@playwright/experimental-ct-react";
 import { captureReasonFieldTestIds } from "../../src/features/newOverview/components/CaptureReasonField/CaptureReasonFieldTestIds.js";
 import { newOverviewDialogTestIds } from "../../src/features/newOverview/components/NewOverviewDialog/NewOverviewDialogTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { justNowListTestIds } from "../../src/features/newOverview/components/JustNowList/JustNowListTestIds.js";
+import { generateOverviewFormTestIds } from "../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { GenerationStepsPageObject } from "./GenerationStepsPageObject.testHelper.js";
 
@@ -54,22 +56,50 @@ export class NewOverviewDialogPageObject extends PageObject {
       await this.page.mouse.click(viewport.width / 2, panel.y / 2);
     });
 
-  verifySourceTitle = (title: string) =>
-    this.step(`verifySourceTitle ${title}`, () => expect(this.get(newOverviewDialogTestIds.sourceTitle)).toHaveText(title));
+  // The newest link Create was given, whatever has come before it.
+  private latestRow = () => this.get(justNowListTestIds.row).and(this.page.locator(":not([data-stage=next])")).last();
 
-  verifyStepDetail = (stepNumber: string, detail: string) => this.steps.verifyStepDetail(stepNumber, detail);
+  private rowNumber = async (attribute: string) => Number(await this.latestRow().getAttribute(attribute));
 
-  verifyStepDetailMatches = (stepNumber: string, pattern: RegExp) => this.steps.verifyStepDetailMatches(stepNumber, pattern);
+  verifySourceTitle = (title: string) => this.step(`verifySourceTitle ${title}`, () => expect(this.latestRow()).toContainText(title));
 
-  verifyStepCountIs = (count: number) => this.steps.verifyStepCountIs(count);
+  verifyStatusReads = (pattern: RegExp) =>
+    this.step(`verifyStatusReads ${pattern.source}`, () =>
+      expect(this.latestRow().getByTestId(justNowListTestIds.status)).toHaveText(pattern),
+    );
 
-  verifyStepState = (stepNumber: string, state: "waiting" | "running" | "done") => this.steps.verifyStepState(stepNumber, state);
+  verifyStage = (stage: "fetch" | "write" | "done" | "saved" | "failed") =>
+    this.step(`verifyStage ${stage}`, () => expect(this.latestRow()).toHaveAttribute("data-stage", stage));
+
+  verifyStepState = (stepNumber: string, state: "waiting" | "running" | "done") =>
+    this.step(`verifyStepState ${stepNumber} ${state}`, async () => {
+      const wanted = Number(stepNumber);
+      await expect
+        .poll(async () => {
+          const stage = await this.latestRow().getAttribute("data-stage");
+          const step = await this.rowNumber("data-step");
+          if (stage === "done" || stage === "saved" || step > wanted) {
+            return "done";
+          }
+          return step === wanted ? "running" : "waiting";
+        })
+        .toBe(state);
+    });
+
+  verifyWaitingReads = (pattern: RegExp) =>
+    this.step(`verifyWaitingReads ${pattern.source}`, () =>
+      expect(
+        this.page.locator(`[data-testid="${justNowListTestIds.row}"][data-stage="next"]`).getByTestId(justNowListTestIds.status),
+      ).toHaveText(pattern),
+    );
+
+  verifyWaitingCount = (count: number) =>
+    this.step(`verifyWaitingCount ${count}`, () =>
+      expect(this.page.locator(`[data-testid="${justNowListTestIds.row}"][data-stage="next"]`)).toHaveCount(count),
+    );
 
   verifyFootNote = (pattern: RegExp) =>
     this.step(`verifyFootNote ${pattern.source}`, () => expect(this.get(newOverviewDialogTestIds.footNote)).toHaveText(pattern));
-
-  verifyElapsedIsShown = () =>
-    this.step("verifyElapsedIsShown", () => expect(this.get(newOverviewDialogTestIds.elapsed)).toHaveText(/^\d+:\d\d elapsed$/));
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 
@@ -80,19 +110,22 @@ export class NewOverviewDialogPageObject extends PageObject {
       asks ? this.expectToBeVisible(captureReasonFieldTestIds.input) : this.expectNotToBeVisible(captureReasonFieldTestIds.input),
     );
 
+  openReason = () => this.step("openReason", () => this.click(justNowListTestIds.addReason));
+
   fillCaptureReason = (reason: string) =>
-    this.step(`fillCaptureReason ${reason}`, () => this.get(captureReasonFieldTestIds.input).fill(reason));
+    this.step(`fillCaptureReason ${reason}`, async () => {
+      if ((await this.get(captureReasonFieldTestIds.input).count()) === 0) {
+        await this.click(justNowListTestIds.addReason);
+      }
+      await this.get(captureReasonFieldTestIds.input).fill(reason);
+    });
 
   verifyCaptureReasonHolds = (reason: string) =>
     this.step(`verifyCaptureReasonHolds ${reason}`, () => expect(this.get(captureReasonFieldTestIds.input)).toHaveValue(reason));
 
-  clickRunInBackground = () => this.step("clickRunInBackground", () => this.click(newOverviewDialogTestIds.runInBackgroundButton));
+  clickDone = () => this.step("clickDone", () => this.click(generateOverviewFormTestIds.cancelButton));
 
-  clickCancelRun = () => this.step("clickCancelRun", () => this.click(newOverviewDialogTestIds.cancelRunButton));
-
-  clickCloseWhenDone = () => this.step("clickCloseWhenDone", () => this.click(newOverviewDialogTestIds.closeWhenDoneButton));
-
-  clickReadOverview = () => this.step("clickReadOverview", () => this.click(newOverviewDialogTestIds.readOverviewButton));
+  clickReadOverview = () => this.step("clickReadOverview", () => this.click(this.latestRow().getByTestId(justNowListTestIds.readOverview)));
 
   verifyAlreadyHeld = () => this.step("verifyAlreadyHeld", () => this.expectToBeVisible(newOverviewDialogTestIds.alreadyHeld));
 

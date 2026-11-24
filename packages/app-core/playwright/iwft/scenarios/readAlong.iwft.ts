@@ -187,7 +187,7 @@ test("the tabs come to rest on the masthead's lower edge, and follow it when it 
 
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.submitUrl(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
-  await dialog.clickRunInBackground();
+  await dialog.clickDone();
   await launcher.appShell.generationStatusStrip.verifyIsShown();
 
   await reader.verifyTabsRestOnTheMasthead();

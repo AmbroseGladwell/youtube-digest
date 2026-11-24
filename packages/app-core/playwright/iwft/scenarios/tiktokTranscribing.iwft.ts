@@ -2,7 +2,7 @@ import type { StoredTranscript, TikTokRead, TikTokVideo, TranscriptionOffer } fr
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
-import { generationStepsTestIds } from "../../../src/features/newOverview/components/GenerationSteps/GenerationStepsTestIds.js";
+import { justNowListTestIds } from "../../../src/features/newOverview/components/JustNowList/JustNowListTestIds.js";
 import { podcastLinkStatusTestIds } from "../../../src/features/newOverview/components/PodcastLinkStatus/PodcastLinkStatusTestIds.js";
 import { tiktokLinkStatusTestIds } from "../../../src/features/newOverview/components/TikTokLinkStatus/TikTokLinkStatusTestIds.js";
 import { transcriptionNoticeTestIds } from "../../../src/features/podcasts/components/TranscriptionNotice/TranscriptionNoticeTestIds.js";
@@ -67,7 +67,7 @@ test("a TikTok with no captions offers to transcribe it, and Transcribe and crea
   }
   await page.getByTestId(generateOverviewFormTestIds.generateButton).click();
 
-  await expect(page.getByTestId(generationStepsTestIds.stepDetail("02"))).toHaveText("None, so we’re making a transcript");
+  await expect(page.getByTestId(justNowListTestIds.status).last()).toContainText("Transcribing");
   await expect(page.getByText("Transcribing the TikTok")).toBeVisible();
   await expect.poll(() => backendSimulator.ourKey.generations().length, { timeout: 20_000 }).toBe(1);
   expect(backendSimulator.tiktok.transcriptionAsks()).toEqual([LINK]);
