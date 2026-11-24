@@ -219,6 +219,21 @@ export class LibraryOverviewCardPageObject extends PageObject {
       expect(Math.abs(image.height - image.width / 2)).toBeLessThanOrEqual(1);
     });
 
+  verifySelectBoxSitsOnTheImageCorner = () =>
+    this.step("verifySelectBoxSitsOnTheImageCorner", async () => {
+      const box = this.get(libraryOverviewCardTestIds.selectBox).locator("visible=true");
+      await expect(box).toHaveCount(1);
+      await expect(box).toHaveCSS("opacity", "1");
+      const tick = (await box.boundingBox())!;
+      const image = (await this.get(overviewThumbnailTestIds.link).boundingBox())!;
+      const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
+      expect(tick.x - image.x).toBeLessThanOrEqual(16);
+      expect(tick.y - image.y).toBeLessThanOrEqual(16);
+      expect(tick.x).toBeGreaterThan(image.x);
+      expect(tick.y).toBeGreaterThan(image.y);
+      expect(tick.y + tick.height).toBeLessThan(title.y);
+    });
+
   verifyImageWidth = (width: number) =>
     this.step(`verifyImageWidth ${width}`, async () => {
       const image = (await this.get(overviewThumbnailTestIds.link).boundingBox())!;

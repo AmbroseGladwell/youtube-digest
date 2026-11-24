@@ -118,7 +118,7 @@ export const LibraryOverviewCard = ({
   const listenLabel = playing ? "Playing" : "Listen";
 
   const box = (className: string | undefined) => (
-    <span className={`${styles.box} ${className ?? ""}`} aria-hidden="true">
+    <span className={`${styles.box} ${className ?? ""}`} aria-hidden="true" data-testid={libraryOverviewCardTestIds.selectBox}>
       <StrokeIcon name="check" size={13} />
     </span>
   );

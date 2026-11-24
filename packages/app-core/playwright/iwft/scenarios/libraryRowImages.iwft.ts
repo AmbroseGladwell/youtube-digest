@@ -28,6 +28,16 @@ test("below 30rem a video's image runs across the top of its tile, with its leng
   await library.verifyPageDoesNotScrollSideways();
 });
 
+test("selecting on a phone puts each tick on its image's corner, as the wide row does", async ({ launcher, backendSimulator, page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  backendSimulator.overviews.seed(video(IMAGE));
+  const library = await launcher.launchExpectingLibrary();
+
+  await library.startSelecting();
+
+  await library.nthCard(0).verifySelectBoxSitsOnTheImageCorner();
+});
+
 test("at the narrowest phone the image still spans the tile and nothing runs off the side", async ({
   launcher,
   backendSimulator,
