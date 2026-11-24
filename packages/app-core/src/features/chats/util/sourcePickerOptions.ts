@@ -1,9 +1,26 @@
-import type { Overview, Project, ProjectMember } from "@overview/domain";
+import type { Overview, Project, ProjectMember, SavedCapture } from "@overview/domain";
 
 export const RECENT_OVERVIEWS_SHOWN = 4;
 export const PICKER_OPTIONS_SHOWN = 8;
 
-export type PickerOption = { kind: "project"; project: Project; count: number } | { kind: "overview"; overview: Overview };
+export type PickerOption =
+  | { kind: "project"; project: Project; count: number }
+  | { kind: "overview"; overview: Overview }
+  | { kind: "saved"; capture: SavedCapture };
+
+export const pickerTitleOf = (option: PickerOption): string => {
+  if (option.kind === "project") {
+    return option.project.name;
+  }
+  return option.kind === "overview" ? option.overview.source.title : option.capture.source.title;
+};
+
+export const pickerKeyOf = (option: PickerOption): string => {
+  if (option.kind === "project") {
+    return option.project.id;
+  }
+  return option.kind === "overview" ? option.overview.id : option.capture.id;
+};
 
 export interface PickerOptions {
   options: PickerOption[];
@@ -26,10 +43,16 @@ export interface SourcePickerQuery {
   projects: readonly Project[];
   members: readonly ProjectMember[];
   overviews: readonly Overview[];
+  saved: readonly SavedCapture[];
   exclude: ReadonlySet<string>;
 }
 
-export const sourcePickerOptions = ({ query, projects, members, overviews, exclude }: SourcePickerQuery): PickerOptions => {
+interface Dated {
+  savedAt: string;
+  option: PickerOption;
+}
+
+export const sourcePickerOptions = ({ query, projects, members, overviews, saved, exclude }: SourcePickerQuery): PickerOptions => {
   const words = wordsOf(query);
   const counted = projects
     .filter((project) => project.archivedAt === null && !exclude.has(project.id))
@@ -49,7 +72,13 @@ export const sourcePickerOptions = ({ query, projects, members, overviews, exclu
   }
   const found = [
     ...counted.filter((option) => option.kind === "project" && matches(option.project.name, words)),
-    ...newest.filter((overview) => matches(overview.source.title, words)).map((overview): PickerOption => ({ kind: "overview", overview })),
+    ...[
+      ...newest.map((overview): Dated => ({ savedAt: overview.savedAt, option: { kind: "overview", overview } })),
+      ...saved.map((capture): Dated => ({ savedAt: capture.savedAt, option: { kind: "saved", capture } })),
+    ]
+      .filter(({ option }) => matches(pickerTitleOf(option), words))
+      .sort((left, right) => right.savedAt.localeCompare(left.savedAt))
+      .map(({ option }) => option),
   ];
   return { options: found.slice(0, PICKER_OPTIONS_SHOWN), more: Math.max(0, found.length - PICKER_OPTIONS_SHOWN) };
 };

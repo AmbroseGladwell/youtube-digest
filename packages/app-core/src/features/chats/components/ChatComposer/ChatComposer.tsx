@@ -1,12 +1,25 @@
 import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
-import { isWrittenPost, MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
+import { useNavigate } from "react-router";
+import { DEFAULT_PLAN, isWrittenPost, MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
+import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useSavedCapturesQuery } from "../../../captures/queries/savedCapturesQuery.js";
+import { useOverviewUsageQuery } from "../../../newOverview/queries/overviewUsageQuery.js";
+import { useNextQuota } from "../../../newOverview/useNextQuota.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { useProjectMembersQuery } from "../../../projects/queries/projectMembersQuery.js";
+import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
 import { useProjectsQuery } from "../../../projects/queries/projectsQuery.js";
 import type { PinnedItem } from "../../useChatPanel.js";
 import { useChipFit } from "../../useChipFit.js";
-import { atQueryOf, markedPieces, sourcePickerOptions, type PickerOption } from "../../util/sourcePickerOptions.js";
+import {
+  atQueryOf,
+  markedPieces,
+  pickerKeyOf,
+  pickerTitleOf,
+  sourcePickerOptions,
+  type PickerOption,
+} from "../../util/sourcePickerOptions.js";
 import { ChatField, type ChatFieldProps } from "../ChatField/ChatField.js";
 import { ChatSourceChip } from "../ChatSourceChip/ChatSourceChip.js";
 import styles from "./ChatComposer.module.scss";
@@ -24,6 +37,24 @@ export interface ChatComposerProps extends Omit<ChatFieldProps, "onAt" | "onPick
 
 const MOST_SHOWN = 2;
 
+const selectableFrom = (options: readonly PickerOption[], from: number, step: 1 | -1): number => {
+  for (let moved = 1; moved <= options.length; moved += 1) {
+    const at = (from + step * moved + options.length * moved) % options.length;
+    if (options[at]!.kind !== "saved") {
+      return at;
+    }
+  }
+  return -1;
+};
+
+const currentOf = (options: readonly PickerOption[], active: number): number => {
+  const at = Math.min(active, options.length - 1);
+  if (at === -1) {
+    return -1;
+  }
+  return options[at]!.kind === "saved" ? selectableFrom(options, at, 1) : at;
+};
+
 const plural = (count: number, noun: string) => (count === 0 ? null : `${count} ${noun}${count === 1 ? "" : "s"}`);
 
 const announcementOf = (full: boolean, options: PickerOption[]): string => {
@@ -36,6 +67,7 @@ const announcementOf = (full: boolean, options: PickerOption[]): string => {
   return [
     plural(options.filter((option) => option.kind === "project").length, "project"),
     plural(options.filter((option) => option.kind === "overview").length, "overview"),
+    plural(options.filter((option) => option.kind === "saved").length, "item without an overview yet"),
   ]
     .filter((part) => part !== null)
     .join(", ");
@@ -48,7 +80,7 @@ const headLabelOf = (option: PickerOption, query: string): string => {
   return query === "" ? "Recent overviews" : "Overviews";
 };
 
-const optionDetailOf = (option: PickerOption): string => {
+const optionDetailOf = (option: Exclude<PickerOption, { kind: "saved" }>): string => {
   if (option.kind === "project") {
     return `${option.count} ${option.count === 1 ? "overview" : "overviews"}`;
   }
@@ -89,6 +121,11 @@ export const ChatComposer = ({
   const library = useOverviewsWithStateQuery().data ?? [];
   const projects = useProjectsQuery().data ?? [];
   const members = useProjectMembersQuery().data ?? [];
+  const saved = useSavedCapturesQuery().data ?? [];
+  const navigate = useNavigate();
+  const canMake = useNextQuota()?.kind === "quota";
+  const usage = useOverviewUsageQuery().data;
+  const [plansOpen, setPlansOpen] = useState(false);
   const [picking, setPicking] = useState<{ start: number; query: string } | null>(null);
   const [active, setActive] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -112,8 +149,11 @@ export const ChatComposer = ({
     ...liveSources.map((source) => source.overviewId),
   ]);
   const { options, more } =
-    picking === null ? { options: [], more: 0 } : sourcePickerOptions({ query: picking.query, projects, members, overviews, exclude });
+    picking === null
+      ? { options: [], more: 0 }
+      : sourcePickerOptions({ query: picking.query, projects, members, overviews, saved, exclude });
   const open = picking !== null;
+  const current = currentOf(options, active);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [below, setBelow] = useState(false);
@@ -167,16 +207,23 @@ export const ChatComposer = ({
     setActive(0);
   };
 
-  const choose = (option: PickerOption) => {
+  const dropQuery = () => {
     if (picking !== null) {
       onChange(`${value.slice(0, picking.start)}${value.slice(picking.start + 1 + picking.query.length)}`.replace(/ {2,}/g, " "));
     }
+    setPicking(null);
+  };
+
+  const choose = (option: PickerOption) => {
+    if (option.kind === "saved") {
+      return;
+    }
+    dropQuery();
     onPin(
       option.kind === "project"
         ? { kind: "project", id: option.project.id, title: option.project.name, count: option.count }
         : { kind: "overview", id: option.overview.id, title: option.overview.source.title },
     );
-    setPicking(null);
     input.current?.focus();
   };
 
@@ -189,17 +236,17 @@ export const ChatComposer = ({
       setPicking(null);
       return true;
     }
-    if (full || options.length === 0) {
+    if (full || current === -1) {
       return false;
     }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
-      setActive((current) => (current + (event.key === "ArrowDown" ? 1 : options.length - 1)) % options.length);
+      setActive(selectableFrom(options, current, event.key === "ArrowDown" ? 1 : -1));
       return true;
     }
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      choose(options[active]!);
+      choose(options[current]!);
       return true;
     }
     return false;
@@ -239,29 +286,70 @@ export const ChatComposer = ({
     return (
       <ul className={styles.list} id={listId} role="listbox" aria-label="Overviews and projects">
         {options.map((option, index) => {
-          const head = index === 0 || options[index - 1]!.kind !== option.kind;
-          const title = option.kind === "project" ? option.project.name : option.overview.source.title;
+          const head = index === 0 || (options[index - 1]!.kind === "project") !== (option.kind === "project");
+          const title = pickerTitleOf(option);
+          const marked = markedPieces(title, query).map((piece, at) =>
+            piece.marked ? <strong key={at}>{piece.text}</strong> : <span key={at}>{piece.text}</span>,
+          );
           return (
-            <li key={option.kind === "project" ? option.project.id : option.overview.id} role="presentation">
+            <li key={pickerKeyOf(option)} role="presentation">
               {head && <p className={styles.head}>{headLabelOf(option, query)}</p>}
-              <div
-                id={optionId(index)}
-                role="option"
-                aria-selected={index === active}
-                className={`${styles.option} ${index === active ? styles.active : ""}`}
-                onMouseDown={(event) => event.preventDefault()}
-                onMouseEnter={() => setActive(index)}
-                onClick={() => choose(option)}
-                data-testid={chatComposerTestIds.option}
-              >
-                <StrokeIcon name={option.kind === "project" ? "folder" : "fileText"} size={15} />
-                <b>
-                  {markedPieces(title, query).map((piece, at) =>
-                    piece.marked ? <strong key={at}>{piece.text}</strong> : <span key={at}>{piece.text}</span>,
+              {option.kind === "saved" ? (
+                <>
+                  <div
+                    id={optionId(index)}
+                    role="option"
+                    aria-selected={false}
+                    aria-disabled
+                    className={`${styles.option} ${styles.off}`}
+                    onMouseDown={(event) => event.preventDefault()}
+                    data-testid={chatComposerTestIds.savedOption}
+                  >
+                    <StrokeIcon name="fileText" size={15} />
+                    <b>{marked}</b>
+                    <small>No overview yet, so it can&rsquo;t be asked about yet</small>
+                  </div>
+                  {canMake ? (
+                    <button
+                      type="button"
+                      className={styles.offLink}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => void navigate(Routes.overview(option.capture.id))}
+                      data-testid={chatComposerTestIds.savedOpen}
+                    >
+                      Make its overview
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.offLink}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        dropQuery();
+                        setPlansOpen(true);
+                      }}
+                      data-testid={chatComposerTestIds.savedGetPlus}
+                    >
+                      Get Plus
+                    </button>
                   )}
-                </b>
-                <small>{optionDetailOf(option)}</small>
-              </div>
+                </>
+              ) : (
+                <div
+                  id={optionId(index)}
+                  role="option"
+                  aria-selected={index === current}
+                  className={`${styles.option} ${index === current ? styles.active : ""}`}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setActive(index)}
+                  onClick={() => choose(option)}
+                  data-testid={chatComposerTestIds.option}
+                >
+                  <StrokeIcon name={option.kind === "project" ? "folder" : "fileText"} size={15} />
+                  <b>{marked}</b>
+                  <small>{optionDetailOf(option)}</small>
+                </div>
+              )}
             </li>
           );
         })}
@@ -276,6 +364,7 @@ export const ChatComposer = ({
 
   return (
     <div className={styles.root} ref={rootRef}>
+      <PlansModal open={plansOpen} plan={usage?.plan ?? DEFAULT_PLAN} onClose={() => setPlansOpen(false)} />
       {open && (
         <div className={`${styles.picker} ${below ? styles.pickerBelow : ""}`} data-testid={chatComposerTestIds.picker}>
           <p className={styles.srOnly} aria-live="polite">
@@ -358,7 +447,7 @@ export const ChatComposer = ({
         combobox={{
           expanded: open && options.length > 0,
           controls: listId,
-          activeDescendant: open && options.length > 0 ? optionId(active) : undefined,
+          activeDescendant: open && current !== -1 ? optionId(current) : undefined,
         }}
       />
     </div>

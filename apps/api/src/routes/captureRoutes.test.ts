@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { CURRENT_SCHEMA_VERSIONS, youTubeSource } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
+import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { distinctVideo, storedOverview, UPDATED_AT } from "../testing/storedRecords.testHelper.js";
@@ -231,15 +232,20 @@ test("one device claims a queued source; another is told when the claim runs out
   await testApp.close();
 });
 
-test("a claim left by a closed tab runs out, and another device takes it", async () => {
-  const testApp = await createTestApp();
+test("a claim left by a closed tab runs out, and another device takes it, which is logged", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await createTestApp({}, { logger });
   const account = await makeAccount(testApp);
   await claim(account, "dQw4w9WgXcQ", "laptop-tab-1");
+  await claim(account, "dQw4w9WgXcQ", "laptop-tab-1");
+  const renewed = lines.filter((line) => line.msg === "capture claim expired").length;
 
   testApp.clock.advance(10 * 60 * 1000);
   const phone = await claim(account, "dQw4w9WgXcQ", "phone-tab-1");
 
   assert.equal(phone.statusCode, 200);
+  assert.equal(renewed, 0);
+  assert.equal(lines.filter((line) => line.msg === "capture claim expired").length, 1);
   await testApp.close();
 });
 

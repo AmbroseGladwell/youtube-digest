@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Overview, ProjectMember } from "@overview/domain";
+import { savedCaptureFrom } from "../../captures/types/SavedCaptureFactory.testHelper.js";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeProject, makeProjectMember } from "../../projects/types/ProjectFactory.testHelper.js";
-import { atQueryOf, markedPieces, sourcePickerOptions } from "./sourcePickerOptions.js";
+import { atQueryOf, markedPieces, pickerTitleOf, sourcePickerOptions } from "./sourcePickerOptions.js";
 
 const titled = (title: string, savedAt: string): Overview => {
   const overview = makeOverview({ savedAt });
@@ -20,23 +21,51 @@ describe("sourcePickerOptions", () => {
   ];
 
   it("shows projects with their counts, then the four most recent overviews, never one excluded", () => {
-    const { options } = sourcePickerOptions({ query: "", projects: [dinner], members, overviews, exclude: new Set([overviews[5]!.id]) });
-    expect(
-      options.map((option) => (option.kind === "project" ? `${option.project.name} ${option.count}` : option.overview.source.title)),
-    ).toEqual(["Dinner Recipes 1", "Talk 3", "Talk 2", "Talk 1", "Talk 0"]);
+    const { options } = sourcePickerOptions({
+      query: "",
+      projects: [dinner],
+      members,
+      overviews,
+      saved: [],
+      exclude: new Set([overviews[5]!.id]),
+    });
+    expect(options.map((option) => (option.kind === "project" ? `${option.project.name} ${option.count}` : pickerTitleOf(option)))).toEqual(
+      ["Dinner Recipes 1", "Talk 3", "Talk 2", "Talk 1", "Talk 0"],
+    );
   });
 
   it("filters by every typed word in a title or project name", () => {
-    const { options } = sourcePickerOptions({ query: "chick soup", projects: [dinner], members, overviews, exclude: new Set() });
+    const { options } = sourcePickerOptions({ query: "chick soup", projects: [dinner], members, overviews, saved: [], exclude: new Set() });
     expect(options.map((option) => (option.kind === "overview" ? option.overview.source.title : ""))).toEqual(["Chorizo & chickpea soup"]);
-    expect(sourcePickerOptions({ query: "recipes", projects: [dinner], members, overviews, exclude: new Set() }).options[0]?.kind).toBe(
-      "project",
-    );
+    expect(
+      sourcePickerOptions({ query: "recipes", projects: [dinner], members, overviews, saved: [], exclude: new Set() }).options[0]?.kind,
+    ).toBe("project");
+  });
+
+  it("finds an item saved without an overview by its title, among overviews by date, but never as a recent one", () => {
+    const saved = [savedCaptureFrom(titled("Chicken soup, slowly", "2026-11-20T09:00:00.000Z"))];
+    const found = sourcePickerOptions({ query: "soup", projects: [], members: [], overviews, saved, exclude: new Set() }).options;
+    expect(found.map((option) => `${option.kind} ${pickerTitleOf(option)}`)).toEqual([
+      "saved Chicken soup, slowly",
+      "overview Chorizo & chickpea soup",
+    ]);
+    expect(
+      sourcePickerOptions({ query: "", projects: [], members: [], overviews, saved, exclude: new Set() }).options.some(
+        (option) => option.kind === "saved",
+      ),
+    ).toBe(false);
   });
 
   it("shows the first eight of many, and says how many more", () => {
     const many = Array.from({ length: 11 }, (_, index) => titled(`Sleep ${index}`, `2026-10-${10 + index}T09:00:00.000Z`));
-    const { options, more } = sourcePickerOptions({ query: "sleep", projects: [], members: [], overviews: many, exclude: new Set() });
+    const { options, more } = sourcePickerOptions({
+      query: "sleep",
+      projects: [],
+      members: [],
+      overviews: many,
+      saved: [],
+      exclude: new Set(),
+    });
     expect(options).toHaveLength(8);
     expect(more).toBe(3);
   });

@@ -13,6 +13,7 @@ import { TimerSound } from "./TimerSound.js";
 import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
+import { CaptureSurface, CaptureWait } from "./Capture.js";
 import { PlaylistOrder } from "./PlaylistOrder.js";
 import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
@@ -1181,6 +1182,57 @@ export const analyticsEvents = {
       }),
       removed: event("The reader takes the waiting videos they chose out of the queue, and how many", {
         videos: z.number().int().positive(),
+      }),
+    },
+  },
+  keptLinks: {
+    queue: {
+      linkKept: event("The reader keeps a link that can't be made right now, to be made once what it waits for clears", {
+        plan: Plan,
+        surface: CaptureSurface,
+        waitingFor: CaptureWait,
+      }),
+      keptLinkMade: event("A kept link's overview is written: how long it waited, what for, where it was kept and which device made it", {
+        plan: Plan,
+        surface: CaptureSurface,
+        keptFrom: CaptureSurface,
+        waitingFor: CaptureWait,
+        waitedMinutes: z.number().int().nonnegative(),
+        byExtension: z.boolean(),
+      }),
+      keptLinkRemoved: event("The reader takes a kept link out of the queue before it's made", {
+        plan: Plan,
+        surface: CaptureSurface,
+        waitingFor: CaptureWait,
+      }),
+      keptLinkFailed: event("A kept link couldn't be made, and why; the reader can try it again", {
+        plan: Plan,
+        surface: CaptureSurface,
+        problem: QueuedCaptureProblem,
+      }),
+    },
+    saved: {
+      savedWithoutOverview: event(
+        "A link is saved with its transcript but no overview, as the month's overviews are spent; whether it was transcribed and whether it was a kept link",
+        {
+          plan: Plan,
+          surface: CaptureSurface,
+          transcribed: z.boolean(),
+          fromKeptLink: z.boolean(),
+        },
+      ),
+      overviewMadeLater: event(
+        "An item saved without an overview gets its overview: how long it waited, and whether its month had reset or more overviews came the same month",
+        {
+          plan: Plan,
+          surface: CaptureSurface,
+          waitedHours: z.number().int().nonnegative(),
+          after: z.enum(["reset", "sameMonth"]),
+        },
+      ),
+      saveCapReached: event("A reader at the month's limit meets the wall with no saves left, so Save it for now isn't offered", {
+        plan: Plan,
+        surface: CaptureSurface,
       }),
     },
   },

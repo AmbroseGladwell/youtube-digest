@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { KeptCapture, OverviewId } from "@overview/domain";
+import { useSurface } from "../../app/SurfaceContext.js";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useStores } from "../../stores/StoresContext.js";
+import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { claimOrSkip } from "../captureQueue/util/claimOrSkip.js";
 import { useCaptureClaimApi } from "../captureQueue/useCaptureClaimApi.js";
@@ -12,11 +14,14 @@ import { useGenerationReadiness } from "../newOverview/useGenerationReadiness.js
 import { useNextQuota } from "../newOverview/useNextQuota.js";
 import { useRunOverviewGeneration } from "../newOverview/useRunOverviewGeneration.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
+import { usePlan } from "../plus/usePlan.js";
 import { captureKeys } from "./captureKeys.js";
 import { useKeptLinksQuery } from "./queries/keptLinksQuery.js";
+import { captureSurfaceOf } from "./util/captureSurfaceOf.js";
 import { keptLinkDue } from "./util/keptLinkDue.js";
 
 const RECHECK_MS = 60_000;
+const MINUTE_MS = 60_000;
 
 export interface KeptLinksController {
   links: KeptCapture[];
@@ -46,6 +51,9 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
   const [now, setNow] = useState(() => Date.now());
   const [elsewhere, setElsewhere] = useState<ReadonlyMap<string, number>>(new Map());
   const monthSpent = next?.kind === "spent";
+  const analytics = useAnalytics();
+  const { plan } = usePlan();
+  const surface = captureSurfaceOf(useSurface());
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), RECHECK_MS);
@@ -81,8 +89,17 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
           }
           throw error;
         }
+        analytics.keptLinks.queue.keptLinkMade({
+          plan,
+          surface,
+          keptFrom: link.keptFrom,
+          waitingFor: link.waitingFor,
+          waitedMinutes: Math.max(0, Math.floor((Date.now() - new Date(link.keptAt).getTime()) / MINUTE_MS)),
+          byExtension: surface === "panel",
+        });
       } catch (error) {
         if (error instanceof SavedWithoutOverview) {
+          analytics.keptLinks.saved.savedWithoutOverview({ plan, surface, transcribed: false, fromKeptLink: true });
           return;
         }
         const problem = queueProblemOf(error);
@@ -91,14 +108,16 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
           await captureStore.saveCapture({ ...link, waitingFor: "server", resumesAt: new Date(hold.resumesAt).toISOString() });
           return;
         }
-        await captureStore.saveCapture({ ...link, queueStatus: "failed", problem: isQueueHoldReason(problem) ? "failed" : problem });
+        const failed = isQueueHoldReason(problem) ? "failed" : problem;
+        analytics.keptLinks.queue.keptLinkFailed({ plan, surface, problem: failed });
+        await captureStore.saveCapture({ ...link, queueStatus: "failed", problem: failed });
       } finally {
         void claimApi?.release(link.sourceKey, holder).catch(() => undefined);
         setMaking(null);
         await refresh();
       }
     },
-    [claimApi, holder, generate, monthSpent, captureStore, refresh],
+    [claimApi, holder, generate, monthSpent, captureStore, refresh, analytics, plan, surface],
   );
 
   const due = links.find((link) => (elsewhere.get(link.id) ?? 0) <= now && keptLinkDue(link, { now, hasExtension, monthSpent }));
@@ -109,7 +128,16 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
     }
   }, [canMake, due, make]);
 
-  const remove = useCallback((id: OverviewId) => void captureStore.removeCapture(id).then(refresh), [captureStore, refresh]);
+  const remove = useCallback(
+    (id: OverviewId) => {
+      const link = links.find((candidate) => candidate.id === id);
+      if (link !== undefined) {
+        analytics.keptLinks.queue.keptLinkRemoved({ plan, surface, waitingFor: link.waitingFor });
+      }
+      void captureStore.removeCapture(id).then(refresh);
+    },
+    [links, analytics, plan, surface, captureStore, refresh],
+  );
   const retry = useCallback(
     (id: OverviewId) => {
       const link = links.find((candidate) => candidate.id === id);

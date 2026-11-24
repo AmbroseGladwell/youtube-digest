@@ -5,6 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { captureKeys } from "../captures/captureKeys.js";
 import { captureSurfaceOf } from "../captures/util/captureSurfaceOf.js";
+import { madeLaterOf } from "../captures/util/madeLaterOf.js";
+import { usePlan } from "../plus/usePlan.js";
 import { SavedWithoutOverview } from "./api/SavedWithoutOverview.js";
 import { SavedSourceNeedsReadingError } from "./api/SavedSourceNeedsReadingError.js";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -129,6 +131,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   const { mutate } = useGenerateOverviewMutation(apiKeys);
   const { mutate: mutateCaptureReason } = useSetOverviewCaptureReasonMutation();
   const analytics = useAnalytics();
+  const { plan } = usePlan();
   const reporter = useErrorReporter();
   const surface = useSurface();
   const queryClient = useQueryClient();
@@ -387,6 +390,13 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         },
         {
           onSuccess: (overview) => {
+            if (options.savedCapture !== undefined) {
+              analytics.keptLinks.saved.overviewMadeLater({
+                plan,
+                surface: captureSurfaceOf(surface),
+                ...madeLaterOf(options.savedCapture.savedAt, new Date()),
+              });
+            }
             if (isCurrent()) {
               // Catches a keystroke between the pipeline's read and this callback.
               const saved = commitDraftOnto(overview);
@@ -432,6 +442,12 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
               return;
             }
             if (error instanceof SavedWithoutOverview) {
+              analytics.keptLinks.saved.savedWithoutOverview({
+                plan,
+                surface: captureSurfaceOf(surface),
+                transcribed: (podcastRequest?.transcribe ?? tiktokRequest?.transcribe ?? socialRequest?.transcribe) !== undefined,
+                fromKeptLink: false,
+              });
               void queryClient.invalidateQueries({ queryKey: captureKeys.all });
               if (isCurrent()) {
                 setRun((current) => (current === null ? null : { ...current, saved: error.capture, finishedAt: Date.now() }));
@@ -484,7 +500,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         },
       );
     },
-    [mutate, commitDraftOnto, analytics, reporter, surface, queryClient],
+    [mutate, commitDraftOnto, analytics, plan, reporter, surface, queryClient],
   );
 
   // One at a time from Create; the rest wait their turn: docs/features/kept-links.md, "Several in a row".
@@ -566,10 +582,11 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         queueStatus: "waiting",
         problem: null,
       });
+      analytics.keptLinks.queue.linkKept({ plan, surface: captureSurfaceOf(surface), waitingFor: "server" });
       setJustNow((current) => current.map((done) => (done.startedAt === kept.startedAt ? { ...done, kept: true } : done)));
       void queryClient.invalidateQueries({ queryKey: captureKeys.all });
     },
-    [captureStore, surface, queryClient],
+    [captureStore, surface, queryClient, analytics, plan],
   );
 
   const startFromSaved = useCallback(
