@@ -3,6 +3,8 @@ import type { FastifyInstance } from "fastify";
 import { IDBFactory } from "fake-indexeddb";
 import { CLIENT_VERSION, type OverviewFold } from "@overview/domain";
 import {
+  IndexedDbCaptureQueueStore,
+  IndexedDbCaptureStore,
   IndexedDbChatStore,
   IndexedDbOverviewStore,
   IndexedDbProjectStore,
@@ -50,6 +52,8 @@ export interface SyncedDevice {
   projects: IndexedDbProjectStore;
   chats: IndexedDbChatStore;
   questions: IndexedDbSuggestedQuestionStore;
+  captures: IndexedDbCaptureStore;
+  queue: IndexedDbCaptureQueueStore;
   storage: IndexedDbSyncStorage;
   engine: SyncEngine;
   sync(): Promise<SyncStatus>;
@@ -82,6 +86,8 @@ export const makeDevice = async (
   const projects = new IndexedDbProjectStore(db, { onJournaled: storage.notifyJournaled });
   const chats = new IndexedDbChatStore(db, { onJournaled: storage.notifyJournaled });
   const questions = new IndexedDbSuggestedQuestionStore(db, { onJournaled: storage.notifyJournaled });
+  const captures = new IndexedDbCaptureStore(db, { onJournaled: storage.notifyJournaled });
+  const queue = new IndexedDbCaptureQueueStore(db, captures);
   await before?.({ overviews, settings, transcripts });
   const engine = new SyncEngine({
     api: createFetchSyncApi({ baseUrl: "http://api.test", token, clientVersion, fetch: injectingFetch(testApp.app) }),
@@ -91,5 +97,5 @@ export const makeDevice = async (
     now: () => testApp.clock.now,
     onFolded,
   });
-  return { overviews, settings, transcripts, projects, chats, questions, storage, engine, sync: () => engine.sync() };
+  return { overviews, settings, transcripts, projects, chats, questions, captures, queue, storage, engine, sync: () => engine.sync() };
 };

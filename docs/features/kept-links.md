@@ -22,11 +22,13 @@ source before its overview, under the id its overview will take. It has two stag
 
 | Stage | Holds | Waits for |
 |---|---|---|
-| `kept` | the pasted address, and the source if it was read | `waitingFor`: `server` (our server's daily cap or a slow-down), `extension` (only the extension can read it), or `reset` (it needs transcribing and no hours are left); `resumesAt` when that's known |
+| `kept` | the pasted address, and the source if it was read | `waitingFor`: `turn` (a playlist video waiting in the queue), `server` (our server's daily cap or a slow-down), `extension` (only the extension can read it), or `reset` (it needs transcribing and no hours are left); `resumesAt` when that's known |
 | `saved` | the source and, for anything but a page, its transcript | the reader choosing to make its overview |
 
-Both carry `sourceKey`, `keptAt`, `keptFrom` (`web`, `phone` or `panel`) and the reader's
-`captureReason`. A capture is never in a share, and goes with the account
+Both carry `sourceKey`, `keptAt`, `keptFrom` (`web`, `phone`, `panel` or `playlist`), the
+reader's `captureReason`, and the title and thumbnail when known. A playlist video also
+carries `fromPlaylist`, its place, when it was chosen to make now, and its queue status and
+problem (`capture-queue.md`). A capture is never in a share, and goes with the account
 (`account-deletion.md`: records and `capture_saves` cascade).
 
 **Why a kind of its own, and not an overview with its note left out.** Every reader of an
@@ -60,6 +62,15 @@ The overview is written under the capture's id, through the usual reservation
 other live capture of the same source (`tombstoneCapturesOf`). A device drops its local
 capture as it saves the overview, without journaling, and the tombstone confirms it.
 
+## Made once
+
+A capture waiting in the queue is made by one device at a time. The device claims its
+source first (`POST /api/capture-claims/:sourceKey` with a holder id per tab), and gets a
+10-minute lease; another device's claim answers `409 claimed_elsewhere` with when it runs
+out, and that device leaves the capture alone until then. The holder releases the claim
+when its run ends (`DELETE` with the same holder), and a tab that closes mid-run lets the
+lease run out (`capture_claims`, V0049). See `capture-queue.md`, "One queue on every device".
+
 ## Transcripts
 
 A saved capture holds its transcript the way an overview does
@@ -89,8 +100,6 @@ before. Transcribing a podcast or reel at the limit uses the reader's hours
 
 ## Not built yet
 
-- The synced queue: playlist captures as entries of this kind, a server claim so each is
-  made once, and pause and choices per account.
 - Create's "Just now" list, the soft wall's *Save it for now*, the item without an
   overview, *Show › No overview yet*, and Make all.
 - Kept links at the server cap, the queue's new home, and the extension's banner.

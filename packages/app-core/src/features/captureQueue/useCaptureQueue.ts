@@ -19,6 +19,7 @@ import { useNextQuota } from "../newOverview/useNextQuota.js";
 import type { LimitMessage } from "../newOverview/util/limitMessage.js";
 import { monthResetOf } from "../newOverview/util/monthReset.js";
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
+import { useUpdateSettingsMutation } from "../settings/mutations/useUpdateSettingsMutation.js";
 import { generationRunStatus } from "../newOverview/util/generationRunStatus.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
 import { useOverviewsWithStateQuery } from "../overviews/queries/overviewsWithStateQuery.js";
@@ -33,6 +34,8 @@ import { newPlaylistEntries } from "../playlists/util/newPlaylistEntries.js";
 import { captureQueueKeys } from "./captureQueueKeys.js";
 import { readCaptureQueuePreferences, writeCaptureQueuePreferences } from "./captureQueuePreferencesStorage.js";
 import { useCaptureQueueQuery } from "./queries/captureQueueQuery.js";
+import { useCaptureClaimApi } from "./useCaptureClaimApi.js";
+import { claimOrSkip } from "./util/claimOrSkip.js";
 import type { CaptureQueueStrip } from "./types/CaptureQueueStrip.js";
 import type { QueueHold } from "./types/QueueHold.js";
 import { captureQueueStrip, type QueueNotice } from "./util/captureQueueStrip.js";
@@ -47,6 +50,9 @@ const CHECKED_NOTICE_MS = 8_000;
 
 type ResumedVia = "reset" | "extension" | "key" | "plan";
 const DONE_NOTICE_MS = 10_000;
+
+const stillClaimed = (current: ReadonlyMap<VideoId, number>): ReadonlyMap<VideoId, number> =>
+  new Map([...current].filter(([, until]) => until > Date.now()));
 
 const unavailableFor = (code: string | null): PlaylistUnavailable | null => {
   if (code === "playlist_private") {
@@ -115,7 +121,13 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
   const nextQuota = useNextQuota();
   const limit = useLimitMessage();
   const plan = useOverviewUsageQuery().data?.plan ?? null;
-  const onlyMyKey = useSettingsQuery().data?.onlyMyKey ?? false;
+  const settings = useSettingsQuery().data;
+  const onlyMyKey = settings?.onlyMyKey ?? false;
+  const paused = settings?.queuePaused ?? false;
+  const updateSettings = useUpdateSettingsMutation();
+  const claimApi = useCaptureClaimApi();
+  const holder = useRef(globalThis.crypto.randomUUID()).current;
+  const [elsewhere, setElsewhere] = useState<ReadonlyMap<VideoId, number>>(new Map());
   const youTubeFetch = useYouTubeFetch();
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();
@@ -332,6 +344,11 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
         await queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
         return;
       }
+      const claim = await claimOrSkip(claimApi, capture.videoId, holder);
+      if (claim.made === "elsewhere") {
+        setElsewhere((current) => new Map(current).set(capture.videoId, claim.until));
+        return;
+      }
       cancelled.current = null;
       setAttentionDismissed(false);
       setBatch((current) => current ?? { done: 0 });
@@ -386,11 +403,12 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
           reporter.warn({ name: "queuedCaptureFailed", problem });
         }
       } finally {
+        void claimApi?.release(capture.videoId, holder).catch(() => undefined);
         await queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
         setMaking(null);
       }
     },
-    [overviewStore, captureQueueStore, generate, queryClient, refresh, reporter, savePreferences, accountId],
+    [overviewStore, captureQueueStore, generate, queryClient, refresh, reporter, savePreferences, accountId, claimApi, holder],
   );
 
   const resumedVia = useRef<ResumedVia>("reset");
@@ -474,11 +492,20 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     hadYouTubeFetch.current = has;
   }, [youTubeFetch, resume]);
 
-  const next = paced.ready[0] ?? null;
+  useEffect(() => {
+    if (elsewhere.size === 0) {
+      return;
+    }
+    const soonest = Math.min(...elsewhere.values());
+    const timer = setTimeout(() => setElsewhere(stillClaimed), Math.max(soonest - Date.now(), 0));
+    return () => clearTimeout(timer);
+  }, [elsewhere]);
+
+  const next = paced.ready.find((capture) => !elsewhere.has(capture.videoId)) ?? null;
   // Why nothing is made before the counts: docs/features/capture-queue.md, "At the month's limit".
   const countsKnown = nextQuota?.kind !== "checking";
   const canMake =
-    !preferences.paused &&
+    !paused &&
     !needsKey &&
     !accountNeeded &&
     !readerRunActive &&
@@ -504,13 +531,13 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
   }, [finished, attention.length, batch]);
 
   const setPaused = useCallback(
-    (paused: boolean) => {
-      if (paused && making !== null) {
+    (pause: boolean) => {
+      if (pause && making !== null) {
         cancelled.current = making.capture.videoId;
       }
-      savePreferences({ paused });
+      updateSettings.mutate({ queuePaused: pause });
     },
-    [making, savePreferences],
+    [making, updateSettings],
   );
 
   const remove = useCallback(
@@ -595,7 +622,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
         },
         failed,
         skipped: attention.length - failed,
-        paused: preferences.paused,
+        paused,
         needsKey,
         hold,
         limit,
@@ -618,7 +645,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
       attention,
       making,
       strip,
-      paused: preferences.paused,
+      paused,
       folded: preferences.folded,
       needsKey,
       hold,

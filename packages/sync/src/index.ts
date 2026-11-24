@@ -29,6 +29,8 @@ export * from "./TranscriptSearchApi.js";
 export * from "./fetchTranscriptSearchApi.js";
 export * from "./PlaylistApi.js";
 export * from "./fetchPlaylistApi.js";
+export * from "./CaptureClaimApi.js";
+export * from "./fetchCaptureClaimApi.js";
 export * from "./ConnectionsApi.js";
 export * from "./fetchConnectionsApi.js";
 export * from "./EventsApi.js";

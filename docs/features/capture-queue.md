@@ -1,7 +1,7 @@
 # The capture queue
 
 Design: "OV-27 2 Queue" (27i–27o); "OV-95 3 Waiting on a Pace", "OV-95 4 Make Now"
-(95aa–95aj). Cards: OV-27, OV-95. What fills it is `playlists.md`.
+(95aa–95aj). Cards: OV-27, OV-95, OV-358. What fills it is `playlists.md`.
 
 Generation is the reader's own key, on the reader's own device, so nothing makes an
 overview while the app is closed (`docs/architecture/v1-architecture-decisions.md`,
@@ -9,16 +9,36 @@ overview while the app is closed (`docs/architecture/v1-architecture-decisions.m
 open: it makes them one at a time, each playlist in the order the reader chose for it, while
 it is.
 
-## On this device, for now
+## One queue on every device
 
-The queue is the device's own until OV-11 syncs it (`CaptureQueueStore`, not journaled).
-Its copy says where it runs: *on this computer*, *on this phone*, *while this panel or the
-extension is open*. Followed playlists do sync, so another signed-in device checks the
-same playlists and fills its own queue (`playlists.md`, "New entries").
+Since OV-358 (24 Nov 2026) the queue syncs. Each waiting video is a `capture` record
+(`kept-links.md`) with `fromPlaylist`, `waitingFor: "turn"`, and its status, problem,
+chosen time and playlist place; `IndexedDbCaptureQueueStore` keeps the `CaptureQueueStore`
+interface the queue was built on, over `IndexedDbCaptureStore`, so the queue, its paces and
+its pages read the same as before. Before, the queue was each device's own, and two
+devices showed different queues, paused separately, and could both make the same video.
 
-Paused, folded into the strip, waiting at a limit, and which videos the reader chose to make
-today are this device's too, kept per account in `localStorage`
-(`captureQueuePreferencesStorage`).
+- **Filling it.** Every signed-in device still checks the followed playlists for itself
+  (`playlists.md`, "New entries"). Two devices that queue the same video before syncing
+  fold into one: the server holds one live capture per source, and the second device's
+  copy is refused and forgotten (`kept-links.md`, "One live item per source").
+- **What a device queued before.** The first time a device opens its queue after the
+  change, what it held in the old device-only store joins the synced queue once, and the
+  old store empties. A refill alone wouldn't bring those back: a device's playlist check
+  only queues videos it hasn't seen.
+- **Made once.** Before making a video, a device claims it on the server
+  (`POST /api/capture-claims/:sourceKey`, a 10-minute lease held per tab). A video another
+  device has claimed is left to it until the claim runs out; the claim is released once
+  the run ends, made or not. Any other failure to claim, such as no server, makes it here,
+  as before (`claimOrSkip`).
+- **Paused is on the account** (`Settings.queuePaused`), so pausing on one device pauses
+  every one.
+- **The device's own:** folded into the strip, waiting at a limit, and which chosen videos
+  were made today, still kept per account in `localStorage`
+  (`captureQueuePreferencesStorage`).
+
+Its copy still says where it runs: *on this computer*, *on this phone*, *while this panel or
+the extension is open*, since the device that's open is the one making.
 
 ## One at a time, in the playlist's order
 

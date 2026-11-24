@@ -1,13 +1,16 @@
 import { z } from "zod";
 import { OverviewId, SourceKey } from "./Brands.js";
+import { PlaylistOrigin } from "./PlaylistOrigin.js";
+import { QueuedCaptureProblem, QueuedCaptureStatus } from "./QueuedCapture.js";
 import { Source } from "./Source.js";
 
 export const CAPTURES_PATH = "/captures";
+export const CAPTURE_CLAIMS_PATH = "/capture-claims";
 
-export const CaptureWait = z.enum(["server", "extension", "reset"]);
+export const CaptureWait = z.enum(["turn", "server", "extension", "reset"]);
 export type CaptureWait = z.infer<typeof CaptureWait>;
 
-export const CaptureSurface = z.enum(["web", "phone", "panel"]);
+export const CaptureSurface = z.enum(["web", "phone", "panel", "playlist"]);
 export type CaptureSurface = z.infer<typeof CaptureSurface>;
 
 const CaptureBase = z.object({
@@ -17,6 +20,13 @@ const CaptureBase = z.object({
   keptAt: z.iso.datetime(),
   keptFrom: CaptureSurface,
   captureReason: z.string().nullable(),
+  title: z.string().nullable().catch(null),
+  thumbnailUrl: z.url().nullable().catch(null),
+  // Playlist videos only: docs/features/capture-queue.md, "One at a time, in the playlist's order".
+  fromPlaylist: PlaylistOrigin.nullable().catch(null),
+  addedAt: z.iso.datetime().nullable().catch(null),
+  playlistIndex: z.number().int().nonnegative().nullable().catch(null),
+  chosenAt: z.iso.datetime().nullable().catch(null),
 });
 
 export const KeptCapture = CaptureBase.extend({
@@ -24,6 +34,8 @@ export const KeptCapture = CaptureBase.extend({
   source: Source.nullable(),
   waitingFor: CaptureWait,
   resumesAt: z.iso.datetime().nullable(),
+  queueStatus: QueuedCaptureStatus.catch("waiting"),
+  problem: QueuedCaptureProblem.nullable().catch(null),
 });
 export type KeptCapture = z.infer<typeof KeptCapture>;
 

@@ -94,6 +94,7 @@ import { ServiceTranscripts } from "./transcripts/ServiceTranscripts.js";
 import { ServiceUsageRepository } from "./transcripts/ServiceUsageRepository.js";
 import { OverviewReservationsRepository } from "./usage/OverviewReservationsRepository.js";
 import { OverviewUsageRepository } from "./usage/OverviewUsageRepository.js";
+import { CaptureClaimsRepository } from "./usage/CaptureClaimsRepository.js";
 import { CaptureSavesRepository } from "./usage/CaptureSavesRepository.js";
 import { TrialsRepository } from "./usage/TrialsRepository.js";
 import { OurKeyGenerator } from "./generation/OurKeyGenerator.js";
@@ -326,6 +327,7 @@ export const buildApp = async ({
       const transcripts = new TranscriptsRepository(sql, clock);
       const overviewUsage = new OverviewUsageRepository(sql);
       const captureSaves = new CaptureSavesRepository(sql);
+      const captureClaims = new CaptureClaimsRepository(sql);
       const reservations = new OverviewReservationsRepository(sql, overviewUsage);
       const trials = new TrialsRepository(sql);
       overviewRoutes(api, records, transcripts, reservations);
@@ -335,7 +337,7 @@ export const buildApp = async ({
       followedPlaylistRoutes(api, records);
       projectRoutes(api, records);
       suggestedQuestionRoutes(api, records, questionRefresher);
-      captureRoutes(api, { records, transcripts, saves: captureSaves, sql, clock });
+      captureRoutes(api, { records, transcripts, saves: captureSaves, claims: captureClaims, sql, clock });
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);

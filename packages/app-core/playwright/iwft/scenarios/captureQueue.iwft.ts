@@ -303,6 +303,28 @@ test("pausing keeps the video unmade at the top of the queue until the reader re
   await strip.verifyReads("Queue done · 1 made");
 });
 
+test("pausing on one device pauses the account's queue, so every device holds it", async ({ launcher, backendSimulator }) => {
+  backendSimulator.simulateEndpointStalled(EndpointKey.SERVICE_TRANSCRIPT);
+  backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
+  await launcher.launch({ apiKeys: API_KEYS });
+
+  await launcher.appShell.queueStrip.pause();
+
+  await expect.poll(async () => (await backendSimulator.settingsStore.get()).queuePaused).toBe(true);
+});
+
+test("a video another device is already making is left to it, and nothing is made here", async ({ launcher, backendSimulator }) => {
+  backendSimulator.simulateEndpointError(EndpointKey.CAPTURE_CLAIM);
+  backendSimulator.transcripts.seedService(makeServiceTranscriptFixture(IWFT_VIDEO_ID, "The Simulated Video"));
+  backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));
+
+  await launcher.launch({ apiKeys: API_KEYS });
+
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.CAPTURE_CLAIM)).toBe(1);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
+  expect(await backendSimulator.overviewStore.listOverviews()).toEqual([]);
+});
+
 test("clearing the queue removes what waits and leaves the playlists followed", async ({ launcher, backendSimulator }) => {
   backendSimulator.playlists.seedFollowed(followed());
   backendSimulator.playlists.seedQueued(queued(IWFT_VIDEO_ID, "The Simulated Video"));

@@ -14,6 +14,7 @@ import {
   youTubeSource,
 } from "@overview/domain";
 import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
+import { IndexedDbCaptureStore } from "./IndexedDbCaptureStore.js";
 import { IndexedDbFollowedPlaylistStore } from "./IndexedDbFollowedPlaylistStore.js";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { IndexedDbProjectStore } from "./IndexedDbProjectStore.js";
@@ -513,7 +514,7 @@ test("a pulled playlist is followed on this device too", async () => {
 test("another device unfollowing takes this device's check and waiting videos with it, and leaves what needs attention", async () => {
   const db = await openEnrolledDatabase();
   const followed = new IndexedDbFollowedPlaylistStore(db);
-  const queue = new IndexedDbCaptureQueueStore(db);
+  const queue = new IndexedDbCaptureQueueStore(db, new IndexedDbCaptureStore(db));
   const playlist = makeFollowedPlaylist();
   await followed.saveCheck({ playlistId: playlist.id, seenVideoIds: [], checkedAt: playlist.followedAt });
   await queue.enqueue([
