@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { TopicId } from "@overview/domain";
+import { DEFAULT_OVERVIEW_STATE, SourceKey, TopicId } from "@overview/domain";
+import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { makeOverviewWithState, makeUnreadableEntry } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { matchesLibraryFilters } from "./matchesLibraryFilters.js";
@@ -103,5 +104,54 @@ describe("matchesLibraryFilters", () => {
     expect(matchesLibraryFilters(tagged, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(true);
     expect(matchesLibraryFilters(userTagged, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(true);
     expect(matchesLibraryFilters(other, { ...NO_LIBRARY_FILTERS, tag: "saas" })).toBe(false);
+  });
+});
+
+describe("matchesLibraryFilters with a source saved without its overview", () => {
+  const saved = (): LibraryEntry => {
+    const { overview } = makeOverviewWithState();
+    return {
+      kind: "capture",
+      capture: {
+        id: overview.id,
+        sourceKey: SourceKey.parse("savedVideo1"),
+        url: "https://www.youtube.com/watch?v=savedVideo1",
+        keptAt: overview.savedAt,
+        keptFrom: "phone",
+        captureReason: null,
+        title: overview.source.title,
+        thumbnailUrl: null,
+        fromPlaylist: null,
+        addedAt: null,
+        playlistIndex: null,
+        chosenAt: null,
+        stage: "saved",
+        source: overview.source,
+        savedAt: overview.savedAt,
+      },
+      state: { ...DEFAULT_OVERVIEW_STATE, overviewId: overview.id },
+    };
+  };
+
+  it("shows under the default view and Unread only, found by its title", () => {
+    const entry = saved();
+    const title = entry.kind === "capture" ? entry.capture.source.title : "";
+    expect(matchesLibraryFilters(entry, NO_LIBRARY_FILTERS)).toBe(true);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, status: "unread" })).toBe(true);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, query: title.slice(0, 6) })).toBe(true);
+  });
+
+  it("is never under a topic, a verdict, a tag, Read or a favourite, since its overview decides those", () => {
+    const entry = saved();
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, novelty: "original" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, tag: "pricing" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, status: "read" })).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, favourite: true })).toBe(false);
+  });
+
+  it("is all that Show › No overview yet shows", () => {
+    expect(matchesLibraryFilters(saved(), { ...NO_LIBRARY_FILTERS, withoutOverview: true })).toBe(true);
+    expect(matchesLibraryFilters(makeOverviewWithState(), { ...NO_LIBRARY_FILTERS, withoutOverview: true })).toBe(false);
   });
 });

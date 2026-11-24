@@ -2,7 +2,7 @@ import { Routes } from "../../../app/Routes.js";
 import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const TERMS_UPDATED_ON = "2026-11-23";
+export const TERMS_UPDATED_ON = "2026-11-24";
 
 const { service, operator, country, contactEmail, governingLaw, minimumAge } = legalIdentity;
 
@@ -93,7 +93,9 @@ const sections: readonly LegalSection[] = [
           Every account can make a number of overviews each month on our own key, and a larger number on a key of its own. The numbers, and
           the daily caps that keep the service safe, are shown in the app with the date they reset. They are allowances, not entitlements:
           we may change them, and we may pause overviews on our key when a day's shared budget is spent. Transcribing a podcast episode that
-          has no transcript of its own has an allowance of its own, in hours of audio a month, on the same terms.
+          has no transcript of its own has an allowance of its own, in hours of audio a month, on the same terms. Once the month's overviews
+          are made, a link can be saved with its transcript and its overview made later, up to a number of saves a month shown in the app,
+          on the same terms too.
         </p>
         <p>
           <strong>Asking about an overview.</strong> With an account you can ask questions about a video, podcast episode, article or recipe

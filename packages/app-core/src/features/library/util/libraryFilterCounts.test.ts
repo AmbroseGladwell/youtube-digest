@@ -41,6 +41,7 @@ describe("libraryFilterCounts", () => {
       favourite: 1,
       dubious: 1,
       unreadable: 0,
+      withoutOverview: 0,
       byTopic: { [FITNESS]: 2, [FINANCE]: 1 },
       byNovelty: { original: 1, common_knowledge: 1 },
       byTag: [
@@ -74,6 +75,7 @@ describe("libraryFilterCounts", () => {
       favourite: 0,
       dubious: 0,
       unreadable: 0,
+      withoutOverview: 0,
       byTopic: {},
       byNovelty: {},
       byTag: [],

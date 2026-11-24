@@ -9,6 +9,7 @@ export interface LibraryFilterCounts {
   favourite: number;
   dubious: number;
   unreadable: number;
+  withoutOverview: number;
   byTopic: Record<string, number>;
   byNovelty: Record<string, number>;
   byTag: TagCount[];
@@ -24,10 +25,15 @@ export const libraryFilterCounts = (entries: LibraryEntry[]): LibraryFilterCount
   let favourite = 0;
   let dubious = 0;
   let unreadable = 0;
+  let withoutOverview = 0;
 
   for (const entry of entries) {
     if (!entry.state.read) {
       unread += 1;
+    }
+    if (entry.kind === "capture") {
+      withoutOverview += 1;
+      continue;
     }
     if (entry.state.favourite) {
       favourite += 1;
@@ -51,7 +57,18 @@ export const libraryFilterCounts = (entries: LibraryEntry[]): LibraryFilterCount
     }
   }
 
-  const byTag = tagUsage(entries.map((entry) => [...(entry.kind === "unreadable" ? [] : entry.overview.tags), ...entry.state.userTags]));
+  const byTag = tagUsage(entries.map((entry) => [...(entry.kind === "overview" ? entry.overview.tags : []), ...entry.state.userTags]));
 
-  return { total: entries.length, unread, favourite, dubious, unreadable, byTopic, byNovelty, byTag, bySource };
+  return {
+    total: entries.length - withoutOverview,
+    unread,
+    favourite,
+    dubious,
+    unreadable,
+    withoutOverview,
+    byTopic,
+    byNovelty,
+    byTag,
+    bySource,
+  };
 };

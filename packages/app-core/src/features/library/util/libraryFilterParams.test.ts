@@ -28,6 +28,7 @@ describe("parseLibraryFilters", () => {
       novelty: "original",
       status: "read",
       favourite: false,
+      withoutOverview: false,
       dubious: false,
       tag: null,
       query: "botox",

@@ -1,3 +1,8 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { useSurface } from "../../app/SurfaceContext.js";
+import { captureKeys } from "../captures/captureKeys.js";
+import { captureSurfaceOf } from "../captures/util/captureSurfaceOf.js";
+import { SavedWithoutOverview } from "./api/SavedWithoutOverview.js";
 import { useCallback, useRef, useState } from "react";
 import {
   heldOverviewOf,
@@ -36,6 +41,8 @@ export interface StartOverviewRunOptions {
   from: CaptureEntry;
   overviewId?: OverviewId | undefined;
   captureReason?: string | null | undefined;
+  // The soft wall's Save it for now: docs/features/kept-links.md, "Saving at the limit".
+  saveInstead?: boolean | undefined;
 }
 
 export interface ArticleRunRequest extends StartOverviewRunOptions {
@@ -91,6 +98,8 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   const { mutate: mutateCaptureReason } = useSetOverviewCaptureReasonMutation();
   const analytics = useAnalytics();
   const reporter = useErrorReporter();
+  const surface = useSurface();
+  const queryClient = useQueryClient();
   const [run, setRun] = useState<NewOverviewRun | null>(null);
   const [held, setHeld] = useState<AlreadyHeld | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -252,6 +261,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
           ...what,
           from,
           overviewId: options.overviewId,
+          saveInstead: options.saveInstead ? captureSurfaceOf(surface) : undefined,
           captureReason: () => draftRef.current,
           onProgress: (progress) => {
             transcriptSource = progress.transcriptSource;
@@ -364,6 +374,13 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
             }
           },
           onError: (error) => {
+            if (error instanceof SavedWithoutOverview) {
+              void queryClient.invalidateQueries({ queryKey: captureKeys.all });
+              if (isCurrent()) {
+                setRun((current) => (current === null ? null : { ...current, saved: error.capture, finishedAt: Date.now() }));
+              }
+              return;
+            }
             if (isCurrent() && error instanceof ArticleAlreadyHeldError) {
               const overviewId = OverviewId.parse(error.held.id);
               analytics.capture.newOverview.alreadyHeld({ from, overviewId });
@@ -404,7 +421,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         },
       );
     },
-    [mutate, commitDraftOnto, analytics, reporter],
+    [mutate, commitDraftOnto, analytics, reporter, surface, queryClient],
   );
 
   const start = useCallback(

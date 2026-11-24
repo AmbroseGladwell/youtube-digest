@@ -16,6 +16,8 @@ export interface LibraryFilters {
   novelty: Novelty | "all";
   status: "all" | "read" | "unread";
   favourite: boolean;
+  // Show › No overview yet: docs/features/kept-links.md, "In the library".
+  withoutOverview: boolean;
   dubious: boolean;
   tag: string | null;
   query: string;
@@ -27,6 +29,7 @@ export const NO_LIBRARY_FILTERS: LibraryFilters = {
   novelty: "all",
   status: "all",
   favourite: false,
+  withoutOverview: false,
   dubious: false,
   tag: null,
   query: "",

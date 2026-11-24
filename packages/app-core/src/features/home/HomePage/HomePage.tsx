@@ -13,6 +13,7 @@ import { createLabelOf } from "../../podcasts/util/episodeActionOf.js";
 import { PastedLinkStatus } from "../../newOverview/components/PastedLinkStatus/PastedLinkStatus.js";
 import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
+import { savedCaptureEntries, useSavedCapturesQuery } from "../../captures/queries/savedCapturesQuery.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
 import { WHOLE_LIBRARY, type LibraryPlace } from "../../library/types/LibraryPlace.js";
@@ -91,6 +92,7 @@ const LibraryHome = ({ accountNeeded, place }: LibraryHomeProps) => {
 
 const SignedInHome = ({ place }: { place: LibraryPlace }) => {
   const overviewsQuery = useOverviewsWithStateQuery();
+  const savedCaptures = useSavedCapturesQuery().data ?? [];
   const sync = useSync();
 
   if (sync.opening) {
@@ -127,7 +129,9 @@ const SignedInHome = ({ place }: { place: LibraryPlace }) => {
     );
   }
 
-  if (overviewsQuery.data.length === 0 && place.kind === "library") {
+  const entries =
+    savedCaptures.length === 0 ? overviewsQuery.data : [...overviewsQuery.data, ...savedCaptureEntries(savedCaptures, overviewsQuery.data)];
+  if (entries.length === 0 && place.kind === "library") {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
         <LibraryQueueGroup />
@@ -138,7 +142,7 @@ const SignedInHome = ({ place }: { place: LibraryPlace }) => {
 
   return (
     <div className={styles.wide} data-testid={homePageTestIds.root}>
-      <LibraryPage entries={overviewsQuery.data} place={place} />
+      <LibraryPage entries={entries} place={place} />
     </div>
   );
 };

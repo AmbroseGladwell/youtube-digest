@@ -15,10 +15,22 @@ export interface SoftWallProps {
   offerKey: boolean;
   onSeePlans: () => void;
   onFollowed: () => void;
+  // Absent once the month's saves are made: docs/features/kept-links.md, "The save limit".
+  save?: SaveForNow | undefined;
 }
 
+export interface SaveForNow {
+  overviewsBack: string;
+  savesLeft: number;
+  savesLimit: number;
+  saving: boolean;
+  onSave: () => void;
+}
+
+const SAVES_SHOWN_FROM = 10;
+
 // Soft: everything they've saved keeps working, and the link stays where it was.
-export const SoftWall = ({ link, resetsOn, offerKey, onSeePlans, onFollowed }: SoftWallProps) => {
+export const SoftWall = ({ link, resetsOn, offerKey, onSeePlans, onFollowed, save }: SoftWallProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
   useEffect(() => heading.current?.focus(), []);
   return (
@@ -48,6 +60,35 @@ export const SoftWall = ({ link, resetsOn, offerKey, onSeePlans, onFollowed }: S
           Get Plus
         </button>
       </div>
+
+      {save !== undefined && (
+        <div className={styles.way} data-testid={softWallTestIds.wait}>
+          <div>
+            <span className={styles.wayName}>Wait for {resetsOn}</span>
+            <p className={styles.wayBody}>
+              Save it now with its transcript, and make its overview when your {save.overviewsBack} are back.
+              {save.savesLeft <= SAVES_SHOWN_FROM && (
+                <>
+                  {" "}
+                  <strong data-testid={softWallTestIds.savesLeft}>
+                    {save.savesLeft} of {save.savesLimit} saves left this month.
+                  </strong>
+                </>
+              )}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={styles.secondary}
+            onClick={save.onSave}
+            disabled={save.saving}
+            aria-busy={save.saving}
+            data-testid={softWallTestIds.saveForNow}
+          >
+            {save.saving ? "Saving…" : "Save it for now"}
+          </button>
+        </div>
+      )}
 
       <p className={styles.foot}>
         <button type="button" className={styles.link} onClick={onSeePlans} data-testid={softWallTestIds.seePlans}>

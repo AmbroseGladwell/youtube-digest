@@ -83,6 +83,26 @@
   @include controls.pill-lg;
 }
 
+.secondary {
+  @include controls.surface-pill;
+  @include controls.pill-lg;
+}
+
+.chip {
+  @include controls.chip;
+  align-self: flex-start;
+  margin-top: 0.625rem;
+  color: var(--muted);
+}
+
+.savedActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
+}
+
 .foot {
   margin: 0;
   font-size: 0.8125rem;

@@ -244,3 +244,50 @@ test("on the panel, Plus with no key and our key spent is offered a key", async 
     actions: ["Add your own key"],
   });
 });
+
+test("at the wall, Save it for now keeps the link with its transcript, makes nothing, and it opens with only its transcript", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 5 });
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+  await launcher.softWall.verifyOffersSaving(true);
+  await launcher.softWall.verifySavesLeftReads(null);
+
+  await launcher.softWall.saveForNow();
+
+  await launcher.softWall.verifySaved("The Simulated Video");
+  expect(backendSimulator.ourKey.generations()).toEqual([]);
+  const [capture] = await backendSimulator.captureStore.list();
+  expect(capture).toMatchObject({ stage: "saved", sourceKey: IWFT_VIDEO_ID });
+  await launcher.softWall.savedDone();
+  await launcher.savedItem.verifyLibraryRow("The Simulated Video");
+  await launcher.savedItem.showOnlyWithoutOverview();
+  await launcher.savedItem.openFromLibrary("The Simulated Video");
+  await launcher.savedItem.verifyIsShown("The Simulated Video");
+});
+
+test("near the month's saves the wall counts what's left, and with none left it offers no save", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 5 });
+  backendSimulator.ourKey.monthHasSaved(44);
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+
+  await launcher.softWall.verifySavesLeftReads("6 of 50 saves left this month.");
+});
+
+test("with the month's saves made, the wall offers only Plus and a key", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 5 });
+  backendSimulator.ourKey.monthHasSaved(50);
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+
+  await launcher.softWall.verifyOffersSaving(false);
+});

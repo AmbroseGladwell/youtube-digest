@@ -88,6 +88,8 @@ import {
 import type {} from "./iwftWindow.testHelper.js";
 
 // Mirrors apps/api/src/usage/overviewQuotas.ts.
+const SIMULATED_SAVES: Record<Plan, number> = { free: 50, "byo-plus": 150, plus: 300 };
+
 const SIMULATED_QUOTAS: Record<Plan, { ours: number; own: number }> = {
   free: { ours: 5, own: 10 },
   "byo-plus": { ours: 10, own: 200 },
@@ -311,6 +313,7 @@ export class BackendSimulator {
   #ourKeyAvailable = false;
   #ourKeyRefusal: { status: number; code: string; details: Record<string, unknown> } | null = null;
   #ownMonthSpent = false;
+  #savesUsed = 0;
   #madeEarlierThisMonth = { ours: 0, own: 0 };
   #anthropicOutOfCredit = false;
   #anthropicRefusesModel = false;
@@ -1094,6 +1097,7 @@ export class BackendSimulator {
         resetsOn: "2026-11-01",
         ours: { used: this.#madeEarlierThisMonth.ours + this.#ourKeyRequests.length, limit: limits.ours },
         own: { used: this.#ownMonthSpent ? limits.own : ownUsed, limit: limits.own },
+        saves: { used: this.#savesUsed, limit: SIMULATED_SAVES[this.#accountPlan] },
         ...(this.#transcriptionUsage === undefined ? {} : { transcription: this.#transcriptionUsage }),
       };
     };
@@ -1964,6 +1968,9 @@ export class BackendSimulator {
     ownMonthIsSpent: (): void => {
       this.#ownMonthSpent = true;
     },
+    monthHasSaved: (saves: number): void => {
+      this.#savesUsed = saves;
+    },
     monthHasMade: (made: { ours?: number; own?: number }): void => {
       this.#madeEarlierThisMonth = { ours: made.ours ?? 0, own: made.own ?? 0 };
     },
@@ -2149,6 +2156,10 @@ export class BackendSimulator {
 
   transcriptStore = {
     getTranscript: (videoId: VideoId) => this.#page.evaluate((id) => window.__iwftStores__.transcriptStore.getTranscript(id), videoId),
+  };
+
+  captureStore = {
+    list: () => this.#page.evaluate(() => window.__iwftStores__.captureStore.listCaptures()),
   };
 
   settingsStore = {

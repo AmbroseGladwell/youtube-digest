@@ -23,13 +23,16 @@ import { GenerationSteps } from "../GenerationSteps/GenerationSteps.js";
 import styles from "./NewOverviewDialog.module.scss";
 import { newOverviewDialogTestIds } from "./NewOverviewDialogTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useOverviewUsageQuery } from "../../queries/overviewUsageQuery.js";
+import { resetDate } from "../../util/usageLine.js";
+import { SavedForNow } from "../SoftWall/SavedForNow.js";
 
 export interface NewOverviewDialogProps {
   open: boolean;
   prefill: string | null;
   run: NewOverviewRun | null;
   held: AlreadyHeld | null;
-  onSubmit: (url: string) => void;
+  onSubmit: (url: string, options?: { saveInstead: boolean }) => void;
   onOpenHeld: (overviewId: Overview["id"]) => void;
   onClose: () => void;
   onDismiss: () => void;
@@ -118,12 +121,28 @@ export const NewOverviewDialog = ({
     onDismiss();
   };
 
-  const handleSubmit = (submittedUrl: string) => {
+  const handleSubmit = (submittedUrl: string, options?: { saveInstead: boolean }) => {
     setUrl(submittedUrl);
-    onSubmit(submittedUrl);
+    onSubmit(submittedUrl, options);
   };
 
+  const usage = useOverviewUsageQuery().data;
+
   const dialogBody = (): ReactNode => {
+    if (run?.saved != null) {
+      const saved = run.saved;
+      return (
+        <SavedForNow
+          title={saved.title ?? saved.url}
+          kicker={null}
+          resetsOn={usage === undefined ? "" : resetDate(usage.resetsOn)}
+          overviewsBack={String(usage?.ours.limit ?? "")}
+          hasTranscript={saved.source.kind !== "web"}
+          onDone={onDismiss}
+          onReadTranscript={() => onOpenHeld(saved.id)}
+        />
+      );
+    }
     if (playlist !== null && run === null) {
       return (
         <>

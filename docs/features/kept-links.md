@@ -98,9 +98,51 @@ link can still be saved with its transcript (logged as
 before. Transcribing a podcast or reel at the limit uses the reader's hours
 (`speech-to-text.md`), which this doesn't change.
 
+## Saving at the limit
+
+Design 358f. When the month's overviews are made, the soft wall (OV-327) has a second way on
+beside Plus: **Wait for {reset}** · "Save it now with its transcript, and make its overview
+when your 5 are back." · **Save it for now**. It shows only while saves are left, and adds
+"6 of 50 saves left this month." once 10 or fewer are (`overview-usage`'s `saves`).
+
+Save it for now starts the ordinary run with `saveInstead` set (the surface it came from).
+The run reads the link and keeps its transcript as usual (a podcast or reel is transcribed
+on the reader's hours, as ever); then, where it would write the overview, `writeOverview`
+writes a `saved` capture instead (`savedCaptureOf`) and ends with `SavedWithoutOverview`.
+That ending is not a failure: the run controller records it on the run (`run.saved`), and
+the dialog shows **Saved, with its transcript.**, with the link under "In your library",
+**Done** and **Read the transcript** (design 358f-2).
+
+## In the library
+
+Design 358h-5. A saved capture is an ordinary row (`LibraryCaptureCard`): thumbnail,
+source, title and "No overview yet · Transcript ready". It counts as unread, so it shows
+under Unread only, and is never under a topic, a verdict, a tag, Read or Only favourites,
+which its overview decides. **Show › No overview yet** shows only these, and appears in the
+Show group while there are any. Keyword search finds one by its title. A capture whose
+source already has an overview (made on another device, say) is left out until its
+tombstone comes down.
+
+## Opening one
+
+Design 358l. `/overviews/:id` with no overview but a saved capture opens `SavedItemPage`:
+the thumbnail, source and length, the title, "Saved 23 Nov · no overview yet", the way to
+the source (Watch on YouTube, Open the article, Play the episode), Remove, and the
+**Transcript**. Topics, verdict, read and listen times, Listen, Share, Ask, Chapters and
+Questions are left out, not greyed out. In the overview's place, one card:
+
+- with the month spent, **No overview yet.**, saying when the overviews are back, and
+  **Get Plus**;
+- with overviews left, **Make its overview now.** with **Make overview**. A YouTube video
+  is made at once under the capture's id, reading the transcript it already has; another
+  kind opens Create with its link, and the capture goes when its overview is written
+  (`tombstoneCapturesOf`).
+
+Nothing is made on its own when the month resets.
+
 ## Not built yet
 
-- Create's "Just now" list, the soft wall's *Save it for now*, the item without an
-  overview, *Show › No overview yet*, and Make all.
+- Create's "Just now" list, and falling back to a save when the month runs out mid-run.
+- Make all, which needs saved items in the queue (slice 4).
 - Kept links at the server cap, the queue's new home, and the extension's banner.
 - The @ picker's muted row, the events and the "Kept links" dashboard.

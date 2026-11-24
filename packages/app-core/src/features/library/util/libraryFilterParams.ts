@@ -4,7 +4,7 @@ import { DEFAULT_LIBRARY_SORT, LIBRARY_SORTS, type LibrarySort } from "../types/
 import type { LibraryView } from "../types/LibraryView.js";
 
 const STATUS_VALUES = new Set(["all", "read", "unread"]);
-const LIBRARY_VIEW_PARAMS = ["source", "topic", "verdict", "status", "fav", "dubious", "tag", "q", "sort"];
+const LIBRARY_VIEW_PARAMS = ["source", "topic", "verdict", "status", "fav", "pending", "dubious", "tag", "q", "sort"];
 
 export const parseLibraryFilters = (searchParams: URLSearchParams): LibraryFilters => {
   const topicParam = searchParams.get("topic");
@@ -22,6 +22,7 @@ export const parseLibraryFilters = (searchParams: URLSearchParams): LibraryFilte
     novelty,
     status,
     favourite: searchParams.get("fav") === "1",
+    withoutOverview: searchParams.get("pending") === "1",
     dubious: searchParams.get("dubious") === "1",
     tag: tagParam !== null && Tag.safeParse(tagParam).success ? tagParam : NO_LIBRARY_FILTERS.tag,
     query: searchParams.get("q") ?? NO_LIBRARY_FILTERS.query,
@@ -45,6 +46,9 @@ export const applyLibraryFilterPatch = (current: URLSearchParams, patch: Partial
   }
   if ("favourite" in patch) {
     setOrDelete(next, "fav", patch.favourite ? "1" : undefined);
+  }
+  if ("withoutOverview" in patch) {
+    setOrDelete(next, "pending", patch.withoutOverview ? "1" : undefined);
   }
   if ("dubious" in patch) {
     setOrDelete(next, "dubious", patch.dubious ? "1" : undefined);

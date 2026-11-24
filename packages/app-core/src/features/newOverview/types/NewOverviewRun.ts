@@ -1,4 +1,4 @@
-import type { Overview, PodcastPlatform, SocialPost, VideoSource } from "@overview/domain";
+import type { Overview, PodcastPlatform, SocialPost, VideoSource, SavedCapture } from "@overview/domain";
 import type { EpisodeTranscription } from "../../podcasts/types/EpisodeTranscription.js";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
 import type { RunError } from "./RunError.js";
@@ -55,6 +55,8 @@ export interface NewOverviewRun {
   social: SocialRun | null;
   transcriptWords: number | null;
   overview: Overview | null;
+  // Saved with its words and no overview, at the month's limit (docs/features/kept-links.md).
+  saved?: SavedCapture | null;
   error: RunError | null;
   // Kept on the run, not the form: docs/features/capture-reason.md, "Where it is written".
   captureReason: string;

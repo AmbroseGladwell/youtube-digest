@@ -30,6 +30,7 @@ import { InMemoryCaptureQueueStore } from "../src/features/captureQueue/types/In
 import { InMemoryProjectStore } from "../src/features/projects/types/InMemoryProjectStore.testHelper.js";
 import { InMemoryChatStore } from "../src/features/chats/types/InMemoryChatStore.testHelper.js";
 import { InMemorySuggestedQuestionStore } from "../src/features/chats/types/InMemorySuggestedQuestionStore.testHelper.js";
+import { InMemoryCaptureStore } from "../src/features/captures/types/InMemoryCaptureStore.testHelper.js";
 import { deleteLocalLibrary, openLocalLibrary } from "@overview/store-local";
 import type {} from "./network/iwftWindow.testHelper.js";
 
@@ -42,6 +43,8 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const projectStore = new InMemoryProjectStore();
   const chatStore = new InMemoryChatStore();
   const suggestedQuestionStore = new InMemorySuggestedQuestionStore();
+  const captureStore = new InMemoryCaptureStore();
+  overviewStore.onSaved = (overview) => captureStore.removeCapture(overview.id);
   const syncStorage = syncAvailable
     ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore, chatStore)
     : null;
@@ -51,6 +54,7 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
     transcriptStore,
     followedPlaylistStore,
     captureQueueStore,
+    captureStore,
     projectStore,
     chatStore,
     suggestedQuestionStore,

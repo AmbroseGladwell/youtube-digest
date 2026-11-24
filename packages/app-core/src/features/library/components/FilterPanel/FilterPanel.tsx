@@ -68,6 +68,16 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
         >
           Only favourites
         </Toggle>
+        {(counts.withoutOverview > 0 || filters.withoutOverview) && (
+          <Toggle
+            active={filters.withoutOverview}
+            count={counts.withoutOverview}
+            onClick={() => onChange({ withoutOverview: !filters.withoutOverview })}
+            testId={filterPanelTestIds.withoutOverviewChip}
+          >
+            No overview yet
+          </Toggle>
+        )}
       </div>
       {projects}
 

@@ -1,3 +1,4 @@
+import type { SavedCapture } from "@overview/domain";
 import { searchHaystackOf } from "./searchHaystackOf.js";
 import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { librarySourceOf } from "./librarySourceOf.js";
@@ -7,6 +8,9 @@ import type { LibraryFilters } from "../types/LibraryFilters.js";
 export const matchesLibraryFilters = (entry: LibraryEntry, filters: LibraryFilters): boolean => {
   const { state } = entry;
 
+  if (filters.withoutOverview && entry.kind !== "capture") {
+    return false;
+  }
   if (filters.status === "read" && !state.read) {
     return false;
   }
@@ -30,6 +34,10 @@ export const matchesLibraryFilters = (entry: LibraryEntry, filters: LibraryFilte
     );
   }
 
+  if (entry.kind === "capture") {
+    return matchesSavedCapture(entry.capture, filters, query);
+  }
+
   const { overview } = entry;
   if (filters.source !== "all" && librarySourceOf(overview) !== filters.source) {
     return false;
@@ -51,4 +59,16 @@ export const matchesLibraryFilters = (entry: LibraryEntry, filters: LibraryFilte
   }
 
   return true;
+};
+
+// No topic, verdict or tags until its overview: docs/features/kept-links.md, "In the library".
+const matchesSavedCapture = (capture: SavedCapture, filters: LibraryFilters, query: string): boolean => {
+  const overviewOnly = filters.status === "read" || filters.favourite || filters.dubious || filters.tag !== null;
+  if (overviewOnly || filters.topicId !== "all" || filters.novelty !== "all") {
+    return false;
+  }
+  if (filters.source !== "all" && librarySourceOf({ source: capture.source, recipe: null }) !== filters.source) {
+    return false;
+  }
+  return !query || capture.source.title.toLowerCase().includes(query);
 };
