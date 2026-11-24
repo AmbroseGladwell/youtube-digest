@@ -73,6 +73,7 @@ checking a day against a bill:
 | `plan_accounts` | plan | accounts on it now |
 | `cost_days` | day, area, detail | calls, quantity, dollars over every caller, signed out included; no account or plan |
 | `chat_months` | month, account that chatted | plan, questions, usage units, the library and project part of them, and `share` of the plan's allowance (OV-376; `tiers.md`, "Chat usage") |
+| `feedback_entries` | each feedback entry (OV-185) | day, plan, surface, kind, from an overview, triaged and the outcome; never the text or the overview (`feedback.md`) |
 
 - **An account appears only as `md5('cost-report:' || id)`.** It isn't the account id, and it
   isn't the distinct id analytics uses, so PostHog can't join cost to a person.
@@ -81,7 +82,7 @@ checking a day against a bill:
   holds its figures to `chatUsageAllowances`.
 - **A day carries no account and no plan.** It is only for reconciling a day with a bill
   (OV-260), and a day's line could otherwise be one reader's day.
-- **`cost_reader` can read those five views and nothing else.** The migration creates it
+- **`cost_reader` can read those six views and nothing else.** The migration creates it
   without a login and with no role memberships; the tests check both. Views run with their
   owner's rights, so the reader needs nothing on the tables behind them.
 - **Turning on the login is done by hand, once, on prod,** so no password is ever in the repo:

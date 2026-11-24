@@ -9,6 +9,7 @@ import { ErrorReportingRuntime } from "../features/errors/ErrorReportingRuntime.
 import { CookingTimersRuntime } from "../features/cookingTimers/CookingTimersRuntime.js";
 import { PlayerRuntime } from "../features/player/PlayerRuntime.js";
 import { ShareRuntime } from "../features/shares/ShareRuntime.js";
+import { FeedbackRuntime } from "../features/feedback/FeedbackRuntime.js";
 import { SyncRuntime } from "../features/sync/SyncRuntime.js";
 import type { DeleteLibrary, Library, OpenLibrary } from "../stores/Library.js";
 import { LibraryRuntime } from "../stores/LibraryRuntime.js";
@@ -103,7 +104,9 @@ export const App = ({
                                                   <PlayerRuntime>
                                                     <CookingTimersRuntime scope="reader">
                                                       <ShareRuntime>
-                                                        <RouterProvider router={router} />
+                                                        <FeedbackRuntime>
+                                                          <RouterProvider router={router} />
+                                                        </FeedbackRuntime>
                                                       </ShareRuntime>
                                                     </CookingTimersRuntime>
                                                   </PlayerRuntime>

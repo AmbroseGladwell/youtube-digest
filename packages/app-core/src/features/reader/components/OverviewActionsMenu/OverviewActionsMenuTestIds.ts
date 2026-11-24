@@ -17,5 +17,6 @@ export const overviewActionsMenuTestIds = {
   copyLinkItem: "OverviewActionsMenu.copyLinkItem",
   openInWebItem: "OverviewActionsMenu.openInWebItem",
   openInWebReason: "OverviewActionsMenu.openInWebReason",
+  feedbackItem: "OverviewActionsMenu.feedbackItem",
   deleteItem: "OverviewActionsMenu.deleteItem",
 };

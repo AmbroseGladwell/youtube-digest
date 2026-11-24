@@ -98,6 +98,10 @@ const seedEverything = async (testApp: TestApp, session: TestSession, email: str
   );
   await sql.query("insert into narration_render_usage (day, account_id, renders) values ('2026-11-05', $1, 1)", [accountId]);
   await sql.query("insert into chat_usage (day, account_id, messages) values ('2026-11-05', $1, 1)", [accountId]);
+  await sql.query(
+    "insert into feedback (account_id, created_at, surface, client_version, text) values ($1, $2::timestamptz, 'web', 1, 'An idea')",
+    [accountId, now],
+  );
   await sql.query("insert into question_refreshes (account_id, started_at, scopes) values ($1, $2::timestamptz, '{library}')", [
     accountId,
     now,

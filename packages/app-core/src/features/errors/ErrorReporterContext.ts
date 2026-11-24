@@ -1,5 +1,11 @@
 import { createContext, useContext } from "react";
-import type { AnalyticsEventName, ClientErrorSource, ClientTimingReport, ClientWarningReport } from "@overview/domain";
+import type {
+  AnalyticsEventName,
+  ClientErrorSource,
+  ClientErrorTrailEntry,
+  ClientTimingReport,
+  ClientWarningReport,
+} from "@overview/domain";
 import type { SendOptions } from "../analytics/AnalyticsQueue.js";
 
 export interface ErrorReporter {
@@ -9,6 +15,8 @@ export interface ErrorReporter {
   // Never an event: docs/architecture/errors-and-logs.md, "Client timings".
   time(timing: ClientTimingReport): void;
   recordAction(name: AnalyticsEventName): void;
+  // Sent with feedback only when the reader says something's wrong: docs/features/feedback.md.
+  trail(): ClientErrorTrailEntry[];
   flush(options?: SendOptions): Promise<void>;
 }
 
@@ -17,6 +25,7 @@ export const silentErrorReporter: ErrorReporter = {
   warn: () => undefined,
   time: () => undefined,
   recordAction: () => undefined,
+  trail: () => [],
   flush: async () => undefined,
 };
 

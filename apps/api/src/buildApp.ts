@@ -16,6 +16,7 @@ import { eventRoutes } from "./events/eventRoutes.js";
 import { sharedPageEventRoutes } from "./events/sharedPageEventRoutes.js";
 import type { EventSink } from "./events/EventSink.js";
 import { errorRoutes } from "./errors/errorRoutes.js";
+import { feedbackRoutes } from "./feedback/feedbackRoutes.js";
 import type { ErrorSink } from "./errors/ErrorSink.js";
 import { registerApiErrorHandler } from "./http/apiErrorHandler.js";
 import { requestIdFor } from "./http/requestIdFor.js";
@@ -439,6 +440,7 @@ export const buildApp = async ({
       eventRoutes(api, { sink: eventSink, records, clock });
       sharedPageEventRoutes(api, { shares, sink: eventSink, clock });
       errorRoutes(api, errorSink, clock);
+      feedbackRoutes(api, sql, clock);
       audioRoutes(
         api,
         audio === null || audioQueue === null

@@ -503,6 +503,13 @@ export const apiLogLines = coded("api", {
       "A started refresh threw after the Ask page had its answer; `reason` names the error class, with the pairs labelled before it. Nothing it had not written is kept.",
     ),
   },
+  feedback: {
+    received: line(
+      "info",
+      "feedback received",
+      "A reader sent feedback: the plan, `surface`, `kind` (`wrong`, `idea` or none), whether it came from an overview, and how many recent actions came with it. Never the text or the overview's id.",
+    ),
+  },
   seed: {
     narrationUnavailable: line("info", "no voice samples to seed", "The release command found no TTS service, so it rendered no samples."),
     voiceSamplesSeeded: line("info", "voice samples seeded", "The release command queued a sample render for each voice that lacked one."),

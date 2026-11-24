@@ -25,6 +25,7 @@ import styles from "./ReaderMasthead.module.scss";
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { readerMastheadTestIds } from "./ReaderMastheadTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
+import { useFeedbackBox } from "../../../feedback/FeedbackContext.js";
 
 export interface ReaderMastheadProps {
   overview: Overview;
@@ -99,6 +100,7 @@ export const ReaderMasthead = ({
   ref,
 }: ReaderMastheadProps) => {
   const analytics = useReaderAnalytics();
+  const feedback = useFeedbackBox();
   const backToLibrary = useBackTo(Routes.home());
   const homeName = useHomeName();
   const backLabel = compact ? homeName : "All overviews";
@@ -206,6 +208,16 @@ export const ReaderMasthead = ({
           projects={projects === null ? null : { count: projects.count, onAdd: () => projects.openPicker("menu") }}
           onDelete={onDelete}
           onChat={onChat}
+          onFeedback={
+            feedback === null
+              ? null
+              : (returnFocusTo) =>
+                  feedback.open({
+                    about: { overviewId: overview.id, title: overview.source.title, source: overview.source },
+                    from: "overviewMenu",
+                    returnFocusTo,
+                  })
+          }
         />
       </div>
 

@@ -3,6 +3,7 @@ import type { Page, Route } from "@playwright/test";
 import {
   CLIENT_VERSION,
   CURRENT_SCHEMA_VERSIONS,
+  type FeedbackRequest,
   chatRecordId,
   type Chat,
   type ChatCitation,
@@ -189,6 +190,8 @@ const silentWav = (seconds: number): Buffer => {
   return wav;
 };
 
+export type FeedbackRefusal = "offline" | "server" | "tooMany";
+
 interface SimulatedResponse {
   status: number;
   body?: unknown;
@@ -360,6 +363,9 @@ export class BackendSimulator {
   #declines: AnalyticsDeclined[] = [];
   #sharedPageEventBatches: Array<{ token: string; batch: SharedPageEventBatch }> = [];
   #errorBatches: ClientErrorBatch[] = [];
+  #feedbackSent: FeedbackRequest[] = [];
+  // Answered in turn, then stored: docs/features/feedback.md, "Slice 2: the screens".
+  #feedbackRefusals: FeedbackRefusal[] = [];
   #playlists = new Map<string, PlaylistLookup | "private">();
   #meaningMatches = new Map<string, string[]>();
   #transcriptMatches = new Map<string, TranscriptSearchResponse["matches"]>();
@@ -753,6 +759,7 @@ export class BackendSimulator {
     await this.#handleConnectionNetworking();
     await this.#handleSampleNetworking();
     await this.#handleAnalyticsNetworking();
+    await this.#handleFeedbackNetworking();
 
     await this.#page.route("**/api/handshake", (route) =>
       this.#respond(route, EndpointKey.SYNC_HANDSHAKE, {
@@ -1515,6 +1522,38 @@ export class BackendSimulator {
     );
   };
 
+  #handleFeedbackNetworking = async (): Promise<void> => {
+    await this.#page.route("**/api/feedback", async (route) => {
+      this.#callCounts.set(EndpointKey.FEEDBACK, this.getCallCount(EndpointKey.FEEDBACK) + 1);
+      const refusal = this.#feedbackRefusals.shift();
+      if (refusal === "offline") {
+        await route.abort("internetdisconnected");
+        return;
+      }
+      if (refusal === "tooMany") {
+        await fulfil(route, {
+          status: 429,
+          body: { error: { code: "too_many_requests", message: "Simulated: twenty this hour" } },
+        });
+        return;
+      }
+      if (refusal === "server") {
+        await fulfil(route, { status: 503, body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } } });
+        return;
+      }
+      if (this.#behaviours.get(EndpointKey.FEEDBACK) === EndpointBehaviour.STALL) {
+        this.#stalled.push({ endpoint: EndpointKey.FEEDBACK, route, onDefault: () => this.#storeFeedback(route) });
+        return;
+      }
+      await fulfil(route, this.#storeFeedback(route));
+    });
+  };
+
+  #storeFeedback = (route: Route): SimulatedResponse => {
+    this.#feedbackSent.push(route.request().postDataJSON() as FeedbackRequest);
+    return { status: 204, body: undefined };
+  };
+
   #respond = async (
     route: Route,
     endpoint: EndpointKey,
@@ -2022,6 +2061,13 @@ export class BackendSimulator {
       batches: (): Array<{ token: string; batch: SharedPageEventBatch }> => [...this.#sharedPageEventBatches],
       events: (): Array<{ name: string; props: Record<string, unknown> }> =>
         this.#sharedPageEventBatches.flatMap(({ batch }) => batch.events.map(({ name, props }) => ({ name, props }))),
+    },
+  };
+
+  feedback = {
+    sent: (): FeedbackRequest[] => [...this.#feedbackSent],
+    refuseNext: (...refusals: FeedbackRefusal[]): void => {
+      this.#feedbackRefusals.push(...refusals);
     },
   };
 
