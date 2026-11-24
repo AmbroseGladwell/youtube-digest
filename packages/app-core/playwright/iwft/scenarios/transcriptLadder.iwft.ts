@@ -121,7 +121,7 @@ test("once our server's budget for the day is spent, the reader is told what els
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
 });
 
-test("past our server's daily cap, a reader making one by hand is told when it resets and that the extension can fetch it now", async ({
+test("past our server's daily cap, a reader making one by hand is told when it resets, and can keep it for then or the extension", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -130,8 +130,8 @@ test("past our server's daily cap, a reader making one by hand is told when it r
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });
 
   await form.submitUrl(VIDEO_URL);
-  await form.verifyGenerationError(
-    /^Our server has fetched as many transcripts for you as it can today\. It can again after \d\d:\d\d, or the extension can fetch this one now\.$/,
+  await launcher.appShell.newOverviewDialog.verifyKeepNoticeReads(
+    /^This one can’t be fetched right now\.Fetching from YouTube is paused on us until \d\d:\d\d\. Keep it, and it’s made after \d\d:\d\d, or as soon as you open the extension on a computer, whichever comes first\.Keep itNot now$/,
   );
 
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);

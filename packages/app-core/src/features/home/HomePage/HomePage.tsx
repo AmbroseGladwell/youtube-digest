@@ -20,7 +20,6 @@ import { WHOLE_LIBRARY, type LibraryPlace } from "../../library/types/LibraryPla
 import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
-import { LibraryQueueGroup } from "../../captureQueue/components/LibraryQueueGroup/LibraryQueueGroup.js";
 import styles from "./HomePage.module.scss";
 import { homePageTestIds } from "./HomePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
@@ -134,7 +133,6 @@ const SignedInHome = ({ place }: { place: LibraryPlace }) => {
   if (entries.length === 0 && place.kind === "library") {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
-        <LibraryQueueGroup />
         <FirstRunHero />
       </div>
     );

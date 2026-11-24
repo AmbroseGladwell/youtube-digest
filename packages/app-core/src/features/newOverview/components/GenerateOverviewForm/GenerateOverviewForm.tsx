@@ -129,7 +129,7 @@ export const GenerateOverviewForm = ({
   const podcast = usePodcastLink(url);
   const tiktok = useTikTokLink(url);
   const social = useSocialLink(url);
-  const { startPodcast, transcribeAgain, startTikTok, startSocial, run, justNow, waiting, held } = useNewOverviewRunController();
+  const { startPodcast, transcribeAgain, startTikTok, startSocial, run, justNow, waiting, held, keep } = useNewOverviewRunController();
   const { podcastShown, tiktokShown, socialShown, reading, generateOffered, episodeAction } = pastedLinkState(
     article.link,
     podcast,
@@ -496,6 +496,7 @@ export const GenerateOverviewForm = ({
         onOpenSaved={(capture) => onOpen(capture.id)}
         onCaptureReasonChange={onCaptureReasonChange}
         onCaptureReasonCommit={onCaptureReasonCommit}
+        onKeep={(failed) => void keep(failed)}
       />
 
       <div className={styles.actions}>

@@ -86,6 +86,20 @@ export class NewOverviewDialogPageObject extends PageObject {
         .toBe(state);
     });
 
+  verifyKeepOffered = (time: string) =>
+    this.step("verifyKeepOffered", async () => {
+      await expect(this.get(justNowListTestIds.keepNotice)).toContainText("This one can’t be fetched right now.");
+      await expect(this.get(justNowListTestIds.keepIt)).toHaveAccessibleName(`Keep it: made after ${time} or in the extension`);
+    });
+
+  verifyKeepNoticeReads = (pattern: RegExp) =>
+    this.step(`verifyKeepNoticeReads ${pattern.source}`, () => expect(this.get(justNowListTestIds.keepNotice)).toHaveText(pattern));
+
+  keepIt = () => this.step("keepIt", () => this.click(justNowListTestIds.keepIt));
+
+  verifyKept = (time: string) =>
+    this.step("verifyKept", () => expect(this.get(justNowListTestIds.kept)).toContainText(`Kept. It’ll be made after ${time}.`));
+
   verifyWaitingReads = (pattern: RegExp) =>
     this.step(`verifyWaitingReads ${pattern.source}`, () =>
       expect(

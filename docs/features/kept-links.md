@@ -175,9 +175,44 @@ meanwhile.
 - **Already in your library. Open it** shows under the field (358c) in place of a screen of
   its own.
 
+## Kept links
+
+Design 358g, 358i. When our server can't fetch a YouTube link right now (its daily cap, or
+asked to slow down), the run's row in Create says **This one can't be fetched right now.**
+with when fetching is back, **Keep it** and **Not now**. Keep it writes a `kept` capture
+(`waitingFor: "server"`, `resumesAt` from the server's own `Retry-After`), and the row says
+**Kept. It'll be made after 01:00.** with "Continues after 01:00".
+
+`useKeptLinks`, beside the playlist queue in the app shell, makes each kept link when it's
+due (`keptLinkDue`): after its time on our server, at once on a device with the extension
+(which fetches for itself), and not while the reader's own run is going. It claims the
+source first (see "Made once") and makes it under the capture's id, so the overview takes
+its place. With the month spent by then, it's saved with its transcript instead; asked to
+wait again, its time moves on; any other failure marks it **Needs attention**, with Try
+again and Dismiss. Only YouTube links are kept for now: the extension-only TikTok case comes
+with the extension's banner.
+
+The **Queue page** shows them below the playlist's groups (`KeptLinksSection`): Making now,
+**Continues after 01:00 · n** with "Fetching from YouTube is paused on us until 01:00. These
+carry on then, or now in the extension on a computer.", **Ready in the extension · n**, and
+Needs attention. Each row's line says what it waits for and where it came from ("Added by
+you", "From your phone").
+
+**The queue is off the Overviews list** (358h-6 to 358h-10): `QueueLink` sits at the top of
+the sidebar, which is the Filters sheet on a phone, with how many wait, shown only while
+something does, and "1 needs attention" in the alert colour when something does. The strip
+still shows while something is being made.
+
+**Make all** (358h-5): on Show › No overview yet, once overviews are back, "Make all 2 ·
+uses 2 of your 5" makes each saved video, episode, TikTok and post one after another
+(`makeAllSaved`, queued behind whatever is being made), up to what's left this month.
+Articles still need Create.
+
 ## Not built yet
 
-- Make all, which needs saved items in the queue (slice 4).
+- The extension's banner for links waiting for it, and keeping a TikTok only the extension
+  can read (slice 4b).
 - "Already saved · no overview yet" and "Already in your queue" under the field (358c-2).
+- Undo after removing a kept link.
 - Kept links at the server cap, the queue's new home, and the extension's banner.
 - The @ picker's muted row, the events and the "Kept links" dashboard.
