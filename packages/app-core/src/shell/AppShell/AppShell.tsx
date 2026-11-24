@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
+import { Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
 import { useIsPanel } from "../../app/LayoutContext.js";
 import { BackLinkHandoffProvider, type HeadBackLink } from "../../app/BackLinkHandoffContext.js";
@@ -37,7 +37,7 @@ import { CaptureQueueProvider } from "../../features/captureQueue/CaptureQueueCo
 import { KeptLinksProvider } from "../../features/captures/KeptLinksContext.js";
 import { useKeptLinks } from "../../features/captures/useKeptLinks.js";
 import { useCaptureQueue } from "../../features/captureQueue/useCaptureQueue.js";
-import { navigationDirection, shouldAnimateNavigation, useShouldAnimateNavigation } from "../../util/viewTransitions.js";
+import { navigationDirection, shouldAnimateNavigation } from "../../util/viewTransitions.js";
 import styles from "./AppShell.module.scss";
 import "./paneTransitions.scss";
 import { appShellTestIds } from "./AppShellTestIds.js";
@@ -46,9 +46,19 @@ import { PageLink } from "../../components/shared/PageLink/PageLink.js";
 import { OnThisTabLine } from "../../features/capture/components/OnThisTabLine/OnThisTabLine.js";
 import { useOnThisTab } from "../../features/capture/useOnThisTab.js";
 import { stickyChromeSizes } from "../../util/stickyChromeSizes.js";
+import { SidebarShownProvider } from "../../app/SidebarContext.js";
+import { useOverviewsWithStateQuery } from "../../features/overviews/queries/overviewsWithStateQuery.js";
+import { useSavedCapturesQuery } from "../../features/captures/queries/savedCapturesQuery.js";
+import { AppSidebar } from "../AppSidebar/AppSidebar.js";
+import { useSidebar } from "./useSidebar.js";
 
 // Mirrors the breakpoint in ReaderMasthead.module.scss.
 const HEAD_SCROLLS_AWAY_QUERY = "(max-width: 61.9375rem)";
+// Design 399d (D): phones, and a phone on its side, get the pages as icons and no sidebar.
+const PHONE_NAV_QUERY = "(max-width: 47.9375rem), (pointer: coarse) and (max-height: 31.1875rem)";
+
+const onSidebarPage = (pathname: string): boolean =>
+  [Routes.home(), Routes.projects(), Routes.queue(), Routes.ask()].includes(pathname) || pathname.startsWith(Routes.project(""));
 
 export const AppShell = () => {
   const navigate = useNavigate();
@@ -64,8 +74,6 @@ export const AppShell = () => {
     [mastheadHeight.measured],
   );
   const trail = useHistoryTrail();
-  // For the app's one NavLink, which PageLink can't stand in for: the active styling is NavLink's.
-  const animateNavigation = useShouldAnimateNavigation();
   const sync = useSync();
   const onAuthPage = pathname === Routes.signIn() || pathname === Routes.createAccount();
   const belowWriteFloor = sync.status.phase === "unsupported";
@@ -79,6 +87,9 @@ export const AppShell = () => {
     }
   }, [signedIn]);
   const libraryMoved = useLibraryMove().move !== null;
+  const phoneNav = useMediaQuery(PHONE_NAV_QUERY);
+  const hasEntries = (useOverviewsWithStateQuery().data?.length ?? 0) + (useSavedCapturesQuery().data?.length ?? 0) > 0;
+  const sidebar = useSidebar(!isPanel && !phoneNav && !accountNeeded && hasEntries && onSidebarPage(pathname));
   const onThisTab = useOnThisTab();
 
   // On the root, the only place ::view-transition-* can see; set before the browser's "after" snapshot.
@@ -94,6 +105,8 @@ export const AppShell = () => {
   const isPhone = useIsPhone();
   const askTip = useLongPressTip(isPhone);
   const newTip = useLongPressTip(isPhone);
+  const overviewsTip = useLongPressTip(isPhone);
+  const projectsTip = useLongPressTip(isPhone);
   const readerRun = newOverview.run;
   const readerRunActive = readerRun !== null && readerRun.overview === null && readerRun.error === null;
   const captureQueue = useCaptureQueue({ readerRunActive });
@@ -161,6 +174,24 @@ export const AppShell = () => {
     );
   }
 
+  const pageIcon = (name: "Overviews" | "Projects", to: string, icon: "list" | "folder", on: boolean) => (
+    <span className={styles.tipHost} {...(name === "Overviews" ? overviewsTip : projectsTip)}>
+      <PageLink
+        className={styles.pageIcon}
+        to={to}
+        aria-label={name}
+        aria-current={on ? "page" : undefined}
+        onClick={() => analytics.app.nav.pageChosen({ page: name === "Overviews" ? "overviews" : "projects", from: "masthead" })}
+        data-testid={appShellTestIds.pageIcon(name)}
+      >
+        <StrokeIcon name={icon} size={19} />
+      </PageLink>
+      <span className={styles.tip} aria-hidden="true">
+        {name}
+      </span>
+    </span>
+  );
+
   const runStripOrNotice = () => {
     if (!isPanel && newOverview.run && !newOverview.dialogOpen) {
       return (
@@ -188,7 +219,11 @@ export const AppShell = () => {
         <KeptLinksProvider value={keptLinks}>
           <HistoryTrailProvider value={trail}>
             <BackLinkHandoffProvider value={handoff}>
-              <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
+              <div
+                className={`${styles.root} ${phoneNav ? styles.phoneNav : ""}`}
+                ref={mastheadHeight.host}
+                data-testid={appShellTestIds.root}
+              >
                 <PageScrolledSentinel />
                 <header className={styles.masthead} ref={measureBand} data-sticky-fade="" data-testid={appShellTestIds.masthead}>
                   <div className={styles.bar}>
@@ -250,19 +285,13 @@ export const AppShell = () => {
                       </span>
                     ) : (
                       <>
-                        <nav className={styles.nav} aria-label="Sections">
-                          <NavLink
-                            className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
-                            to={Routes.home()}
-                            viewTransition={animateNavigation}
-                            onClick={() => analytics.app.masthead.overviewsChosen()}
-                            end
-                          >
-                            Overviews
-                          </NavLink>
-                        </nav>
-
                         <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
+                          {phoneNav && !accountNeeded && (
+                            <nav className={styles.nav} aria-label="Pages">
+                              {pageIcon("Overviews", Routes.home(), "list", pathname === Routes.home())}
+                              {pageIcon("Projects", Routes.projects(), "folder", pathname.startsWith(Routes.projects()))}
+                            </nav>
+                          )}
                           {!accountNeeded && signedIn && (
                             <span className={styles.tipHost} {...askTip}>
                               <PageLink
@@ -270,6 +299,7 @@ export const AppShell = () => {
                                 to={Routes.ask()}
                                 aria-label="Ask your library"
                                 aria-current={pathname === Routes.ask() ? "page" : undefined}
+                                onClick={() => analytics.app.nav.pageChosen({ page: "ask", from: "masthead" })}
                                 data-testid={appShellTestIds.askButton}
                               >
                                 <StrokeIcon name="messageSquare" />
@@ -327,9 +357,42 @@ export const AppShell = () => {
                   {runStripOrNotice()}
                 </header>
 
-                <div className={styles.pane} data-testid={appShellTestIds.pane}>
-                  {paneContent()}
+                <div className={styles.body}>
+                  {sidebar.available && (
+                    <div
+                      ref={sidebar.slot}
+                      className={styles.sidebarSlot}
+                      data-open={sidebar.open}
+                      inert={!sidebar.open}
+                      data-testid={appShellTestIds.sidebarSlot}
+                    >
+                      <AppSidebar onHide={() => sidebar.toggle("button")} />
+                    </div>
+                  )}
+                  <div className={styles.pane} data-testid={appShellTestIds.pane}>
+                    <SidebarShownProvider value={sidebar.shown}>{paneContent()}</SidebarShownProvider>
+                  </div>
                 </div>
+
+                {sidebar.available && !sidebar.open && (
+                  <span className={styles.showSidebarHost}>
+                    <button
+                      ref={sidebar.showButton}
+                      type="button"
+                      className={styles.showSidebar}
+                      aria-label="Show sidebar"
+                      aria-expanded="false"
+                      aria-keyshortcuts="["
+                      onClick={() => sidebar.toggle("button")}
+                      data-testid={appShellTestIds.showSidebar}
+                    >
+                      <StrokeIcon name="panelOpen" size={17} />
+                    </button>
+                    <span className={styles.sideTip} aria-hidden="true">
+                      Show sidebar · [
+                    </span>
+                  </span>
+                )}
 
                 <CookingTimerDock>
                   <MiniPlayer />

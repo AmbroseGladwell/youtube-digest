@@ -110,6 +110,14 @@
   --milestone-100h-tint: #f8f3e6;
   --milestone-100h-ring: #c29a2e;
   --milestone-100h-ink: #7a5a10;
+
+  // A project's colour mark in the sidebar (design 399c-4), picked by projectMarkColour.
+  --project-mark-1: #5f8f5f;
+  --project-mark-2: #b5703f;
+  --project-mark-3: #4f74a3;
+  --project-mark-4: #9a67a8;
+  --project-mark-5: #a88a2a;
+  --project-mark-6: #b85d6c;
 }
 
 @mixin dark-tokens {
@@ -182,6 +190,12 @@
   --milestone-100h-tint: #3e3a2d;
   --milestone-100h-ring: #e8c566;
   --milestone-100h-ink: #e8c566;
+  --project-mark-1: #8fbf8f;
+  --project-mark-2: #d99a6c;
+  --project-mark-3: #86a8d6;
+  --project-mark-4: #c49ad1;
+  --project-mark-5: #d6bc5e;
+  --project-mark-6: #e08f9c;
 }
 
 :root[data-theme="dark"] {

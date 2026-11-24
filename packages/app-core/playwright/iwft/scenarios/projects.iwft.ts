@@ -35,15 +35,15 @@ test.beforeEach(async ({ page }) => {
   await page.clock.install({ time: NOW });
 });
 
-test.describe("the rail", () => {
+test.describe("the sidebar", () => {
   test("with no projects it is a heading and New project, and making one opens its page", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(titled("The kitchen layout mistakes I see every week"));
 
     const library = await launcher.launchExpectingLibrary();
-    await library.projectsRail.verifyListsProjects([]);
-    await library.projectsRail.verifyAllProjectsReads(null);
+    await library.sidebar.verifyListsProjects([]);
+    await library.sidebar.verifyAllProjectsReads(null);
 
-    const dialog = await library.projectsRail.clickNewProject();
+    const dialog = await library.sidebar.clickNewProject();
     await dialog.verifyCreateIsDisabled(true);
     await dialog.verifyHelpReads("Say what you’re doing, by when, and what matters most.");
     await dialog.typeName("Kitchen renovation");
@@ -57,9 +57,9 @@ test.describe("the rail", () => {
     await head.verifyPurposeReads("Redo the kitchen by March for £18k.");
     await head.verifyFactsRead("0 overviews0 unreadUpdated today");
     await head.verifyEmptyOffersPrompt(null);
-    await library.projectsRail.verifyListsProjects(["Kitchen renovation"]);
-    await library.projectsRail.verifyIsCurrent("Kitchen renovation");
-    await library.projectsRail.verifyAllProjectsReads("All projects");
+    await library.sidebar.verifyListsProjects(["Kitchen renovation"]);
+    await library.sidebar.verifyIsCurrent("Kitchen renovation");
+    await library.sidebar.verifyAllProjectsReads("All projects");
     expect((await backendSimulator.projects.list()).map((project) => project.purposeBy)).toEqual([{ by: "reader" }]);
   });
 
@@ -68,14 +68,14 @@ test.describe("the rail", () => {
     backendSimulator.projects.seed(makeProject());
 
     const library = await launcher.launchExpectingLibrary();
-    const dialog = await library.projectsRail.clickNewProject();
+    const dialog = await library.sidebar.clickNewProject();
     await dialog.typeName("kitchen renovation ");
 
     await dialog.verifyTakenReads("You already have a project called “Kitchen renovation”.");
     await dialog.verifyCreateIsDisabled(true);
   });
 
-  test("lists five last changed first, says Made by Claude, and cuts to All N projects with the archived counted", async ({
+  test("lists five last changed first with their counts, and cuts to All N projects with the archived counted", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -95,9 +95,9 @@ test.describe("the rail", () => {
 
     const library = await launcher.launchExpectingLibrary();
 
-    await library.projectsRail.verifyListsProjects(["Six", "Five", "Four", "Three", "Two"]);
-    await library.projectsRail.verifyRowReads("Six", "SixMade by Claude0");
-    await library.projectsRail.verifyAllProjectsReads("All 6 projects · 1 archived");
+    await library.sidebar.verifyListsProjects(["Six", "Five", "Four", "Three", "Two"]);
+    await library.sidebar.verifyRowReads("Six", "Six0");
+    await library.sidebar.verifyAllProjectsReads("All 6 projects · 1 archived");
   });
 });
 
@@ -119,14 +119,14 @@ test.describe("a project's page", () => {
     backendSimulator.projects.seedMember(makeProjectMember(project, quartz.id, { addedBy: CLAUDE, addedAt: "2026-11-11T09:00:00.000Z" }));
   };
 
-  test("opens from the rail with what it's for, counts, the spread, and only its own overviews, read or not", async ({
+  test("opens from the sidebar with what it's for, counts, the spread, and only its own overviews, read or not", async ({
     launcher,
     backendSimulator,
   }) => {
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary();
 
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.verifyKickerReads("Project·Made 4 Nov");
     await head.verifyPurposeReads("Redo the kitchen by March for £18k without moving the sink.");
@@ -141,7 +141,7 @@ test.describe("a project's page", () => {
   test("taking out what an assistant added is silent and counted", async ({ launcher, backendSimulator }) => {
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await library.cardWithTitle("What moving a sink").clickRemoveFromProject();
 
@@ -163,7 +163,7 @@ test.describe("a project's page", () => {
       makeProjectMember(project, elsewhere.id, { addedBy: { by: "filing" }, addedAt: "2026-11-12T09:00:00.000Z" }),
     );
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-    await library.projectsRail.openProject("Kitchen renovation");
+    await library.sidebar.openProject("Kitchen renovation");
 
     await library.cardWithTitle("Stop studying Spanish").verifyAddedByReads("Added automatically · 12 Nov·Remove");
     await library.cardWithTitle("Stop studying Spanish").clickRemoveFromProject();
@@ -179,7 +179,7 @@ test.describe("a project's page", () => {
   test("renames in place, and Escape leaves the name as it was", async ({ launcher, backendSimulator }) => {
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary();
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.rename("Galley kitchen", "Escape");
     await head.verifyNameReads("Kitchen renovation");
@@ -187,7 +187,7 @@ test.describe("a project's page", () => {
 
     await head.rename("Galley kitchen");
     await head.verifyNameReads("Galley kitchen");
-    await library.projectsRail.verifyListsProjects(["Galley kitchen"]);
+    await library.sidebar.verifyListsProjects(["Galley kitchen"]);
   });
 
   test("a purpose an assistant wrote says so until the reader saves their own", async ({ launcher, backendSimulator }) => {
@@ -195,7 +195,7 @@ test.describe("a project's page", () => {
     backendSimulator.connections.seed(connection());
     backendSimulator.projects.seed({ ...project, purposeBy: CLAUDE });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
     await head.verifyAssistantHintIsShown(true);
     await head.verifyWrittenByReads("Written by Claude");
 
@@ -211,7 +211,7 @@ test.describe("a project's page", () => {
     seed(backendSimulator);
     backendSimulator.projects.seed({ ...project, purpose: null, purposeBy: null });
     const library = await launcher.launchExpectingLibrary();
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.verifyInvitesAPurpose(/like “Redo the kitchen by March for £18k”\. It sits at the top/);
     await head.addPurpose("Choose worktops and a builder.");
@@ -224,7 +224,7 @@ test.describe("a project's page", () => {
     await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary();
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.clickCopy();
 
@@ -239,26 +239,29 @@ test.describe("a project's page", () => {
     );
   });
 
-  test("archiving hides it from the rail and the index keeps it, with Restore in both places", async ({ launcher, backendSimulator }) => {
+  test("archiving hides it from the sidebar and the index keeps it, with Restore in both places", async ({
+    launcher,
+    backendSimulator,
+  }) => {
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary();
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.archive();
 
     await head.verifyArchivedStripReads("Archived today.Hidden from your projects. Restore brings it back.");
-    await library.projectsRail.verifyListsProjects([]);
-    await library.projectsRail.verifyAllProjectsReads("All projects · 1 archived");
+    await library.sidebar.verifyListsProjects([]);
+    await library.sidebar.verifyAllProjectsReads("All projects · 1 archived");
     await head.clickRestore();
     await head.verifyArchivedStripReads(null);
     await head.archive();
 
-    const index = await library.projectsRail.openAllProjects();
+    const index = await library.sidebar.openAllProjects();
     await index.verifySummaryReads("0 projects · 1 archived");
     await index.showArchived();
     await index.restore("Kitchen renovation");
     await index.verifySummaryReads("1 project");
-    await library.projectsRail.verifyListsProjects(["Kitchen renovation"]);
+    await library.sidebar.verifyListsProjects(["Kitchen renovation"]);
   });
 
   test("deleting asks first with Cancel focused, keeps the overviews and goes back to the library", async ({
@@ -267,7 +270,7 @@ test.describe("a project's page", () => {
   }) => {
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary();
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     const dialog = await head.delete();
     await dialog.verifyCancelIsFocused();
@@ -276,7 +279,7 @@ test.describe("a project's page", () => {
     );
     await dialog.clickDelete();
 
-    await library.projectsRail.verifyListsProjects([]);
+    await library.sidebar.verifyListsProjects([]);
     expect(await backendSimulator.projects.list()).toEqual([]);
     expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(4);
   });
@@ -289,7 +292,7 @@ test.describe("a project's page", () => {
     backendSimulator.projects.seed({ ...project, createdAt: "2026-08-01T09:00:00.000Z" });
     backendSimulator.projects.seedMember(makeProjectMember(project, layout.id, { addedAt: "2026-09-03T09:00:00.000Z" }));
     const library = await launcher.launchExpectingLibrary();
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.verifyNudgeReads("Nothing new since 3 September. Still working on this?");
     await head.clickKeep();
@@ -302,7 +305,7 @@ test.describe("a project's page", () => {
     backendSimulator.connections.seed(connection());
     backendSimulator.projects.seed(project);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.verifyEmptyOffersPrompt(
       "“Find anything I’ve saved in The Overview that helps with my project “Kitchen renovation”, and add it to the project.”",
@@ -314,7 +317,7 @@ test.describe("a project's page", () => {
     backendSimulator.connections.seed(connection({ writes: false }));
     backendSimulator.projects.seed(project);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.verifyEmptyOffersPrompt(null);
     await head.verifyAssistantHintIsShown(true);
@@ -349,7 +352,7 @@ test.describe("overviews that might fit a project", () => {
     seed(backendSimulator);
     backendSimulator.connections.seed(connection());
     const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.suggestions.verifyOffers([sink, quartz, tiles, layout].map(({ source }) => source.title));
     await head.suggestions.verifySublineReads("Found by meaning, from the project’s name and what it’s for.");
@@ -382,7 +385,7 @@ test.describe("overviews that might fit a project", () => {
   }) => {
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.verifyEmptyFurtherReads(
       /^Or add them yourself: Select in the library, or Add to project… on any overview\.Or connect an assistant like Claude/,
@@ -395,7 +398,7 @@ test.describe("overviews that might fit a project", () => {
   }) => {
     seed(backendSimulator, [layout]);
     const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.suggestions.verifyIsNotShown();
     await head.verifySuggestionsLineReads("3 overviews might fit");
@@ -416,7 +419,7 @@ test.describe("overviews that might fit a project", () => {
   test("Not for this project takes it away for good, and Undo before then keeps it offered", async ({ launcher, backendSimulator }) => {
     seed(backendSimulator, [layout]);
     const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
     await head.clickSuggestionsLine();
 
     await head.suggestions.clickNotForThisProject("What moving a sink");
@@ -427,8 +430,8 @@ test.describe("overviews that might fit a project", () => {
 
     await head.suggestions.clickNotForThisProject("What moving a sink");
     await head.suggestions.verifyOffers([quartz, tiles].map(({ source }) => source.title));
-    await library.projectsRail.leaveProject("Kitchen renovation");
-    const again = await library.projectsRail.openProject("Kitchen renovation");
+    await library.sidebar.openPage("Overviews");
+    const again = await library.sidebar.openProject("Kitchen renovation");
 
     await again.verifySuggestionsLineReads("2 overviews might fit");
     await expect.poll(async () => (await backendSimulator.projects.members()).map(({ overviewId }) => overviewId)).toEqual([layout.id]);
@@ -440,7 +443,7 @@ test.describe("overviews that might fit a project", () => {
     backendSimulator.projects.seed(pension);
     backendSimulator.meaning.seed("Pension", [sink.id]);
     const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
-    const head = await library.projectsRail.openProject("Pension");
+    const head = await library.sidebar.openProject("Pension");
 
     await head.suggestions.verifySublineReads(
       "Found by meaning from the project’s name. Saying what it’s for makes suggestions more accurate.",
@@ -454,7 +457,7 @@ test.describe("overviews that might fit a project", () => {
     seed(backendSimulator);
     backendSimulator.simulateEndpointError(EndpointKey.MEANING_SEARCH);
     const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const head = await library.sidebar.openProject("Kitchen renovation");
 
     await head.suggestions.verifyIsNotShown();
     await head.verifyEmptyFurtherReads(/^Nothing here yet/);
@@ -537,7 +540,7 @@ test.describe("on an overview", () => {
 });
 
 test.describe("on a phone and in the panel", () => {
-  test("Until the navigation moves, projects sit at the foot of the Filters sheet; choosing one closes it onto the project's page, and back goes to All projects", async ({
+  test("projects are reached from the bar's Projects icon, and a project's way back goes to All projects", async ({
     launcher,
     backendSimulator,
     page,
@@ -550,12 +553,11 @@ test.describe("on a phone and in the panel", () => {
     backendSimulator.overviews.seed(overview);
     backendSimulator.projects.seed(project);
     backendSimulator.projects.seedMember(makeProjectMember(project, overview.id));
-    const library = await launcher.launchExpectingLibrary();
+    await launcher.launchExpectingLibrary();
 
-    await library.openFilters();
-    const head = await library.projectsRail.openProject("Kitchen renovation");
+    const projects = await launcher.appShell.openProjectsFromBar();
+    const head = await projects.openProject("Kitchen renovation");
 
-    await library.verifyFiltersAreOpen(false);
     await head.verifyNameReads("Kitchen renovation");
 
     const index = await head.clickBackToAllProjects();
@@ -576,27 +578,23 @@ test.describe("on a phone and in the panel", () => {
     }
     const library = await launcher.launchExpectingLibrary();
     const shell = launcher.appShell;
-    await library.openFilters();
-    await library.projectsRail.openProject("Kitchen renovation");
+    const projects = await shell.openProjectsFromBar();
+    await projects.openProject("Kitchen renovation");
 
     await shell.verifyBarHoldsTheBrand("All projects");
     await library.scrollTheList();
     await shell.verifyBarHoldsTheWayBack("All projects");
     await shell.clickBackInBarToAllProjects();
-
-    await shell.verifyBarHoldsTheBrand("All overviews");
-    await library.scrollTheList();
-    await shell.verifyBarHoldsTheWayBack("All overviews");
-    await shell.clickBackInBar();
+    await shell.verifyBarMarksPage("Projects");
   });
 
   test("New project is a sheet across the whole width", async ({ launcher, backendSimulator, page }) => {
     await page.setViewportSize({ width: 390, height: 760 });
     backendSimulator.overviews.seed(titled("The kitchen layout mistakes I see every week"));
-    const library = await launcher.launchExpectingLibrary();
+    await launcher.launchExpectingLibrary();
 
-    await library.openFilters();
-    const dialog = await library.projectsRail.clickNewProject();
+    const projects = await launcher.appShell.openProjectsFromBar();
+    const dialog = await projects.clickNewProject();
 
     await dialog.verifySpansTheScreen(390);
   });

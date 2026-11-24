@@ -12,8 +12,6 @@ import { DeleteProjectDialog } from "./components/DeleteProjectDialog/DeleteProj
 import { ProjectPicker } from "./components/ProjectPicker/ProjectPicker.js";
 import { ProjectEmpty } from "./components/ProjectEmpty/ProjectEmpty.js";
 import { ProjectHead } from "./components/ProjectHead/ProjectHead.js";
-import { ProjectsIndex } from "./components/ProjectsIndex/ProjectsIndex.js";
-import { ProjectsRailGroup } from "./components/ProjectsRailGroup/ProjectsRailGroup.js";
 import { useDeleteProjectMutation } from "./mutations/useDeleteProjectMutation.js";
 import { useSetProjectMemberMutation } from "./mutations/useSetProjectMemberMutation.js";
 import { useUpdateProjectMutation } from "./mutations/useUpdateProjectMutation.js";
@@ -24,7 +22,7 @@ import { useProjectSuggestions } from "./useProjectSuggestions.js";
 import { useProjectSummaries } from "./useProjectSummaries.js";
 import { projectNudged } from "./util/projectNudge.js";
 import { projectShortDate } from "./util/projectDates.js";
-import { activeSummaries, archivedSummaries } from "./util/projectSummaries.js";
+import { activeSummaries } from "./util/projectSummaries.js";
 import type { BulkAction } from "../library/util/bulkActionToast.js";
 import { pickerAction, type PickerChange } from "../library/util/pickerAction.js";
 
@@ -65,7 +63,6 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
   const now = new Date();
 
   const active = activeSummaries(summaries);
-  const archived = archivedSummaries(summaries);
   const currentId: ProjectId | null = place.kind === "project" ? place.projectId : null;
   const current = currentId === null ? null : (summaries.find(({ project }) => project.id === currentId) ?? null);
   const [purposeAsked, setPurposeAsked] = useState(0);
@@ -75,34 +72,10 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
     editPurpose: () => setPurposeAsked((asked) => asked + 1),
   });
 
-  const restore = (projectId: ProjectId, from: "page" | "index") => {
-    analytics.projects.page.restored({ projectId, from });
+  const restore = (projectId: ProjectId) => {
+    analytics.projects.page.restored({ projectId, from: "page" });
     updateProject.mutate({ projectId, patch: { archivedAt: null } });
   };
-
-  const railGroup = (
-    <ProjectsRailGroup
-      active={active}
-      archived={archived.length}
-      current={currentId}
-      onOpen={(project) => analytics.projects.rail.projectOpened({ projectId: project.id })}
-      onLeave={() => analytics.projects.rail.projectLeft()}
-      onAll={() => analytics.projects.rail.allProjectsOpened()}
-      onNew={() => newProject.open("rail")}
-    />
-  );
-
-  const index = (
-    <ProjectsIndex
-      active={active}
-      archived={archived}
-      now={now}
-      onNew={() => newProject.open("index")}
-      onOpen={(project) => analytics.projects.index.projectOpened({ projectId: project.id, archived: project.archivedAt !== null })}
-      onRestore={(project) => restore(project.id, "index")}
-      onArchivedShown={(shown) => analytics.projects.index.archivedShown({ shown })}
-    />
-  );
 
   const head =
     current === null ? null : (
@@ -128,7 +101,7 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
           analytics.projects.page.archived({ projectId: current.project.id, from });
           updateProject.mutate({ projectId: current.project.id, patch: { archivedAt: new Date().toISOString() } });
         }}
-        onRestore={() => restore(current.project.id, "page")}
+        onRestore={() => restore(current.project.id)}
         onKeep={() => {
           analytics.projects.page.nudgeKept({ projectId: current.project.id });
           writeProjectNudgeKept(accountId, current.project.id, new Date().toISOString());
@@ -273,8 +246,6 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
     current,
     missing: loaded && currentId !== null && current === null,
     inScope: current === null ? null : new Set<string>(current.items.map((item) => item.overview.id)),
-    railGroup,
-    index,
     head,
     suggestions: host.selecting ? null : suggestions.group,
     empty,

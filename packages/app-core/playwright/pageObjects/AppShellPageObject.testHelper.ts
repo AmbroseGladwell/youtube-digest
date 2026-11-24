@@ -12,6 +12,9 @@ import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { StaleClientBannerPageObject } from "./StaleClientBannerPageObject.testHelper.js";
 import { ErrorStatePageObject } from "./ErrorStatePageObject.testHelper.js";
 import { queueLinkTestIds } from "../../src/features/captureQueue/components/QueueLink/QueueLinkTestIds.js";
+import { queueLineTestIds } from "../../src/features/captureQueue/components/QueueLine/QueueLineTestIds.js";
+import { appSidebarTestIds } from "../../src/shell/AppSidebar/AppSidebarTestIds.js";
+import { AppSidebarPageObject } from "./AppSidebarPageObject.testHelper.js";
 import { PlaylistFollowFlowPageObject } from "./PlaylistFollowFlowPageObject.testHelper.js";
 import { QueuePageObject } from "./QueuePageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
@@ -43,8 +46,38 @@ export class AppShellPageObject extends PageObject {
   openQueue = () =>
     this.step("openQueue", async () => {
       await this.click(appShellTestIds.brand);
-      await this.click(this.get(queueLinkTestIds.root).first());
+      const ways = [appSidebarTestIds.queue, queueLineTestIds.link, queueLinkTestIds.root].map((id) => `[data-testid="${id}"]`);
+      await this.click(this.page.locator(ways.join(", ")).first());
     });
+
+  openProjectsFromBar = (): Promise<ProjectsIndexPageObject> =>
+    this.step("openProjectsFromBar", async () => {
+      await this.click(appShellTestIds.pageIcon("Projects"));
+      return new ProjectsIndexPageObject(this.testContext).verifyIsShown();
+    });
+
+  openOverviewsFromBar = () => this.step("openOverviewsFromBar", () => this.click(appShellTestIds.pageIcon("Overviews")));
+
+  verifyBarMarksPage = (name: "Overviews" | "Projects" | "Ask" | null) =>
+    this.step(`verifyBarMarksPage ${name}`, async () => {
+      for (const page of ["Overviews", "Projects"] as const) {
+        const icon = this.get(appShellTestIds.pageIcon(page));
+        await (page === name ? expect(icon).toHaveAttribute("aria-current", "page") : expect(icon).not.toHaveAttribute("aria-current"));
+      }
+      const ask = this.get(appShellTestIds.askButton);
+      if (name === "Ask") {
+        await expect(ask).toHaveAttribute("aria-current", "page");
+      } else if ((await ask.count()) > 0) {
+        await expect(ask).not.toHaveAttribute("aria-current");
+      }
+    });
+
+  verifyBarOffersPages = (offers: boolean) =>
+    this.step(`verifyBarOffersPages ${offers}`, () => this.expectToHaveCount(appShellTestIds.pageIcon("Projects"), offers ? 1 : 0));
+
+  get sidebar(): AppSidebarPageObject {
+    return new AppSidebarPageObject(this.testContext);
+  }
 
   get playlistFlow(): PlaylistFollowFlowPageObject {
     return new PlaylistFollowFlowPageObject(this.testContext);
@@ -62,26 +95,44 @@ export class AppShellPageObject extends PageObject {
     return new ErrorStatePageObject(this.testContext, this.get(appShellTestIds.pane));
   }
 
+  // Design 399d: below about 340px the bar's circles drop from 44px to 40px so it still fits.
   verifyBarFitsTheScreen = () =>
     this.step("verifyBarFitsTheScreen", async () => {
       const width = this.page.viewportSize()!.width;
-      const controls = this.get(appShellTestIds.masthead).locator(
-        `[data-testid="${appShellTestIds.askButton}"], [data-testid="${appShellTestIds.newOverviewButton}"], [data-testid="${accountMenuTestIds.trigger}"]`,
-      );
+      const smallest = width < 340 ? 40 : 44;
+      const ids = [
+        appShellTestIds.askButton,
+        appShellTestIds.newOverviewButton,
+        appShellTestIds.pageIcon("Overviews"),
+        appShellTestIds.pageIcon("Projects"),
+      ];
+      const controls = this.get(appShellTestIds.masthead).locator(ids.map((id) => `[data-testid="${id}"]:visible`).join(", "));
+      const account = this.get(accountMenuTestIds.trigger);
       await expect(controls.first()).toBeVisible();
-      for (const box of await controls.evaluateAll((all) => all.map((control) => control.getBoundingClientRect().toJSON() as DOMRect))) {
+      const boxes = await controls.evaluateAll((all) => all.map((control) => control.getBoundingClientRect().toJSON() as DOMRect));
+      for (const box of boxes) {
         expect(box.left).toBeGreaterThanOrEqual(0);
         expect(box.right).toBeLessThanOrEqual(width);
-        expect(box.width).toBeGreaterThanOrEqual(44);
+        expect(box.width).toBeGreaterThanOrEqual(smallest);
       }
+      const accountBox = (await account.boundingBox())!;
+      expect(accountBox.x + accountBox.width).toBeLessThanOrEqual(width);
+      expect(accountBox.width).toBeGreaterThanOrEqual(smallest);
       await this.verifyPageDoesNotScrollSideways();
     });
 
-  verifyNameShownWhole = () =>
-    this.step("verifyNameShownWhole", async () => {
-      const name = this.get(appShellTestIds.brand).locator("h1");
-      await expect(name).toHaveText("The Overview");
-      expect(await name.evaluate((title) => title.scrollWidth - title.clientWidth)).toBeLessThanOrEqual(0);
+  // Design 399d: on a phone the bar shows the mark, and the name stays as the heading for screen readers.
+  verifyNameIsTheHeading = () =>
+    this.step("verifyNameIsTheHeading", () =>
+      expect(this.get(appShellTestIds.brand).getByRole("heading", { level: 1 })).toHaveAccessibleName("The Overview"),
+    );
+
+  scrollUntilTheBarHoldsTheWayBack = () =>
+    this.step("scrollUntilTheBarHoldsTheWayBack", async () => {
+      await expect(async () => {
+        await this.page.mouse.wheel(0, 600);
+        await expect(this.get(appShellTestIds.backLink)).not.toHaveAttribute("inert", { timeout: 300 });
+      }).toPass({ timeout: 4_000 });
     });
 
   verifyBackLabelShownWhole = (label: string) =>
@@ -220,7 +271,7 @@ export class AppShellPageObject extends PageObject {
   verifyCarriesTheLibraryChrome = () =>
     this.step("verifyCarriesTheLibraryChrome", async () => {
       await this.expectToBeVisible(appShellTestIds.newOverviewButton);
-      await expect(this.page.getByRole("navigation", { name: "Sections" })).toHaveCount(1);
+      await this.expectToBeVisible(appSidebarTestIds.root);
     });
 
   clickBrand = () => this.step("clickBrand", () => this.click(appShellTestIds.brand));

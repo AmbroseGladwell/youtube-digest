@@ -254,6 +254,9 @@ Five folders, five different questions.
 - `library-filters.md` — Kind and Source split apart, Added, No topic and several values per
   group: how a source is named from its domain on the device, the URL, the saved view and
   the counts.
+- `navigation.md` — Overviews, Projects and Ask as the top-level pages: the masthead on wide
+  screens and phones, the sidebar's projects, topics, queue and time saved, when it opens and
+  how `[` hides it, and where each of those goes without it.
 - `library-sort.md` — the sort pill's three orders and why verdict isn't one, where a
   record with no date or title lands, why the order is in the URL but isn't a filter, and
   what doesn't follow it yet.

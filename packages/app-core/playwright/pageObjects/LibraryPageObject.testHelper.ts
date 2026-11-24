@@ -21,7 +21,9 @@ import { SortMenuPageObject } from "./SortMenuPageObject.testHelper.js";
 import { libraryListTestIds } from "../../src/features/library/components/LibraryList/LibraryListTestIds.js";
 import { MilestoneStackPageObject } from "./MilestoneStackPageObject.testHelper.js";
 import { TimeSavedSheetPageObject } from "./TimeSavedSheetPageObject.testHelper.js";
-import { ProjectsRailGroupPageObject } from "./ProjectsRailGroupPageObject.testHelper.js";
+import { AppSidebarPageObject } from "./AppSidebarPageObject.testHelper.js";
+import { appSidebarTestIds } from "../../src/shell/AppSidebar/AppSidebarTestIds.js";
+import { queueLineTestIds } from "../../src/features/captureQueue/components/QueueLine/QueueLineTestIds.js";
 import { ProjectHeadPageObject } from "./ProjectHeadPageObject.testHelper.js";
 
 export class LibraryPageObject extends PageObject {
@@ -29,8 +31,8 @@ export class LibraryPageObject extends PageObject {
     return new FilterMenuPageObject(this.testContext);
   }
 
-  get projectsRail(): ProjectsRailGroupPageObject {
-    return new ProjectsRailGroupPageObject(this.testContext);
+  get sidebar(): AppSidebarPageObject {
+    return new AppSidebarPageObject(this.testContext);
   }
 
   get projectHead(): ProjectHeadPageObject {
@@ -41,20 +43,47 @@ export class LibraryPageObject extends PageObject {
     return new MilestoneStackPageObject(this.testContext);
   }
 
+  // Beside the heading without the sidebar, at the sidebar's foot with it.
+  private timeSaved = () =>
+    this.page
+      .locator(`[data-testid="${libraryPageTestIds.timeSavedButton}"]:visible, [data-testid="${appSidebarTestIds.timeSaved}"]:visible`)
+      .first();
+
   // The figure is drawn as rolling digits, so it is read from its accessible name.
   verifyTimeSavedSays = (spoken: string) =>
     this.step(`verifyTimeSavedSays ${spoken}`, () =>
-      expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveAttribute("aria-label", `${spoken} saved`),
+      expect(this.timeSaved()).toHaveAccessibleName(new RegExp(`(^${spoken} saved$|^Time saved ${spoken}( Next|$))`)),
     );
 
   verifyTimeSavedShows = (figure: string) =>
-    this.step(`verifyTimeSavedShows ${figure}`, () => expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveText(`${figure}saved`));
+    this.step(`verifyTimeSavedShows ${figure}`, () => expect(this.timeSaved()).toContainText(figure));
 
   openTimeSaved = (): Promise<TimeSavedSheetPageObject> =>
     this.step("openTimeSaved", async () => {
-      await this.click(libraryPageTestIds.timeSavedButton);
+      await this.click(this.timeSaved());
       return new TimeSavedSheetPageObject(this.testContext).verifyIsShown();
     });
+
+  verifyTitleReads = (title: string, countLine: string) =>
+    this.step(`verifyTitleReads ${title}`, async () => {
+      await expect(this.get(libraryPageTestIds.title)).toHaveText(title);
+      await expect(this.get(libraryPageTestIds.listCount)).toHaveText(countLine);
+    });
+
+  verifyListStartsRightOfTheSidebar = () =>
+    this.step("verifyListStartsRightOfTheSidebar", () =>
+      expect(async () => {
+        const sidebar = (await this.page.getByTestId(appSidebarTestIds.root).boundingBox())!;
+        const list = (await this.get(libraryPageTestIds.list).boundingBox())!;
+        expect(list.x).toBeGreaterThanOrEqual(sidebar.x + sidebar.width);
+        expect(list.x + list.width).toBeLessThanOrEqual(this.page.viewportSize()!.width);
+      }).toPass({ timeout: 2_000 }),
+    );
+
+  verifyQueueLineReads = (text: string | null) =>
+    this.step(`verifyQueueLineReads ${text}`, () =>
+      text === null ? this.expectToHaveCount(queueLineTestIds.root, 0) : expect(this.get(queueLineTestIds.root)).toHaveText(text),
+    );
 
   get sortMenu(): SortMenuPageObject {
     return new SortMenuPageObject(this.testContext);
@@ -199,21 +228,6 @@ export class LibraryPageObject extends PageObject {
       await expect(async () => {
         expect(await this.page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
       }).toPass({ timeout: 2_000 });
-    });
-
-  verifyRailRestsOnTheMasthead = () =>
-    this.step("verifyRailRestsOnTheMasthead", () =>
-      expect(async () => {
-        const masthead = (await this.page.getByTestId(appShellTestIds.masthead).boundingBox())!;
-        const rail = (await this.get(libraryPageTestIds.railBody).boundingBox())!;
-        expect(Math.round(rail.y)).toBe(Math.round(masthead.y + masthead.height));
-      }).toPass({ timeout: 2_000 }),
-    );
-
-  verifyRailDividerRunsToTheFoot = () =>
-    this.step("verifyRailDividerRunsToTheFoot", async () => {
-      const rail = (await this.get(libraryPageTestIds.rail).boundingBox())!;
-      expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(this.page.viewportSize()!.height);
     });
 
   openFiltersWhereFolded = () => this.filterMenu.open();

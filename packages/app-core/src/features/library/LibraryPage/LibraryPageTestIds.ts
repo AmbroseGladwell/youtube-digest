@@ -1,6 +1,7 @@
 export const libraryPageTestIds = {
   root: "LibraryPage.root",
   list: "LibraryPage.list",
+  title: "LibraryPage.title",
   listCount: "LibraryPage.listCount",
   timeSavedButton: "LibraryPage.timeSavedButton",
   selectButton: "LibraryPage.selectButton",
@@ -11,8 +12,6 @@ export const libraryPageTestIds = {
   meaningUnavailable: "LibraryPage.meaningUnavailable",
   saidGroup: "LibraryPage.saidGroup",
   transcriptsUnavailable: "LibraryPage.transcriptsUnavailable",
-  rail: "LibraryPage.rail",
-  railBody: "LibraryPage.railBody",
   filterButton: "LibraryPage.filterButton",
   filterCount: "LibraryPage.filterCount",
   caughtUp: "LibraryPage.caughtUp",

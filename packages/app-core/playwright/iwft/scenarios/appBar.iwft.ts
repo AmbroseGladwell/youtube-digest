@@ -13,18 +13,22 @@ for (const width of [320, 360, 375]) {
       await page.setViewportSize({ width, height: 700 });
     });
 
-    test("on the library, the name and every button fit, each still a full touch target", async ({ launcher, backendSimulator }) => {
+    test("on the library, every page icon and button fits, each a full touch target or the design's 40px below 340px", async ({
+      launcher,
+      backendSimulator,
+    }) => {
       backendSimulator.overviews.seedSynced(makeOverview());
       await launcher.launchExpectingLibrary(SIGNED_IN);
 
       await launcher.appShell.verifyBarFitsTheScreen();
-      await launcher.appShell.verifyNameShownWhole();
+      await launcher.appShell.verifyNameIsTheHeading();
     });
 
     test("in a reader, the back link's label, every button and every tab label fit", async ({ launcher, backendSimulator }) => {
       backendSimulator.overviews.seedSynced(makeOverview());
       const library = await launcher.launchExpectingLibrary(SIGNED_IN);
       const reader = await library.nthCard(0).openReader();
+      await launcher.appShell.scrollUntilTheBarHoldsTheWayBack();
 
       await launcher.appShell.verifyBackLabelShownWhole("All overviews");
       await launcher.appShell.verifyBarFitsTheScreen();

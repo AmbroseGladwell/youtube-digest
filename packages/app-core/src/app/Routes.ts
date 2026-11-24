@@ -19,6 +19,7 @@ export interface AskRouteTarget {
 export const Routes = {
   home: () => "/",
   taggedLibrary: (tag: string) => `/?${new URLSearchParams({ tag })}`,
+  libraryView: (params: URLSearchParams) => (params.size === 0 ? "/" : `/?${params}`),
   settings: () => "/settings",
   queue: () => "/queue",
   settingsSection: (section: SettingsSectionId) => `/settings/${section}`,

@@ -17,6 +17,10 @@ import { savedCaptureEntries, useSavedCapturesQuery } from "../../captures/queri
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
 import { WHOLE_LIBRARY, type LibraryPlace } from "../../library/types/LibraryPlace.js";
+import { ProjectsPage } from "../../projects/ProjectsPage/ProjectsPage.js";
+import { readableEntries } from "../../overviews/types/LibraryEntry.js";
+
+export type HomePlace = LibraryPlace | { kind: "projects" };
 import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
@@ -49,7 +53,7 @@ import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 import { QueueLink } from "../../captureQueue/components/QueueLink/QueueLink.js";
 
-export const HomePage = ({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) => {
+export const HomePage = ({ place = WHOLE_LIBRARY }: { place?: HomePlace }) => {
   const isPanel = useIsPanel();
   const accountNeeded = useAccountNeeded();
   const location = useLocation();
@@ -76,7 +80,7 @@ export const HomePage = ({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) =>
 
 interface LibraryHomeProps {
   accountNeeded: boolean;
-  place: LibraryPlace;
+  place: HomePlace;
 }
 
 const LibraryHome = ({ accountNeeded, place }: LibraryHomeProps) => {
@@ -90,7 +94,7 @@ const LibraryHome = ({ accountNeeded, place }: LibraryHomeProps) => {
   return <SignedInHome place={place} />;
 };
 
-const SignedInHome = ({ place }: { place: LibraryPlace }) => {
+const SignedInHome = ({ place }: { place: HomePlace }) => {
   const overviewsQuery = useOverviewsWithStateQuery();
   const savedCaptures = useSavedCapturesQuery().data ?? [];
   const sync = useSync();
@@ -141,7 +145,7 @@ const SignedInHome = ({ place }: { place: LibraryPlace }) => {
 
   return (
     <div className={styles.wide} data-testid={homePageTestIds.root}>
-      <LibraryPage entries={entries} place={place} />
+      {place.kind === "projects" ? <ProjectsPage overviews={readableEntries(entries)} /> : <LibraryPage entries={entries} place={place} />}
     </div>
   );
 };

@@ -120,6 +120,5 @@ default Unread has none.
 
 **Nothing matches** says so, with Reset filters.
 
-**Until the navigation moves** (OV-399's shell slice), the rail on a wide screen keeps only the
-queue link, projects and milestones, and under 62rem the projects group and queue link sit at
-the foot of the filter menu, the only way to them on a phone until the masthead has Projects.
+The rail is gone: projects, the queue and time saved are in the sidebar, or the masthead and
+the list's head without it (`navigation.md`). The filter menu holds filters only.
