@@ -206,7 +206,7 @@ test.describe("Chat beside the note", () => {
     await reader.chat.verifyMenuOffersChat(false);
   });
 
-  test("Chat in the overview's menu reopens the latest conversation; Esc closes it and a new one says it can see the others", async ({
+  test("Ask overview in the overview's menu reopens the latest conversation; Esc closes it and a new one says it can see the others", async ({
     launcher,
     backendSimulator,
   }) => {

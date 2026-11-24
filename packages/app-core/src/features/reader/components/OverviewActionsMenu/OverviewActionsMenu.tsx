@@ -143,7 +143,7 @@ export const OverviewActionsMenu = ({
               })}
               data-testid={overviewActionsMenuTestIds.chatItem}
             >
-              Chat
+              Ask overview
             </button>
           )}
           <button
