@@ -1,6 +1,9 @@
 @use "../../../../theme/controls.scss" as controls;
 
 $control-height: 2.125rem;
+// Design 407v–x: 128px at 480 wide, 176px by 640, so the text keeps about 280px.
+$row-thumbnail-width: clamp(8rem, 30vw - 1rem, 11rem);
+$banner-query: "(max-width: 29.9375rem)";
 
 // Design 11c/12c: docs/features/stone-theme.md, "The tile".
 .root {
@@ -218,14 +221,9 @@ $control-height: 2.125rem;
     padding: 0.875rem;
   }
 
-  // Too small on a phone to tell one video from another, and it costs the title its column.
-  .thumbnail {
-    display: none;
-  }
-
-  .row,
-  .row:has(> .body:first-child) {
-    grid-template-columns: minmax(0, 1fr);
+  .row {
+    grid-template-columns: $row-thumbnail-width minmax(0, 1fr);
+    gap: 1rem;
   }
 
   .title {
@@ -252,6 +250,32 @@ $control-height: 2.125rem;
     height: 2.375rem;
     font-size: 1rem;
   }
+}
+
+// Design 407l, 407u: below 30rem the image runs across the top of the tile.
+@media #{$banner-query} {
+  .row,
+  .row:has(> .body:first-child) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3125rem;
+  }
+
+  .row > .thumbnail {
+    width: auto;
+    max-width: none;
+    margin: -0.875rem -0.875rem 0;
+    aspect-ratio: 2 / 1;
+    border-radius: var(--radius-tile) var(--radius-tile) 0 0;
+  }
+}
+
+.root:has([data-length-badge]) .lengthPart {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 // Under the summary, never in the kicker, so it can't be read as a judgement (168f).
@@ -376,7 +400,7 @@ $control-height: 2.125rem;
   transition: opacity 120ms var(--motion-ease);
 }
 
-@media (max-width: 47.9375rem) {
+@media #{$banner-query} {
   .thumbnailBox {
     display: none;
   }
@@ -384,7 +408,9 @@ $control-height: 2.125rem;
   .kickerBox {
     display: inline-flex;
   }
+}
 
+@media (max-width: 47.9375rem) {
   .actions {
     max-height: 3rem;
     transition:

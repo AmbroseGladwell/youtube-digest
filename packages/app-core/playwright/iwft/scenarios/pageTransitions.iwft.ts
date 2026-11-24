@@ -113,13 +113,22 @@ test("without an image the pane keeps 9c's slide", async ({ launcher, backendSim
   await shell.verifyThePaneKeyframesAre("paneEnterForward", () => library.nthCard(0).openReader());
 });
 
-// No row thumbnail below 768px: docs/features/page-transitions.md, "Where it doesn't carry".
-test("a phone has no row thumbnail to carry, so the journey stays 9c", async ({ page, launcher, backendSimulator }) => {
-  backendSimulator.overviews.seed(withImage());
-  await page.setViewportSize(PHONE);
-  const library = await launcher.launchExpectingLibrary();
-  const shell = launcher.appShell;
+// Opened twice, as on the desktop: docs/features/page-transitions.md, "Where it doesn't carry".
+for (const [name, viewport] of [
+  ["a phone's banner", PHONE],
+  ["the narrow row's", { width: 480, height: 800 }],
+] as const) {
+  test(`${name} image carries across into the note's head`, async ({ page, launcher, backendSimulator }) => {
+    backendSimulator.overviews.seed(withImage());
+    await page.setViewportSize(viewport);
+    const library = await launcher.launchExpectingLibrary();
+    const shell = launcher.appShell;
 
-  const reader = await shell.verifyImageDoesNotCarryAcross(() => library.nthCard(0).openReader());
-  await reader.verifyHeadHasImage(true);
-});
+    const warmed = await library.nthCard(0).openReader();
+    await warmed.verifyHeadHasImage(true);
+    const back = await warmed.clickBackToLibrary();
+
+    const reader = await shell.verifyImageCarriesAcross(() => back.nthCard(0).openReader());
+    await reader.verifyHeadHasImage(true);
+  });
+}

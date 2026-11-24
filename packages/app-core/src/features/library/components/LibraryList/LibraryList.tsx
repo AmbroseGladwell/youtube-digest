@@ -6,6 +6,11 @@ import { libraryScrollPositions } from "../../util/libraryScrollPositions.js";
 import styles from "./LibraryList.module.scss";
 
 const ESTIMATED_ROW_PX = 190;
+const BANNER_QUERY = "(max-width: 29.9375rem)";
+const BANNER_ROW_TEXT_PX = 250;
+
+const estimatedRowPx = (listWidth: number): number =>
+  globalThis.matchMedia?.(BANNER_QUERY).matches ? Math.round(listWidth / 2) + BANNER_ROW_TEXT_PX : ESTIMATED_ROW_PX;
 const OVERSCAN_ROWS = 6;
 
 export interface LibraryListProps<Entry> {
@@ -21,10 +26,11 @@ export const LibraryList = <Entry,>({ entries, keyOf, row, testId }: LibraryList
   const { key: historyKey } = useLocation();
   const [placed, setPlaced] = useState({ top: 0, width: 0 });
   const heights = libraryRowHeights(placed.width);
+  const rowEstimate = estimatedRowPx(placed.width);
 
   const virtualizer = useWindowVirtualizer<HTMLDivElement>({
     count: entries.length,
-    estimateSize: (index) => heights.get(keyOf(entries[index]!)) ?? ESTIMATED_ROW_PX,
+    estimateSize: (index) => heights.get(keyOf(entries[index]!)) ?? rowEstimate,
     getItemKey: (index) => keyOf(entries[index]!),
     overscan: OVERSCAN_ROWS,
     scrollMargin: placed.top,

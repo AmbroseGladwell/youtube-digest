@@ -5,6 +5,7 @@ import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/Favou
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import {
   formatTimestamp,
+  noteLengthBadge,
   NOVELTY_LABEL,
   overviewMetaParts,
   overviewTimeSaved,
@@ -76,6 +77,8 @@ export const LibraryOverviewCard = ({
   const { overview, state } = overviewWithState;
   const readerPath = Routes.overview(overview.id);
   const metaParts = overviewMetaParts(overview);
+  const readingParts = metaParts.slice(0, -1);
+  const sourceLength = metaParts.at(-1);
   const saved = overviewTimeSaved(overview);
   const savedMoment = useSavedMoment(SAVED_CHIP_SHOWN_MS);
   const toggleRead = () => {
@@ -127,6 +130,7 @@ export const LibraryOverviewCard = ({
           onOpen={() => onOpen("thumbnail")}
           className={styles.thumbnail}
           carriesIntoHead
+          badge={noteLengthBadge(overview)}
         />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
@@ -201,7 +205,11 @@ export const LibraryOverviewCard = ({
           <div className={styles.foot}>
             <span className={styles.reading}>
               <p className={styles.timing} data-testid={libraryOverviewCardTestIds.meta}>
-                {metaParts.join(" · ")}
+                {readingParts.join(" · ")}
+                <span className={styles.lengthPart} data-testid={libraryOverviewCardTestIds.metaLength}>
+                  {" "}
+                  · {sourceLength}
+                </span>
               </p>
               {savedMoment.phase !== "hidden" && saved.kind === "counted" && (
                 <SavedChip minutes={saved.minutes} leaving={savedMoment.phase === "leaving"} />

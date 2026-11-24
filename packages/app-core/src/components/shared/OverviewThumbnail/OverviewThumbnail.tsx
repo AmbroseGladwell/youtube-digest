@@ -13,6 +13,7 @@ export interface OverviewThumbnailProps {
   onOpen?: (() => void) | undefined;
   // Only a library row's thumbnail becomes a note's head; naming more could reuse the name at once.
   carriesIntoHead?: boolean | undefined;
+  badge?: string | null | undefined;
 }
 
 const MATTED = new Set(["podcast", "tiktok", "instagram", "facebook"]);
@@ -29,11 +30,25 @@ const pictureClass = (kind: string, to: string | undefined, className: string | 
 };
 
 // Any falsy URL counts as none: a record saved before thumbnailUrl existed has no key, not null.
-export const OverviewThumbnail = ({ video, className, to, state, onOpen, carriesIntoHead = false }: OverviewThumbnailProps) => {
+export const OverviewThumbnail = ({
+  video,
+  className,
+  to,
+  state,
+  onOpen,
+  carriesIntoHead = false,
+  badge = null,
+}: OverviewThumbnailProps) => {
   const [failed, setFailed] = useState(false);
   const morph = useOverviewImageMorph<HTMLAnchorElement>(to ?? "", carriesIntoHead);
 
   const kind = "kind" in video ? video.kind : "youtube";
+  const corner =
+    badge === null ? null : (
+      <span className={styles.badge} data-length-badge="" data-testid={overviewThumbnailTestIds.badge}>
+        {badge}
+      </span>
+    );
   const imageUrl = "kind" in video ? sourceImage(video) : video.thumbnailUrl;
 
   if ("kind" in video && video.kind !== "youtube" && (!imageUrl || failed)) {
@@ -50,8 +65,10 @@ export const OverviewThumbnail = ({ video, className, to, state, onOpen, carries
         aria-hidden="true"
         tabIndex={-1}
         onClick={onOpen}
+        data-testid={overviewThumbnailTestIds.link}
       >
         {tile}
+        {corner}
       </PageLink>
     ) : (
       <span className={`${styles.thumbnail} ${styles.tileHost} ${className ?? ""}`}>{tile}</span>
@@ -96,6 +113,7 @@ export const OverviewThumbnail = ({ video, className, to, state, onOpen, carries
       data-testid={overviewThumbnailTestIds.link}
     >
       {image}
+      {corner}
     </PageLink>
   );
 };

@@ -178,6 +178,34 @@ export class LibraryOverviewCardPageObject extends PageObject {
     });
 
   verifyHasThumbnail = () => this.expectToBeVisible(overviewThumbnailTestIds.image);
+
+  verifyImageSpansTheTile = () =>
+    this.step("verifyImageSpansTheTile", async () => {
+      const image = (await this.get(overviewThumbnailTestIds.link).boundingBox())!;
+      const tile = (await this.card.boundingBox())!;
+      expect(Math.round(image.width)).toBe(Math.round(tile.width));
+      expect(Math.round(image.x)).toBe(Math.round(tile.x));
+      expect(Math.abs(image.height - image.width / 2)).toBeLessThanOrEqual(1);
+    });
+
+  verifyImageWidth = (width: number) =>
+    this.step(`verifyImageWidth ${width}`, async () => {
+      const image = (await this.get(overviewThumbnailTestIds.link).boundingBox())!;
+      expect(Math.round(image.width)).toBe(width);
+    });
+
+  verifyLengthBadgeReads = (text: string | null) =>
+    this.step(`verifyLengthBadgeReads ${text}`, () =>
+      text === null
+        ? expect(this.get(overviewThumbnailTestIds.badge)).toHaveCount(0)
+        : expect(this.get(overviewThumbnailTestIds.badge)).toHaveText(text),
+    );
+
+  verifyLengthShownInTheMeta = (shown: boolean) =>
+    this.step(`verifyLengthShownInTheMeta ${shown}`, async () => {
+      const length = (await this.get(libraryOverviewCardTestIds.metaLength).boundingBox())!;
+      expect(length.width > 1).toBe(shown);
+    });
   verifyHasNoThumbnail = () => this.expectNotToBeVisible(overviewThumbnailTestIds.image);
 
   verifyAddedByReads = (text: string | null) =>
