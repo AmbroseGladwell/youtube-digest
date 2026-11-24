@@ -45,12 +45,6 @@ export interface LibraryOverviewCardProps {
 
 const SAVED_CHIP_SHOWN_MS = 3_200;
 
-const SELLING_LABEL: Record<string, string> = {
-  own_paid_product: "Sells own paid product",
-  own_free_promotion: "Promotes something of theirs",
-  sponsor_or_affiliate: "Sponsored or affiliate",
-};
-
 const markedText = (text: string, marks: readonly TextMark[]) => {
   const parts = [];
   let from = 0;
@@ -80,7 +74,6 @@ export const LibraryOverviewCard = ({
   said = null,
 }: LibraryOverviewCardProps) => {
   const { overview, state } = overviewWithState;
-  const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
   const readerPath = Routes.overview(overview.id);
   const metaParts = overviewMetaParts(overview);
   const saved = overviewTimeSaved(overview);
@@ -148,15 +141,12 @@ export const LibraryOverviewCard = ({
               {overview.verdict && <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>}
               {overview.recipe === null && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
             </span>
-            {(overview.verdict?.dubious || selling) && (
+            {overview.verdict?.dubious && (
               <span className={styles.kickerGroup}>
-                {overview.verdict?.dubious && (
-                  <span className={styles.dubious}>
-                    <StrokeIcon name="alert" size={13} />
-                    Dubious claim
-                  </span>
-                )}
-                {selling && <span className={styles.selling}>{selling}</span>}
+                <span className={styles.dubious}>
+                  <StrokeIcon name="alert" size={13} />
+                  Dubious claim
+                </span>
               </span>
             )}
           </p>

@@ -82,8 +82,9 @@ OV-232, design 232a–232k. Every row says what it is, in words, never by an ico
   "Article", "Recipe · 4 servings", and a recipe video's "Recipe · 6 servings". A video is most of
   the library, so its row keeps the kicker it had. The chip is a quiet outline in `--muted`, lighter
   than the verdict's filled pill, so the eye finds the title and verdict first.
-- **The kicker is two groups**: what it is (kind, topic, verdict or "Thin"), then its warnings
-  (Dubious claim, the selling note). On a phone a group moves to the next line whole rather than
+- **The kicker is two groups**: what it is (kind, topic, verdict or "Thin"), then its warning
+  (Dubious claim). What it's selling stays on the overview page, not the row: it wasn't useful
+  in the list. On a phone a group moves to the next line whole rather than
   breaking mid-phrase. Nothing shortens or drops.
 - **Recent overviews** on the capture page lead each row with the same chip. The reader masthead,
   the shared page and the link preview already name the kind in words, so they have no chip.

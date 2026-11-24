@@ -388,6 +388,8 @@ judgment call ("neither distorts the argument") — the exact signal Verdict's
 field instead of prose Verdict would otherwise have to re-read. But this richer data
 is deliberately not all shown at once, or shown per-card:
 
+- **Since 24 Nov 2026 the card shows no selling signal at all**: the owner found it not useful
+  in the list, so it lives only on the overview page. What follows was the earlier position.
 - **The card gets exactly one consistent signal**: a single "💰 Selling" chip, present
   or absent, the same shape every time — no per-category badges, no severity marker.
   This is the direct answer to not wanting cards to accumulate labels, and it matches
