@@ -20,6 +20,14 @@
   background: var(--surface);
 }
 
+.stretch {
+  max-width: 100%;
+
+  .title {
+    max-width: none;
+  }
+}
+
 .deleted {
   color: var(--muted);
 

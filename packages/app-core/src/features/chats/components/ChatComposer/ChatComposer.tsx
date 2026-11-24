@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
+import { useId, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { DEFAULT_PLAN, isWrittenPost, MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
@@ -12,7 +12,9 @@ import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
 import { useProjectsQuery } from "../../../projects/queries/projectsQuery.js";
 import { useTopicsQuery } from "../../../overviews/queries/topicsQuery.js";
 import type { PinnedItem } from "../../useChatPanel.js";
+import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useChipFit } from "../../useChipFit.js";
+import { useMenuRoom } from "../../useMenuRoom.js";
 import {
   atQueryOf,
   markedPieces,
@@ -101,6 +103,11 @@ const headLabelOf = (option: PickerOption, query: string): string => {
   return query === "" ? "Recent overviews" : "Overviews";
 };
 
+const optionImageOf = (option: Exclude<PickerOption, { kind: "saved" }>) =>
+  option.kind === "overview"
+    ? { imageUrl: sourceImage(option.overview.source), wide: option.overview.source.kind === "youtube" }
+    : { imageUrl: null, wide: false };
+
 const optionDetailOf = (option: Exclude<PickerOption, { kind: "saved" }>): string => {
   if (option.kind === "project" || option.kind === "topic") {
     return `${option.count} ${option.count === 1 ? "overview" : "overviews"}`;
@@ -178,15 +185,7 @@ export const ChatComposer = ({
   const current = currentOf(options, active);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const [below, setBelow] = useState(false);
-  useLayoutEffect(() => {
-    if (!open) {
-      return;
-    }
-    const top = rootRef.current?.getBoundingClientRect().top ?? 0;
-    const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
-    setBelow(top - Math.max(bar, 0) < Math.min(352, window.innerHeight * 0.5));
-  }, [open]);
+  const pickerRoom = useMenuRoom(open, rootRef, 352);
 
   const rows: RowItem[] = [
     ...pinned.map((item) => {
@@ -220,6 +219,8 @@ export const ChatComposer = ({
     MOST_SHOWN,
   );
   const hidden = measuring ? rows.length : rows.length - shown;
+  const moreRoom = useMenuRoom(moreOpen && !measuring, moreRef, 352);
+  useDismissOnOutside(moreOpen, () => setMoreOpen(false), moreRef);
 
   const changed = (next: string) => {
     onChange(next);
@@ -363,8 +364,14 @@ export const ChatComposer = ({
                   onClick={() => choose(option)}
                   data-testid={chatComposerTestIds.option}
                 >
-                  <StrokeIcon name={PIN_ICON[groupOf(option)]} size={15} />
-                  <b>{marked}</b>
+                  <ChatSourceChip
+                    stretch
+                    title={title}
+                    marked={marked}
+                    label={title}
+                    {...optionImageOf(option)}
+                    icon={PIN_ICON[groupOf(option)]}
+                  />
                   <small>{optionDetailOf(option)}</small>
                 </div>
               )}
@@ -384,7 +391,11 @@ export const ChatComposer = ({
     <div className={styles.root} ref={rootRef}>
       <PlansModal open={plansOpen} plan={usage?.plan ?? DEFAULT_PLAN} onClose={() => setPlansOpen(false)} />
       {open && (
-        <div className={`${styles.picker} ${below ? styles.pickerBelow : ""}`} data-testid={chatComposerTestIds.picker}>
+        <div
+          className={`${styles.picker} ${pickerRoom.below ? styles.below : ""}`}
+          style={pickerRoom.style}
+          data-testid={chatComposerTestIds.picker}
+        >
           <p className={styles.srOnly} aria-live="polite">
             {announced}
           </p>
@@ -412,34 +423,36 @@ export const ChatComposer = ({
               <button
                 type="button"
                 className={`${styles.moreButton} ${moreOpen ? styles.on : ""}`}
-                aria-haspopup="menu"
                 aria-expanded={moreOpen}
+                aria-label={`${hidden} more sources for your next question`}
                 onClick={() => setMoreOpen((current) => !current)}
                 data-testid={chatComposerTestIds.more}
               >
                 +{hidden}
               </button>
               {moreOpen && !measuring && (
-                <div className={styles.moreMenu} role="menu" data-testid={chatComposerTestIds.moreMenu}>
+                <div
+                  className={`${styles.moreMenu} ${moreRoom.below ? styles.below : ""}`}
+                  style={moreRoom.style}
+                  role="group"
+                  aria-label="Sources for your next question"
+                  data-testid={chatComposerTestIds.moreMenu}
+                >
                   {rows.map((item) => (
-                    <div key={item.id} className={styles.moreRow} role="none">
-                      <StrokeIcon name={item.icon} size={14} />
-                      <span className={styles.moreTitle}>{item.title}</span>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        className={styles.moreRemove}
-                        aria-label={`Remove source: ${item.title}`}
-                        onClick={item.remove}
-                        data-testid={chatComposerTestIds.moreRemove}
-                      >
-                        <StrokeIcon name="close" size={13} />
-                      </button>
-                    </div>
+                    <ChatSourceChip
+                      key={item.id}
+                      quiet
+                      title={item.title}
+                      label={item.title}
+                      imageUrl={item.imageUrl}
+                      wide={item.wide}
+                      icon={item.icon}
+                      deleted={item.deleted}
+                      onRemove={item.remove}
+                    />
                   ))}
                   <button
                     type="button"
-                    role="menuitem"
                     className={styles.clearAll}
                     onClick={() => {
                       onClear();

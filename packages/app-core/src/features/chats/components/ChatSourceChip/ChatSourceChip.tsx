@@ -8,12 +8,14 @@ import { chatSourceChipTestIds } from "./ChatSourceChipTestIds.js";
 
 export interface ChatSourceChipProps {
   title: string;
+  marked?: ReactNode;
   detail?: string | undefined;
   more?: readonly string[] | undefined;
   imageUrl?: string | null | undefined;
   wide?: boolean | undefined;
   icon?: StrokeIconName | undefined;
   quiet?: boolean | undefined;
+  stretch?: boolean | undefined;
   deleted?: boolean | undefined;
   to?: string | undefined;
   state?: unknown;
@@ -75,12 +77,14 @@ const ChipFace = ({ body, name, deleted, to, state, onFollow, onPress, tip, test
 
 export const ChatSourceChip = ({
   title,
+  marked = title,
   detail,
   more = [],
   imageUrl,
   wide,
   icon = "fileText",
   quiet,
+  stretch,
   deleted,
   to,
   state,
@@ -108,7 +112,7 @@ export const ChatSourceChip = ({
     return () => observer.disconnect();
   }, [title]);
 
-  const className = `${styles.chip} ${quiet ? styles.quiet : styles.outline} ${deleted ? styles.deleted : ""} ${cut ? styles.cut : ""}`;
+  const className = `${styles.chip} ${quiet ? styles.quiet : styles.outline} ${stretch ? styles.stretch : ""} ${deleted ? styles.deleted : ""} ${cut ? styles.cut : ""}`;
   const thumbnail = imageUrl ? (
     <img className={`${styles.thumb} ${wide ? styles.wide : ""}`} src={imageUrl} alt="" loading="lazy" />
   ) : (
@@ -118,7 +122,7 @@ export const ChatSourceChip = ({
     <>
       {thumbnail}
       <span ref={titleText} className={styles.title} data-cuttable>
-        {title}
+        {marked}
       </span>
       {detail === undefined ? null : <span className={styles.detail}> · {detail}</span>}
       {more.length === 0 ? null : <span className={styles.detail}> +{more.length}</span>}

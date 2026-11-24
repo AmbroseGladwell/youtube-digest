@@ -54,59 +54,25 @@ $focus-ring-room: 4px;
   right: 0;
   bottom: calc(100% + 6px);
   z-index: 6;
-  width: 260px;
-  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  max-height: min(22rem, var(--menu-room, 22rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px;
   border-radius: 18px;
   background: var(--dialog);
   box-shadow: var(--shadow-menu);
 }
 
-.moreRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 6px 0 10px;
-  color: var(--ink);
-
-  :global(svg) {
-    flex: none;
-    color: var(--muted);
-  }
-}
-
-.moreTitle {
-  overflow: hidden;
-  flex: 1;
-  min-width: 0;
-  font: 500 0.8125rem var(--font-body);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.moreRemove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-
-  &:hover,
-  &:focus-visible {
-    background: var(--surface);
-    color: var(--ink);
-  }
-}
-
 .clearAll {
+  flex: none;
   width: 100%;
-  height: 40px;
-  margin-top: 4px;
+  min-height: 40px;
   padding: 0 10px;
   border: 0;
   border-top: 1px solid var(--divider);
@@ -124,7 +90,7 @@ $focus-ring-room: 4px;
   bottom: calc(100% + 6px);
   left: 0;
   z-index: 10;
-  max-height: min(22rem, 50vh);
+  max-height: min(22rem, 50vh, var(--menu-room, 50vh));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 6px;
@@ -133,7 +99,7 @@ $focus-ring-room: 4px;
   box-shadow: var(--shadow-menu);
 }
 
-.pickerBelow {
+.below {
   top: calc(100% + 6px);
   bottom: auto;
 }
@@ -153,13 +119,17 @@ $focus-ring-room: 4px;
 
 .option {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1px 10px;
   align-items: center;
   padding: 8px 10px;
   border-radius: 12px;
   color: var(--ink);
   cursor: pointer;
+
+  > span:first-child {
+    justify-self: start;
+  }
 
   :global(svg) {
     color: var(--muted);
@@ -185,9 +155,14 @@ $focus-ring-room: 4px;
 
 .active {
   background: var(--surface);
+
+  > span:first-child {
+    box-shadow: inset 0 0 0 1.5px var(--surface-press);
+  }
 }
 
 .off {
+  grid-template-columns: 26px minmax(0, 1fr);
   cursor: default;
 
   :global(svg) {
