@@ -77,12 +77,28 @@ export const followUpQuestionsShape = () => ({
   readerQuestions: z.string().array(),
 });
 
-const usable = (written: string[]): string[] =>
-  written.map((question) => question.trim()).filter((question) => question !== "" && wordCount(question) <= FOLLOW_UP_QUESTION_MAX_WORDS);
+const sameness = (question: string): string =>
+  question
+    .toLowerCase()
+    .replace(/[\s\p{P}]+/gu, " ")
+    .trim();
+
+const usable = (written: string[], taken: Set<string>): string[] =>
+  written
+    .map((question) => question.trim())
+    .filter((question) => {
+      const key = sameness(question);
+      if (key === "" || wordCount(question) > FOLLOW_UP_QUESTION_MAX_WORDS || taken.has(key)) {
+        return false;
+      }
+      taken.add(key);
+      return true;
+    });
 
 export const resolvedFollowUpQuestions = (aboutSource: string[], forReader: string[]): FollowUpQuestions => {
-  const sources = usable(aboutSource);
-  const readers = usable(forReader).slice(0, MOST_READER_QUESTIONS);
+  const taken = new Set<string>();
+  const readers = usable(forReader, taken).slice(0, MOST_READER_QUESTIONS);
+  const sources = usable(aboutSource, taken);
   const resolved: FollowUpQuestion[] = [];
   while (sources.length > 0 && resolved.length < MOST_FOLLOW_UP_QUESTIONS) {
     const reader = readers.shift();
