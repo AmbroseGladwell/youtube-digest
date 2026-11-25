@@ -31,7 +31,7 @@ const WITH_MINOR_UNITS = /^(\d[\d,]*)\.(\d\d)$/;
 const minorMoney = (symbol: string, whole: string, minor: string): string => {
   const [one, many] = CURRENCY_NAME[symbol]!;
   if (whole !== "0") {
-    return `${whole} ${whole === "1" ? one : many}${minor === "00" ? "" : ` ${minor}`}`;
+    return `${whole} ${whole === "1" ? one : many}${Number(minor) === 0 ? "" : ` ${Number(minor)}`}`;
   }
   const [minorOne, minorMany] = MINOR_CURRENCY_NAME[symbol]!;
   const count = String(Number(minor));

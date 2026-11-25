@@ -42,8 +42,8 @@ A sentence may open or close inside bold or italic marks.
 - Citation ids are already taken out of stored text by the server (`withoutCitationMarks`);
   one left as a bracketed aside is dropped by `speakable`.
 - Last, each sentence goes through `speakable` for currencies, abbreviations, fractions and
-  decimals (`tts-pre-rendered-speech.md`, "Numbers and symbols"). Decimals were fixed there
-  for this card: without it, Kokoro's phonemiser cut a sentence at the point of `1.5`.
+  decimals (`tts-pre-rendered-speech.md`, "Numbers and symbols"). Decimals are said as
+  words there since OV-417: before that, Kokoro's phonemiser cut a sentence at the point of `1.5`.
 
 **Where each sentence is shown.** Each `SpokenSentence` carries its `place` (intro, a section's
 heading, paragraph, numbered or bulleted item, the takeaway, or the plain `text`), the index of

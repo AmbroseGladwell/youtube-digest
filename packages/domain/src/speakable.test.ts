@@ -60,6 +60,14 @@ test("says pounds and pence, and pence alone under a pound", () => {
   assert.equal(speakable("A $1.5m fund."), "A 1 point 5 million dollar fund.");
 });
 
+test("says every amount the card lists as people say it, and leaves a full stop after a year alone", () => {
+  assert.equal(speakable("£4.99, £4.00 and £4.05."), "4 pounds 99, 4 pounds and 4 pounds 5.");
+  assert.equal(speakable("It raised $1.5m."), "It raised 1 point 5 million dollars.");
+  assert.equal(speakable("a $4.99 coat"), "a 4 dollars 99 coat");
+  assert.equal(speakable("Update to v2.5.1 now."), "Update to v2 point 5 point 1 now.");
+  assert.equal(speakable("It grew in 2026."), "It grew in 2026.");
+});
+
 test("leaves ordinary prose alone", () => {
   assert.equal(speakable("Add sets, not weight."), "Add sets, not weight.");
 });
