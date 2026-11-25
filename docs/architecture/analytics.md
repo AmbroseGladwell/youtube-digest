@@ -191,6 +191,11 @@ shell (`web` or `extension`), the layout (`full` or `panel`, or `worker` for an 
 the extension's service worker), the app's version when it is a plain `x.y.z`, and the
 operating system in one word, from `analyticsPlatform`. The server adds the environment.
 
+The server writes these into every event's properties as `surface`, `layout`, `app_version`,
+`platform` and `environment`, after the event's own, so an event property with one of those
+names is overwritten. `analyticsEvents.test.ts` refuses them; name the thing itself instead
+(`rowLayout`, `captureSurface`, `source`).
+
 ## Naming
 
 Every event is `feature.screen.action`, so a name says where it came from without a

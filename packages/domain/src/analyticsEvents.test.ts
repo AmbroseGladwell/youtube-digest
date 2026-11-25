@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { z } from "zod";
+import { AnalyticsContext } from "./AnalyticsEventBatch.js";
 import { ANALYTICS_IDS, analyticsEventDefinitions, isAnalyticsEventName } from "./analyticsEvents.js";
 
 const everyEvent = [...analyticsEventDefinitions];
@@ -21,6 +22,15 @@ test("every property is a choice, a flag, a number, one of our own ids or a mode
         schema instanceof z.ZodEnum || schema instanceof z.ZodBoolean || schema instanceof z.ZodNumber || ids.includes(schema),
         `${name}.${prop} must be an enum, a boolean, a number or an id from ANALYTICS_IDS (ours, or a model's)`,
       );
+    }
+  }
+});
+
+test("no property takes a name the server stamps on every event, which would overwrite it", () => {
+  const stamped = new Set([...Object.keys(AnalyticsContext.shape), "app_version", "environment"]);
+  for (const [name, definition] of everyEvent) {
+    for (const prop of Object.keys(definition.props)) {
+      assert.ok(!stamped.has(prop), `${name}.${prop} is overwritten by the event's context`);
     }
   }
 });

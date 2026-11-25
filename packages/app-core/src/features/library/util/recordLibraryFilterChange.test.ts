@@ -62,8 +62,8 @@ describe("recordLibraryFilterChange", () => {
     recordLibraryFilterChange(filters, NO_LIBRARY_FILTERS, { sources: [sources[0]!.id, "youtube" as LibrarySourceId] }, "panel", sources);
 
     expect(recorded).toEqual([
-      ["library.filters.sourceSwitched", { platform: "website", on: true, from: "panel" }],
-      ["library.filters.sourceSwitched", { platform: "youtube", on: true, from: "panel" }],
+      ["library.filters.sourceSwitched", { source: "website", on: true, from: "panel" }],
+      ["library.filters.sourceSwitched", { source: "youtube", on: true, from: "panel" }],
     ]);
   });
 

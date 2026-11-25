@@ -182,8 +182,8 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const player = usePlayer();
   const playerSnapshot = usePlayerSnapshot();
   const { plan } = usePlan();
-  const layout = useLibraryRowLayout();
-  const rowAnalytics = { layout, plan };
+  const rowLayout = useLibraryRowLayout();
+  const rowAnalytics = { rowLayout, plan };
 
   const isPlaying = (overviewId: OverviewId) =>
     playerSnapshot.track?.overviewId === overviewId && ["playing", "buffering", "preparing"].includes(playerSnapshot.status);

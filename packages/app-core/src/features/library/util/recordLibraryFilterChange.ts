@@ -31,7 +31,7 @@ export const recordLibraryFilterChange = (
     analytics.kindSwitched({ kind: value, on, from });
   }
   for (const { value, on } of switched(before.sources, patch.sources)) {
-    analytics.sourceSwitched({ platform: platformOf(value, sources), on, from });
+    analytics.sourceSwitched({ source: platformOf(value, sources), on, from });
   }
   if (patch.added !== undefined && patch.added !== before.added) {
     analytics.addedChosen({ added: patch.added, from });

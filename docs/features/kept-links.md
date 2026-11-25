@@ -233,8 +233,9 @@ it.
 
 ## Events
 
-Under `keptLinks` in the catalogue, each with `plan` and `surface` (web, phone or panel),
-never the link:
+Under `keptLinks` in the catalogue, each with `plan` and `captureSurface` (web, phone or panel),
+never the link. Until 25 Nov it was `surface`, which the event's context overwrote with
+`web` or `extension`, so earlier events don't say where:
 
 - `queue.linkKept`: Keep it pressed, with what the link waits for.
 - `queue.keptLinkMade`: an overview written for a kept link, with how many minutes it
