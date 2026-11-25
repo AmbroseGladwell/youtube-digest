@@ -16,6 +16,8 @@ export interface ArticlePages {
   // Must be called inside the click, or Chrome refuses it.
   requestAccess: (url: string) => Promise<boolean>;
   read: (tabId: number) => Promise<ArticleRead>;
+  // A kept link, read in a tab of its own that closes after.
+  readAt: (url: string) => Promise<ArticleRead>;
   reload: (tabId: number) => Promise<void>;
   // True it moved, false the place has gone, null we couldn't look.
   showPlace: (tabId: number, place: ArticlePlace) => Promise<boolean | null>;

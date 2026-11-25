@@ -18,6 +18,7 @@ export class IwftArticlePages implements ArticlePages {
   private placeResult: boolean | null = true;
   readonly shown: ArticlePlace[] = [];
   readonly asked: string[] = [];
+  readonly readAddresses: string[] = [];
   reloads = 0;
 
   constructor({ page, granted, read }: IwftArticlePagesConfig) {
@@ -50,6 +51,10 @@ export class IwftArticlePages implements ArticlePages {
     });
   };
   read = async (): Promise<ArticleRead> => this.readResult;
+  readAt = async (url: string): Promise<ArticleRead> => {
+    this.readAddresses.push(url);
+    return this.readResult;
+  };
   reload = async (): Promise<void> => {
     this.reloads += 1;
   };

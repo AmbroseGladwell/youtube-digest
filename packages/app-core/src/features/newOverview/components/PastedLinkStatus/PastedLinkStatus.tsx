@@ -22,7 +22,7 @@ export const PastedLinkStatus = ({ article, podcast, tiktok, social, url, onClea
   const opened = onOpened === undefined ? {} : { onOpened };
   const state = pastedLinkState(article.link, podcast, tiktok?.link, social?.link);
   if (state.tiktokShown && tiktok !== undefined) {
-    return <TikTokLinkStatus link={tiktok.link} onRetry={tiktok.retry} onClear={onClear} {...opened} />;
+    return <TikTokLinkStatus link={tiktok.link} url={url} onRetry={tiktok.retry} onClear={onClear} {...opened} />;
   }
   if (state.socialShown && social !== undefined) {
     return <SocialLinkStatus social={social} onClear={onClear} onOpened={onOpened} />;

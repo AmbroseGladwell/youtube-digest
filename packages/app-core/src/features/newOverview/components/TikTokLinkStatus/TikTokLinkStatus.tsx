@@ -7,13 +7,17 @@ import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { ArticleFailureNotice } from "../../../capture/components/ArticleFailureNotice/ArticleFailureNotice.js";
 import { transcriptionCopy } from "../../../podcasts/util/transcriptionCopy.js";
 import { EpisodeWordsNote } from "../PodcastLinkStatus/PodcastLinkStatus.js";
-import type { TikTokLink } from "../../useTikTokLink.js";
+import type { TikTokLink, TikTokLinkFailure } from "../../useTikTokLink.js";
+import { useSurface } from "../../../../app/SurfaceContext.js";
+import { KeepForExtension } from "../../../captures/components/KeepForExtension/KeepForExtension.js";
+import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { tiktokLinkFailureCopy, tiktokStopCopy } from "../../util/tiktokLinkFailureCopy.js";
 import styles from "./TikTokLinkStatus.module.scss";
 import { tiktokLinkStatusTestIds } from "./TikTokLinkStatusTestIds.js";
 
 export interface TikTokLinkStatusProps {
   link: TikTokLink;
+  url: string;
   onRetry: () => void;
   onClear: () => void;
   onOpened?: () => void;
@@ -28,7 +32,12 @@ const lengthOf = (video: Pick<TikTokVideo, "durationSeconds">): string | null =>
 export const tiktokFacts = (video: Pick<TikTokVideo, "durationSeconds" | "postedAt">): string =>
   [lengthOf(video), video.postedAt === null ? null : `Posted ${formatPublishedDate(video.postedAt)}`].filter(Boolean).join(" · ");
 
-export const TikTokLinkStatus = ({ link, onRetry, onClear, onOpened }: TikTokLinkStatusProps) => {
+// Failures our server meets that the reader's own browser can get past (docs/features/tiktok-links.md, "Who reads TikTok").
+const NOT_KEEPABLE = new Set<TikTokLinkFailure>(["unavailable", "photo", "profile"]);
+
+export const TikTokLinkStatus = ({ link, url, onRetry, onClear, onOpened }: TikTokLinkStatusProps) => {
+  const surface = useSurface();
+  const { keepForExtension } = useNewOverviewRunController();
   switch (link.status) {
     case "none":
       return null;
@@ -97,7 +106,13 @@ export const TikTokLinkStatus = ({ link, onRetry, onClear, onOpened }: TikTokLin
     case "unreachable":
     case "failed": {
       const copy = tiktokLinkFailureCopy(link.status === "failed" ? link.reason : "unreachable");
-      return <ArticleFailureNotice copy={copy} onWay={copy.way === "tryAgain" ? onRetry : onClear} prominent={copy.way === "tryAnother"} />;
+      const keepable = link.status === "failed" && !NOT_KEEPABLE.has(link.reason) && surface !== "extension";
+      return (
+        <>
+          <ArticleFailureNotice copy={copy} onWay={copy.way === "tryAgain" ? onRetry : onClear} prominent={copy.way === "tryAnother"} />
+          {keepable && <KeepForExtension onKeep={() => keepForExtension(url, null)} />}
+        </>
+      );
     }
   }
 };

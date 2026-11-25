@@ -48,3 +48,39 @@ export const showArticlePlaceInTab = async (tabId: number, place: ArticlePlace):
     return null;
   }
 };
+
+const LOAD_TIMEOUT_MS = 30_000;
+
+const loaded = (tabId: number): Promise<void> =>
+  new Promise((resolve) => {
+    const changed = (updated: number, change: chrome.tabs.TabChangeInfo) => {
+      if (updated === tabId && change.status === "complete") {
+        done();
+      }
+    };
+    const timer = setTimeout(() => done(), LOAD_TIMEOUT_MS);
+    const done = () => {
+      clearTimeout(timer);
+      chrome.tabs.onUpdated.removeListener(changed);
+      resolve();
+    };
+    chrome.tabs.onUpdated.addListener(changed);
+    void chrome.tabs.get(tabId).then(
+      (tab) => tab.status === "complete" && done(),
+      () => done(),
+    );
+  });
+
+// A kept link is read in a tab of its own, out of sight, then closed (docs/features/kept-links.md, "Only the extension can read").
+export const readArticleAt = async (url: string): Promise<ArticleRead> => {
+  const tab = await chrome.tabs.create({ url, active: false }).catch(() => null);
+  if (tab?.id === undefined) {
+    return NOT_LOADED;
+  }
+  try {
+    await loaded(tab.id);
+    return await readArticleInTab(tab.id);
+  } finally {
+    await chrome.tabs.remove(tab.id).catch(() => undefined);
+  }
+};
