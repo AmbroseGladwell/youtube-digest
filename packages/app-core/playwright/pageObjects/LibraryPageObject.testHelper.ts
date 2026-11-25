@@ -377,10 +377,12 @@ export class LibraryPageObject extends PageObject {
     this.step("openReaderFromACardOnScreen", async () => {
       const cards = this.get(libraryOverviewCardTestIds.root);
       const viewport = this.page.viewportSize()!;
+      const toolbar = await this.get(libraryPageTestIds.toolbar).boundingBox();
+      const clearOfChrome = toolbar === null ? 0 : toolbar.y + toolbar.height;
       const count = await cards.count();
       for (let index = 0; index < count; index += 1) {
         const box = await cards.nth(index).boundingBox();
-        if (box !== null && box.y >= 0 && box.y + box.height <= viewport.height) {
+        if (box !== null && box.y >= clearOfChrome && box.y + box.height <= viewport.height) {
           return this.nthCard(index).openReader();
         }
       }

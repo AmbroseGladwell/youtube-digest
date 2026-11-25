@@ -65,6 +65,7 @@ export const AppShell = () => {
   const { pathname } = useLocation();
   const isPanel = useIsPanel();
   const mastheadHeight = useMeasuredHeight(stickyChromeSizes.masthead);
+  const paneStripHeight = useMeasuredHeight(stickyChromeSizes.paneStrip);
   const [band, setBand] = useState<HTMLElement | null>(null);
   const measureBand = useCallback(
     (element: HTMLElement | null) => {
@@ -193,7 +194,10 @@ export const AppShell = () => {
   );
 
   const runStripOrNotice = () => {
-    if (!isPanel && newOverview.run && !newOverview.dialogOpen) {
+    if (isPanel) {
+      return null;
+    }
+    if (newOverview.run && !newOverview.dialogOpen) {
       return (
         <GenerationStatusStrip
           run={newOverview.run}
@@ -203,8 +207,10 @@ export const AppShell = () => {
         />
       );
     }
-    return !isPanel && !newOverview.run && libraryMoved && <LibraryMoveNotice />;
+    return !newOverview.run && libraryMoved ? <LibraryMoveNotice /> : null;
   };
+  const stripOrNotice = runStripOrNotice();
+  const stripInPane = sidebar.available && stripOrNotice !== null;
 
   const paneContent = () => {
     if (belowWriteFloor) {
@@ -220,7 +226,7 @@ export const AppShell = () => {
           <HistoryTrailProvider value={trail}>
             <BackLinkHandoffProvider value={handoff}>
               <div
-                className={`${styles.root} ${phoneNav ? styles.phoneNav : ""}`}
+                className={`${styles.root} ${phoneNav ? styles.phoneNav : ""} ${sidebar.available && !sidebar.open ? styles.showSidebarClear : ""}`}
                 ref={mastheadHeight.host}
                 data-testid={appShellTestIds.root}
               >
@@ -302,7 +308,7 @@ export const AppShell = () => {
                                 onClick={() => analytics.app.nav.pageChosen({ page: "ask", from: "masthead" })}
                                 data-testid={appShellTestIds.askButton}
                               >
-                                <StrokeIcon name="messageSquare" />
+                                <StrokeIcon name="chat" />
                                 <span className={styles.buttonLabel}>Ask</span>
                               </PageLink>
                               <span className={styles.tip} aria-hidden="true">
@@ -354,7 +360,7 @@ export const AppShell = () => {
                     <OnThisTabLine tab={onThisTab} onStartVideo={(url) => newOverview.start(url, { from: "panel" })} />
                   )}
 
-                  {runStripOrNotice()}
+                  {!stripInPane && stripOrNotice}
                 </header>
 
                 <div className={styles.body}>
@@ -369,7 +375,17 @@ export const AppShell = () => {
                       <AppSidebar onHide={() => sidebar.toggle("button")} />
                     </div>
                   )}
-                  <div className={styles.pane} data-testid={appShellTestIds.pane}>
+                  <div
+                    className={styles.pane}
+                    ref={paneStripHeight.host}
+                    data-strip={stripInPane || undefined}
+                    data-testid={appShellTestIds.pane}
+                  >
+                    {stripInPane && (
+                      <div className={styles.paneStrip} ref={paneStripHeight.measured}>
+                        {stripOrNotice}
+                      </div>
+                    )}
                     <SidebarShownProvider value={sidebar.shown}>{paneContent()}</SidebarShownProvider>
                   </div>
                 </div>

@@ -116,7 +116,38 @@
   min-height: 2.75rem;
 }
 
+// On a phone the sheet stacks the field over a full-width Make button, rather than wrapping inside the pill.
 @media (max-width: 47.9375rem) {
+  .fieldRow {
+    flex-direction: column;
+    align-items: stretch;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .urlInput {
+    flex: none;
+    min-height: 2.75rem;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--surface);
+    padding: 0.5rem 1.125rem;
+    transition: border-color var(--motion-state) var(--motion-ease);
+
+    &:focus,
+    &:focus-visible {
+      border-color: var(--brand);
+    }
+  }
+
+  .generateButton {
+    width: 100%;
+    justify-content: center;
+  }
+
   .watchingButton {
     align-self: stretch;
     min-height: 2.75rem;

@@ -234,7 +234,7 @@ export const JustNowList = ({
       </ol>
       {(running !== null || waiting.length > 0) && (
         <p className={styles.footNote} data-testid={newOverviewDialogTestIds.footNote}>
-          You can close this — it keeps going.{surface === "extension" && " Closing the side panel does stop it."}
+          You can close this, it keeps going.{surface === "extension" && " Closing the side panel does stop it."}
         </p>
       )}
     </section>

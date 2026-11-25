@@ -24,6 +24,18 @@
   }
 }
 
+.search {
+  --conversation-search-surface: var(--chat-raised, var(--surface));
+
+  margin-bottom: 0.625rem;
+}
+
+.noMatches {
+  margin: 0.5rem 0.75rem;
+  font: 400 0.8125rem/1.45 var(--font-body);
+  color: var(--muted);
+}
+
 .rows {
   margin: 0;
   padding: 0;

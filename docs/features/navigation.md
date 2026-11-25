@@ -14,12 +14,14 @@ account on the right. Ask is a page, so on it its pill is ringed and carries
 
 **Phones (D, 399d).** The logo's mark (the name stays as the heading for screen readers),
 then **Overviews** and **Projects** as icons named by their tips and accessible names, the
-orange **Ask** and **+** circles, and the account. The current page's icon sits on a surface
-circle with `aria-current="page"`. Every circle is 44px, as OV-380 holds the bar (the design
-draws the page icons at 40); below about 340px wide (400% zoom on a phone) they drop to 40px
-so the bar still fits at 320px. At 200% text they grow with it and wrap to a second row
-rather than run off the screen. While the bar holds a page's way back (`back-within-reach.md`),
-the page icons give way so its label fits.
+orange **Ask** and **+** circles, and the account. Only the current page is orange: its circle (Overviews,
+Projects or Ask) takes the action colour and Ask's ring, with `aria-current="page"`; the rest,
+
+- included, sit quiet in the muted ink until hovered. Every circle is 44px, as OV-380 holds the bar (the design
+  draws the page icons at 40); below about 340px wide (400% zoom on a phone) they drop to 40px
+  so the bar still fits at 320px. At 200% text they grow with it and wrap to a second row
+  rather than run off the screen. While the bar holds a page's way back (`back-within-reach.md`),
+  it is the arrow alone, its label kept for screen readers, so the page icons stay.
 
 D applies under 48rem, and to a phone on its side: `(pointer: coarse) and (max-height:
 31.1875rem)`, so a short desktop window keeps the wide layout.
@@ -52,12 +54,16 @@ Top to bottom:
   colour and "Next: 50 hours · 740 min to go". It opens the same Time saved dialog as before.
   Its name is its own text, with the figure's words hidden beside the rolling digits, so what
   is said matches what is shown.
-- **Hide sidebar**, under Time saved, tip "Hide sidebar · [".
+- **Hide sidebar**, under Time saved, tip "Hide sidebar · [". Time saved and Hide sidebar are
+  a foot fixed to the bottom of the sidebar; the lists scroll under it. The + tips open to the
+  left of their buttons, since the sidebar clips anything that leaves it.
 
 **Open or hidden.** Open by default from 62rem (desktop and tablet landscape), hidden by
 default below it (tablet portrait, an unfolded foldable). Opened there, it pushes the list,
 which narrows; nothing is dimmed. Hidden, a floating button in the bottom left ("Show sidebar
-· [", above the mini player) brings it back. `[` toggles it either way, except while typing
+· [", above the mini player), the same size and in the same place as Hide sidebar, brings it
+back. While an overview is being made, its strip sits over the page alone, under the masthead,
+so the sidebar keeps its place beside it. `[` toggles it either way, except while typing
 in a field or with a dialog or menu open. The choice is remembered on the device
 (`sidebarStorage`, one value, open or hidden); with none, the width decides. It slides over
 240ms and switches at once with reduced motion. Hiding by the button moves focus to the

@@ -1,10 +1,12 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useChipFit } from "../../useChipFit.js";
+import { clippingEdges, menuShift } from "../../util/menuShift.js";
 import styles from "./ChatChipRow.module.scss";
 import { chatChipRowTestIds } from "./ChatChipRowTestIds.js";
 
 const MOST_SHOWN = 2;
+const MENU_EDGES = 32;
 
 export interface ChatChipRowProps {
   chips: readonly ReactNode[];
@@ -17,22 +19,24 @@ export const ChatChipRow = ({ chips, labels, align = "start", testId }: ChatChip
   const [open, setOpen] = useState(false);
   const { rowRef, moreRef, measuring, shown } = useChipFit(labels, MOST_SHOWN);
   const menu = useRef<HTMLDivElement | null>(null);
-  const [toEnd, setToEnd] = useState(align === "end");
+  const [place, setPlace] = useState<{ shift: number; room: number } | null>(null);
   useDismissOnOutside(open, () => setOpen(false), moreRef);
 
-  // The menu opens toward whichever side has room, so it never runs off a phone's screen (OV-368).
+  // The menu opens toward whichever side has room and is kept inside the screen and its panel (OV-368).
   useLayoutEffect(() => {
     if (!open) {
+      setPlace(null);
       return;
     }
-    const hostBox = moreRef.current?.getBoundingClientRect();
-    const width = menu.current?.offsetWidth ?? 0;
-    if (hostBox === undefined) {
+    const host = moreRef.current;
+    if (host === null) {
       return;
     }
-    const roomRight = window.innerWidth - hostBox.left;
-    const roomLeft = hostBox.right;
-    setToEnd(align === "end" ? roomLeft >= width || roomLeft >= roomRight : roomRight < width && roomLeft > roomRight);
+    const bounds = clippingEdges(host);
+    setPlace({
+      shift: menuShift(host.getBoundingClientRect(), menu.current?.offsetWidth ?? 0, bounds, align),
+      room: bounds.right - bounds.left - MENU_EDGES,
+    });
   }, [open, align]);
 
   const hidden = measuring ? chips.length : chips.length - shown;
@@ -61,7 +65,13 @@ export const ChatChipRow = ({ chips, labels, align = "start", testId }: ChatChip
             +{hidden}
           </button>
           {open && !measuring && (
-            <div ref={menu} className={`${styles.menu} ${toEnd ? styles.menuEnd : ""}`} role="group" data-testid={chatChipRowTestIds.menu}>
+            <div
+              ref={menu}
+              className={`${styles.menu} ${place !== null && place.shift < 0 ? styles.menuEnd : ""}`}
+              style={place === null ? { visibility: "hidden" } : { left: `${place.shift}px`, maxWidth: `min(320px, ${place.room}px)` }}
+              role="group"
+              data-testid={chatChipRowTestIds.menu}
+            >
               {chips}
             </div>
           )}

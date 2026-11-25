@@ -46,6 +46,7 @@ import { filtersChangedFromDefault } from "../util/filtersChangedFromDefault.js"
 import { clearGroupPatch, libraryFilterChips } from "../util/libraryFilterChips.js";
 import { LibraryFilterChips } from "../components/LibraryFilterChips/LibraryFilterChips.js";
 import { libraryRowGlideName, useLibraryGlide } from "./useLibraryGlide.js";
+import { useToolbarStuck } from "./useToolbarStuck.js";
 import "./libraryTransitions.scss";
 import { useLibraryView } from "./useLibraryView.js";
 import { useLibraryViewLink } from "../useLibraryViewLink.js";
@@ -82,6 +83,8 @@ import { useOverviewSelection } from "./useOverviewSelection.js";
 
 const NARROW_QUERY = "(max-width: 61.9375rem)";
 const PHONE_QUERY = "(max-width: 47.9375rem)";
+// Mirrors shortScreens.scss: on a short screen the toolbar scrolls away with the page.
+const TOOLBAR_STICKS_QUERY = "(min-height: 34.0625rem)";
 const QUERY_TO_URL_MS = 300;
 
 export interface LibraryPageProps {
@@ -223,6 +226,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const sidebarShown = useSidebarShown();
   const isPhone = useMediaQuery(PHONE_QUERY);
   const coarsePointer = useMediaQuery("(pointer: coarse)");
+  const toolbar = useToolbarStuck(useMediaQuery(TOOLBAR_STICKS_QUERY));
   const timeSaved = timeSavedSummary(readableEntries(entries));
   const milestones = useMilestones(timeSaved.minutes, true);
   // A sample isn't the reader's first overview: docs/features/onboarding.md, "Try a sample".
@@ -340,7 +344,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     selection.stop();
   };
   const acted = (action: SelectionAction) => analytics.library.selection.acted({ action, overviews: selected.length });
-  const finishActing = (action: SelectionAction, done: BulkAction, writes: Promise<unknown>[], overviews: number) => {
+  const finishActing = (action: SelectionAction, done: BulkAction, writes: Promise<unknown>[], overviews: number, undo?: () => void) => {
     analytics.library.selection.stopped({ selected: overviews, reason: "acted" });
     refocusSelect.current = true;
     selection.stop();
@@ -349,7 +353,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         analytics.library.selection.failed({ action, failed, writes: writes.length });
       }
       const { text, done: succeeded } = bulkActionToast(done, { writes: writes.length, failed });
-      toast.show(text, succeeded);
+      toast.show(text, succeeded, succeeded ? (undo ?? null) : null);
     });
   };
   const setSelectedState = (patch: { read: boolean } | { favourite: boolean }): Promise<unknown>[] => {
@@ -629,69 +633,78 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
 
             {projects.empty === null && (
               <>
-                <LibrarySearch
-                  text={searchText}
-                  onType={(typed) => {
-                    setQuery(typed);
-                    setKeptIds((kept) => (kept.size === 0 ? kept : new Set()));
-                  }}
-                  onClearPressed={() => analytics.library.search.cleared()}
-                  isPhone={isPhone}
-                  placeholder={projects.current === null ? searchPlaceholder : `Search in ${projects.current.project.name}`}
+                <div ref={toolbar.sentinel} className={styles.toolbarSentinel} aria-hidden="true" />
+                <div
+                  ref={toolbar.toolbar}
+                  className={styles.toolbar}
+                  data-sticky-fade={toolbar.stuck ? "" : undefined}
+                  data-glide-above=""
+                  data-testid={libraryPageTestIds.toolbar}
                 >
-                  {sortControl}
-                  <button
-                    ref={filterButton}
-                    type="button"
-                    className={styles.filterButton}
-                    onClick={() => {
-                      if (filtersOpen) {
-                        closeFilters();
-                      } else {
-                        analytics.library.filterSheet.opened();
-                        setAppliedOpen(false);
-                        setFiltersOpen(true);
-                      }
+                  <LibrarySearch
+                    text={searchText}
+                    onType={(typed) => {
+                      setQuery(typed);
+                      setKeptIds((kept) => (kept.size === 0 ? kept : new Set()));
                     }}
-                    aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} applied`}
-                    aria-haspopup="dialog"
-                    aria-expanded={filtersOpen}
-                    data-testid={libraryPageTestIds.filterButton}
+                    onClearPressed={() => analytics.library.search.cleared()}
+                    isPhone={isPhone}
+                    placeholder={projects.current === null ? searchPlaceholder : `Search in ${projects.current.project.name}`}
                   >
-                    <StrokeIcon name="filter" size={17} />
-                    {changedFilters > 0 && (
-                      <span className={styles.filterCount} aria-hidden="true" data-testid={libraryPageTestIds.filterCount}>
-                        {changedFilters}
-                      </span>
-                    )}
-                  </button>
-                  {selectable && (
+                    {sortControl}
                     <button
-                      ref={selectButton}
+                      ref={filterButton}
                       type="button"
-                      className={styles.selectButton}
+                      className={styles.filterButton}
                       onClick={() => {
-                        if (selection.selecting) {
-                          stopSelecting();
+                        if (filtersOpen) {
+                          closeFilters();
                         } else {
-                          analytics.library.selection.started();
-                          selection.start();
+                          analytics.library.filterSheet.opened();
+                          setAppliedOpen(false);
+                          setFiltersOpen(true);
                         }
                       }}
-                      aria-pressed={selection.selecting}
-                      aria-label={selection.selecting ? "Stop selecting" : "Select"}
-                      title={selection.selecting ? "Stop selecting" : "Select"}
-                      data-testid={libraryPageTestIds.selectButton}
+                      aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} applied`}
+                      aria-haspopup="dialog"
+                      aria-expanded={filtersOpen}
+                      data-testid={libraryPageTestIds.filterButton}
                     >
-                      <span className={styles.selectIcon} aria-hidden="true">
-                        <StrokeIcon name="squareCheck" size={16} />
-                      </span>
-                      <span className={styles.stopIcon} aria-hidden="true">
-                        <StrokeIcon name="close" size={16} />
-                      </span>
+                      <StrokeIcon name="filter" size={17} />
+                      {changedFilters > 0 && (
+                        <span className={styles.filterCount} aria-hidden="true" data-testid={libraryPageTestIds.filterCount}>
+                          {changedFilters}
+                        </span>
+                      )}
                     </button>
-                  )}
-                </LibrarySearch>
+                    {selectable && (
+                      <button
+                        ref={selectButton}
+                        type="button"
+                        className={styles.selectButton}
+                        onClick={() => {
+                          if (selection.selecting) {
+                            stopSelecting();
+                          } else {
+                            analytics.library.selection.started();
+                            selection.start();
+                          }
+                        }}
+                        aria-pressed={selection.selecting}
+                        aria-label={selection.selecting ? "Stop selecting" : "Select"}
+                        title={selection.selecting ? "Stop selecting" : "Select"}
+                        data-testid={libraryPageTestIds.selectButton}
+                      >
+                        <span className={styles.selectIcon} aria-hidden="true">
+                          <StrokeIcon name="squareCheck" size={16} />
+                        </span>
+                        <span className={styles.stopIcon} aria-hidden="true">
+                          <StrokeIcon name="close" size={16} />
+                        </span>
+                      </button>
+                    )}
+                  </LibrarySearch>
+                </div>
 
                 {selection.selecting && projects.current !== null && (
                   <p className={styles.selectionLine} aria-live="polite" data-testid={libraryPageTestIds.selectionLine}>
@@ -791,9 +804,9 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                 onRemoveFromProject={() => {
                   acted("removeFromProject");
                   const ids = selected.map(({ overview }) => overview.id);
-                  const writes = projects.removeFromCurrent(ids);
+                  const { writes, undo } = projects.removeFromCurrent(ids);
                   const place = projects.current?.project.name ?? "";
-                  finishActing("removeFromProject", { kind: "removed", overviews: ids.length, place }, writes, ids.length);
+                  finishActing("removeFromProject", { kind: "removed", overviews: ids.length, place }, writes, ids.length, undo);
                 }}
                 onDelete={() => {
                   acted("delete");

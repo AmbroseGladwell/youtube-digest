@@ -369,6 +369,7 @@ export const AskPage = () => {
             page.openConversation(chat);
           }}
           onDelete={page.deleteConversation}
+          onSearched={(matches) => analytics.ask.drawer.searched({ matches })}
           onClose={() => {
             hideDrawer();
             requestAnimationFrame(() => drawerButton.current?.focus());
@@ -393,7 +394,7 @@ export const AskPage = () => {
               }}
               data-testid={askPageTestIds.drawerButton}
             >
-              <StrokeIcon name="panelOpen" size={18} />
+              <StrokeIcon name="chatOpen" size={18} />
             </button>
           </div>
         )}

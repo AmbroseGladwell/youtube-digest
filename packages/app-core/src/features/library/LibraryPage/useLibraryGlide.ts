@@ -2,6 +2,8 @@ import { useCallback, useLayoutEffect, useRef, type RefObject } from "react";
 import { shouldAnimateNavigation } from "../../../util/viewTransitions.js";
 
 const GLIDE_ATTRIBUTE = "libraryGlide";
+const POPOVER_GLIDE_NAME = "library-popover";
+const TOOLBAR_GLIDE_NAME = "library-toolbar";
 const SETTLE_LIMIT_MS = 500;
 
 const glidables = (region: HTMLElement) => region.querySelectorAll<HTMLElement>("[data-glide-name]");
@@ -17,6 +19,18 @@ const unnameAll = (region: HTMLElement) => {
     element.style.viewTransitionName = "";
   }
 };
+
+const openPopover = () => document.querySelector<HTMLElement>("body > [role='dialog'], body > [role='menu']");
+
+const heldAbove = (region: HTMLElement): [HTMLElement, string][] => {
+  const pairs: [HTMLElement | null, string][] = [
+    [region.querySelector<HTMLElement>("[data-glide-above]"), TOOLBAR_GLIDE_NAME],
+    [openPopover(), POPOVER_GLIDE_NAME],
+  ];
+  return pairs.filter((pair): pair is [HTMLElement, string] => pair[0] !== null);
+};
+
+const modalOpen = () => document.querySelector("dialog[open]:modal") !== null;
 
 export const libraryRowGlideName = (id: string) => `library-row-${id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
@@ -38,7 +52,7 @@ export const useLibraryGlide = (region: RefObject<HTMLElement | null>, viewKey: 
   return useCallback(
     (update: () => void) => {
       const element = region.current;
-      if (element === null || !shouldAnimateNavigation()) {
+      if (element === null || !shouldAnimateNavigation() || modalOpen()) {
         update();
         return;
       }
@@ -49,6 +63,10 @@ export const useLibraryGlide = (region: RefObject<HTMLElement | null>, viewKey: 
       }
       document.documentElement.dataset[GLIDE_ATTRIBUTE] = "";
       nameAll(element);
+      const above = heldAbove(element);
+      for (const [held, name] of above) {
+        held.style.viewTransitionName = name;
+      }
       const transition = document.startViewTransition(
         () =>
           new Promise<void>((resolve) => {
@@ -66,6 +84,9 @@ export const useLibraryGlide = (region: RefObject<HTMLElement | null>, viewKey: 
       transition.types?.add("library-glide");
       void transition.finished.finally(() => {
         unnameAll(element);
+        for (const [held] of above) {
+          held.style.viewTransitionName = "";
+        }
         delete document.documentElement.dataset[GLIDE_ATTRIBUTE];
       });
     },

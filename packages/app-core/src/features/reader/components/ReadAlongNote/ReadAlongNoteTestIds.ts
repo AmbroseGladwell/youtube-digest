@@ -10,5 +10,6 @@ export const readAlongNoteTestIds = {
   followButton: "ReadAlongNote.followButton",
   aside: "ReadAlongNote.aside",
   showAllSteps: "ReadAlongNote.showAllSteps",
+  hideSteps: "ReadAlongNote.hideSteps",
   stepNumber: "ReadAlongNote.stepNumber",
 };

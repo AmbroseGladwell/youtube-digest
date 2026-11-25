@@ -212,51 +212,53 @@ export const AppSidebar = ({ onHide }: AppSidebarProps) => {
         </button>
       )}
 
-      <button
-        type="button"
-        className={styles.saved}
-        aria-haspopup="dialog"
-        aria-expanded={timeSavedOpen}
-        onClick={() => {
-          analytics.timeSaved.library.breakdownOpened();
-          setTimeSavedOpen(true);
-        }}
-        data-testid={appSidebarTestIds.timeSaved}
-      >
-        <span className={styles.savedLabel}>Time saved</span>
-        <span className={styles.savedFigure}>
-          <TimeSavedFigure minutes={timeSaved.minutes} />
-          <span className={styles.spoken}>{spokenTimeSaved(timeSaved.minutes)}</span>
-        </span>
-        {next !== undefined && (
-          <>
-            <span className={styles.savedTrack} style={milestoneColourStyle(next.id)}>
-              <i style={{ width: `${((timeSaved.minutes - from) / (next.minutes - from)) * 100}%` }} />
-            </span>
-            <span className={styles.savedNext}>
-              Next: {next.label} · {next.minutes - timeSaved.minutes} min to go
-            </span>
-          </>
-        )}
-      </button>
-
-      <div className={styles.foot}>
-        <span className={styles.hideHost}>
-          <button
-            type="button"
-            className={styles.hide}
-            aria-label="Hide sidebar"
-            aria-expanded="true"
-            aria-keyshortcuts="["
-            onClick={onHide}
-            data-testid={appSidebarTestIds.hide}
-          >
-            <StrokeIcon name="panelClose" size={17} />
-          </button>
-          <span className={styles.tip} aria-hidden="true">
-            Hide sidebar · [
+      <div className={styles.dock}>
+        <button
+          type="button"
+          className={styles.saved}
+          aria-haspopup="dialog"
+          aria-expanded={timeSavedOpen}
+          onClick={() => {
+            analytics.timeSaved.library.breakdownOpened();
+            setTimeSavedOpen(true);
+          }}
+          data-testid={appSidebarTestIds.timeSaved}
+        >
+          <span className={styles.savedLabel}>Time saved</span>
+          <span className={styles.savedFigure}>
+            <TimeSavedFigure minutes={timeSaved.minutes} />
+            <span className={styles.spoken}>{spokenTimeSaved(timeSaved.minutes)}</span>
           </span>
-        </span>
+          {next !== undefined && (
+            <>
+              <span className={styles.savedTrack} style={milestoneColourStyle(next.id)}>
+                <i style={{ width: `${((timeSaved.minutes - from) / (next.minutes - from)) * 100}%` }} />
+              </span>
+              <span className={styles.savedNext}>
+                Next: {next.label} · {next.minutes - timeSaved.minutes} min to go
+              </span>
+            </>
+          )}
+        </button>
+
+        <div className={styles.foot}>
+          <span className={styles.hideHost}>
+            <button
+              type="button"
+              className={styles.hide}
+              aria-label="Hide sidebar"
+              aria-expanded="true"
+              aria-keyshortcuts="["
+              onClick={onHide}
+              data-testid={appSidebarTestIds.hide}
+            >
+              <StrokeIcon name="panelClose" size={17} />
+            </button>
+            <span className={styles.tip} aria-hidden="true">
+              Hide sidebar · [
+            </span>
+          </span>
+        </div>
       </div>
 
       {newProject.dialog}

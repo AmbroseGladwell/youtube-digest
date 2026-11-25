@@ -1,6 +1,7 @@
 export const libraryPageTestIds = {
   root: "LibraryPage.root",
   list: "LibraryPage.list",
+  toolbar: "LibraryPage.toolbar",
   title: "LibraryPage.title",
   listCount: "LibraryPage.listCount",
   timeSavedButton: "LibraryPage.timeSavedButton",

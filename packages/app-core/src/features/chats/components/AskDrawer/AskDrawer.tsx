@@ -3,8 +3,11 @@ import { chatOwner, type Chat } from "@overview/domain";
 import { CutText } from "../../../../components/shared/CutText/CutText.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
+import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
 import { askHistoryGroups } from "../../util/askHistory.js";
+import { chatMatchesQuery } from "../../util/chatMatchesQuery.js";
 import { firstQuestionOf } from "../../util/conversationLine.js";
+import { ConversationSearch } from "../ConversationSearch/ConversationSearch.js";
 import styles from "./AskDrawer.module.scss";
 import { askDrawerTestIds } from "./AskDrawerTestIds.js";
 
@@ -22,7 +25,10 @@ export interface AskDrawerProps {
   onOpen: (chat: Chat) => void;
   onDelete: (chat: Chat) => void;
   onClose: () => void;
+  onSearched: (matches: number) => void;
 }
+
+const SEARCH_FROM = 2;
 
 export const AskDrawer = ({
   motion,
@@ -37,6 +43,7 @@ export const AskDrawer = ({
   onOpen,
   onDelete,
   onClose,
+  onSearched,
 }: AskDrawerProps) => {
   const root = useRef<HTMLDivElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
@@ -55,7 +62,8 @@ export const AskDrawer = ({
     const height = menu.current?.offsetHeight ?? 0;
     setMenuUp(item !== undefined && box !== undefined && item.bottom + height + 8 > Math.min(box.bottom, window.innerHeight));
   }, [menuFor]);
-  const groups = askHistoryGroups(chats, now);
+  const [query, setQuery] = useState("");
+  const searchable = chats.length >= SEARCH_FROM;
 
   const scopeOf = (chat: Chat) => {
     const owner = chatOwner(chat);
@@ -67,6 +75,10 @@ export const AskDrawer = ({
     }
     return "Your library";
   };
+
+  const shown = searchable ? chats.filter((chat) => chatMatchesQuery(chat, query, scopeOf(chat))) : chats;
+  const groups = askHistoryGroups(shown, now);
+  useTypingSettled(query, () => onSearched(shown.length));
 
   return (
     <>
@@ -92,15 +104,21 @@ export const AskDrawer = ({
               onClick={onClose}
               data-testid={askDrawerTestIds.close}
             >
-              <StrokeIcon name="panelClose" size={18} />
+              <StrokeIcon name="chatClose" size={18} />
             </button>
           )}
           <button type="button" className={styles.newChat} onClick={onNew} data-testid={askDrawerTestIds.newChat}>
             <StrokeIcon name="plus" size={16} />
             New chat
           </button>
+          {searchable && <ConversationSearch className={styles.search} query={query} onQuery={setQuery} />}
         </div>
-        {groups.length === 0 && (
+        {searchable && query.trim() !== "" && shown.length === 0 && (
+          <p className={styles.empty} role="status" data-testid={askDrawerTestIds.noMatches}>
+            No conversations match “{query.trim()}”.
+          </p>
+        )}
+        {chats.length === 0 && (
           <p className={styles.empty} data-testid={askDrawerTestIds.empty}>
             Your questions across your library, projects and overviews will be here.
           </p>

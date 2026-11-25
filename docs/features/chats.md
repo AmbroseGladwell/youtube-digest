@@ -142,6 +142,7 @@ a project, the library). They look and feel the same; only what they draw on dif
 - for an overview's chat, `inSource` and `generalKnowledge`, as before.
 
 **Citing.** A source id may be anything the chat can cite:
+
 - a passage (`p12`);
 - an item of the overview (`step2`);
 - another chat's message (`c1.m3`);
@@ -154,6 +155,7 @@ item's citations (chat schema 7, client 29). An answer stored before reads its i
 nothing of their own, and its "Supports" shows as "Based on" (`relationLabel`).
 
 **Writing** (OV-362):
+
 - No em dashes, ever. The prompt says so, and `withoutDashes` turns any it writes into a comma, in
   every stored field and in the streamed intro.
 - A few key words may be bold, with `**double asterisks**`, never a heading. The app renders them.
@@ -167,12 +169,12 @@ is whole. An answer stored at schema 5, as points, reads as bullets with their s
 **Measured on the shared shape** (21 Nov 2026, harness `own`, `shipped-keyword` and `twopass shipped`
 arms, ~$0.67):
 
-| Chat | Result | Before the change |
-|---|---|---|
-| An overview's own transcript (`own`) | right moment 61/68 (single moments 48/51; both of two moments 13/17); detail named 67/68 | OV-267's 46/48, on other questions |
-| The same: not covered | 10 of 12 cited nothing. The other 2 cited the part the video did cover and marked the rest as general knowledge | |
-| Across sources (`shipped-keyword`) | right moment 51/68, detail named 70/75 | 50/68 and 70/75, same day |
-| Library and project (`twopass shipped`) | 18/22 core overviews, no unknown ids, no counts | 19/22 |
+| Chat                                    | Result                                                                                                          | Before the change                  |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| An overview's own transcript (`own`)    | right moment 61/68 (single moments 48/51; both of two moments 13/17); detail named 67/68                        | OV-267's 46/48, on other questions |
+| The same: not covered                   | 10 of 12 cited nothing. The other 2 cited the part the video did cover and marked the rest as general knowledge |                                    |
+| Across sources (`shipped-keyword`)      | right moment 51/68, detail named 70/75                                                                          | 50/68 and 70/75, same day          |
+| Library and project (`twopass shipped`) | 18/22 core overviews, no unknown ids, no counts                                                                 | 19/22                              |
 
 ## Library and project chat
 
@@ -305,14 +307,14 @@ No route lets a device write a chat.
 our key, on GPT-6 Luna (`chatModel.ts`) for every plan. `ChatAnswerer` settles everything that
 can refuse before the answer starts, so a refusal is an ordinary JSON error:
 
-| Refusal                                                    | Status                       | Details                                                                                            |
-| ---------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------- |
-| The overview isn't held, or the conversation was deleted   | 404 `not_found`              |                                                                                                    |
-| A video or episode with no transcript kept                 | 422 `transcript_unavailable` | `chat: "no-source"`                                                                                |
-| The conversation has `MAX_CHAT_QUESTIONS` questions        | 400 `invalid_request`        | `conversation: "full"`                                                                             |
+| Refusal                                                                                                                 | Status                       | Details                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------- |
+| The overview isn't held, or the conversation was deleted                                                                | 404 `not_found`              |                                                                                                    |
+| A video or episode with no transcript kept                                                                              | 422 `transcript_unavailable` | `chat: "no-source"`                                                                                |
+| The conversation has `MAX_CHAT_QUESTIONS` questions                                                                     | 400 `invalid_request`        | `conversation: "full"`                                                                             |
 | The month's, the day's or the global day's usage spent (or, `scope: "library"`, too little left for a library question) | 429 `too_many_requests`      | `quota`, `retryAfterSeconds`, `resetsOn` for the month (`tiers.md`, "Questions about an overview") |
-| No key on this server                                      | 503 `unavailable`            |                                                                                                    |
-| The provider failed before answering                       | 502 `generation_failed`      |                                                                                                    |
+| No key on this server                                                                                                   | 503 `unavailable`            |                                                                                                    |
+| The provider failed before answering                                                                                    | 502 `generation_failed`      |                                                                                                    |
 
 **Usage (OV-376, slice 1):** once an answer is stored, its real cost, both passes of a library
 answer together, settles as usage on the day its question was reserved (`ChatUsageRepository.settle`),
@@ -937,6 +939,10 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
     the conversation is on the device, then clears the state so a reload or Back doesn't open it
     again. Chat's `opened` event says `from: "askDrawer"`.
   - Deleting a conversation from either list refreshes both, the overview's own and the drawer's.
+  - With two or more conversations, a Search conversations field sits under New chat, pinned with
+    it. It matches every word against the reader's questions and the scope line, never the answers,
+    and says when nothing matches. The overview's Conversations list has the same field, matching
+    questions only (`ConversationSearch`, `chatMatchesQuery`).
   - Its ⋯ (on hover, on focus and on the open one; always on touch) has only Delete conversation.
     There's no Rename, because the title is the first question.
   - Deleting has Undo for six seconds, and the delete is made when the toast goes or the reader
@@ -967,8 +973,10 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   - `chat.*`: asked (typed or a starter, new conversation, pins and set aside counted), picked (how
     many, and `lookedAcross` since OV-373), answered (sections, overviews cited), answerFailed, waited, stopped, answerCopied,
     sourcesMenuOpened, readOpened, sourcePinned, sourceRemoved, overviewFollowed and plansFollowed.
-  - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted and deleteUndone. The last
-    three carry `scope`: library, project or overview (OV-363).
+  - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted, deleteUndone and
+    searched. conversationOpened, conversationDeleted and deleteUndone carry `scope`: library,
+    project or overview (OV-363). searched carries how many conversations matched, once typing
+    settles, never the words.
   - `questions.*` and `question.*`: the suggested questions under the field (OV-350,
     `suggested-questions.md`, "Slice 3: on the Ask page").
 

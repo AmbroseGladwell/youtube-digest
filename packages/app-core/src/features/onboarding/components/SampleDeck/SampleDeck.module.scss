@@ -5,6 +5,13 @@
   flex-direction: column;
   gap: 0.875rem;
   min-width: 0;
+
+  // Under the field in one column, the deck centres rather than hugging the left edge.
+  @media (max-width: 61.9375rem) {
+    justify-self: center;
+    width: fit-content;
+    max-width: 100%;
+  }
 }
 
 .head {

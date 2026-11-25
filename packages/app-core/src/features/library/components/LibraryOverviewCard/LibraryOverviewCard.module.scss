@@ -236,10 +236,6 @@ $orb-out: 160ms;
   font-size: 0.875rem;
 }
 
-.favouriteActive {
-  color: var(--brand);
-}
-
 @media (max-width: 47.9375rem) {
   .root {
     padding: 0.875rem;
@@ -634,4 +630,9 @@ $orb-out: 160ms;
   to {
     rotate: 360deg;
   }
+}
+
+.favouriteActive,
+.favouriteActive:hover:not(:disabled) {
+  color: var(--brand);
 }

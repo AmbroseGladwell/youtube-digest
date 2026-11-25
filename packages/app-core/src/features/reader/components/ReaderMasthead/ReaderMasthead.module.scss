@@ -348,13 +348,19 @@
   color: var(--ink);
 }
 
+// On a phone the art stands large above the byline, so the show's name and chips keep the full width.
 @media (max-width: 47.9375rem) {
   .lead:has(> .art) {
-    grid-template-columns: 5.5rem minmax(0, 1fr);
-    column-gap: 0.875rem;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.875rem;
+    align-items: start;
   }
 
-  .lead:has(> .artCompact) {
-    grid-template-columns: 4.5rem minmax(0, 1fr);
+  .art {
+    width: min(100%, 17.5rem);
+  }
+
+  .artCompact {
+    width: min(100%, 12.5rem);
   }
 }

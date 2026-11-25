@@ -170,6 +170,15 @@ export const ReadAlongNote = ({
     );
   };
 
+  const hideSteps = () => {
+    setStepsShown(false);
+    requestAnimationFrame(() => {
+      const showAll = root.current?.querySelector<HTMLElement>(`[data-testid="${readAlongNoteTestIds.showAllSteps}"]`);
+      showAll?.focus({ preventScroll: true });
+      showAll?.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    });
+  };
+
   const select = (index: number) => {
     analytics.readAlong.lineChosen();
     onSelectLine(index);
@@ -263,6 +272,18 @@ export const ReadAlongNote = ({
                   {collapsed.size} more
                   {lastStep?.range ? `, up to ${formatTimestamp(lastStep.range.startMs)}` : ""}
                 </small>
+              </button>
+            )}
+            {index === lastStepIndex && stepsShown && !reached && beyondFirst.length > 0 && (
+              <button
+                type="button"
+                className={styles.showAllSteps}
+                aria-expanded="true"
+                onClick={hideSteps}
+                data-testid={readAlongNoteTestIds.hideSteps}
+              >
+                Hide steps
+                <small>Back to the first {STEPS_SHOWN_FIRST}</small>
               </button>
             )}
             {caption && (

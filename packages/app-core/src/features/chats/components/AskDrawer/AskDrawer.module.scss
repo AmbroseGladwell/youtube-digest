@@ -28,6 +28,10 @@ $drawer-width: 280px;
   padding: 12px var(--drawer-inset) 0;
   background: var(--drawer-surface);
 
+  @include shortScreens.short-screen {
+    position: relative;
+  }
+
   &::after {
     content: "";
     position: absolute;
@@ -42,6 +46,10 @@ $drawer-width: 280px;
   }
 }
 
+.search {
+  margin-bottom: 10px;
+}
+
 .root[data-scrolled] .top::after {
   opacity: 1;
 }
@@ -52,7 +60,7 @@ $drawer-width: 280px;
   flex: none;
   align-self: flex-start;
   width: $drawer-width;
-  height: calc(100dvh - var(--masthead-height) - 24px);
+  height: calc(100dvh - var(--masthead-height) - 24px - var(--show-sidebar-clearance, 0px));
   margin: 4px 0 20px 16px;
   border-radius: 22px;
   box-shadow: var(--shadow-float);

@@ -119,7 +119,7 @@ test.describe("a project's page", () => {
     backendSimulator.projects.seedMember(makeProjectMember(project, quartz.id, { addedBy: CLAUDE, addedAt: "2026-11-11T09:00:00.000Z" }));
   };
 
-  test("opens from the sidebar with what it's for, counts, the spread, and only its own overviews, read or not", async ({
+  test("opens from the sidebar with what it's for, counts, and only its own overviews, read or not", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -132,7 +132,6 @@ test.describe("a project's page", () => {
     await head.verifyPurposeReads("Redo the kitchen by March for £18k without moving the sink.");
     await head.verifyAssistantHintIsShown(false);
     await head.verifyFactsRead("3 overviews2 unreadUpdated 11 Nov");
-    await head.verifySpreadReads("1 Original1 Fresh angle1 Widely covered1 dubious");
     await library.verifyCardOrder(["Quartz or granite", "What moving a sink", "The kitchen layout"]);
     await library.cardWithTitle("The kitchen layout").verifyAddedByReads(null);
     await library.cardWithTitle("What moving a sink").verifyAddedByReads("Added by Claude · 11 Nov·Remove");
@@ -228,7 +227,7 @@ test.describe("a project's page", () => {
 
     await head.clickCopy();
 
-    await head.verifyCopyReads("Copied");
+    await head.verifyCopyReads("Copied as Markdown");
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     expect(copied).toBe(
       projectMarkdown(project, [

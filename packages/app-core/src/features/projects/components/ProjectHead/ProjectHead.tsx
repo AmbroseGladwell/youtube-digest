@@ -1,12 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type RefObject } from "react";
-import {
-  MAX_PROJECT_NAME_LENGTH,
-  MAX_PROJECT_PURPOSE_LENGTH,
-  NOVELTY_LABEL,
-  projectMarkdown,
-  verdictSpread,
-  type Novelty,
-} from "@overview/domain";
+import { MAX_PROJECT_NAME_LENGTH, MAX_PROJECT_PURPOSE_LENGTH, projectMarkdown } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { useBackTo } from "../../../../app/useBackTo.js";
 import { useLentBackLink } from "../../../../app/useLentBackLink.js";
@@ -36,8 +29,6 @@ export interface ProjectHeadProps {
   // Bumped to open What it's for from outside the head.
   purposeAsked?: number;
 }
-
-const SPREAD: Novelty[] = ["original", "fresh_angle", "common_knowledge"];
 
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
@@ -80,7 +71,6 @@ export const ProjectHead = ({
     project.createdBy.by === "assistant"
       ? `Made by ${project.createdBy.name} · ${projectShortDate(project.createdAt, now)}`
       : `Made ${projectShortDate(project.createdAt, now)}`;
-  const spread = verdictSpread(items.map((item) => item.overview));
   const finishEditing = (stop: () => void) => {
     stop();
     requestAnimationFrame(() => returnTo.current.current?.focus());
@@ -240,21 +230,6 @@ export const ProjectHead = ({
           </button>
         )}
       </p>
-      {items.length > 0 && (
-        <p className={styles.spread} data-testid={projectHeadTestIds.spread}>
-          {SPREAD.filter((novelty) => spread[novelty] > 0).map((novelty) => (
-            <span key={novelty} className={styles.verdict}>
-              {spread[novelty]} {NOVELTY_LABEL[novelty]}
-            </span>
-          ))}
-          {spread.dubious > 0 && (
-            <span className={styles.dubious}>
-              <StrokeIcon name="alert" size={13} />
-              {spread.dubious} dubious
-            </span>
-          )}
-        </p>
-      )}
 
       {nudged && (
         <div className={styles.nudge} role="status" data-testid={projectHeadTestIds.nudge}>
@@ -280,7 +255,7 @@ export const ProjectHead = ({
         {askable && (
           <PageLink className={styles.pill} to={Routes.ask({ project: project.id })} data-testid={projectHeadTestIds.askLink}>
             <StrokeIcon name="chat" />
-            Ask
+            Ask project
           </PageLink>
         )}
         {archived && (
@@ -289,21 +264,14 @@ export const ProjectHead = ({
             Restore
           </button>
         )}
-        {canWriteClipboard() && (
-          <button
-            type="button"
-            className={styles.pill}
-            onClick={() => {
-              void navigator.clipboard.writeText(projectMarkdown(project, items));
-              setCopied(true);
-              onCopied();
-            }}
-            data-testid={projectHeadTestIds.copyButton}
-          >
-            <StrokeIcon name={copied ? "check" : "copy"} />
-            <span aria-live="polite">{copied ? "Copied" : "Copy as Markdown"}</span>
-          </button>
-        )}
+        <span className={styles.copied} role="status" data-testid={projectHeadTestIds.copiedNote}>
+          {copied && (
+            <>
+              <StrokeIcon name="check" />
+              Copied as Markdown
+            </>
+          )}
+        </span>
         <ProjectActionsMenu
           ref={menu}
           archived={archived}
@@ -314,6 +282,15 @@ export const ProjectHead = ({
           onEditPurpose={() => startPurpose(menu)}
           onArchive={() => onArchive("menu")}
           onDelete={onDelete}
+          onCopy={
+            canWriteClipboard()
+              ? () => {
+                  void navigator.clipboard.writeText(projectMarkdown(project, items));
+                  setCopied(true);
+                  onCopied();
+                }
+              : undefined
+          }
         />
       </div>
     </div>

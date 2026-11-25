@@ -46,7 +46,7 @@ test("the same run on the web promises only that the dialog can be closed", asyn
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS, surface: "web" });
   await form.submitUrl(VALID_URL);
 
-  await launcher.appShell.newOverviewDialog.verifyFootNote(/^You can close this — it keeps going\.$/);
+  await launcher.appShell.newOverviewDialog.verifyFootNote(/^You can close this, it keeps going\.$/);
 });
 
 test("the web app on a phone offers no extension, which can't be added there", async ({ launcher }) => {

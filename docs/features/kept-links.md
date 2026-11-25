@@ -20,10 +20,10 @@ later slices of the same card.
 A **capture** is a synced record kind (`capture`, `packages/domain/src/Capture.ts`): a
 source before its overview, under the id its overview will take. It has two stages:
 
-| Stage | Holds | Waits for |
-|---|---|---|
-| `kept` | the pasted address, and the source if it was read | `waitingFor`: `turn` (a playlist video waiting in the queue), `server` (our server's daily cap or a slow-down), `extension` (only the extension can read it), or `reset` (it needs transcribing and no hours are left); `resumesAt` when that's known |
-| `saved` | the source and, for anything but a page, its transcript | the reader choosing to make its overview |
+| Stage   | Holds                                                   | Waits for                                                                                                                                                                                                                                             |
+| ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kept`  | the pasted address, and the source if it was read       | `waitingFor`: `turn` (a playlist video waiting in the queue), `server` (our server's daily cap or a slow-down), `extension` (only the extension can read it), or `reset` (it needs transcribing and no hours are left); `resumesAt` when that's known |
+| `saved` | the source and, for anything but a page, its transcript | the reader choosing to make its overview                                                                                                                                                                                                              |
 
 Both carry `sourceKey`, `keptAt`, `keptFrom` (`web`, `phone`, `panel` or `playlist`), the
 reader's `captureReason`, and the title and thumbnail when known. A saved one also keeps
@@ -170,7 +170,7 @@ meanwhile.
   rather than failing.
 - **Add a reason** sits on the row being made (left out on a phone), and opens the reason
   field for that link.
-- The foot line "You can close this — it keeps going." stays while anything runs, and in the
+- The foot line "You can close this, it keeps going." stays while anything runs, and in the
   extension still says that closing the side panel stops it. There's no Cancel for a run.
 - **Already in your library. Open it** shows under the field (358c) in place of a screen of
   its own.
