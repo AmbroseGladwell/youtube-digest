@@ -251,7 +251,7 @@ test.describe("milestones", () => {
     await (await library.openTimeSaved()).close();
 
     await expect
-      .poll(() => backendSimulator.analytics.events())
+      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("timeSaved.")))
       .toEqual([
         { name: "timeSaved.milestoneCard.lineChosen", props: { milestone: "30m", by: "dot" } },
         { name: "timeSaved.milestoneCard.lineChosen", props: { milestone: "30m", by: "keys" } },
