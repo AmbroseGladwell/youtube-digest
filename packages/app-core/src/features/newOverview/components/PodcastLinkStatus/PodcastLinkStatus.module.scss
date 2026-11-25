@@ -104,6 +104,30 @@
   font-size: 0.8125rem;
 }
 
+// Design 351g's Kept state.
+.kept {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding: 1rem 1.125rem;
+  border-radius: 1.25rem;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--surface);
+
+  b {
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  span {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+}
+
 .held {
   display: flex;
   align-items: center;

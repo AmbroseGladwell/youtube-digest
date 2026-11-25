@@ -1,4 +1,6 @@
 import type { PodcastEpisode, StoredTranscript } from "@overview/domain";
+import { limitInPlaceTestIds } from "../../../src/features/plus/components/LimitInPlace/LimitInPlaceTestIds.js";
+import { plansModalTestIds } from "../../../src/features/plus/components/PlansModal/PlansModalTestIds.js";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
@@ -70,7 +72,7 @@ test("an episode with no transcript says so on its card before Create, and Trans
   expect(backendSimulator.podcasts.transcriptAsks()).toEqual([]);
 });
 
-test("with too little transcribing left, the stop takes Create's place, names what's left and the plans with more", async ({
+test("with too little transcribing left, the limit in place names what's left, Plus and the wait, and Make my overview is disabled (351g)", async ({
   page,
   launcher,
   backendSimulator,
@@ -90,12 +92,20 @@ test("with too little transcribing left, the stop takes Create's place, names wh
 
   await page.getByTestId(generateOverviewFormTestIds.urlInput).fill(LINK);
 
-  await expect(page.getByTestId(transcriptionNoticeTestIds.heading)).toHaveText("You don’t have enough transcribing left for this one");
-  await expect(page.getByTestId(transcriptionNoticeTestIds.body)).toHaveText(
-    "It’s 1 hr 56 min, and you have 1 hr 10 min left this month. You’ll have 5 hours again on 1 November. BYO Plus transcribes 15 hours a month, Plus 30. No overview was used.",
+  await expect(page.getByTestId(limitInPlaceTestIds.heading)).toHaveText(
+    "You have 1 hr 10 min of transcribing left, and this episode needs about 1 hr 56 min.",
   );
-  await expect(page.getByTestId(transcriptionNoticeTestIds.plans)).toHaveText("See plans");
-  await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveCount(0);
+  await expect(page.getByTestId(limitInPlaceTestIds.plus)).toContainText(
+    "30 hours of transcribing a month, and 50 overviews on us. From £7.99 a month, cancel anytime.",
+  );
+  await expect(page.getByTestId(limitInPlaceTestIds.waitAction)).toHaveText("Keep it until 1 November");
+  await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveAccessibleDescription(
+    "No transcribing hours left this month",
+  );
+
+  await page.getByTestId(limitInPlaceTestIds.getPlus).click();
+  await expect(page.getByTestId(plansModalTestIds.root)).toBeVisible();
 });
 
 test("out of transcribing, Keep it keeps the episode until the reset, when it is transcribed and made under the kept id", async ({
@@ -119,10 +129,10 @@ test("out of transcribing, Keep it keeps the episode until the reset, when it is
   await launcher.appShell.openNewOverview();
   await page.getByTestId(generateOverviewFormTestIds.urlInput).fill(LINK);
 
-  await page.getByTestId(transcriptionNoticeTestIds.primary).click();
+  await page.getByTestId(limitInPlaceTestIds.waitAction).click();
 
   await expect(page.getByTestId(podcastLinkStatusTestIds.keptForReset)).toHaveText(
-    "Kept. It’s transcribed and made on 1 November, when your hours are back.",
+    "Kept. It’s transcribed and made on 1 November, when your hours are back.It waits in your queue. Nothing else to do.",
   );
   const [kept] = await backendSimulator.captureStore.list();
   expect(kept).toMatchObject({ stage: "kept", waitingFor: "reset", resumesAt: "2026-11-01T00:00:00.000Z", url: LINK });

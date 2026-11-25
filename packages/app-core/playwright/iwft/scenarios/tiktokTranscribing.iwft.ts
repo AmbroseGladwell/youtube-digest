@@ -1,4 +1,5 @@
 import type { StoredTranscript, TikTokRead, TikTokVideo, TranscriptionOffer } from "@overview/domain";
+import { limitInPlaceTestIds } from "../../../src/features/plus/components/LimitInPlace/LimitInPlaceTestIds.js";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
@@ -75,7 +76,11 @@ test("a TikTok with no captions offers to transcribe it, and Transcribe and crea
   expect(backendSimulator.ourKey.generations()[0]?.input).toHaveProperty("tiktok.handle", "nytcooking");
 });
 
-test("with too little transcribing left, the stop takes Create's place", async ({ page, launcher, backendSimulator }) => {
+test("with the month's transcribing used, the limit sits under the TikTok, with Make my overview disabled (351g)", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.tiktok.answerWith(
     uncaptioned({ status: "not-enough", episodeSeconds: 38, usage: { usedSeconds: 5 * HOUR, limitSeconds: 5 * HOUR, episodes: 9 } }),
@@ -85,8 +90,9 @@ test("with too little transcribing left, the stop takes Create's place", async (
 
   await page.getByTestId(generateOverviewFormTestIds.urlInput).fill(LINK);
 
-  await expect(page.getByTestId(transcriptionNoticeTestIds.heading)).toHaveText("You’ve used this month’s 5 hours of transcribing");
-  await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveCount(0);
+  await expect(page.getByTestId(limitInPlaceTestIds.heading)).toHaveText("You’ve used this month’s 5 hours of transcribing.");
+  await expect(page.getByTestId(limitInPlaceTestIds.root)).toContainText("This TikTok needs about 38 s of it.");
+  await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveAttribute("aria-disabled", "true");
 });
 
 test("a TikTok whose sound couldn't be fetched says so in TikTok's words, and Try again asks again", async ({

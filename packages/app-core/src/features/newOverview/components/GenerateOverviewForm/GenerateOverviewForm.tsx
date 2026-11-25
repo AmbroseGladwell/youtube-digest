@@ -1,4 +1,7 @@
-import type { Overview } from "@overview/domain";
+import type { Overview, Plan } from "@overview/domain";
+import { LimitInPlace } from "../../../plus/components/LimitInPlace/LimitInPlace.js";
+import { usePlanPrompt } from "../../../plus/usePlanPrompt.js";
+import { limitCopy } from "../../../plus/util/limitCopy.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { captureSurfaceOf } from "../../../captures/util/captureSurfaceOf.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -68,6 +71,7 @@ export const playlistTargetOf = (url: string): PlaylistTarget | null => {
   return null;
 };
 
+const SPENT_ID = "generate-overview-spent";
 const MAKE_LABEL = "Make my overview";
 
 const urlPlaceholder = (articleAvailable: boolean, playlistsAvailable: boolean): string => {
@@ -82,6 +86,28 @@ const HELD_SAYS = {
   saved: "Already saved · no overview yet.",
   queued: "Already in your queue.",
 } as const;
+
+interface SavesLimitProps {
+  plan: Plan;
+  resetsOn: string;
+}
+
+const SavesLimit = ({ plan, resetsOn }: SavesLimitProps) => {
+  const { chose } = usePlanPrompt({ kind: "saves" });
+  const [plansOpen, setPlansOpen] = useState(false);
+  return (
+    <>
+      <LimitInPlace
+        {...limitCopy.saves(plan, resetsOn)}
+        onGetPlus={() => {
+          chose("seePlans");
+          setPlansOpen(true);
+        }}
+      />
+      <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} />
+    </>
+  );
+};
 
 export const GenerateOverviewForm = ({
   url,
@@ -144,6 +170,8 @@ export const GenerateOverviewForm = ({
     tiktok.link,
     social.link,
   );
+  // Design 351g: at the hours limit the button stays, disabled, beside the limit's two ways.
+  const hoursSpent = episodeAction?.kind === "stop" && episodeAction.offer.status === "not-enough";
   const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
       recognised:
@@ -321,7 +349,10 @@ export const GenerateOverviewForm = ({
     );
   }
 
-  if (wallShown && walled !== null) {
+  // Design 351i: with no overviews and no saves left, the limit sits under the link rather than the wall.
+  const savesSpent = wallShown && walled !== null && saves !== undefined && savesLeft === 0 && usage !== undefined;
+
+  if (wallShown && walled !== null && !savesSpent) {
     const pasted = pastedLink();
     return (
       <>
@@ -371,7 +402,7 @@ export const GenerateOverviewForm = ({
             autoFocus
             data-testid={generateOverviewFormTestIds.urlInput}
           />
-          {choosing === null && (limit === null || walled !== null) && generateOffered && (
+          {choosing === null && (limit === null || walled !== null) && generateOffered && !savesSpent && (
             <button
               type="submit"
               className={styles.generateButton}
@@ -381,9 +412,24 @@ export const GenerateOverviewForm = ({
               {episodeAction === null ? MAKE_LABEL : createLabelOf(episodeAction, MAKE_LABEL)}
             </button>
           )}
+          {choosing === null && (hoursSpent || savesSpent) && (
+            <button
+              type="button"
+              className={styles.generateButton}
+              aria-disabled="true"
+              aria-describedby={SPENT_ID}
+              data-testid={generateOverviewFormTestIds.generateButton}
+            >
+              {MAKE_LABEL}
+              <span id={SPENT_ID} className={styles.hidden}>
+                {hoursSpent ? "No transcribing hours left this month" : "No overviews or saves left this month"}
+              </span>
+            </button>
+          )}
         </span>
       </label>
       {keysReady && limit === null && <UsageLine testIds={generateOverviewFormTestIds.usageLine} offersPlus onPlanFollowed={onCancel} />}
+      {savesSpent && <SavesLimit plan={plan} resetsOn={usage.resetsOn} />}
       {held !== null && (
         <p className={styles.held} data-testid={newOverviewDialogTestIds.alreadyHeld}>
           <StrokeIcon name="check" size={15} />

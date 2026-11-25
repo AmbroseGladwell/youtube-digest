@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chatWaitCopy } from "./chatWaitCopy.js";
+import { chatWaitCopy, monthSpentOf } from "./chatWaitCopy.js";
 
 describe("chatWaitCopy", () => {
   it("a spent month says chat is used, when it's back, that overviews keep working, and upsells only plans that give more (376d)", () => {
@@ -44,5 +44,14 @@ describe("chatWaitCopy", () => {
       body: "Start a new one. It can see this one.",
       action: { kind: "newConversation" },
     });
+  });
+});
+
+describe("monthSpentOf", () => {
+  it("gives the month's reset for a spent month, falling back to the usage's, and nothing for other waits", () => {
+    expect(monthSpentOf({ kind: "month", resetsOn: "2026-12-01" }, null)).toBe("2026-12-01");
+    expect(monthSpentOf({ kind: "month", resetsOn: null }, "2026-12-01")).toBe("2026-12-01");
+    expect(monthSpentOf({ kind: "offline" }, "2026-12-01")).toBeNull();
+    expect(monthSpentOf(null, "2026-12-01")).toBeNull();
   });
 });

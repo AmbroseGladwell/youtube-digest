@@ -26,7 +26,7 @@ const limit = (quota: string, details: Record<string, unknown> = {}) => ({
 });
 
 test.describe("Chat's waits and its usage meter", () => {
-  test("a spent month takes the field's place, says when it's back and offers the plans that give more", async ({
+  test("a spent month's limit takes the field's place with Plus and the wait, and Not now folds it until tomorrow (351h)", async ({
     launcher,
     backendSimulator,
   }) => {
@@ -38,19 +38,30 @@ test.describe("Chat's waits and its usage meter", () => {
 
     await reader.chat.askInNote("How much lean mass?");
 
-    await reader.chat.verifyWaitReads(
-      "You’ve used this month’s chat",
-      "More on 1 December. Your overviews, and everything you’ve saved, keep working.",
-      "See plans",
+    await reader.chat.verifyMonthLimitReads(
+      "You’ve used this month’s questions on us.",
+      "About 1,000 questions a month, against 100. From £7.99 a month, cancel anytime.",
     );
     await expect
       .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "reader.chat.waited"))
       .toEqual([{ name: "reader.chat.waited", props: expect.objectContaining({ wait: "month" }) }]);
 
-    await reader.chat.clickWaitAction();
+    await reader.chat.getPlusFromLimit();
+    await launcher.plansModal.verifyIsShown();
+    await launcher.plansModal.close();
 
-    await launcher.settingsPage.openSection("usage");
-    await launcher.settingsPage.verifyPlanUsageCellReads("chat", ["100% used", "Nearly used up"]);
+    await reader.chat.putLimitAway();
+    await reader.chat.verifyLimitFolded("Asking is back on 1 December");
+    await expect
+      .poll(() =>
+        backendSimulator.analytics
+          .events()
+          .filter(({ name, props }) => name === "plus.prompt.chosen" && (props as { variant: string }).variant === "chat"),
+      )
+      .toEqual([
+        { name: "plus.prompt.chosen", props: { variant: "chat", plan: "free", outcome: "seePlans" } },
+        { name: "plus.prompt.chosen", props: { variant: "chat", plan: "free", outcome: "notNow" } },
+      ]);
   });
 
   test("with BYO Plus's month spent before asking, chat opens on the wait, offering Plus", async ({ launcher, backendSimulator }) => {
@@ -61,10 +72,9 @@ test.describe("Chat's waits and its usage meter", () => {
 
     await reader.chat.openFromMenu();
 
-    await reader.chat.verifyWaitReads(
-      "You’ve used this month’s chat",
-      "More on 1 December. Your overviews, and everything you’ve saved, keep working.",
-      "See Plus",
+    await reader.chat.verifyMonthLimitReads(
+      "You’ve used this month’s questions on us.",
+      "About 1,000 questions a month, against 500. From £7.99 a month, cancel anytime.",
     );
   });
 

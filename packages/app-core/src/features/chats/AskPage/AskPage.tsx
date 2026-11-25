@@ -29,11 +29,12 @@ import { useSuggestedQuestions, type QuestionRemoval } from "../useSuggestedQues
 import type { AskQuestion } from "../types/AskQuestion.js";
 import type { PickedOverview } from "../useAskOver.js";
 import { askStarters } from "../util/askStarters.js";
-import { chatWaitCopy, type ShownWait } from "../util/chatWaitCopy.js";
+import { chatWaitCopy, monthSpentOf, type ShownWait } from "../util/chatWaitCopy.js";
 import { chatMeterOf, chatMeterStateOf, spentWaitOf } from "../util/chatMeterOf.js";
 import { useChatMeterShown } from "../useChatMeterShown.js";
 import { ChatMeterLine } from "../components/ChatMeterLine/ChatMeterLine.js";
 import { prefersReducedMotion } from "../../../util/prefersReducedMotion.js";
+import { ChatMonthLimit } from "../components/ChatMonthLimit/ChatMonthLimit.js";
 import styles from "./AskPage.module.scss";
 import { askPageTestIds } from "./AskPageTestIds.js";
 
@@ -286,31 +287,41 @@ export const AskPage = () => {
   };
   const toast = toastFor();
 
-  const field =
-    wait !== null ? (
-      <ChatWaitBlock
-        copy={chatWaitCopy(wait, usage?.plan ?? "free", usage?.resetsOn ?? null)}
-        onNewConversation={page.newConversation}
-        onPlansFollowed={() => analytics.ask.chat.plansFollowed({ scope })}
-      />
-    ) : (
-      <ChatComposer
-        ref={page.field}
-        pinned={page.pinned}
-        liveSources={page.liveSources}
-        onPin={page.pin}
-        onUnpin={page.unpin}
-        onRemoveSource={page.removeSource}
-        onClear={page.clearSources}
-        value={draft}
-        placeholder={placeholderOf(isPhone, scope)}
-        answering={answering}
-        large={empty}
-        onChange={setDraft}
-        onSend={() => send(draft)}
-        onStop={page.stop}
-      />
-    );
+  const monthSpentOn = monthSpentOf(wait, usage?.resetsOn ?? null);
+  const plansFollowed = () => analytics.ask.chat.plansFollowed({ scope });
+  const waitInFieldOf = () => {
+    if (monthSpentOn !== null) {
+      return <ChatMonthLimit plan={usage?.plan ?? "free"} resetsOn={monthSpentOn} onPlansFollowed={plansFollowed} />;
+    }
+    if (wait !== null) {
+      return (
+        <ChatWaitBlock
+          copy={chatWaitCopy(wait, usage?.plan ?? "free", usage?.resetsOn ?? null)}
+          onNewConversation={page.newConversation}
+          onPlansFollowed={plansFollowed}
+        />
+      );
+    }
+    return null;
+  };
+  const field = waitInFieldOf() ?? (
+    <ChatComposer
+      ref={page.field}
+      pinned={page.pinned}
+      liveSources={page.liveSources}
+      onPin={page.pin}
+      onUnpin={page.unpin}
+      onRemoveSource={page.removeSource}
+      onClear={page.clearSources}
+      value={draft}
+      placeholder={placeholderOf(isPhone, scope)}
+      answering={answering}
+      large={empty}
+      onChange={setDraft}
+      onSend={() => send(draft)}
+      onStop={page.stop}
+    />
+  );
   const composer = (
     <>
       {field}
