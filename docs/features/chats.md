@@ -689,7 +689,8 @@ OV-310's plumbing, ahead of the panel the Design round draws:
   kind), answerFailed, stopped, waited (which wait), citationFollowed (to what, another overview
   included; for an overview, the part and, unless it changed since, the item's place, never its
   text), answerCopied, continuedIn
-  (assistant, filled in or copied, connected), conversationOpened and conversationDeleted. Since
+  (assistant, filled in or copied, connected), conversationOpened, conversationDeleted and
+  conversationsSearched (how many matched, once typing settles, never the words; OV-412). Since
   OV-354: asked also carries how many overviews and projects it newly pinned and set aside, and
   whether Search my library was on; sourcesAdded (how many pinned and found, from the stream's
   `sources`), sourcePinned (overview or project), sourceRemoved (one, or all), searchLibrarySwitched

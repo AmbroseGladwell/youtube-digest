@@ -522,6 +522,9 @@ export const analyticsEvents = {
       ),
       conversationOpened: event("The reader opens one of the overview's earlier conversations"),
       conversationDeleted: event("The reader deletes a conversation about the overview"),
+      conversationsSearched: event("The reader searches the overview's conversations, counted once they stop typing; never the words", {
+        matches: z.number().int().nonnegative(),
+      }),
     },
     dubiousReasons: {
       opened: event(

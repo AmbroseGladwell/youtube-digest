@@ -70,7 +70,10 @@ A fifth, since the policy pages exist:
 
 A sixth, from the owner on 23 Nov 2026:
 
-6. **Every feature gets a validation dashboard in PostHog.** It shows how much the feature is used, where it works and where it doesn't (a quality signal, not only counts), how use differs between plans, and what it costs, from `cost_reports` when it calls a model or a paid service. Each event carries `plan`. A card that adds or changes a cost also updates the Unit economics and Spend dashboards, and any other that tracks it, in the same card, so none of them silently miss an area. Build it over the PostHog MCP once the events exist, and check it against live data before calling the card done. Amounts stay in PostHog, never in the repo, PRs or logs (`docs/architecture/spend.md`).
+6. **Every main feature gets a validation dashboard in PostHog.** Small features and polish
+   (a search box, a menu item, a layout fix) still send events but need no dashboard of their
+   own; when it isn't clear whether a feature is a main one, ask the owner (25 Nov 2026).
+   A main feature's dashboard shows how much the feature is used, where it works and where it doesn't (a quality signal, not only counts), how use differs between plans, and what it costs, from `cost_reports` when it calls a model or a paid service. Each event carries `plan`. A card that adds or changes a cost also updates the Unit economics and Spend dashboards, and any other that tracks it, in the same card, so none of them silently miss an area. Build it over the PostHog MCP once the events exist, and check it against live data before calling the card done. Amounts stay in PostHog, never in the repo, PRs or logs (`docs/architecture/spend.md`).
 
 ## Code conventions
 
