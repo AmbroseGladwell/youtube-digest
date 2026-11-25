@@ -137,3 +137,106 @@ test("the extension makes a link kept on a phone at once, and its panel says so 
     .poll(() => propsOf(backendSimulator, "queue.keptLinkMade"))
     .toMatchObject([{ surface: "panel", keptFrom: "phone", waitingFor: "server", byExtension: true }]);
 });
+
+test("a link already saved without an overview says so in Create, makes nothing, and opens the saved item", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.captureStore.seed(saved(IWFT_VIDEO_ID, "The Simulated Video", "4d5e6f7a-8b9c-4d0e-9f1a-2b3c4d5e6f7a"));
+  await launcher.launch({ ...SIGNED_IN, apiKeys: ANTHROPIC_KEY });
+  const dialog = await launcher.appShell.openNewOverview();
+
+  await dialog.form.submitUrl(VALID_URL);
+
+  await dialog.verifyAlreadyHeld("Already saved · no overview yet. Open it");
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+  await dialog.clickOpenHeld();
+  await launcher.savedItem.verifyTitleIs("The Simulated Video");
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "capture.newOverview.alreadyHeld"))
+    .toMatchObject([{ props: { held: "saved" } }]);
+});
+
+test("a link already waiting in the queue says so in Create, makes nothing, and See queue opens the queue", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.captureStore.seed({
+    id: OverviewId.parse("5e6f7a8b-9c0d-4e1f-8a2b-3c4d5e6f7a8b"),
+    sourceKey: SourceKey.parse(IWFT_VIDEO_ID),
+    url: VALID_URL,
+    keptAt: "2026-10-06T20:00:00.000Z",
+    keptFrom: "phone",
+    captureReason: null,
+    title: "The Simulated Video",
+    thumbnailUrl: null,
+    fromPlaylist: null,
+    addedAt: null,
+    playlistIndex: null,
+    chosenAt: null,
+    stage: "kept",
+    source: null,
+    waitingFor: "server",
+    resumesAt: "2099-01-01T00:00:00.000Z",
+    queueStatus: "waiting",
+    problem: null,
+  });
+  await launcher.launch({ ...SIGNED_IN, apiKeys: ANTHROPIC_KEY });
+  const dialog = await launcher.appShell.openNewOverview();
+
+  await dialog.form.submitUrl(VALID_URL);
+
+  await dialog.verifyAlreadyHeld("Already in your queue. See queue");
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+  await dialog.clickSeeQueue();
+  await launcher.appShell.queuePage.verifyIsShown();
+  await dialog.verifyIsHidden();
+});
+
+test("removing a kept link offers Undo, which puts it back, and it goes only once the Undo has passed", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  await page.clock.install({ time: EVENING });
+  backendSimulator.captureStore.seed({
+    id: OverviewId.parse("6f7a8b9c-0d1e-4f2a-9b3c-4d5e6f7a8b9c"),
+    sourceKey: SourceKey.parse(IWFT_VIDEO_ID),
+    url: VALID_URL,
+    keptAt: "2026-10-06T20:00:00.000Z",
+    keptFrom: "phone",
+    captureReason: null,
+    title: "The Simulated Video",
+    thumbnailUrl: null,
+    fromPlaylist: null,
+    addedAt: null,
+    playlistIndex: null,
+    chosenAt: null,
+    stage: "kept",
+    source: null,
+    waitingFor: "server",
+    resumesAt: "2099-01-01T00:00:00.000Z",
+    queueStatus: "waiting",
+    problem: null,
+  });
+  await launcher.launch(SIGNED_IN);
+  await launcher.appShell.openQueue();
+  const queue = await launcher.appShell.queuePage.verifyIsShown();
+  await queue.verifyKeptLinks(["The Simulated Video"]);
+
+  await queue.removeKeptLink("The Simulated Video");
+  await queue.verifyRemovedSays("Removed “The Simulated Video”.");
+  await queue.verifyKeptLinks([]);
+  await queue.undoRemove();
+
+  await queue.verifyKeptLinks(["The Simulated Video"]);
+  expect(await backendSimulator.captureStore.list()).toHaveLength(1);
+
+  await queue.removeKeptLink("The Simulated Video");
+  await page.clock.fastForward(7_000);
+
+  await expect.poll(() => backendSimulator.captureStore.list()).toEqual([]);
+  await expect
+    .poll(() => propsOf(backendSimulator, "queue.keptLinkRemoved"))
+    .toEqual([{ plan: "free", surface: "web", waitingFor: "server" }]);
+});

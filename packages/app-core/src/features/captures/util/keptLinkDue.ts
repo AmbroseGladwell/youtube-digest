@@ -15,7 +15,7 @@ export const keptLinkDue = (link: KeptCapture, { now, hasExtension, monthSpent }
     case "extension":
       return hasExtension;
     case "reset":
-      return !monthSpent;
+      return link.resumesAt === null ? !monthSpent : Date.parse(link.resumesAt) <= now;
     default:
       return hasExtension || link.resumesAt === null || Date.parse(link.resumesAt) <= now;
   }

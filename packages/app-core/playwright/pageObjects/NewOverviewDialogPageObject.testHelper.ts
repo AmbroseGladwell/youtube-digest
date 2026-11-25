@@ -145,7 +145,10 @@ export class NewOverviewDialogPageObject extends PageObject {
 
   clickReadOverview = () => this.step("clickReadOverview", () => this.click(this.latestRow().getByTestId(justNowListTestIds.readOverview)));
 
-  verifyAlreadyHeld = () => this.step("verifyAlreadyHeld", () => this.expectToBeVisible(newOverviewDialogTestIds.alreadyHeld));
+  verifyAlreadyHeld = (says = "Already in your library. Open it") =>
+    this.step(`verifyAlreadyHeld ${says}`, () => expect(this.get(newOverviewDialogTestIds.alreadyHeld)).toHaveText(says));
+
+  clickSeeQueue = () => this.step("clickSeeQueue", () => this.click(newOverviewDialogTestIds.seeQueueLink));
 
   clickOpenHeld = () => this.step("clickOpenHeld", () => this.click(newOverviewDialogTestIds.openHeldButton));
 }

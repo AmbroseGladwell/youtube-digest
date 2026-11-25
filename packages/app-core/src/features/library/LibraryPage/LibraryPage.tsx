@@ -24,7 +24,8 @@ import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageT
 import { SortMenu } from "../components/SortMenu/SortMenu.js";
 import { LibraryList, type LibraryListHeading } from "../components/LibraryList/LibraryList.js";
 import { libraryGroups, localeWeekStart } from "../util/libraryGroups.js";
-import { LibraryOverviewCard, type SaidMoment, type SiteLink } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
+import { LibraryOverviewCard, type SiteLink } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
+import type { SaidMoment } from "../components/SaidMomentLink/SaidMomentLink.js";
 import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { LibraryCaptureCard } from "../components/LibraryCaptureCard/LibraryCaptureCard.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
@@ -35,7 +36,7 @@ import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
 import { meaningEntries } from "../util/meaningEntries.js";
 import { useMeaningMatchesQuery } from "../queries/meaningMatchesQuery.js";
 import { useTranscriptMatchesQuery } from "../queries/transcriptMatchesQuery.js";
-import { transcriptEntries } from "../util/transcriptEntries.js";
+import { saidSourceWord, transcriptEntries } from "../util/transcriptEntries.js";
 import { useSettledText } from "../../../util/useSettledText.js";
 import { orderLibraryEntries } from "../util/orderLibraryEntries.js";
 import { useLibraryActivity } from "../useLibraryActivity.js";
@@ -324,12 +325,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   transcriptSettled.current = () =>
     analytics.library.search.transcriptMatched({ transcriptOnly: saidInSource.length, failed: transcriptQuery.isError });
   const closeInMeaning = settledIsCurrent
-    ? meaningEntries(
-        entries,
-        filters,
-        meaningQuery.data,
-        new Set([...visible.map(libraryEntryId), ...saidInSource.map(({ overview }) => overview.id)]),
-      )
+    ? meaningEntries(entries, filters, meaningQuery.data, new Set([...visible.map(libraryEntryId), ...saidInSource.map(libraryEntryId)]))
     : [];
   const meaningUnavailable = settledIsCurrent && meaningQuery.data?.available === false;
   meaningSettled.current = () =>
@@ -479,6 +475,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           entering={entering.has(entry.capture.id)}
           readerState={readerState}
           onOpen={() => undefined}
+          said={said}
         />
       )}
       {entry.kind === "unreadable" && (
@@ -748,10 +745,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                 <p className={styles.meaningSub}>Your words aren't in these overviews, but they were said.</p>
                 <div className={styles.list}>
                   {saidInSource.map((entry, index) =>
-                    row(entry, visible.length + index, {
-                      moment: entry.moment,
-                      sourceWord: entry.overview.source.kind === "podcast" ? "episode" : "video",
-                    }),
+                    row(entry, visible.length + index, { moment: entry.moment, sourceWord: saidSourceWord(entry) }),
                   )}
                 </div>
               </section>

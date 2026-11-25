@@ -6,17 +6,7 @@ import { ReadIcon } from "../../../../components/shared/ReadIcon/ReadIcon.js";
 import { useMediaQuery } from "../../../../util/useMediaQuery.js";
 import { useLongPressTip } from "../../../../util/useLongPressTip.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
-import {
-  formatTimestamp,
-  noteLengthBadge,
-  NOVELTY_LABEL,
-  overviewMetaParts,
-  overviewTimeSaved,
-  sourceName,
-  type Source,
-  type TextMark,
-  type TranscriptMoment,
-} from "@overview/domain";
+import { noteLengthBadge, NOVELTY_LABEL, overviewMetaParts, overviewTimeSaved, sourceName, type Source } from "@overview/domain";
 import { KindChip } from "../../../../components/shared/KindChip/KindChip.js";
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { useSavedMoment } from "../../../timeSaved/components/SavedChip/useSavedMoment.js";
@@ -25,12 +15,7 @@ import type { LibraryViewState } from "../../util/libraryViewState.js";
 import styles from "./LibraryOverviewCard.module.scss";
 import { libraryOverviewCardTestIds } from "./LibraryOverviewCardTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
-import { TRANSCRIPT_MOMENT_STATE } from "../../../reader/util/transcriptMomentFromLocation.js";
-
-export interface SaidMoment {
-  moment: TranscriptMoment;
-  sourceWord: "video" | "episode";
-}
+import { SaidMomentLink, type SaidMoment } from "../SaidMomentLink/SaidMomentLink.js";
 
 export interface LibraryOverviewCardProps {
   overviewWithState: OverviewWithState;
@@ -62,17 +47,6 @@ const actionTip = (label: string) => (
     {label}
   </span>
 );
-
-const markedText = (text: string, marks: readonly TextMark[]) => {
-  const parts = [];
-  let from = 0;
-  for (const { start, end } of marks) {
-    parts.push(text.slice(from, start), <mark key={start}>{text.slice(start, end)}</mark>);
-    from = end;
-  }
-  parts.push(text.slice(from));
-  return parts;
-};
 
 const bylineOf = (source: Source): string =>
   source.kind === "web" && source.author !== null ? `${sourceName(source)} · ${source.author}` : sourceName(source);
@@ -226,19 +200,13 @@ export const LibraryOverviewCard = ({
           )}
 
           {said !== null && (
-            <PageLink
-              className={styles.said}
+            <SaidMomentLink
+              said={said}
               to={readerPath}
-              state={{ ...readerState, [TRANSCRIPT_MOMENT_STATE]: said.moment.startMs }}
+              readerState={readerState}
               onClick={() => onOpen("said")}
-              data-testid={libraryOverviewCardTestIds.saidLink}
-            >
-              <span className={styles.saidLabel}>
-                <StrokeIcon name="scrollText" size={13} />
-                Said in the {said.sourceWord} at {formatTimestamp(said.moment.startMs)}
-              </span>
-              <span className={styles.saidText}>{markedText(said.moment.text, said.moment.marks)}</span>
-            </PageLink>
+              testId={libraryOverviewCardTestIds.saidLink}
+            />
           )}
 
           {addedBy !== null && (

@@ -43,4 +43,10 @@ describe("keptLinkDue", () => {
   it("one that failed waits for the reader, not the clock", () => {
     expect(keptLinkDue(kept({ queueStatus: "failed", resumesAt: null }), { now: 0, hasExtension: true, monthSpent: false })).toBe(false);
   });
+
+  it("waits for the month to turn when it is kept for the reset, out of transcribing, even on the extension", () => {
+    const link = kept({ waitingFor: "reset", resumesAt: "2026-12-01T00:00:00.000Z" });
+    expect(keptLinkDue(link, { now: Date.parse("2026-11-30T23:59:00.000Z"), hasExtension: true, monthSpent: false })).toBe(false);
+    expect(keptLinkDue(link, { now: Date.parse("2026-12-01T00:00:00.000Z"), hasExtension: false, monthSpent: false })).toBe(true);
+  });
 });

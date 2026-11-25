@@ -1,4 +1,6 @@
 import {
+  Capture,
+  CAPTURE_MIGRATIONS,
   isEmptyTranscriptQuery,
   Overview,
   OVERVIEW_MIGRATIONS,
@@ -49,13 +51,21 @@ const liveOverviewsBySource = async (records: RecordsRepository, accountId: Acco
   return bySource;
 };
 
-// One account's transcripts only, most mentions first: docs/features/transcript-search.md.
-export const transcriptMatches = async (
+interface SourceMatch<T> {
+  item: T;
+  mentions: number;
+  moments: TranscriptMoment[];
+}
+
+type LiveOf<T> = (records: RecordsRepository, accountId: AccountId, keys: string[]) => Promise<Map<string, T>>;
+
+const sourceMatches = async <T>(
   { passages, records, transcripts }: TranscriptMatchesDeps,
   accountId: AccountId,
   text: string,
-  { limit = TRANSCRIPT_RESULTS, withinSources = null }: TranscriptMatchesOptions = {},
-): Promise<TranscriptMatch[]> => {
+  liveOf: LiveOf<T>,
+  { limit = TRANSCRIPT_RESULTS, withinSources = null }: TranscriptMatchesOptions,
+): Promise<SourceMatch<T>[]> => {
   const query = transcriptQueryOf(text);
   if (isEmptyTranscriptQuery(query)) {
     return [];
@@ -63,8 +73,8 @@ export const transcriptMatches = async (
   await passages.backfill(accountId);
   const hits = await passages.matching(accountId, query, MOMENTS_PER_SOURCE, withinSources);
   const sources = [...new Set(hits.map((hit) => hit.videoId))];
-  const live = await liveOverviewsBySource(records, accountId, sources);
-  const matches: TranscriptMatch[] = [];
+  const live = await liveOf(records, accountId, sources);
+  const matches: SourceMatch<T>[] = [];
   for (const source of sources.filter((key) => live.has(key)).slice(0, limit)) {
     const stored = StoredTranscript.safeParse(await transcripts.get(accountId, source as VideoId));
     if (!stored.success) {
@@ -76,8 +86,52 @@ export const transcriptMatches = async (
       .flatMap((hit) => transcriptSnippet(blocks, hit, query) ?? [])
       .filter((moment, index, all) => all.findIndex((other) => other.startMs === moment.startMs) === index);
     if (moments.length > 0) {
-      matches.push({ overview: live.get(source)!, mentions: ofSource[0]!.mentions, moments });
+      matches.push({ item: live.get(source)!, mentions: ofSource[0]!.mentions, moments });
     }
   }
   return matches;
 };
+
+// One account's transcripts only, most mentions first: docs/features/transcript-search.md.
+export const transcriptMatches = async (
+  deps: TranscriptMatchesDeps,
+  accountId: AccountId,
+  text: string,
+  options: TranscriptMatchesOptions = {},
+): Promise<TranscriptMatch[]> =>
+  (await sourceMatches(deps, accountId, text, liveOverviewsBySource, options)).map(({ item, mentions, moments }) => ({
+    overview: item,
+    mentions,
+    moments,
+  }));
+
+const liveItemsBySource = async (records: RecordsRepository, accountId: AccountId, keys: string[]): Promise<Map<string, string>> => {
+  const bySource = new Map(
+    [...(await liveOverviewsBySource(records, accountId, keys))].map(([key, overview]) => [key, overview.id as string]),
+  );
+  for (const record of await records.liveOfSources(accountId, "capture", keys)) {
+    const read = readStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), Capture, CAPTURE_MIGRATIONS);
+    if (read.status === "read" && read.record.stage === "saved" && !bySource.has(read.record.sourceKey)) {
+      bySource.set(read.record.sourceKey, read.record.id);
+    }
+  }
+  return bySource;
+};
+
+export interface ItemTranscriptMatch {
+  id: string;
+  mentions: number;
+  moments: TranscriptMoment[];
+}
+
+// The app's own search also finds items saved without an overview; the MCP connector never does (docs/features/kept-links.md).
+export const itemTranscriptMatches = async (
+  deps: TranscriptMatchesDeps,
+  accountId: AccountId,
+  text: string,
+): Promise<ItemTranscriptMatch[]> =>
+  (await sourceMatches(deps, accountId, text, liveItemsBySource, {})).map(({ item, mentions, moments }) => ({
+    id: item,
+    mentions,
+    moments,
+  }));

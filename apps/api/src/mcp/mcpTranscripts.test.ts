@@ -1,11 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  CURRENT_SCHEMA_VERSIONS,
   formatTimestamp,
   SourceKey,
   transcriptBlocks,
   VideoId,
   youtubeTimestampUrl,
+  youTubeSource,
   type TranscriptSegment,
   type WebSource,
 } from "@overview/domain";
@@ -165,4 +167,33 @@ test("get_transcript refuses a time past the end, and a time with a cursor", asy
   assert.equal(past.isError, true);
   assert.match(past.text, /Nothing is said after 0:03/);
   assert.equal(both.isError, true);
+});
+
+test("search_transcripts leaves out an item saved without an overview, as every tool does", async (t) => {
+  const { testApp, reader, client } = await connected();
+  t.after(() => testApp.close());
+  const transcript = makeStoredTranscript({
+    videoId: VideoId.parse("savedOnly01"),
+    segments: [{ text: "Only the saved one mentions Zatsiorsky.", startMs: 0, endMs: 3000 }],
+  });
+  const source = youTubeSource(transcript.video!);
+  const capture = {
+    id: "5c9e1a2b-3d4f-4a6b-8c7d-9e0f1a2b3c4d",
+    sourceKey: source.id,
+    url: source.url,
+    keptAt: "2026-11-24T09:00:00.000Z",
+    keptFrom: "phone",
+    captureReason: null,
+    stage: "saved",
+    source,
+    savedAt: "2026-11-24T09:00:00.000Z",
+    schemaVersion: CURRENT_SCHEMA_VERSIONS.capture,
+    updatedAt: "2026-11-24T09:00:00.000Z",
+  };
+  assert.equal((await reader.inject({ method: "POST", url: "/api/captures", body: capture })).statusCode, 201);
+  assert.equal((await reader.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript })).statusCode, 204);
+
+  const found = await client.callTool("search_transcripts", { query: "Zatsiorsky" });
+
+  assert.match(found.text, /^Nothing in the reader's transcripts says that\./);
 });

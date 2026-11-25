@@ -184,6 +184,17 @@ export const JustNowList = ({
             </button>
           </div>
         )}
+        {row.stage === "keptForReset" && (
+          <div className={styles.foot}>
+            <span className={styles.chip}>
+              <StrokeIcon name="clock" size={12} />
+              Kept
+            </span>
+            <span data-testid={justNowListTestIds.status}>
+              No transcribing left this month · transcribed and made{resetsOn === null ? " after the reset" : ` on ${resetsOn}`}
+            </span>
+          </div>
+        )}
         {row.stage === "failed" && (run.keepable == null ? failure(run) : <KeepNotice run={run} onKeep={onKeep} />)}
         {(inProgress || row.stage === "done") &&
           run.startedAt === current?.startedAt &&

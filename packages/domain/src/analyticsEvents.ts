@@ -1057,10 +1057,14 @@ export const analyticsEvents = {
         provider: Provider.optional(),
         model: ModelId.optional(),
       }),
-      alreadyHeld: event("The reader asks for a video the library already holds an overview of, so nothing is made", {
-        from: CaptureEntry,
-        overviewId: OverviewId,
-      }),
+      alreadyHeld: event(
+        "The reader asks for a link the library already holds: an overview, an item saved without one, or one waiting in the queue, so nothing is made",
+        {
+          from: CaptureEntry,
+          overviewId: OverviewId,
+          held: z.enum(["overview", "saved", "queued"]).optional(),
+        },
+      ),
     },
     newOverviewDialog: {
       opened: event("The reader opens the new overview dialog", { from: z.enum(["newButton", "statusStrip"]) }),

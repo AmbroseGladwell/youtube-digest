@@ -8,5 +8,6 @@ export const newOverviewDialogTestIds = {
   closeWhenDoneButton: "NewOverviewDialog.closeWhenDoneButton",
   readOverviewButton: "NewOverviewDialog.readOverviewButton",
   alreadyHeld: "NewOverviewDialog.alreadyHeld",
+  seeQueueLink: "NewOverviewDialog.seeQueueLink",
   openHeldButton: "NewOverviewDialog.openHeldButton",
 };

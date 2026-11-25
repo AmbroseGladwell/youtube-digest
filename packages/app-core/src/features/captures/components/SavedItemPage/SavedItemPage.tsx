@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_PLAN, formatClock, sourceName, type SavedCapture } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
@@ -15,6 +15,7 @@ import { resetDate } from "../../../newOverview/util/usageLine.js";
 import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
 import { TranscriptPanel } from "../../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import { timedSource } from "../../../reader/util/timedSource.js";
+import { transcriptMomentFromLocation } from "../../../reader/util/transcriptMomentFromLocation.js";
 import { captureKeys } from "../../captureKeys.js";
 import styles from "./SavedItemPage.module.scss";
 import { savedItemPageTestIds } from "./SavedItemPageTestIds.js";
@@ -44,6 +45,7 @@ export interface SavedItemPageProps {
 // Design 358l: left out, not greyed out, until its overview exists (docs/features/kept-links.md, "Opening one").
 export const SavedItemPage = ({ capture }: SavedItemPageProps) => {
   const navigate = useNavigate();
+  const openAtMs = transcriptMomentFromLocation(useLocation().state);
   const queryClient = useQueryClient();
   const { captureStore } = useStores();
   const { startFromSaved, openWith } = useNewOverviewRunController();
@@ -129,7 +131,7 @@ export const SavedItemPage = ({ capture }: SavedItemPageProps) => {
       {video !== null && (
         <section className={styles.transcript} aria-label="Transcript" data-testid={savedItemPageTestIds.transcript}>
           <h2 className={styles.tab}>Transcript</h2>
-          <TranscriptPanel video={video} openAtMs={null} openedFrom={null} onBackToChapters={() => undefined} />
+          <TranscriptPanel video={video} openAtMs={openAtMs} openedFrom={null} onBackToChapters={() => undefined} />
         </section>
       )}
       <PlansModal open={plansOpen} plan={usage?.plan ?? DEFAULT_PLAN} onClose={() => setPlansOpen(false)} />

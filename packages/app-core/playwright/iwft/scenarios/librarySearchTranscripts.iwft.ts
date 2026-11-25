@@ -2,6 +2,7 @@ import { VideoId, type Overview } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import { savedCaptureFrom } from "../../../src/features/captures/types/SavedCaptureFactory.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
@@ -71,6 +72,27 @@ test.describe("searching the library for words said in a transcript", () => {
     await expect
       .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "library.overviewCard.opened"))
       .toEqual([{ name: "library.overviewCard.opened", props: { overviewId: arms.id, from: "said", layout: "row", plan: "free" } }]);
+  });
+
+  test("an item saved without an overview is listed as said in it too, and opens its transcript at that moment", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    const { arms } = seed(backendSimulator);
+    const saved = savedCaptureFrom(titled("Volume for beginners", "Not written yet.", VideoId.parse("savedVideo01")));
+    backendSimulator.captureStore.seed(saved);
+    backendSimulator.transcripts.seed(
+      makeStoredTranscript({ videoId: VideoId.parse("savedVideo01"), segments: makeCaptionRun([SAID], { startMs: 65_000, cueMs: 4000 }) }),
+    );
+    backendSimulator.transcriptSearch.seed("zatsiorsky", [matchOf(arms.id), matchOf(saved.id)]);
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+
+    await library.search("zatsiorsky");
+
+    await launcher.savedItem.verifySaidReads("Volume for beginners", `Said in the video at 1:05${SAID}`);
+    await launcher.savedItem.openTheMomentSaid("Volume for beginners");
+    await launcher.savedItem.verifyIsShown("Volume for beginners");
+    await launcher.savedItem.verifyTranscriptOpensAt(/Zatsiorsky wrote the book/);
   });
 
   test("an overview its own words already found, or already said, is not listed again", async ({ launcher, backendSimulator }) => {

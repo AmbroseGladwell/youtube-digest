@@ -1,12 +1,13 @@
 import { expect, test } from "../../support/fixtures.testHelper.js";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
-import type { Chat } from "@overview/domain";
+import { OverviewId, SourceKey, type Chat, type KeptCapture } from "@overview/domain";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import type { AxeAllowance, PageObject } from "../../pageObjects/PageObject.testHelper.js";
 import { libraryPageTestIds } from "../../../src/features/library/LibraryPage/LibraryPageTestIds.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { savedCaptureFrom } from "../../../src/features/captures/types/SavedCaptureFactory.testHelper.js";
 import { applyReflowCondition, reflowConditions } from "../../support/reflowConditions.testHelper.js";
 import { SUGGESTED_TEXTS, seedSuggestedQuestions } from "../../support/seedSuggestedQuestions.testHelper.js";
 
@@ -24,6 +25,29 @@ const NOTE = makeOverview({
     { text: "Hiring intent has turned.", range: null },
   ],
 });
+
+const KEPT_ON_A_PHONE: KeptCapture = {
+  id: OverviewId.parse("6e7f8a9b-0c1d-4e2f-9a3b-4c5d6e7f8a9b"),
+  sourceKey: SourceKey.parse("keptVideo01"),
+  url: "https://www.youtube.com/watch?v=keptVideo01",
+  keptAt: "2026-11-24T20:00:00.000Z",
+  keptFrom: "phone",
+  captureReason: null,
+  title: "Why the UK economy suddenly looks alright, and what the data actually says",
+  thumbnailUrl: null,
+  fromPlaylist: null,
+  addedAt: null,
+  playlistIndex: null,
+  chosenAt: null,
+  stage: "kept",
+  source: null,
+  waitingFor: "server",
+  resumesAt: "2099-01-01T00:00:00.000Z",
+  queueStatus: "waiting",
+  problem: null,
+};
+
+const NOTE_TO_SAVE = makeOverview();
 
 const askedEarlier = (question: string, minutesAgo: number): Chat => {
   const at = new Date(Date.now() - minutesAgo * 60_000).toISOString();
@@ -159,6 +183,37 @@ const screens: Screen[] = [
       return ask;
     },
     verify: (ask) => ask.verifyDrawerControlsCanBeReached(),
+  }),
+  screen({
+    name: "the Queue page, with kept links",
+    open: async (launcher, backendSimulator) => {
+      backendSimulator.captureStore.seed(KEPT_ON_A_PHONE);
+      backendSimulator.captureStore.seed({
+        ...KEPT_ON_A_PHONE,
+        id: OverviewId.parse("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d"),
+        sourceKey: SourceKey.parse("keptVideo02"),
+        url: "https://www.youtube.com/watch?v=keptVideo02",
+        title: "A second link kept on a phone, with a title long enough to wrap on a small screen",
+        queueStatus: "failed",
+        problem: "failed",
+      });
+      await openLibrary(launcher, backendSimulator);
+      await launcher.openPage(Routes.queue());
+      return launcher.appShell.queuePage.verifyIsShown();
+    },
+    verify: (queue) => queue.verifyReflows(),
+  }),
+  screen({
+    name: "an item saved without an overview",
+    open: async (launcher, backendSimulator) => {
+      const saved = savedCaptureFrom(NOTE_TO_SAVE);
+      backendSimulator.captureStore.seed(saved);
+      await openLibrary(launcher, backendSimulator);
+      await launcher.openPage(Routes.overview(saved.id));
+      await launcher.savedItem.verifyTitleIs(NOTE_TO_SAVE.source.title);
+      return launcher.savedItem;
+    },
+    verify: (savedItem) => savedItem.verifyReflows(),
   }),
   screen({
     name: "Settings",

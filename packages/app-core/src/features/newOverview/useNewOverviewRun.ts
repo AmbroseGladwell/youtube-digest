@@ -8,11 +8,16 @@ import { captureSurfaceOf } from "../captures/util/captureSurfaceOf.js";
 import { madeLaterOf } from "../captures/util/madeLaterOf.js";
 import { usePlan } from "../plus/usePlan.js";
 import { SavedWithoutOverview } from "./api/SavedWithoutOverview.js";
+import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
+import { TranscriptionRefusedError } from "../podcasts/api/TranscriptionRefusedError.js";
+import { nextUsageMonth } from "../captures/util/nextUsageMonth.js";
 import { SavedSourceNeedsReadingError } from "./api/SavedSourceNeedsReadingError.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   heldOverviewOf,
   OverviewId,
+  podcastSource,
+  podcastSourceId,
   SourceKey,
   type ArticleRead,
   type CaptureEntry,
@@ -105,6 +110,7 @@ export interface NewOverviewRunController {
   startTikTok: (request: TikTokRunRequest & StartOverviewRunOptions) => void;
   startSocial: (request: SocialRunRequest & StartOverviewRunOptions) => void;
   startFromSaved: (capture: SavedCapture) => void;
+  keepForReset: (request: PodcastRunRequest) => Promise<void>;
   makeAllSaved: (captures: readonly SavedCapture[]) => void;
   keep: (run: NewOverviewRun) => Promise<void>;
   dismiss: () => void;
@@ -179,9 +185,47 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         return null;
       }
       const found = await heldOverviewOf(overviewStore, videoId).catch(() => null);
-      return found === null ? null : { url, overviewId: OverviewId.parse(found.id), readable: found.readable };
+      if (found !== null) {
+        return { url, overviewId: OverviewId.parse(found.id), readable: found.readable, as: "overview" };
+      }
+      const capture = await captureStore.captureOfSource(SourceKey.parse(videoId)).catch(() => null);
+      return capture === null ? null : { url, overviewId: capture.id, readable: true, as: capture.stage === "saved" ? "saved" : "queued" };
     },
-    [overviewStore],
+    [overviewStore, captureStore],
+  );
+
+  const resetsOnRef = useRef<string | null>(null);
+  resetsOnRef.current = useOverviewUsageQuery().data?.resetsOn ?? null;
+
+  // docs/features/kept-links.md, "Saving at the limit": no transcribing left, so it waits for the month to turn.
+  const keepUntilReset = useCallback(
+    async (request: PodcastRunRequest, captureReason: string) => {
+      const id = await podcastSourceId(request.episode);
+      const at = new Date();
+      await captureStore.saveCapture({
+        id: OverviewId.parse(globalThis.crypto.randomUUID()),
+        sourceKey: id,
+        url: request.sharedFrom,
+        keptAt: at.toISOString(),
+        keptFrom: captureSurfaceOf(surface),
+        captureReason: captureReason.trim() === "" ? null : captureReason.trim(),
+        title: request.episode.title,
+        thumbnailUrl: request.episode.imageUrl,
+        fromPlaylist: null,
+        addedAt: null,
+        playlistIndex: null,
+        chosenAt: null,
+        stage: "kept",
+        source: podcastSource(request.episode, id, request.sharedFrom),
+        waitingFor: "reset",
+        resumesAt: (resetsOnRef.current === null ? nextUsageMonth(at) : new Date(`${resetsOnRef.current}T00:00:00.000Z`)).toISOString(),
+        queueStatus: "waiting",
+        problem: null,
+      });
+      analytics.keptLinks.queue.linkKept({ plan, surface: captureSurfaceOf(surface), waitingFor: "reset" });
+      void queryClient.invalidateQueries({ queryKey: captureKeys.all });
+    },
+    [captureStore, surface, analytics, plan, queryClient],
   );
 
   // Stable callbacks: the status strip's self-dismiss timer would restart on every new identity.
@@ -455,11 +499,23 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
               }
               return;
             }
+            if (
+              podcastRequest !== null &&
+              options.saveInstead === true &&
+              error instanceof TranscriptionRefusedError &&
+              error.refusal === "not-enough"
+            ) {
+              void keepUntilReset(podcastRequest, options.captureReason ?? "");
+              if (isCurrent()) {
+                setRun((current) => (current === null ? null : { ...current, keptUntilReset: true, finishedAt: Date.now() }));
+              }
+              return;
+            }
             if (isCurrent() && error instanceof ArticleAlreadyHeldError) {
               const overviewId = OverviewId.parse(error.held.id);
-              analytics.capture.newOverview.alreadyHeld({ from, overviewId });
+              analytics.capture.newOverview.alreadyHeld({ from, overviewId, held: "overview" });
               setRun(null);
-              setHeld({ url, overviewId, readable: error.held.readable });
+              setHeld({ url, overviewId, readable: error.held.readable, as: "overview" });
               return;
             }
             if (error instanceof ChosenModelFailedError) {
@@ -501,7 +557,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         },
       );
     },
-    [mutate, commitDraftOnto, analytics, plan, reporter, surface, queryClient],
+    [mutate, commitDraftOnto, analytics, plan, reporter, surface, queryClient, keepUntilReset],
   );
 
   // One at a time from Create; the rest wait their turn: docs/features/kept-links.md, "Several in a row".
@@ -552,7 +608,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       setHeld(null);
       void alreadyHeld(url, options).then((found) => {
         if (found !== null) {
-          analytics.capture.newOverview.alreadyHeld({ from: options.from, overviewId: found.overviewId });
+          analytics.capture.newOverview.alreadyHeld({ from: options.from, overviewId: found.overviewId, held: found.as });
           setHeld(found);
           return;
         }
@@ -719,7 +775,10 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     setHeld(null);
     setDialogOpen(true);
   }, []);
-  const close = useCallback(() => setDialogOpen(false), []);
+  const close = useCallback(() => {
+    setHeld(null);
+    setDialogOpen(false);
+  }, []);
   const dismiss = useCallback(() => {
     runIdRef.current += 1;
     busyRef.current = false;
@@ -747,6 +806,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     startTikTok,
     startSocial,
     startFromSaved,
+    keepForReset: (request: PodcastRunRequest) => keepUntilReset(request, draftRef.current),
     makeAllSaved,
     keep,
     dismiss,
