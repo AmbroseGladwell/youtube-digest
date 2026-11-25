@@ -714,7 +714,9 @@ what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat
 - **The sheet:** 64px from the top on a phone, under the masthead in the panel. Raised it is a
   modal dialog holding focus, over a scrim. Its handle (a button, "Lower chat" / "Raise chat") or
   its header drags it, following the finger with resistance past either rest (`sheetDrag`); let
-  go, it springs (420ms) to the nearer rest, or where it was flicked faster than 0.5px/ms.
+  go, it goes to the nearer rest, or where it was flicked faster than 0.5px/ms. It moves like
+  every other sheet (`bottom-sheets.md`, OV-404): it springs up on opening and on raising, and
+  falls away on lowering and on closing.
   Lowered, it shows only the conversation's title and a line, and the read-aloud bar moves up
   above it. A citation that plays (the video beside the panel, an episode's audio) lowers it to
   "Playing 3:28–4:23 from the answer"; reading a cited stretch in the transcript lowers it to say
@@ -956,12 +958,13 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
     `data-sticky-fade` itself, since only the lowest band keeps that fade and it would take it
     from the masthead.
   - Opening and closing slide: on the web its width opens from the left with what's inside held
-    at the open width, and on a phone the sheet rises over a fading scrim. Closing plays it
-    backwards. It doesn't slide when it starts open, or with reduced motion (OV-371).
+    at the open width, and closing plays it backwards. It doesn't slide when it starts open, or
+    with reduced motion (OV-371). A phone's sheet moves as every sheet does.
   - On the web it starts open whenever the Ask page opens (owner, 22 Nov 2026, OV-370); closed,
     it stays closed until the page is opened again. `drawer.opened` counts only the reader opening
     it.
-  - On a phone it's a bottom sheet over a scrim, and starts closed.
+  - On a phone it's the shared bottom sheet (`bottom-sheets.md`, OV-404), with New chat at its
+    head and Search conversations pinned at the top of its list, and starts closed.
   - The ⋯ menu (354t-6) is 220px and right-aligned. It opens below the ⋯, or above it when there's
     no room below, as for the last conversation in a phone's sheet (OV-362).
 - **Waits** are the overview chat's (`ChatWaitBlock`), with 50 questions to a conversation. The

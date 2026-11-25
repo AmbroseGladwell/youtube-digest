@@ -346,8 +346,9 @@ export const AskPage = () => {
 
   return (
     <main className={styles.root} data-testid={askPageTestIds.root}>
-      {(drawerOpen || drawerLeaving) && (
+      {(isPhone || drawerOpen || drawerLeaving) && (
         <AskDrawer
+          open={drawerOpen}
           motion={drawerMotionOf(drawerOpen, drawerArrives)}
           chats={page.chats}
           openChatId={page.chat?.id ?? null}
@@ -355,7 +356,6 @@ export const AskPage = () => {
           projectName={(id) => projects.find((each) => each.id === id)?.name ?? null}
           overviewTitle={(id) => (library === undefined ? "" : (overviewOf(id)?.source.title ?? null))}
           sheet={isPhone}
-          trigger={drawerButton}
           onNew={() => {
             if (isPhone) {
               hideDrawer();
@@ -372,7 +372,9 @@ export const AskPage = () => {
           onSearched={(matches) => analytics.ask.drawer.searched({ matches })}
           onClose={() => {
             hideDrawer();
-            requestAnimationFrame(() => drawerButton.current?.focus());
+            if (!isPhone) {
+              requestAnimationFrame(() => drawerButton.current?.focus());
+            }
           }}
         />
       )}

@@ -48,6 +48,19 @@ test.describe("Chat as a sheet", () => {
     await reader.chat.verifySheetIs("raised");
   });
 
+  test("closing chat lets the sheet fall away like every other sheet, and then it's gone", async ({ launcher, backendSimulator, page }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    await page.setViewportSize(PHONE);
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.followUps.clickQuestion(0);
+    await reader.chat.verifySheetIs("raised");
+
+    await reader.chat.close();
+
+    await reader.chat.verifySheetFallsAway();
+  });
+
   test("dragging the handle past halfway lowers the sheet, and dragging it back up raises it", async ({
     launcher,
     backendSimulator,

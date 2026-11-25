@@ -430,6 +430,13 @@ export class ChatPanelPageObject extends PageObject {
   verifySlowReads = (text: string) =>
     this.step(`verifySlowReads ${text}`, () => expect(this.panel().getByTestId(chatPanelTestIds.slow)).toHaveText(text));
 
+  verifySheetFallsAway = () =>
+    this.step("verifySheetFallsAway", async () => {
+      const sheet = this.page.getByTestId(chatSheetTestIds.root);
+      await expect.poll(() => sheet.evaluate((element) => getComputedStyle(element).animationName)).toMatch(/chatSheetAway/);
+      await expect(sheet).toHaveCount(0);
+    });
+
   verifySheetIs = (rest: "raised" | "lowered") =>
     this.step(`verifySheetIs ${rest}`, async () => {
       const sheet = this.page.getByTestId(chatSheetTestIds.root);
