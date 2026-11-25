@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
-import { PLAN_CARDS } from "../../../plus/planCards.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { GET_OVERVIEW_PLUS } from "../../../plus/components/GetPlusButton/GetPlusButton.js";
+import { PAID_PRICES, PLAN_CARDS } from "../../../plus/planCards.js";
 import styles from "./SoftWall.module.scss";
 import { softWallTestIds } from "./SoftWallTestIds.js";
 
@@ -52,12 +54,13 @@ export const SoftWall = ({ link, resetsOn, offerKey, onSeePlans, onFollowed, sav
         <div>
           <span className={styles.wayName}>Plus</span>
           <p className={styles.wayBody}>
-            {PLUS.ourKey.replace(" a month", "")} overviews a month on us, and {PLUS.ownKey.replace(" a month", "")} on your own AI API key.{" "}
-            {PLUS.price}, cancel anytime.
+            {PLUS.ourKey.replace(" a month", "")} overviews a month on us, and {PLUS.ownKey.replace(" a month", "")} on your own AI API key.
+            From {PAID_PRICES.plus.yearlyPerMonth} a month, cancel anytime.
           </p>
         </div>
         <button type="button" className={styles.primary} onClick={onSeePlans} data-testid={softWallTestIds.getPlus}>
-          Get Plus
+          <StrokeIcon name="gem" size={15} weight={1.8} />
+          {GET_OVERVIEW_PLUS}
         </button>
       </div>
 

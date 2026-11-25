@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GET_OVERVIEW_PLUS } from "../../../plus/components/GetPlusButton/GetPlusButton.js";
 import { useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_PLAN, formatClock, sourceName, type SavedCapture } from "@overview/domain";
@@ -122,7 +123,7 @@ export const SavedItemPage = ({ capture }: SavedItemPageProps) => {
               onClick={() => setPlansOpen(true)}
               data-testid={savedItemPageTestIds.getPlus}
             >
-              Get Plus
+              {GET_OVERVIEW_PLUS}
             </button>
           </>
         )}

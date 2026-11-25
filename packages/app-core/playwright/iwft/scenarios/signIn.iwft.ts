@@ -45,7 +45,14 @@ test.describe("the account menu", () => {
     const menu = await launcher.appShell.accountMenu.open();
 
     await menu.verifySignedInAs("Ada", SIMULATED_EMAIL);
-    await menu.verifyItemsRead(["Connect the extension", "Settings", "Send feedback", "Sign out"]);
+    await menu.verifyItemsRead([
+      "Get Overview Plus 50 overviews a month on us",
+      "Connect the extension",
+      "Settings",
+      "Plan",
+      "Send feedback",
+      "Sign out",
+    ]);
     await menu.verifySyncStatusShown(false);
   });
 

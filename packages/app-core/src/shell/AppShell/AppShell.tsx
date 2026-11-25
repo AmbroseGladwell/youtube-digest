@@ -10,6 +10,7 @@ import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
 import { MiniPlayer } from "../../features/player/components/MiniPlayer/MiniPlayer.js";
 import { CookingTimerDock } from "../../features/cookingTimers/components/CookingTimerDock/CookingTimerDock.js";
 import { AccountMenu } from "../../features/auth/components/AccountMenu/AccountMenu.js";
+import { GetPlusButton } from "../../features/plus/components/GetPlusButton/GetPlusButton.js";
 import { SignedOutGate } from "../../features/accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { LibraryMoveNotice } from "../../features/accountLibraries/components/LibraryMoveNotice/LibraryMoveNotice.js";
 import { SignOutNotice } from "../../features/accountLibraries/components/SignOutNotice/SignOutNotice.js";
@@ -298,6 +299,7 @@ export const AppShell = () => {
                               {pageIcon("Projects", Routes.projects(), "folder", pathname.startsWith(Routes.projects()))}
                             </nav>
                           )}
+                          {!accountNeeded && signedIn && <GetPlusButton />}
                           {!accountNeeded && signedIn && (
                             <span className={styles.tipHost} {...askTip}>
                               <PageLink

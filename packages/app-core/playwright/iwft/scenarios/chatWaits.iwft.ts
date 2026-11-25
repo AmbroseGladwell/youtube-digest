@@ -32,9 +32,9 @@ test.describe("Chat's waits and its usage meter", () => {
   }) => {
     backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.refuseWith(429, limit("chat-month", { resetsOn: "2026-12-01" }));
+    backendSimulator.chats.setUsage({ used: 100, share: 1, libraryFits: false, resetsOn: "2026-12-01" });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
-    backendSimulator.chats.setUsage({ used: 100, share: 1, libraryFits: false, resetsOn: "2026-12-01" });
 
     await reader.chat.askInNote("How much lean mass?");
 

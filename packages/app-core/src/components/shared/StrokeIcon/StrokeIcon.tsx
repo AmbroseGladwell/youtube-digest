@@ -9,6 +9,7 @@ export type StrokeIconName =
   | "volumeOff"
   | "check"
   | "gem"
+  | "creditCard"
   | "sun"
   | "moon"
   | "close"
@@ -141,6 +142,12 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     </>
   ),
   check: <path d="M20 6 9 17l-5-5" />,
+  creditCard: (
+    <>
+      <rect width="20" height="14" x="2" y="5" rx="2" />
+      <path d="M2 10h20" />
+    </>
+  ),
   gem: (
     <>
       <path d="M6 3h12l4 6-10 12L2 9z" />

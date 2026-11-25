@@ -90,7 +90,7 @@ export class AskPagePageObject extends PageObject {
       await expect(option).toHaveAttribute("aria-disabled", "true");
       await expect(option).toContainText(title);
       await expect(option).toContainText("No overview yet, so it can’t be asked about yet");
-      await expect(this.root().getByTestId(chatComposerTestIds.savedGetPlus)).toHaveText("Get Plus");
+      await expect(this.root().getByTestId(chatComposerTestIds.savedGetPlus)).toHaveText("Get Overview Plus");
     });
 
   tryMutedPickerOption = () =>

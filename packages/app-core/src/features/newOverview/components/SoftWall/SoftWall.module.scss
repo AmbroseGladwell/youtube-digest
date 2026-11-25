@@ -81,6 +81,7 @@
 .primary {
   @include controls.action-pill;
   @include controls.pill-lg;
+  gap: 0.5rem;
 }
 
 .secondary {

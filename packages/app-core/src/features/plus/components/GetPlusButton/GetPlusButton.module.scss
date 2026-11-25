@@ -1,0 +1,19 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Borderless text led by the diamond, a soft tint on hover (design 351a).
+.button {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--ink);
+
+  svg {
+    color: var(--muted);
+    transition: color var(--motion-state) var(--motion-ease);
+  }
+
+  &:hover svg {
+    color: var(--ink);
+  }
+}

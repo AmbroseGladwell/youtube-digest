@@ -184,6 +184,23 @@ timestamp per variant, merged a key at a time (`mergeSettingsRecord`), so a prom
 the phone stays away on the web and in the panel (`isPlanPromptHidden`). The counter's See
 plans, the reset line and the transcribing line have no close.
 
+### Get Overview Plus (351a, 351b)
+
+"Get Plus" became **Get Overview Plus** everywhere (the plan stays "Plus"), led by Plus's
+diamond (`StrokeIcon` `gem`, drawn at a 1.8 stroke, muted at rest and ink on hover).
+
+- **The top bar** (`GetPlusButton`): Free only, borderless before Ask and + New, with the tip
+  "50 overviews a month on us". It is only drawn from 62rem, the width at which the masthead has
+  room, so at tablet widths and enlarged text it is not there and the menu carries it. It opens
+  the plans modal.
+- **The account menu** (`GetPlusMenuItem`): first, in its own group, with a second line: "50
+  overviews a month on us" for Free; for BYO Plus, only once an allowance on us is spent, what ran
+  out ("Your 10 on us are used. Plus has 50 a month", or the hours or questions). It is mounted
+  only while the menu is open, so its `shown` event means it was seen. The modal it opens lives
+  on the menu itself and gives focus back to the account button. **Plan** now sits under Settings.
+- The soft wall's button and the @ picker's and a saved item's offers read Get Overview Plus,
+  and the wall's Plus row says "From £7.99 a month, cancel anytime".
+
 ### The plans modal (351m)
 
 Outside Settings, every See plans, Get Overview Plus and Upgrade opens `PlansModal`: **the paid

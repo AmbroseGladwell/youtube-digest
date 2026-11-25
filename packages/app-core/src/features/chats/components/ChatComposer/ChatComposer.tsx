@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from "react";
+import { GET_OVERVIEW_PLUS } from "../../../plus/components/GetPlusButton/GetPlusButton.js";
 import { useNavigate } from "react-router";
 import { DEFAULT_PLAN, isWrittenPost, MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
@@ -349,7 +350,7 @@ export const ChatComposer = ({
                       }}
                       data-testid={chatComposerTestIds.savedGetPlus}
                     >
-                      Get Plus
+                      {GET_OVERVIEW_PLUS}
                     </button>
                   )}
                 </>
