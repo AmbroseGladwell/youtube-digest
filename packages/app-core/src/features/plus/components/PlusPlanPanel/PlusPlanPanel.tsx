@@ -1,23 +1,56 @@
+import { useState } from "react";
+import type { Plan } from "@overview/domain";
+import { Routes } from "../../../../app/Routes.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useNextQuota } from "../../../newOverview/useNextQuota.js";
+import { CHECKING } from "../../../newOverview/util/usageLine.js";
+import type { NextQuota } from "../../../newOverview/util/nextQuota.js";
 import { PLAN_LABEL } from "../../planLabel.js";
-import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS } from "../../planCards.js";
+import type { Billing, PaidPlan } from "../../planCards.js";
 import { usePlan } from "../../usePlan.js";
 import { usePlanUsage } from "../../usePlanUsage.js";
-import { PlanUsage } from "../PlanUsage/PlanUsage.js";
-import { useChatUsageQuery } from "../../../chats/queries/chatUsageQuery.js";
+import { useToldWhen } from "../../useToldWhen.js";
+import { BillingSwitch } from "../BillingSwitch/BillingSwitch.js";
+import { PlanOfferCard } from "../PlanOfferCard/PlanOfferCard.js";
 import styles from "./PlusPlanPanel.module.scss";
 import { plusPlanPanelTestIds } from "./PlusPlanPanelTestIds.js";
-import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
+const PLANS: Plan[] = ["free", "byo-plus", "plus"];
+
+const ON_KEY = { ours: "on us", own: "on your own key" } as const;
+
+export const PLAN_FOOTNOTE =
+  "*Question counts are typical, not fixed: questions across your whole library use more than questions about one overview. Transcribing counts each episode’s length. Allowances reset on the 1st of each month. Yearly is billed once a year: 17% less than monthly on BYO Plus, 16% less on Plus. Prices are in GBP; plans and prices may change, and we’ll tell you before they do.";
+
+const summaryOf = (next: NextQuota | null): string | null => {
+  switch (next?.kind) {
+    case "quota":
+      return `${next.left} of ${next.limit} overviews ${ON_KEY[next.key]} left`;
+    case "spent":
+      return "No overviews left";
+    case "checking":
+      return CHECKING;
+    default:
+      return null;
+  }
+};
+
+const offeredTo = (plan: Plan, card: Plan): boolean => PLANS.indexOf(card) > PLANS.indexOf(plan);
+
+// Settings › Plan is for choosing: the plan, one usage line, then every plan's card (design 351j).
 export const PlusPlanPanel = () => {
   const { plan, status, recheck } = usePlan();
   const usage = usePlanUsage();
-  const chatUsage = useChatUsageQuery().data ?? null;
+  const next = useNextQuota();
   const analytics = useAnalytics();
+  const [billing, setBilling] = useState<Billing>("yearly");
+  const { told, tell } = useToldWhen();
 
   if (status !== "known") {
     return (
       <section className={styles.root} aria-busy={status === "checking"} data-testid={plusPlanPanelTestIds.root}>
-        <p className={styles.eyebrow}>Plan</p>
+        <p className={styles.eyebrow}>Your plan</p>
         <p className={styles.planName} data-testid={plusPlanPanelTestIds.planName}>
           {status === "checking" ? "Checking…" : "Couldn't check your plan"}
         </p>
@@ -42,72 +75,52 @@ export const PlusPlanPanel = () => {
   }
 
   const signedOut = usage?.signedIn === false;
-  const transcribes = usage?.signedIn === true && usage.usage.status === "known" && usage.usage.data.transcription !== undefined;
-  const planName = signedOut ? "No account" : PLAN_LABEL[plan];
+  const summary = signedOut ? null : summaryOf(next);
 
   return (
     <section className={styles.root} data-testid={plusPlanPanelTestIds.root}>
-      <p className={styles.eyebrow}>{signedOut ? "Signed out" : "Your plan"}</p>
-      <p className={styles.planName} data-testid={plusPlanPanelTestIds.planName}>
-        {planName}
-      </p>
-      {usage !== null && (usage.signedIn ? <PlanUsage {...usage} chatUsage={chatUsage} /> : <PlanUsage {...usage} />)}
-
-      <p className={styles.note} data-testid={plusPlanPanelTestIds.includedNote}>
-        Every account gets all of it:
-      </p>
-      <ul className={styles.features}>
-        {EVERY_ACCOUNT_INCLUDES.map((text) => (
-          <li key={text} data-testid={plusPlanPanelTestIds.feature}>
-            {text}
-          </li>
+      <div className={styles.yourPlan}>
+        <p className={styles.eyebrow}>{signedOut ? "Signed out" : "Your plan"}</p>
+        <p className={styles.planName} data-testid={plusPlanPanelTestIds.planName}>
+          {signedOut ? "No account" : PLAN_LABEL[plan]}
+        </p>
+      </div>
+      {signedOut && (
+        <p className={styles.summary}>
+          Plans come with an account.{" "}
+          <PageLink className={styles.link} to={Routes.createAccount()} data-testid={plusPlanPanelTestIds.createAccountLink}>
+            Create account
+          </PageLink>
+        </p>
+      )}
+      {summary !== null && (
+        <p className={styles.summary} data-testid={plusPlanPanelTestIds.summary}>
+          This month: <b>{summary}</b> ·{" "}
+          <PageLink className={styles.link} to={Routes.settingsSection("usage")} data-testid={plusPlanPanelTestIds.seeUsageLink}>
+            See usage
+          </PageLink>
+        </p>
+      )}
+      <BillingSwitch billing={billing} onChange={setBilling} testId={plusPlanPanelTestIds.billing} />
+      <ul className={styles.plans}>
+        {PLANS.map((card) => (
+          <PlanOfferCard
+            key={card}
+            plan={card}
+            billing={billing}
+            yours={!signedOut && card === plan}
+            offered={offeredTo(plan, card)}
+            told={card !== "free" && told.includes(card)}
+            onTell={(chosen: PaidPlan) => {
+              tell(chosen);
+              analytics.plus.prompt.chosen({ variant: "settings", plan, outcome: "tellMeWhen", tellMeWhen: chosen });
+            }}
+          />
         ))}
       </ul>
-
-      <p className={styles.note}>
-        {transcribes
-          ? "What a plan buys is how much you can make, and how many questions you can ask about it."
-          : "What a plan buys is how many overviews you can make, and how many questions you can ask about them."}
-      </p>
-      <ul className={styles.plans}>
-        {PLAN_CARDS.map((card) => {
-          const yours = card.name === planName;
-          return (
-            <li className={`${styles.plan} ${yours ? styles.yours : ""}`} key={card.name} data-testid={plusPlanPanelTestIds.planCard}>
-              <div className={styles.planHead}>
-                <span className={styles.planCardName}>{card.name}</span>
-                {yours && <span className={styles.yoursPill}>Your plan</span>}
-              </div>
-              <dl className={styles.allowances}>
-                <div>
-                  <dt>On us</dt>
-                  <dd>{card.ourKey}</dd>
-                </div>
-                <div>
-                  <dt>On your own key</dt>
-                  <dd>{card.ownKey}</dd>
-                </div>
-                <div>
-                  <dt>Chat, on us</dt>
-                  <dd>{card.chat}</dd>
-                </div>
-                {transcribes && (
-                  <div>
-                    <dt>Transcribing episodes</dt>
-                    <dd>{card.transcribing}</dd>
-                  </div>
-                )}
-              </dl>
-              <p className={styles.planNote}>{card.note}</p>
-            </li>
-          );
-        })}
-      </ul>
-
-      <p className={styles.note} data-testid={plusPlanPanelTestIds.notOnSaleNote}>
-        {plan === "free"
-          ? "Both paid plans need a way to pay for them, and that isn't built yet. There is nothing to buy here today — everything on this page works without it."
-          : "This plan was set by hand: billing isn't built yet."}
+      <p className={styles.foot}>{PLAN_FOOTNOTE}</p>
+      <p className={styles.announce} role="status">
+        {told.length > 0 ? `You’re on the list for ${told.map((paid) => PLAN_LABEL[paid]).join(" and ")}.` : ""}
       </p>
     </section>
   );

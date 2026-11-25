@@ -49,7 +49,8 @@ test.describe("Chat's waits and its usage meter", () => {
 
     await reader.chat.clickWaitAction();
 
-    await launcher.settingsPage.verifyChatMeterReads("100% used", ["Nearly used up", "Resets 1 December"]);
+    await launcher.settingsPage.openSection("usage");
+    await launcher.settingsPage.verifyPlanUsageCellReads("chat", ["100% used", "Nearly used up"]);
   });
 
   test("with BYO Plus's month spent before asking, chat opens on the wait, offering Plus", async ({ launcher, backendSimulator }) => {
@@ -120,11 +121,8 @@ test.describe("Chat's waits and its usage meter", () => {
     await reader.chat.openFromMenu();
 
     await reader.chat.verifyMeterReads("60% of chat used · Resets 1 December");
-    const settings = await (await launcher.appShell.openSettings()).openSection("plan");
-    await settings.verifyChatMeterReads("67% used", [
-      "Questions about one overview use the least; questions across your library use more.",
-      "Resets 1 December",
-    ]);
+    const settings = await (await launcher.appShell.openSettings()).openSection("usage");
+    await settings.verifyPlanUsageCellReads("chat", ["67% used"]);
   });
 
   test("from 90% the line warns once, and offers the plans that give more (376c)", async ({ launcher, backendSimulator }) => {
@@ -140,7 +138,8 @@ test.describe("Chat's waits and its usage meter", () => {
       .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "reader.chat.meterShown"))
       .toEqual([{ name: "reader.chat.meterShown", props: expect.objectContaining({ state: "warning", plan: "free" }) }]);
     await reader.chat.followMeterPlans();
-    await launcher.settingsPage.verifyChatMeterReads("92% used", ["Nearly used up", "Resets 1 December"]);
+    await launcher.settingsPage.openSection("usage");
+    await launcher.settingsPage.verifyPlanUsageCellReads("chat", ["92% used", "Nearly used up"]);
   });
 
   test("on the Ask page, too little left for a library question says overview questions still work (376h)", async ({

@@ -74,11 +74,13 @@ test("while the counts load, the line and Settings read Checking…, never 0", a
   const settings = await launcher.appShell.openSettings();
   await settings.verifyRowReads("plan", "Free · Checking…");
   await settings.openSection("plan");
+  await settings.verifyPlanSummaryReads("This month: Checking… · See usage");
+  await settings.openSection("usage");
   await settings.verifyPlanUsageCellReads("ours", ["Checking…"]);
   await settings.verifyPlanUsageCellReads("own", ["Checking…"]);
 });
 
-test("Plan on the line opens Settings › Plan, where both quotas are counted", async ({ launcher, backendSimulator }) => {
+test("Plan on the line opens Settings › Plan, whose usage line leads to both quotas counted", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.monthHasMade({ own: 3, ours: 5 });
   await launcher.launch(SIGNED_IN);
@@ -89,7 +91,11 @@ test("Plan on the line opens Settings › Plan, where both quotas are counted", 
   const settings = launcher.settingsPage;
   await settings.verifySectionIsShown("plan");
   await settings.verifyPlanReads("Free");
-  await settings.verifyPlanUsagePeriodReads("This month · resets 1 November");
+  await settings.verifyPlanSummaryReads("This month: 7 of 10 overviews on your own key left · See usage");
+  await settings.seeUsage();
+  await settings.verifyUsagePlanReads("Your plan: Free");
+  await settings.verifyUpgradeOffered(true);
+  await settings.verifyPlanUsagePeriodReads("This month’s usage · resets 1 November");
   await settings.verifyPlanUsageCellReads("ours", ["0 of 5 left", "None left. More on 1 November."]);
   await settings.verifyPlanUsageCellReads("own", ["7 of 10 left"]);
   await settings.verifyRowReads("plan", "Free · 7 of 10 left");
@@ -99,9 +105,10 @@ test("with no key saved, Settings gives the own-key quota as a number, with a wa
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.monthHasMade({ ours: 38 });
   await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, plan: "plus" });
-  const settings = await (await launcher.appShell.openSettings()).openSection("plan");
+  const settings = await (await launcher.appShell.openSettings()).openSection("usage");
 
-  await settings.verifyPlanReads("Plus");
+  await settings.verifyUsagePlanReads("Your plan: Plus");
+  await settings.verifyUpgradeOffered(false);
   await settings.verifyPlanUsageCellReads("ours", ["12 of 50 left"]);
   await settings.verifyPlanUsageCellReads("own", ["200 a month", "Once you add a key · Add a key"]);
 });

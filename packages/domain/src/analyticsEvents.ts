@@ -253,6 +253,7 @@ export const SettingsSection = z.enum([
   "milestones",
   "shared",
   "plan",
+  "usage",
   "privacy",
   "about",
 ]);

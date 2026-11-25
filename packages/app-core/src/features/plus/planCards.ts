@@ -3,12 +3,6 @@ import { chatAllowances, overviewQuotas, saveQuotas, transcriptionHours, type Pl
 
 // Paid plans sell volume, and suggested questions: docs/architecture/tiers.md, "The tiers".
 
-export const EVERY_ACCOUNT_INCLUDES = [
-  "Your library synced to the web app and every device",
-  "Overviews read aloud, in every voice",
-  "An MCP connection, so Claude and other assistants can read your overviews",
-];
-
 export interface PlanCard {
   name: string;
   price: string;

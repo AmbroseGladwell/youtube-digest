@@ -99,6 +99,15 @@ export const useSettingsSections = (): SettingsSectionSummary[] => {
       title: "Plan",
       value: planValue(),
     },
+    ...(sync.connected
+      ? [
+          {
+            id: "usage" as const,
+            title: "Usage",
+            value: planRowCount(nextQuota) ?? "This month",
+          },
+        ]
+      : []),
     {
       id: "keys",
       title: "API keys",

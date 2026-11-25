@@ -121,7 +121,7 @@ It is quieter than 16a by design — a hairline box with one accent edge, agains
 docked panel on an accent wash. 16a was asked for by pressing something; this one
 interrupted.
 
-## 16c — in Settings, redrawn by 95d–95h
+## 16c — in Settings, redrawn by 95d–95h (replaced by 351j, below)
 
 The permanent home, above the keys: the plan's name, what every account includes, and then
 **all three plans as cards** — Free, BYO Plus, Plus — each carrying both quotas as a two-cell
@@ -197,6 +197,20 @@ figures come from the server's own allowances in `@overview/domain`, and the pri
 **Tell me when** stands where paying will be. Pressing it says "On the list", disabled and
 announced, for the rest of the tab's session (`useToldWhen`, in `sessionStorage`), and sends
 `plus.prompt.chosen` with `tellMeWhen`. Nothing is stored on the server.
+
+### Settings › Plan and Settings › Usage (351j)
+
+**Plan** is for choosing: Your plan, one usage line ("This month: 1 of 5 overviews on us left ·
+See usage", the quota the next overview uses), the Monthly / Yearly switch and all three
+`PlanOfferCard`s, the reader's own ringed with "Your plan" and Tell me when on the plans above
+it only, then the full footnote. The section is wider than the others to hold three cards; when
+it is narrower than 48rem the cards stack, in plan order so focus follows what is on screen
+(the design put Plus first on a phone; the modal does, since it builds the list in that order).
+
+**Usage** is its own section: "Your plan: Free" with **Upgrade plan** (Free and BYO Plus),
+which goes to Settings › Plan, then "This month's usage · resets 1 December" and a bar per
+allowance: overviews on us, on your own AI API key, transcribing with its episodes, chat as a
+percentage, and saves without an overview. A bar turns to the alert colour from 90% used.
 
 ### Events
 

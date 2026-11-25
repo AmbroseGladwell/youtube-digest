@@ -1,7 +1,6 @@
 import { VideoId } from "@overview/domain";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS } from "../../../src/features/plus/planCards.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
@@ -20,20 +19,23 @@ const seedHeldOverview = (backendSimulator: BackendSimulator) => {
   });
 };
 
-test("Settings names the plan, gives every account the features, and sells both paid plans on volume", async ({ launcher }) => {
+test("Settings › Plan names the plan, lists every plan's benefits, and offers the ones above it", async ({ launcher }) => {
   await launcher.launchPanel(panel);
   const settings = await launcher.appShell.openSettings();
   await settings.verifyRowReads("plan", "Free");
   await settings.openSection("plan");
 
   await settings.verifyPlanReads("Free");
-  await settings.verifyEveryAccountIncludes(EVERY_ACCOUNT_INCLUDES);
-  await settings.verifyPlanCardsRead(PLAN_CARDS.map((card) => [card.name, card.ourKey, card.ownKey, card.chat, card.note]));
-  await settings.verifyPlanMarkedAsYours("Free");
-  await settings.verifyPlansAreNotOnSale("isn't built yet");
+  await settings.verifyPlanCardsRead([
+    { plan: "free", lines: ["£0", "5 overviews a month, on us", "Synced to web and every device"] },
+    { plan: "byo-plus", lines: ["£4.99", "Everything in Free, plus:", "Suggested questions across your library"] },
+    { plan: "plus", lines: ["£7.99", "Recommended", "300 saves a month, overview later"] },
+  ]);
+  await settings.verifyPlanMarkedAsYours("free");
+  await settings.verifyTellMeWhenOffered(["byo-plus", "plus"]);
 });
 
-test("on Plus, Settings rings the reader's own plan among the three", async ({ launcher }) => {
+test("on Plus, Settings rings the reader's own plan among the three, and offers none", async ({ launcher }) => {
   await launcher.launchPanel({
     ...panel,
     sync: true,
@@ -43,9 +45,8 @@ test("on Plus, Settings rings the reader's own plan among the three", async ({ l
   const settings = await (await launcher.appShell.openSettings()).openSection("plan");
 
   await settings.verifyPlanReads("Plus");
-  await settings.verifyEveryAccountIncludes(EVERY_ACCOUNT_INCLUDES);
-  await settings.verifyPlanMarkedAsYours("Plus");
-  await settings.verifyPlansAreNotOnSale("set by hand");
+  await settings.verifyPlanMarkedAsYours("plus");
+  await settings.verifyTellMeWhenOffered([]);
 });
 
 test("Listen on a free plan docks the player and plays, with no case for Plus", async ({ launcher, backendSimulator }) => {

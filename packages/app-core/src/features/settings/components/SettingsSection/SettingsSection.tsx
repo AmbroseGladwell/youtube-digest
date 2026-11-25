@@ -8,12 +8,14 @@ export interface SettingsSectionProps {
   title: string;
   intro: string | null;
   focusOnArrival: boolean;
+  // Room for the plans side by side (design 351j).
+  wide?: boolean;
   children: ReactNode;
 }
 
 export const settingsSectionHeadingId = (section: SettingsSectionId) => `settings-section-${section}`;
 
-export const SettingsSection = ({ id, title, intro, focusOnArrival, children }: SettingsSectionProps) => {
+export const SettingsSection = ({ id, title, intro, focusOnArrival, wide = false, children }: SettingsSectionProps) => {
   const heading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -24,7 +26,11 @@ export const SettingsSection = ({ id, title, intro, focusOnArrival, children }: 
   }, [focusOnArrival]);
 
   return (
-    <section className={styles.root} aria-labelledby={settingsSectionHeadingId(id)} data-testid={settingsSectionTestIds.root(id)}>
+    <section
+      className={wide ? `${styles.root} ${styles.wide}` : styles.root}
+      aria-labelledby={settingsSectionHeadingId(id)}
+      data-testid={settingsSectionTestIds.root(id)}
+    >
       <h2
         ref={heading}
         id={settingsSectionHeadingId(id)}
