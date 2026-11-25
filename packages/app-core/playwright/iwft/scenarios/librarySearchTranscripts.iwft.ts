@@ -70,7 +70,7 @@ test.describe("searching the library for words said in a transcript", () => {
     await reader.verifyTargetTranscriptBlockReads(/Zatsiorsky wrote the book/);
     await expect
       .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "library.overviewCard.opened"))
-      .toEqual([{ name: "library.overviewCard.opened", props: { overviewId: arms.id, from: "said", layout: "row", plan: "free" } }]);
+      .toEqual([{ name: "library.overviewCard.opened", props: { overviewId: arms.id, from: "said", rowLayout: "row", plan: "free" } }]);
   });
 
   test("an overview its own words already found, or already said, is not listed again", async ({ launcher, backendSimulator }) => {
