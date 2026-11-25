@@ -1,6 +1,7 @@
 import { ABOUT_YOU_SECTIONS, type AboutYouSection } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { ABOUT_YOU_SECTION_COPY } from "../../../settings/util/aboutYouCopy.js";
+import { OnboardingCarousel } from "../OnboardingCarousel/OnboardingCarousel.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingStepsMoment.module.scss";
 import { onboardingStepsMomentTestIds } from "./OnboardingStepsMomentTestIds.js";
@@ -58,7 +59,7 @@ export const OnboardingStepsMoment = ({ noun, onAddContext, onSkip }: Onboarding
         </p>
       </figure>
 
-      <div className={styles.cards}>
+      <OnboardingCarousel label="Examples" slideLabels={[OVERVIEW_LABEL, CHAT_LABEL]}>
         <figure className={styles.card} aria-label={`An example: ${OVERVIEW_LABEL}`}>
           <figcaption className={styles.label}>
             <StrokeIcon name="sparkle" size={12} />
@@ -92,7 +93,7 @@ export const OnboardingStepsMoment = ({ noun, onAddContext, onSkip }: Onboarding
             </span>
           </div>
         </figure>
-      </div>
+      </OnboardingCarousel>
 
       <div className={styles.foot}>
         <button type="button" className={styles.primary} onClick={onAddContext} data-testid={onboardingStepsMomentTestIds.addContext}>

@@ -1,5 +1,6 @@
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { OnboardingCarousel } from "../OnboardingCarousel/OnboardingCarousel.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingKnowledgeMoment.module.scss";
 import { onboardingKnowledgeMomentTestIds } from "./OnboardingKnowledgeMomentTestIds.js";
@@ -39,7 +40,7 @@ export const OnboardingKnowledgeMoment = ({ onContinue, onSkip }: OnboardingKnow
         {!isPanel && <p className={styles.lead}>{LEAD}</p>}
       </div>
 
-      <div className={styles.cards}>
+      <OnboardingCarousel label="Examples" slideLabels={[ASK_LABEL, FIND_LABEL]}>
         <figure className={styles.card} aria-label={`An example: ${ASK_LABEL}`}>
           <figcaption className={styles.label}>
             <StrokeIcon name="chat" size={12} />
@@ -80,7 +81,7 @@ export const OnboardingKnowledgeMoment = ({ onContinue, onSkip }: OnboardingKnow
             ))}
           </ul>
         </figure>
-      </div>
+      </OnboardingCarousel>
 
       <div className={styles.foot}>
         <button type="button" className={styles.primary} onClick={onContinue} data-testid={onboardingKnowledgeMomentTestIds.next}>

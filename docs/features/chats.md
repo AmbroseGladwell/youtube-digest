@@ -918,6 +918,8 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
     - A step not yet started is faint and still.
   - Since OV-373 `picked` carries `looked`, and the second step reads "Looking across 112 overviews,
     reading 5 in full" (or just "Looking across 112 overviews" when nothing was picked).
+  - The titles under it cut with an ellipsis inside the chat, and the step's words wrap, so a long
+    title never runs past the window's edge (OV-411).
   - Once the intro or a section arrives it folds into "Read 5 overviews" with a tick and a chevron.
     That line opens to the five as chips, and stays on each stored question, from its `picked`.
   - After 10 seconds still choosing, "Still choosing, slow connection".

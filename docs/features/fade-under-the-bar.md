@@ -63,7 +63,8 @@ Where that lands, surface by surface:
 
 The library's toolbar (search, sort, filters, select) sticks under the bar and only becomes a
 band once it is held there (`useToolbarStuck`), so until then the bar keeps the fade. On a short
-screen it scrolls away with the page and never becomes one.
+screen it scrolls away with the page and never becomes one. Its ground and fade run the page's
+full width, past the centred column, like the bar's (OV-411).
 
 A page with only one tab, such as a recipe page or an article without chapters, has no tab
 strip, so the bar is its lowest band. With chat open beside the note, the bar's fade stops where

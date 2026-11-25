@@ -31,6 +31,19 @@
   padding-block: 0.5rem;
   background: var(--ground);
 
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 -100vmax;
+    z-index: -1;
+    background: var(--ground);
+  }
+
+  &[data-sticky-fade]::after {
+    left: -100vmax;
+    right: -100vmax;
+  }
+
   @include shortScreens.short-screen {
     position: relative;
     top: auto;

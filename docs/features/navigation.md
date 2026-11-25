@@ -10,7 +10,9 @@ menu"), and its projects, queue link and time saved moved into the sidebar below
 
 **Wide screens (C1, 399c-4).** The logo, then the orange **Ask** and **+ New** pills and the
 account on the right. Ask is a page, so on it its pill is ringed and carries
-`aria-current="page"`. The masthead holds no page links: they are in the sidebar.
+`aria-current="page"`. On Settings and the account pages the account button is orange and
+ringed the same way (OV-411); an open account menu alone keeps the ink ring. The masthead holds
+no page links: they are in the sidebar.
 
 **Phones (D, 399d).** The logo's mark (the name stays as the heading for screen readers),
 then **Overviews** and **Projects** as icons named by their tips and accessible names, the
