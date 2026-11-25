@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { timeSavedSheetTestIds } from "../../src/features/timeSaved/components/TimeSavedSheet/TimeSavedSheetTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class TimeSavedSheetPageObject extends PageObject {
@@ -36,7 +37,7 @@ export class TimeSavedSheetPageObject extends PageObject {
 
   close = () =>
     this.step("close", async () => {
-      await this.click(timeSavedSheetTestIds.closeButton);
+      await this.click(this.get(timeSavedSheetTestIds.root).getByTestId(bottomSheetTestIds.close));
       await this.verifyIsClosed();
     });
 }

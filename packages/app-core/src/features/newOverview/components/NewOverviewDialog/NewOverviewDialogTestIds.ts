@@ -1,8 +1,5 @@
 export const newOverviewDialogTestIds = {
   root: "NewOverviewDialog.root",
-  closeButton: "NewOverviewDialog.closeButton",
-  panel: "NewOverviewDialog.panel",
-  handle: "NewOverviewDialog.handle",
   sourceTitle: "NewOverviewDialog.sourceTitle",
   footNote: "NewOverviewDialog.footNote",
   elapsed: "NewOverviewDialog.elapsed",

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent, type Ref } from "react";
 import { ABOUT_YOU_SECTIONS, type AboutYou, type AboutYouSection } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
+import { useKeptWhileClosing } from "../../../../util/useKeptWhileClosing.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { flyEntriesInto, measureEntries } from "../../util/flyEntriesInto.js";
@@ -32,6 +34,9 @@ export const AboutYouEditor = ({ aboutYou, size, topicNames, onChange }: AboutYo
   const dialog = useRef<HTMLDialogElement | null>(null);
   const popover = useRef<HTMLDivElement | null>(null);
   const modal = isPanel || isPhone;
+  const asSheet = isPhone && !isPanel;
+  const sheetBody = useRef<HTMLDivElement | null>(null);
+  const phoneSheet = useKeptWhileClosing(asSheet ? open : null);
   const finished = useRef<AboutYouSection | null>(null);
   const opened = useRef<readonly string[]>([]);
 
@@ -85,7 +90,7 @@ export const AboutYouEditor = ({ aboutYou, size, topicNames, onChange }: AboutYo
     const section = open;
     const before = opened.current;
     const added = draft.filter((entry) => !before.includes(entry));
-    const flights = measureEntries(dialog.current ?? popover.current, added);
+    const flights = measureEntries(sheetBody.current ?? dialog.current ?? popover.current, added);
     const changed = !sameEntries(draft, before);
     const next = { ...aboutYou, [section]: draft };
     const filledLast = before.length === 0 && ABOUT_YOU_SECTIONS.every((candidate) => next[candidate].length > 0);
@@ -93,7 +98,7 @@ export const AboutYouEditor = ({ aboutYou, size, topicNames, onChange }: AboutYo
     dialog.current?.close();
     setOpen(null);
     const button = sectionButtons.current.get(section);
-    if (refocus) {
+    if (refocus && !asSheet) {
       button?.focus();
     }
     if (!changed) {
@@ -168,9 +173,10 @@ export const AboutYouEditor = ({ aboutYou, size, topicNames, onChange }: AboutYo
     }
   };
 
-  const sheet = open !== null && (
+  const shownSection = open ?? phoneSheet.kept;
+  const sheet = shownSection !== null && (
     <AboutYouSheet
-      section={open}
+      section={shownSection}
       entries={draft}
       topicNames={topicNames}
       headingId={headingId}
@@ -204,10 +210,23 @@ export const AboutYouEditor = ({ aboutYou, size, topicNames, onChange }: AboutYo
           {sheet}
         </div>
       )}
-      {open !== null && modal && (
+      {asSheet && phoneSheet.kept !== null && (
+        <BottomSheet
+          open={phoneSheet.open}
+          title="About you"
+          onClose={() => finish()}
+          head={null}
+          labelledBy={headingId}
+          returnFocusTo={sectionButtons.current.get(phoneSheet.kept) ?? null}
+          testId={aboutYouEditorTestIds.sheet}
+        >
+          <div ref={sheetBody}>{sheet}</div>
+        </BottomSheet>
+      )}
+      {open !== null && isPanel && (
         <dialog
           ref={dialog}
-          className={isPanel ? styles.takeover : styles.bottomSheet}
+          className={styles.takeover}
           aria-labelledby={headingId}
           onCancel={(event) => {
             event.preventDefault();
@@ -215,20 +234,16 @@ export const AboutYouEditor = ({ aboutYou, size, topicNames, onChange }: AboutYo
           }}
           data-testid={aboutYouEditorTestIds.sheet}
         >
-          {isPanel ? (
-            <button
-              type="button"
-              className={styles.panelBack}
-              aria-label="Back to your sentence"
-              onClick={() => finish()}
-              data-testid={aboutYouEditorTestIds.panelBack}
-            >
-              <StrokeIcon name="arrowLeft" size={18} />
-              <span>Your sentence</span>
-            </button>
-          ) : (
-            <span className={styles.handle} aria-hidden="true" />
-          )}
+          <button
+            type="button"
+            className={styles.panelBack}
+            aria-label="Back to your sentence"
+            onClick={() => finish()}
+            data-testid={aboutYouEditorTestIds.panelBack}
+          >
+            <StrokeIcon name="arrowLeft" size={18} />
+            <span>Your sentence</span>
+          </button>
           {sheet}
         </dialog>
       )}

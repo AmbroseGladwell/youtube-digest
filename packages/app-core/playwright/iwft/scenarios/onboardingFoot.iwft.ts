@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test";
 import { test } from "../../support/fixtures.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
@@ -9,6 +8,7 @@ import { onboardingProjectsCardTestIds } from "../../../src/features/onboarding/
 import { onboardingTopicsTestIds } from "../../../src/features/onboarding/components/OnboardingTopics/OnboardingTopicsTestIds.js";
 import { onboardingPageTestIds } from "../../../src/features/onboarding/OnboardingPage/OnboardingPageTestIds.js";
 import { aboutYouSheetTestIds } from "../../../src/features/settings/components/AboutYouSheet/AboutYouSheetTestIds.js";
+import { useATouchScreen } from "../../support/reflowConditions.testHelper.js";
 
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const PHONE = { width: 390, height: 844 };
@@ -28,12 +28,6 @@ const reachTopics = async (launcher: Launcher, backendSimulator: BackendSimulato
     await onboarding.seeAllTopics();
   }
   return onboarding;
-};
-
-// Chromium's touch emulation is what makes (pointer: coarse) match.
-const useATouchScreen = async (page: Page) => {
-  const devtools = await page.context().newCDPSession(page);
-  await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
 };
 
 test("on a phone Continue is on screen with all topics open, and the list scrolls under the foot's fade to its end", async ({

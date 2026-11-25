@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { newProjectDialogTestIds } from "../../src/features/projects/components/NewProjectDialog/NewProjectDialogTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class NewProjectDialogPageObject extends PageObject {
@@ -13,7 +14,7 @@ export class NewProjectDialogPageObject extends PageObject {
 
   verifySpansTheScreen = (width: number) =>
     this.step(`verifySpansTheScreen ${width}`, async () => {
-      const box = await this.get(newProjectDialogTestIds.root).locator("form").boundingBox();
+      const box = await this.get(newProjectDialogTestIds.root).getByTestId(bottomSheetTestIds.panel).boundingBox();
       expect(box).toMatchObject({ x: 0, width });
     });
 

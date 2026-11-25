@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { CDPSession, Page } from "@playwright/test";
 
 export const DEFAULT_TEXT_SIZE = 16;
 export const DOUBLED_TEXT_SIZE = 32;
@@ -40,11 +40,28 @@ export const resetTextSizeIfChanged = async (page: Page): Promise<void> => {
   }
 };
 
+const touchScreenSessions = new WeakMap<Page, CDPSession>();
+
+// Chromium's touch emulation is what makes (pointer: coarse) match.
+export const useATouchScreen = async (page: Page): Promise<void> => {
+  const devtools = touchScreenSessions.get(page) ?? (await page.context().newCDPSession(page));
+  await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+  touchScreenSessions.set(page, devtools);
+};
+
+export const resetTouchScreenIfUsed = async (page: Page): Promise<void> => {
+  const devtools = touchScreenSessions.get(page);
+  if (devtools) {
+    touchScreenSessions.delete(page);
+    await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: false });
+    await devtools.detach();
+  }
+};
+
 export const applyReflowCondition = async (page: Page, condition: ReflowCondition): Promise<void> => {
   await page.setViewportSize(condition.viewport);
   if (condition.touch) {
-    const devtools = await page.context().newCDPSession(page);
-    await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+    await useATouchScreen(page);
   }
   await setTextSize(page, condition.textSize);
 };

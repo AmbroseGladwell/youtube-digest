@@ -1,9 +1,9 @@
-import type { Page } from "@playwright/test";
 import { overviewPartHash, type ChatCitation, type Overview } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeProject, makeProjectMember } from "../../../src/features/projects/types/ProjectFactory.testHelper.js";
+import { useATouchScreen } from "../../support/reflowConditions.testHelper.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -14,12 +14,6 @@ const titled = (title: string, savedAt: string): Overview => {
   const overview = makeOverview({ savedAt });
   overview.source.title = title;
   return overview;
-};
-
-// Chromium's touch emulation is what turns (hover: hover) off.
-const useATouchScreen = async (page: Page) => {
-  const devtools = await page.context().newCDPSession(page);
-  await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
 };
 
 const LONG_TITLE = "A very long title about everything you ever wanted to know about fermenting vegetables at home";

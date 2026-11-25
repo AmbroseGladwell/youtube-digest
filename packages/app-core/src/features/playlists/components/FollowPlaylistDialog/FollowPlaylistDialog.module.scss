@@ -1,30 +1,7 @@
-@use "../../../../theme/controls.scss" as controls;
-@use "../../../../theme/dialog.scss" as dialog;
-
-.dialog {
-  @include dialog.dialog-shell;
-}
-
-.panel {
-  @include dialog.dialog-panel;
-}
-
-.handle {
-  @include dialog.dialog-handle;
-}
-
-.head {
+// The follow flow on the shared sheet: a centred card on a desktop, the sheet on a phone.
+.content {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.heading {
-  @include dialog.dialog-heading;
-}
-
-.close {
-  @include controls.surface-pill;
-  @include controls.circle(2.25rem);
+  flex-direction: column;
+  gap: 1.125rem;
+  padding: 0 0.25rem 1.25rem;
 }

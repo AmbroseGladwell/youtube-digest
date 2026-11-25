@@ -1,28 +1,14 @@
 @use "../../../../theme/controls.scss" as controls;
 @use "../../../../theme/dialog.scss" as dialog;
 
-// Design 84j–84n: the list scrolls between a fixed head and a fixed action bar.
-.dialog {
-  @include dialog.dialog-shell;
-}
-
-.panel {
-  @include dialog.dialog-panel;
-
-  height: min(42rem, calc(100vh - 5rem));
+// Design 84j–84n on the shared sheet: the list scrolls between a fixed head and a fixed action bar.
+.content {
+  display: flex;
+  flex-direction: column;
   gap: 0.875rem;
-  padding: 1.5rem 1.5rem 1.25rem 1.75rem;
-
-  @media (max-width: 47.9375rem) {
-    height: 92vh;
-    padding: 0.75rem 1.25rem 1.25rem;
-  }
+  height: min(38rem, calc(85dvh - 5rem));
+  padding: 0 0.25rem 1rem;
 }
-
-.handle {
-  @include dialog.dialog-handle;
-}
-
 .head {
   display: flex;
   align-items: flex-start;
@@ -48,13 +34,6 @@
   line-height: 1.55;
   color: var(--muted);
   text-wrap: pretty;
-}
-
-.close {
-  @include controls.ghost-pill;
-  @include controls.circle(2.25rem);
-
-  color: var(--muted);
 }
 
 .notice {

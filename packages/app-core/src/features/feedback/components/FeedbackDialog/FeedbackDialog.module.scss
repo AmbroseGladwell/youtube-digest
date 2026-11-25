@@ -1,94 +1,12 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Designs 185c to 185n: a card from 600px, a sheet below it, as DeleteOverviewDialog is.
-$enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
-
-.dialog {
-  border: 0;
-  padding: 0;
-  margin: auto;
-  max-width: none;
-  max-height: none;
-  background: transparent;
-  color: var(--ink);
-}
-
-.dialog::backdrop {
-  background: var(--scrim);
-}
-
-.dialog[open] {
-  animation: feedbackDialogFadeUp 320ms $enter-easing 60ms both;
-}
-
-.dialog[open]::backdrop {
-  animation: feedbackScrimFade 260ms ease both;
-}
-
-@keyframes feedbackScrimFade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes feedbackDialogFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes feedbackSheetTravel {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: none;
-  }
-}
-
-.panel {
-  position: relative;
-  box-sizing: border-box;
-  width: min(32.5rem, calc(100vw - 2.5rem));
-  max-height: calc(100dvh - 2.5rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: var(--dialog);
-  border-radius: var(--radius-dialog);
-  box-shadow: var(--shadow-dialog);
-  padding: 1.625rem 1.75rem 1.5rem;
-}
-
-.handle {
-  display: none;
-  width: 2.5rem;
-  height: 0.3125rem;
-  border-radius: var(--radius-badge);
-  background: var(--surface);
-  margin: 0 auto 0.75rem;
-}
-
-.closeButton {
-  @include controls.surface-pill;
-  @include controls.circle(2.25rem);
-
-  position: absolute;
-  top: 1.125rem;
-  right: 1.125rem;
-}
+// Designs 185c to 185n on the shared sheet: a card on a desktop, the sheet on a phone.
 
 .box {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
+  padding: 0 0.25rem 1rem;
 }
 
 .heading {
@@ -285,18 +203,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   color: var(--muted);
 }
 
-.foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
-.footStart {
-  justify-content: flex-start;
-}
-
 .hint {
   margin-right: auto;
   font-size: 0.78125rem;
@@ -309,6 +215,8 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   @include controls.pill-md;
 
   min-height: 2.75rem;
+
+  margin-left: auto;
 }
 
 .primaryAction {
@@ -342,30 +250,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 }
 
 @media (max-width: 37.4375rem) {
-  .dialog {
-    margin: auto 0 0;
-    width: 100%;
-  }
-
-  .dialog[open] {
-    animation-name: feedbackSheetTravel;
-  }
-
-  .panel {
-    width: 100%;
-    max-height: calc(100dvh - 1rem);
-    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
-    padding: 0.625rem 1.25rem 1.375rem;
-  }
-
-  .handle {
-    display: block;
-  }
-
-  .closeButton {
-    top: 1.25rem;
-  }
-
   .heading {
     font-size: 1.4375rem;
   }

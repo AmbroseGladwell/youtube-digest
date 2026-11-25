@@ -1,6 +1,5 @@
 export const feedbackDialogTestIds = {
   root: "FeedbackDialog.root",
-  closeButton: "FeedbackDialog.closeButton",
   about: "FeedbackDialog.about",
   kind: (kind: string) => `FeedbackDialog.kind.${kind}`,
   draftNote: "FeedbackDialog.draftNote",

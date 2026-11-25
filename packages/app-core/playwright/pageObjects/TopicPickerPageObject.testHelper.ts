@@ -1,5 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { topicPickerTestIds } from "../../src/features/reader/components/TopicPicker/TopicPickerTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
+import { topicLineTestIds } from "../../src/features/reader/components/TopicLine/TopicLineTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class TopicPickerPageObject extends PageObject {
@@ -46,7 +48,7 @@ export class TopicPickerPageObject extends PageObject {
   verifyRestsOnTheWindowFoot = () =>
     this.step("verifyRestsOnTheWindowFoot", () =>
       expect(async () => {
-        const sheet = (await this.get(topicPickerTestIds.root).boundingBox())!;
+        const sheet = (await this.page.getByTestId(topicLineTestIds.sheet).getByTestId(bottomSheetTestIds.panel).boundingBox())!;
         const window = this.page.viewportSize()!;
         expect(Math.round(sheet.x)).toBe(0);
         expect(Math.round(sheet.width)).toBe(window.width);

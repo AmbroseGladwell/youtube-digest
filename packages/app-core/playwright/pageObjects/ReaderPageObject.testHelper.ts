@@ -861,8 +861,7 @@ export class ReaderPageObject extends PageObject {
   verifyLineMenuNames = (lineText: string) =>
     this.step(`verifyLineMenuNames ${lineText}`, () => expect(this.get(lineRangeTagTestIds.menu)).toContainText(lineText));
 
-  clickOutsideLineMenu = () =>
-    this.step("clickOutsideLineMenu", () => this.get(lineRangeTagTestIds.scrim).click({ position: { x: 10, y: 10 } }));
+  clickOutsideLineMenu = () => this.step("clickOutsideLineMenu", () => this.page.mouse.click(10, 10));
 
   clickReadInTranscript = () => this.step("clickReadInTranscript", () => this.click(lineRangeTagTestIds.transcriptButton));
 

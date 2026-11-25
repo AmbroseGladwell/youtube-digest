@@ -131,8 +131,13 @@ export const SyncPanel = () => {
             )}
           </div>
         )}
-        {deletingAccount && connection.email !== null && connection.accountId !== null && (
-          <DeleteAccountDialog email={connection.email} accountId={connection.accountId} onClose={() => setDeletingAccount(false)} />
+        {connection.email !== null && connection.accountId !== null && (
+          <DeleteAccountDialog
+            open={deletingAccount}
+            email={connection.email}
+            accountId={connection.accountId}
+            onClose={() => setDeletingAccount(false)}
+          />
         )}
       </div>
     );

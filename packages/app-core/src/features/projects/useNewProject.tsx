@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useKeptWhileClosing } from "../../util/useKeptWhileClosing.js";
 import { useNavigate } from "react-router";
 import type { OverviewId } from "@overview/domain";
 import { Routes } from "../../app/Routes.js";
@@ -24,6 +25,7 @@ const addsOf = (overviews: Adding["overviews"]) => {
 
 export const useNewProject = (takenNames: string[]) => {
   const [adding, setAdding] = useState<Adding | null>(null);
+  const kept = useKeptWhileClosing(adding);
   const create = useCreateProjectMutation();
   const analytics = useAnalytics();
   const assistants = useAssistantConnections();
@@ -35,24 +37,26 @@ export const useNewProject = (takenNames: string[]) => {
   };
 
   const dialog =
-    adding === null ? null : (
+    kept.kept === null ? null : (
       <NewProjectDialog
-        adds={addsOf(adding.overviews)}
+        open={kept.open}
+        adds={addsOf(kept.kept.overviews)}
         assistantConnected={assistants.any}
         takenNames={takenNames}
         busy={create.isPending}
         onCreate={({ name, purpose }) =>
           create.mutate(
-            { name, purpose, overviewIds: adding.overviews.map(({ id }) => id) },
+            { name, purpose, overviewIds: kept.kept!.overviews.map(({ id }) => id) },
             {
               onSuccess: (project) => {
-                analytics.projects.newProjectDialog.created({ projectId: project.id, from: adding.from, hasPurpose: purpose !== null });
-                for (const { id } of adding.overviews) {
+                const done = kept.kept!;
+                analytics.projects.newProjectDialog.created({ projectId: project.id, from: done.from, hasPurpose: purpose !== null });
+                for (const { id } of done.overviews) {
                   analytics.projects.membership.added({ projectId: project.id, overviewId: id, from: "newProject" });
                 }
                 setAdding(null);
-                adding.onDone?.({ name: project.name });
-                if (adding.from === "sidebar" || adding.from === "index") {
+                done.onDone?.({ name: project.name });
+                if (done.from === "sidebar" || done.from === "index") {
                   void navigate(Routes.project(project.id));
                 }
               },
@@ -62,7 +66,7 @@ export const useNewProject = (takenNames: string[]) => {
         onClose={() => {
           analytics.projects.newProjectDialog.cancelled();
           setAdding(null);
-          adding.onDone?.(null);
+          kept.kept?.onDone?.(null);
         }}
       />
     );

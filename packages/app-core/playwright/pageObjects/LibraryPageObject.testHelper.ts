@@ -69,6 +69,8 @@ export class LibraryPageObject extends PageObject {
       return new TimeSavedSheetPageObject(this.testContext).verifyIsShown();
     });
 
+  verifyTimeSavedButtonIsFocused = () => this.step("verifyTimeSavedButtonIsFocused", () => expect(this.timeSaved()).toBeFocused());
+
   verifyTitleReads = (title: string, countLine: string) =>
     this.step(`verifyTitleReads ${title}`, async () => {
       await expect(this.get(libraryPageTestIds.title)).toHaveText(title);

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import {
   KEY_POINTS_SECTION,
@@ -41,6 +41,7 @@ export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): 
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { timedNoun } from "../../util/timedSource.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { formatTimeRange } from "../../../overviews/util/formatTimeRange.js";
@@ -106,7 +107,7 @@ export const LineRangeTag = ({
     setOpen(false);
     tag.current?.focus();
   };
-  useDismissOnOutside(open, close, root, menu);
+  useDismissOnOutside(open && !asSheet, close, root, menu);
 
   useLayoutEffect(() => {
     if (!open || asSheet || !tag.current || !menu.current) {
@@ -261,24 +262,23 @@ export const LineRangeTag = ({
   );
 
   const sheet = (
-    <>
-      <span className={styles.scrim} onClick={close} aria-hidden="true" data-testid={lineRangeTagTestIds.scrim} />
-      <div
-        ref={menu}
-        className={styles.sheet}
-        role="dialog"
-        aria-label={`${start} to ${formatTimestamp(range.endMs)}`}
-        onKeyDown={moveFocus}
-        data-testid={lineRangeTagTestIds.menu}
-      >
-        <span className={styles.handle} aria-hidden="true" />
-        <p className={styles.sheetLine}>{about}</p>
+    <BottomSheet
+      open={open}
+      title={`${start} to ${formatTimestamp(range.endMs)}`}
+      onClose={close}
+      returnFocusTo={tag.current}
+      testId={lineRangeTagTestIds.sheet}
+      head={
         <p className={styles.sheetRange} data-testid={lineRangeTagTestIds.menuRange}>
           {stretch} in the video
         </p>
+      }
+    >
+      <div ref={menu} className={styles.sheetBody} onKeyDown={moveFocus} data-testid={lineRangeTagTestIds.menu}>
+        <p className={styles.sheetLine}>{about}</p>
         {actions}
       </div>
-    </>
+    </BottomSheet>
   );
 
   return (
@@ -300,7 +300,7 @@ export const LineRangeTag = ({
         {watchAnyway ? stretch : start}
         {playing && " · Playing"}
       </button>
-      {open && portalled(asSheet, asSheet ? sheet : popover)}
+      {asSheet ? createPortal(sheet, document.body) : open && popover}
     </span>
   );
 };
@@ -309,5 +309,3 @@ const rangeLength = ({ startMs, endMs }: TimeRange): string => {
   const minutes = Math.max(1, Math.round((endMs - startMs) / 60_000));
   return `${minutes} min`;
 };
-
-const portalled = (asSheet: boolean, content: ReactNode) => (asSheet ? createPortal(content, document.body) : content);

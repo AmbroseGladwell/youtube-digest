@@ -2,7 +2,7 @@ import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Overview, OverviewId } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
-import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import type { AlreadyHeld } from "../../types/AlreadyHeld.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { GenerateOverviewForm, playlistTargetOf } from "../GenerateOverviewForm/GenerateOverviewForm.js";
@@ -31,8 +31,6 @@ export interface NewOverviewDialogProps {
   onCaptureReasonCommit: () => void;
 }
 
-const HEADING_ID = "NewOverviewDialog-heading";
-
 export const NewOverviewDialog = ({
   open,
   prefill,
@@ -46,7 +44,6 @@ export const NewOverviewDialog = ({
   onCaptureReasonChange,
   onCaptureReasonCommit,
 }: NewOverviewDialogProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const activeVideoUrl = useActiveVideoUrl();
   const [url, setUrl] = useState("");
@@ -54,28 +51,23 @@ export const NewOverviewDialog = ({
   const playlistsAvailable = usePlaylistApi() !== null;
   const phone = useIsPhone();
 
-  // showModal() makes the page behind inert, keeps focus inside, and sends Escape as a cancel event.
+  const [shownOpen, setShownOpen] = useState(false);
+  if (shownOpen !== open) {
+    setShownOpen(open);
+    if (open && run === null) {
+      const handedOver = prefill ?? activeVideoUrl ?? "";
+      setUrl(handedOver);
+      const target = prefill !== null && playlistsAvailable ? playlistTargetOf(prefill) : null;
+      setPlaylist(target === null ? null : { target, pastedUrl: prefill!, from: "home" });
+    }
+  }
+
   useEffect(() => {
-    const element = dialog.current;
-    if (!element) {
-      return;
-    }
-    if (open && !element.open) {
-      if (run === null) {
-        const handedOver = prefill ?? activeVideoUrl ?? "";
-        setUrl(handedOver);
-        const target = prefill !== null && playlistsAvailable ? playlistTargetOf(prefill) : null;
-        setPlaylist(target === null ? null : { target, pastedUrl: prefill!, from: "home" });
-      }
-      returnFocusTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      element.showModal();
-    }
-    if (!open && element.open) {
-      element.close();
-      returnFocusTo.current = null;
+    returnFocusTo.current = open && document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (!open) {
       setPlaylist(null);
     }
-  }, [open, activeVideoUrl, prefill]);
+  }, [open]);
 
   // Unmounting skips close()'s focus restoration: docs/features/extension-panel.md, "One slot, one way out".
   useEffect(
@@ -117,100 +109,58 @@ export const NewOverviewDialog = ({
   const dialogBody = (): ReactNode => {
     if (playlist !== null) {
       return (
-        <>
-          <div className={styles.head}>
-            <h2 className={styles.heading} id={HEADING_ID}>
-              New overview
-            </h2>
-            <button
-              type="button"
-              className={styles.close}
-              onClick={closeForm}
-              aria-label="Close"
-              data-testid={newOverviewDialogTestIds.closeButton}
-            >
-              <StrokeIcon name="close" size={16} />
-            </button>
-          </div>
-          <PlaylistFollowFlow
-            target={playlist.target}
-            pastedUrl={playlist.pastedUrl}
-            from={playlist.from}
-            stacked={phone}
-            onJustThisVideo={(videoUrl) => {
-              setPlaylist(null);
-              handleSubmit(videoUrl);
-            }}
-            onPasteAnother={() => {
-              setPlaylist(null);
-              setUrl("");
-            }}
-            onDone={() => {
-              setPlaylist(null);
-              onDismiss();
-            }}
-          />
-        </>
+        <PlaylistFollowFlow
+          target={playlist.target}
+          pastedUrl={playlist.pastedUrl}
+          from={playlist.from}
+          stacked={phone}
+          onJustThisVideo={(videoUrl) => {
+            setPlaylist(null);
+            handleSubmit(videoUrl);
+          }}
+          onPasteAnother={() => {
+            setPlaylist(null);
+            setUrl("");
+          }}
+          onDone={() => {
+            setPlaylist(null);
+            onDismiss();
+          }}
+        />
       );
     }
     // docs/features/one-overview-per-video.md, "Prevention: not generating what is already here".
     return (
-      <>
-        <div className={styles.head}>
-          <h2 className={styles.heading} id={HEADING_ID}>
-            Make an overview
-          </h2>
-          <button
-            type="button"
-            className={styles.close}
-            onClick={closeForm}
-            aria-label="Close"
-            data-testid={newOverviewDialogTestIds.closeButton}
-          >
-            <StrokeIcon name="close" size={16} />
-          </button>
-        </div>
-        <GenerateOverviewForm
-          url={url}
-          onUrlChange={setUrl}
-          onSubmit={handleSubmit}
-          onCancel={closeForm}
-          onPlaylist={(target, pastedUrl) => setPlaylist({ target, pastedUrl, from: "dialog" })}
-          active={open}
-          onReadOverview={(overview) => {
-            analytics.capture.newOverviewDialog.readChosen({ overviewId: overview.id, from: "dialog" });
-            onReadOverview(overview);
-          }}
-          onOpen={(id) => onOpenHeld(id as OverviewId)}
-          onCaptureReasonChange={onCaptureReasonChange}
-          onCaptureReasonCommit={onCaptureReasonCommit}
-        />
-      </>
+      <GenerateOverviewForm
+        url={url}
+        onUrlChange={setUrl}
+        onSubmit={handleSubmit}
+        onCancel={closeForm}
+        onPlaylist={(target, pastedUrl) => setPlaylist({ target, pastedUrl, from: "dialog" })}
+        active={open}
+        onReadOverview={(overview) => {
+          analytics.capture.newOverviewDialog.readChosen({ overviewId: overview.id, from: "dialog" });
+          onReadOverview(overview);
+        }}
+        onOpen={(id) => onOpenHeld(id as OverviewId)}
+        onCaptureReasonChange={onCaptureReasonChange}
+        onCaptureReasonCommit={onCaptureReasonCommit}
+      />
     );
   };
 
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={HEADING_ID}
-      aria-busy={inProgress}
-      onCancel={(event) => {
-        event.preventDefault();
-        requestClose();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current) {
-          requestClose();
-        }
-      }}
-      data-testid={newOverviewDialogTestIds.root}
+    <BottomSheet
+      open={open}
+      title={playlist === null ? "Make an overview" : "New overview"}
+      onClose={requestClose}
+      wide="dialog"
+      width="33.75rem"
+      testId={newOverviewDialogTestIds.root}
     >
-      <div className={styles.panel} data-testid={newOverviewDialogTestIds.panel}>
-        <span className={styles.handle} aria-hidden="true" data-testid={newOverviewDialogTestIds.handle} />
-
+      <div className={styles.content} aria-busy={inProgress}>
         {dialogBody()}
       </div>
-    </dialog>
+    </BottomSheet>
   );
 };

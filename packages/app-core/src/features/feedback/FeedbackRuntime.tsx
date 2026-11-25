@@ -45,21 +45,23 @@ export const FeedbackRuntime = ({ children }: { children: ReactNode }) => {
     [api, analytics, plan, accountId],
   );
 
-  const shut = () => {
-    const returnTo = opened?.returnFocusTo ?? null;
-    setOpened(null);
-    requestAnimationFrame(() => returnTo?.focus({ preventScroll: true }));
-  };
+  const shut = () => setOpened(null);
 
-  const overviewId = opened?.about?.overviewId ?? null;
+  const [shown, setShown] = useState(opened);
+  if (opened !== null && shown !== opened) {
+    setShown(opened);
+  }
+  const overviewId = shown?.about?.overviewId ?? null;
 
   return (
     <FeedbackProvider value={box}>
       {children}
-      {opened !== null && api !== null && (
+      {shown !== null && api !== null && (
         <FeedbackDialog
-          about={opened.about}
-          draft={opened.draft}
+          open={opened !== null}
+          returnFocusTo={shown.returnFocusTo ?? null}
+          about={shown.about}
+          draft={shown.draft}
           onDraftChange={(text) => writeFeedbackDraft(accountId, overviewId, text)}
           onSend={(request) => api.send({ ...request, surface, ...(request.kind === "wrong" ? { trail: errors.trail() } : {}) })}
           onSent={(kind) => analytics.feedback.box.sent({ plan, kind: kind ?? "none", fromOverview: overviewId !== null })}

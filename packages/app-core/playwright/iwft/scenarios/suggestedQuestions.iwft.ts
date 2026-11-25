@@ -1,8 +1,8 @@
-import type { Page } from "@playwright/test";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SUGGESTED_TEXTS, seedSuggestedQuestions } from "../../support/seedSuggestedQuestions.testHelper.js";
+import { useATouchScreen } from "../../support/reflowConditions.testHelper.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -18,12 +18,6 @@ const TEMPLATES = [
 ];
 
 const [FIRST, SECOND, THIRD, FOURTH] = SUGGESTED_TEXTS as [string, string, string, string];
-
-// Chromium's touch emulation is what turns (hover: hover) off.
-const useATouchScreen = async (page: Page) => {
-  const devtools = await page.context().newCDPSession(page);
-  await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
-};
 
 const writtenOf = (changes: Array<{ id: string; change: Record<string, unknown> }>, key: string) =>
   changes.filter(({ change }) => key in change);

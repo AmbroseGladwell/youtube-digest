@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { codeStepTestIds } from "../../src/features/auth/components/CodeStep/CodeStepTestIds.js";
 import { deleteAccountDialogTestIds } from "../../src/features/auth/components/DeleteAccountDialog/DeleteAccountDialogTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class DeleteAccountDialogPageObject extends PageObject {
@@ -74,7 +75,7 @@ export class DeleteAccountDialogPageObject extends PageObject {
     this.step("verifyIsDeleting", async () => {
       await expect(this.get(deleteAccountDialogTestIds.heading)).toHaveText("Deleting your account…");
       await this.expectToHaveCount(deleteAccountDialogTestIds.cancelButton, 0);
-      await this.expectToHaveCount(deleteAccountDialogTestIds.closeButton, 0);
+      await expect(this.get(deleteAccountDialogTestIds.root).getByTestId(bottomSheetTestIds.close)).toHaveCount(0);
     });
 
   verifyFailed = () =>

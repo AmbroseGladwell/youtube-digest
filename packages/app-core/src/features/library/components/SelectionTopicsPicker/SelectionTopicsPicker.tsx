@@ -9,6 +9,8 @@ import type { OverviewWithState } from "../../../overviews/types/OverviewWithSta
 import { selectionTopicsPickerTestIds } from "./SelectionTopicsPickerTestIds.js";
 
 export interface SelectionTopicsPickerProps {
+  open?: boolean;
+  returnFocusTo?: HTMLElement | null | undefined;
   topics: Topic[];
   overviews: OverviewWithState[];
   countByTopic: Record<string, number>;
@@ -17,7 +19,16 @@ export interface SelectionTopicsPickerProps {
   onClose: () => void;
 }
 
-export const SelectionTopicsPicker = ({ topics, overviews, countByTopic, onToggle, onCreate, onClose }: SelectionTopicsPickerProps) => {
+export const SelectionTopicsPicker = ({
+  open = true,
+  returnFocusTo,
+  topics,
+  overviews,
+  countByTopic,
+  onToggle,
+  onCreate,
+  onClose,
+}: SelectionTopicsPickerProps) => {
   const of = overviews.length;
   const options = topics.map((topic) => {
     const held = overviews.filter(({ overview }) => overview.topicIds.includes(topic.id)).length;
@@ -33,6 +44,8 @@ export const SelectionTopicsPicker = ({ topics, overviews, countByTopic, onToggl
 
   return (
     <ChecklistPicker
+      open={open}
+      returnFocusTo={returnFocusTo}
       heading={`Topics for ${of} ${of === 1 ? "overview" : "overviews"}`}
       hint={sharedChecklistHint}
       groupLabel="Topics"

@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { captureReasonFieldTestIds } from "../../src/features/newOverview/components/CaptureReasonField/CaptureReasonFieldTestIds.js";
 import { newOverviewDialogTestIds } from "../../src/features/newOverview/components/NewOverviewDialog/NewOverviewDialogTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { justNowListTestIds } from "../../src/features/newOverview/components/JustNowList/JustNowListTestIds.js";
 import { generateOverviewFormTestIds } from "../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
@@ -27,7 +28,7 @@ export class NewOverviewDialogPageObject extends PageObject {
   // A width media query, not a prop, chooses the shape, so the drawn box is what says which.
   verifyIsTheSheet = () =>
     this.step("verifyIsTheSheet", async () => {
-      await this.expectToBeVisible(newOverviewDialogTestIds.handle);
+      await expect(this.get(newOverviewDialogTestIds.root).getByTestId(bottomSheetTestIds.bar)).toBeVisible();
       const { panel, viewport } = await this.panelAgainstViewport();
       expect(Math.round(panel.width)).toBe(viewport.width);
       expect(Math.round(panel.y + panel.height)).toBe(viewport.height);
@@ -35,7 +36,7 @@ export class NewOverviewDialogPageObject extends PageObject {
 
   verifyIsTheCentredDialog = () =>
     this.step("verifyIsTheCentredDialog", async () => {
-      await this.expectNotToBeVisible(newOverviewDialogTestIds.handle);
+      await expect(this.get(newOverviewDialogTestIds.root).getByTestId(bottomSheetTestIds.bar)).not.toBeVisible();
       const { panel, viewport } = await this.panelAgainstViewport();
       expect(panel.width).toBeLessThan(viewport.width);
       expect(Math.round(panel.y + panel.height)).toBeLessThan(viewport.height);
@@ -47,7 +48,10 @@ export class NewOverviewDialogPageObject extends PageObject {
     await this.get(newOverviewDialogTestIds.root).evaluate((element) =>
       Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished)),
     );
-    return { panel: (await this.get(newOverviewDialogTestIds.panel).boundingBox())!, viewport: this.page.viewportSize()! };
+    return {
+      panel: (await this.get(newOverviewDialogTestIds.root).getByTestId(bottomSheetTestIds.panel).boundingBox())!,
+      viewport: this.page.viewportSize()!,
+    };
   };
 
   clickScrim = () =>

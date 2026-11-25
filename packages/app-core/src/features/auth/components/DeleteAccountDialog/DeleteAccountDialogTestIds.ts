@@ -6,7 +6,6 @@ export const deleteAccountDialogTestIds = {
   keptList: "DeleteAccountDialog.keptList",
   continueButton: "DeleteAccountDialog.continueButton",
   cancelButton: "DeleteAccountDialog.cancelButton",
-  closeButton: "DeleteAccountDialog.closeButton",
   checking: "DeleteAccountDialog.checking",
   refused: "DeleteAccountDialog.refused",
   deleting: "DeleteAccountDialog.deleting",

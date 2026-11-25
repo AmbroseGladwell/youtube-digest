@@ -1,7 +1,6 @@
 export const manageTagsDialogTestIds = {
   root: "ManageTagsDialog.root",
   summary: "ManageTagsDialog.summary",
-  closeButton: "ManageTagsDialog.closeButton",
   notice: "ManageTagsDialog.notice",
   undoButton: "ManageTagsDialog.undoButton",
   searchInput: "ManageTagsDialog.searchInput",

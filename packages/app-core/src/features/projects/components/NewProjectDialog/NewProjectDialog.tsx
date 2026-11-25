@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { MAX_PROJECT_NAME_LENGTH, MAX_PROJECT_PURPOSE_LENGTH, sameTopicName } from "@overview/domain";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./NewProjectDialog.module.scss";
 import { newProjectDialogTestIds } from "./NewProjectDialogTestIds.js";
@@ -10,6 +11,7 @@ export interface OnCreateOptions {
 }
 
 export interface NewProjectDialogProps {
+  open: boolean;
   adds: { title: string } | { count: number } | null;
   assistantConnected: boolean;
   takenNames: string[];
@@ -18,22 +20,23 @@ export interface NewProjectDialogProps {
   onClose: () => void;
 }
 
-export const NewProjectDialog = ({ adds, assistantConnected, takenNames, busy, onCreate, onClose }: NewProjectDialogProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
+export const NewProjectDialog = ({ open, adds, assistantConnected, takenNames, busy, onCreate, onClose }: NewProjectDialogProps) => {
+  const nameInput = useRef<HTMLInputElement | null>(null);
+  const formId = useId();
   const [name, setName] = useState("");
   const [purpose, setPurpose] = useState("");
-  const headingId = useId();
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) {
+      setName("");
+      setPurpose("");
+    }
+  }
   const nameId = useId();
   const purposeId = useId();
   const helpId = useId();
   const takenId = useId();
-
-  useEffect(() => {
-    const element = dialog.current;
-    if (element && !element.open) {
-      element.showModal();
-    }
-  }, []);
 
   const trimmed = name.trim();
   const taken = takenNames.find((existing) => sameTopicName(existing, trimmed)) ?? null;
@@ -48,26 +51,32 @@ export const NewProjectDialog = ({ adds, assistantConnected, takenNames, busy, o
   };
 
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={headingId}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current) {
-          onClose();
-        }
-      }}
-      data-testid={newProjectDialogTestIds.root}
+    <BottomSheet
+      open={open}
+      title="New project"
+      onClose={onClose}
+      wide="dialog"
+      width="28.75rem"
+      initialFocus={nameInput}
+      testId={newProjectDialogTestIds.root}
+      foot={
+        <>
+          <button type="button" className={styles.quietAction} onClick={onClose} data-testid={newProjectDialogTestIds.cancelButton}>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form={formId}
+            className={styles.primaryAction}
+            disabled={!creatable}
+            data-testid={newProjectDialogTestIds.createButton}
+          >
+            Create project
+          </button>
+        </>
+      }
     >
-      <form className={styles.panel} onSubmit={submit}>
-        <span className={styles.handle} aria-hidden="true" />
-        <h2 className={styles.heading} id={headingId}>
-          New project
-        </h2>
+      <form id={formId} className={styles.content} onSubmit={submit}>
         {adds !== null && (
           <p className={styles.adds} data-testid={newProjectDialogTestIds.adds}>
             <StrokeIcon name="folder" size={14} />
@@ -85,7 +94,7 @@ export const NewProjectDialog = ({ adds, assistantConnected, takenNames, busy, o
             id={nameId}
             name="project-name"
             autoComplete="off"
-            autoFocus
+            ref={nameInput}
             className={styles.input}
             maxLength={MAX_PROJECT_NAME_LENGTH}
             placeholder="Kitchen renovation"
@@ -127,15 +136,7 @@ export const NewProjectDialog = ({ adds, assistantConnected, takenNames, busy, o
             </span>
           </p>
         </div>
-        <div className={styles.foot}>
-          <button type="button" className={styles.quietAction} onClick={onClose} data-testid={newProjectDialogTestIds.cancelButton}>
-            Cancel
-          </button>
-          <button type="submit" className={styles.primaryAction} disabled={!creatable} data-testid={newProjectDialogTestIds.createButton}>
-            Create project
-          </button>
-        </div>
       </form>
-    </dialog>
+    </BottomSheet>
   );
 };

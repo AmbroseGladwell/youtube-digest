@@ -44,27 +44,11 @@
   cursor: pointer;
 }
 
-// The scrim belongs to the sheet, so it is drawn only where the picker becomes one.
-.scrim {
-  display: none;
-}
+// The phone sheet's foot (design 14c): Done across the width.
+.sheetDone {
+  @include controls.surface-pill;
+  @include controls.pill-md;
 
-@media (max-width: 47.9375rem) {
-  .scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    background: var(--scrim);
-    animation: scrimIn var(--motion-state) ease both;
-  }
-
-  @keyframes scrimIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
+  width: 100%;
+  min-height: 2.75rem;
 }

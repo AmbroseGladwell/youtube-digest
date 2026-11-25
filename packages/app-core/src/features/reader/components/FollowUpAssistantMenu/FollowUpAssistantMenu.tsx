@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type CSSProperties, type KeyboardEvent, type 
 import { createPortal } from "react-dom";
 import { FOLLOW_UP_ASSISTANTS, FollowUpAssistant } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
@@ -19,6 +20,7 @@ export const SET_UP_NOTE =
   "Connect your assistant to The Overview and it can read the whole transcript, search your library, save to projects and more.";
 
 export interface FollowUpAssistantMenuProps {
+  open: boolean;
   // The first tap asks as soon as one is picked; Change only chooses.
   firstTap: boolean;
   continueIn?: boolean;
@@ -92,6 +94,7 @@ const menuPlacementClassOf = (asSheet: boolean, align: "centre" | "end"): string
 };
 
 export const FollowUpAssistantMenu = ({
+  open,
   firstTap,
   continueIn = false,
   align = "centre",
@@ -114,21 +117,20 @@ export const FollowUpAssistantMenu = ({
   const checked: Option | null = offerHere && hereChosen ? "here" : chosen;
   const titleId = useId();
   const menu = useRef<HTMLDivElement | null>(null);
-  const sheet = useRef<HTMLDialogElement | null>(null);
   const options = useRef<(HTMLButtonElement | null)[]>([]);
   const focusedAt = Math.max(0, checked === null ? 0 : choices.indexOf(checked));
 
-  useDismissOnOutside(!asSheet, onClose, menu, inside);
+  useDismissOnOutside(open && !asSheet, onClose, menu, inside);
 
   useEffect(() => {
-    if (asSheet && sheet.current !== null && !sheet.current.open) {
-      sheet.current.showModal();
+    if (!open) {
+      return;
     }
     options.current[focusedAt]?.focus({ preventScroll: true });
     if (!asSheet) {
       menu.current?.scrollIntoView?.({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
     }
-  }, [asSheet, focusedAt]);
+  }, [open, asSheet, focusedAt]);
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
     const current = options.current.indexOf(document.activeElement as HTMLButtonElement);
@@ -156,14 +158,15 @@ export const FollowUpAssistantMenu = ({
       className={`${styles.menu} ${menuPlacementClassOf(asSheet, align)}`}
       ref={menu}
       role={asSheet ? undefined : "dialog"}
-      aria-labelledby={titleId}
+      aria-labelledby={asSheet ? undefined : titleId}
       style={asSheet ? undefined : ({ "--top": `${top}px` } as CSSProperties)}
       data-testid={followUpAssistantMenuTestIds.root}
     >
-      {asSheet && <span className={styles.handle} aria-hidden="true" />}
-      <p className={styles.title} id={titleId}>
-        {title}
-      </p>
+      {!asSheet && (
+        <p className={styles.title} id={titleId}>
+          {title}
+        </p>
+      )}
       <div role="radiogroup" aria-label={offerHere ? "Where questions are answered" : "Assistant"} onKeyDown={moveFocus}>
         {choices.map((option, index) => (
           <button
@@ -245,26 +248,12 @@ export const FollowUpAssistantMenu = ({
   );
 
   if (!asSheet) {
-    return body;
+    return open ? body : null;
   }
   return createPortal(
-    <dialog
-      ref={sheet}
-      className={styles.sheet}
-      aria-labelledby={titleId}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === sheet.current) {
-          onClose();
-        }
-      }}
-      data-testid={followUpAssistantMenuTestIds.sheet}
-    >
+    <BottomSheet open={open} title={title} onClose={onClose} testId={followUpAssistantMenuTestIds.sheet}>
       {body}
-    </dialog>,
+    </BottomSheet>,
     document.body,
   );
 };

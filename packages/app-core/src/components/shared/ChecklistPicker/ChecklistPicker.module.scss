@@ -1,26 +1,10 @@
 @use "../../../theme/controls.scss" as controls;
-@use "../../../theme/dialog.scss" as dialog;
 
-.dialog {
-  @include dialog.dialog-shell;
-  overflow: visible;
-}
-
-.panel {
-  @include dialog.dialog-panel(22.5rem);
-  gap: 0;
-  padding: 1.125rem 1rem 1rem;
-}
-
-.handle {
-  @include dialog.dialog-handle;
-  margin: 0 0 0.875rem;
-}
-
-.heading {
-  @include dialog.dialog-heading;
-  font-size: 1.3125rem;
-  margin: 0 0.25rem 0.125rem;
+// The shared sheet's foot: what the ticks did, then Done.
+.footText {
+  flex: 1;
+  font-size: 0.78125rem;
+  color: var(--muted);
 }
 
 .hint {
@@ -162,27 +146,12 @@
   color: var(--alert);
 }
 
-.foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.625rem;
-  margin-top: 0.75rem;
-  padding: 0 0.25rem;
-  font-size: 0.78125rem;
-  color: var(--muted);
-}
-
 .done {
   @include controls.surface-pill;
   @include controls.pill-md;
 }
 
 @media (max-width: 47.9375rem) {
-  .panel {
-    padding: 0.75rem 1rem 1.5rem;
-  }
-
   .done {
     min-height: 2.75rem;
   }

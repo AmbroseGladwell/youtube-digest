@@ -1,53 +1,33 @@
-import { useEffect, useId, useRef } from "react";
+import { useRef } from "react";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import styles from "./DeleteOverviewsDialog.module.scss";
 import { deleteOverviewsDialogTestIds } from "./DeleteOverviewsDialogTestIds.js";
 
 export interface DeleteOverviewsDialogProps {
+  open: boolean;
+  returnFocusTo?: HTMLElement | null | undefined;
   count: number;
   onDelete: () => void;
   onClose: () => void;
 }
 
-export const DeleteOverviewsDialog = ({ count, onDelete, onClose }: DeleteOverviewsDialogProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
+export const DeleteOverviewsDialog = ({ open, returnFocusTo, count, onDelete, onClose }: DeleteOverviewsDialogProps) => {
   const cancel = useRef<HTMLButtonElement | null>(null);
-  const headingId = useId();
   const noun = count === 1 ? "overview" : `${count} overviews`;
 
-  useEffect(() => {
-    const element = dialog.current;
-    if (element && !element.open) {
-      element.showModal();
-      cancel.current?.focus();
-    }
-  }, []);
-
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={headingId}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current) {
-          onClose();
-        }
-      }}
-      data-testid={deleteOverviewsDialogTestIds.root}
-    >
-      <div className={styles.panel}>
-        <span className={styles.handle} aria-hidden="true" />
-        <h2 className={styles.heading} id={headingId}>
-          Delete {count === 1 ? "this overview" : noun}?
-        </h2>
-        <p className={styles.body} data-testid={deleteOverviewsDialogTestIds.body}>
-          {count === 1 ? "It goes" : "They go"} from your library on every device, and from any projects {count === 1 ? "it’s" : "they’re"}{" "}
-          in. You can’t undo this.
-        </p>
-        <div className={styles.foot}>
+    <BottomSheet
+      open={open}
+      title={`Delete ${count === 1 ? "this overview" : noun}?`}
+      onClose={onClose}
+      wide="dialog"
+      width="27.5rem"
+      role="alertdialog"
+      initialFocus={cancel}
+      returnFocusTo={returnFocusTo}
+      testId={deleteOverviewsDialogTestIds.root}
+      foot={
+        <>
           <button
             type="button"
             ref={cancel}
@@ -60,8 +40,13 @@ export const DeleteOverviewsDialog = ({ count, onDelete, onClose }: DeleteOvervi
           <button type="button" className={styles.primaryAction} onClick={onDelete} data-testid={deleteOverviewsDialogTestIds.deleteButton}>
             Delete {noun}
           </button>
-        </div>
-      </div>
-    </dialog>
+        </>
+      }
+    >
+      <p className={styles.body} data-testid={deleteOverviewsDialogTestIds.body}>
+        {count === 1 ? "It goes" : "They go"} from your library on every device, and from any projects {count === 1 ? "it’s" : "they’re"}{" "}
+        in. You can’t undo this.
+      </p>
+    </BottomSheet>
   );
 };

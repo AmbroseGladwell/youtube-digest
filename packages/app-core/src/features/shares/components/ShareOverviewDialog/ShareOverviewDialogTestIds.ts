@@ -18,6 +18,5 @@ export const shareOverviewDialogTestIds = {
   signInButton: "ShareOverviewDialog.signInButton",
   cancelButton: "ShareOverviewDialog.cancelButton",
   doneButton: "ShareOverviewDialog.doneButton",
-  closeButton: "ShareOverviewDialog.closeButton",
   failure: "ShareOverviewDialog.failure",
 };

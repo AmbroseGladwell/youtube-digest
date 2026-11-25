@@ -188,7 +188,7 @@ export const JustNowList = ({
         {(inProgress || row.stage === "done") &&
           run.startedAt === current?.startedAt &&
           !phone &&
-          (reasonOpen === run.startedAt ? (
+          (reasonOpen === run.startedAt || Boolean(run.captureReason) ? (
             <CaptureReasonField value={run.captureReason} onChange={onCaptureReasonChange} onCommit={onCaptureReasonCommit} />
           ) : (
             <button

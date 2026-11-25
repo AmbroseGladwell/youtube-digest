@@ -254,6 +254,9 @@ Five folders, five different questions.
 - `library-filters.md` — Kind and Source split apart, Added, No topic and several values per
   group: how a source is named from its domain on the device, the URL, the saved view and
   the counts.
+- `bottom-sheets.md` — one sheet behaviour on every phone: the spring in, the fall out, the
+  handle that drags to close or to full height, ×, Escape and focus, and what each sheet is
+  on a wider screen.
 - `navigation.md` — Overviews, Projects and Ask as the top-level pages: the masthead on wide
   screens and phones, the sidebar's projects, topics, queue and time saved, when it opens and
   how `[` hides it, and where each of those goes without it.
