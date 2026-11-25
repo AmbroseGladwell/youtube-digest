@@ -58,14 +58,16 @@ export const UsageLine = ({ testIds, narrow = false, offersPlus = false, onPlanF
 
   if (!quiet && reset.prompt?.variant === "reset" && usage !== null) {
     return (
-      <p className={`${styles.root} ${styles.offer}`} data-testid={testIds.root}>
-        <StrokeIcon name="gem" size={14} weight={1.8} />
-        <b>
-          Your {reset.prompt.limit} are back for {monthBefore(usage.resetsOn)}.
-        </b>{" "}
-        Make more with Plus <span aria-hidden="true">·</span> {seePlans(() => reset.chose("seePlans"))}
+      <>
+        <p className={`${styles.root} ${styles.offer}`} data-testid={testIds.root}>
+          <StrokeIcon name="gem" size={14} weight={1.8} />
+          <b>
+            Your {reset.prompt.limit} are back for {monthBefore(usage.resetsOn)}.
+          </b>{" "}
+          Make more with Plus <span aria-hidden="true">·</span> {seePlans(() => reset.chose("seePlans"))}
+        </p>
         {plans}
-      </p>
+      </>
     );
   }
 
@@ -73,14 +75,16 @@ export const UsageLine = ({ testIds, narrow = false, offersPlus = false, onPlanF
   if (shown?.variant === "counter" || shown?.variant === "nudge") {
     const left = `${shown.left} of ${shown.limit} ${counter.plan === "free" ? "" : "on us "}left this month`;
     return (
-      <p className={`${styles.root} ${styles.offer}`} data-testid={testIds.root}>
-        {joined([
-          <b key="left">{left}</b>,
-          `More on ${resetDate(shown.resetsOn)}`,
-          ...(shown.variant === "nudge" ? [seePlans(() => counter.chose("seePlans"))] : []),
-        ])}
+      <>
+        <p className={`${styles.root} ${styles.offer}`} data-testid={testIds.root}>
+          {joined([
+            <b key="left">{left}</b>,
+            `More on ${resetDate(shown.resetsOn)}`,
+            ...(shown.variant === "nudge" ? [seePlans(() => counter.chose("seePlans"))] : []),
+          ])}
+        </p>
         {plans}
-      </p>
+      </>
     );
   }
 
