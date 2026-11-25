@@ -126,43 +126,12 @@
   flex: 1;
 }
 
-.scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  background: rgba(21, 22, 24, 0.32);
-}
-
-.sheet {
-  position: fixed;
-  inset: auto 0 0 0;
-  z-index: 41;
+// The stretch in the shared sheet: the line it is from, then where to go.
+.sheetBody {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 16px calc(30px + env(safe-area-inset-bottom));
-  background: var(--dialog);
-  border-radius: 28px 28px 0 0;
-  font-family: var(--font-body);
-  animation: sheetRise var(--motion-arrive) var(--motion-ease) both;
-}
-
-@keyframes sheetRise {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: none;
-  }
-}
-
-.handle {
-  align-self: center;
-  width: 36px;
-  height: 5px;
-  margin-bottom: 10px;
-  border-radius: var(--radius-badge);
-  background: var(--stone-tint);
+  padding-bottom: 1rem;
 }
 
 .sheetLine {
@@ -177,7 +146,7 @@
 }
 
 .sheetRange {
-  margin: 2px 8px 10px;
+  margin: 0;
   font-size: 0.78125rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;

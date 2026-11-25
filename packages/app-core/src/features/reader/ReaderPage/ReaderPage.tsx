@@ -1044,19 +1044,18 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
 
           {!accountNeeded && projects.dialogs}
 
-          {confirmingDelete && (
-            <DeleteOverviewDialog
-              title={overview.source.title}
-              onDelete={confirmDelete}
-              onClose={() => {
-                reader.deleteDialog.cancelled();
-                setConfirmingDelete(false);
-              }}
-            />
-          )}
+          <DeleteOverviewDialog
+            open={confirmingDelete}
+            title={overview.source.title}
+            onDelete={confirmDelete}
+            onClose={() => {
+              reader.deleteDialog.cancelled();
+              setConfirmingDelete(false);
+            }}
+          />
 
-          {explainingRegenerate && webPage !== null && (
-            <RegenerateArticleDialog url={webPage.url} onClose={() => setExplainingRegenerate(false)} />
+          {webPage !== null && (
+            <RegenerateArticleDialog open={explainingRegenerate} url={webPage.url} onClose={() => setExplainingRegenerate(false)} />
           )}
 
           {printingRecipe && recipeNote !== null && (
@@ -1104,24 +1103,23 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
             />
           )}
 
-          {sharing && (
-            <ShareOverviewDialog
-              share={overviewShare.share}
-              edited={overviewShare.edited}
-              audioMissing={overviewShare.audioMissing}
-              signedIn={sync.connected}
-              busy={shareOverview.isPending || stopSharing.isPending}
-              failed={shareOverview.isError || stopSharing.isError}
-              onCreate={() => shareOverview.mutate({ overview })}
-              onStop={() => {
-                if (overviewShare.share !== null) {
-                  stopSharing.mutate({ token: overviewShare.share.token });
-                }
-              }}
-              onSignIn={() => void navigate(Routes.signIn(), { viewTransition: animateNavigation })}
-              onClose={() => setSharing(false)}
-            />
-          )}
+          <ShareOverviewDialog
+            open={sharing}
+            share={overviewShare.share}
+            edited={overviewShare.edited}
+            audioMissing={overviewShare.audioMissing}
+            signedIn={sync.connected}
+            busy={shareOverview.isPending || stopSharing.isPending}
+            failed={shareOverview.isError || stopSharing.isError}
+            onCreate={() => shareOverview.mutate({ overview })}
+            onStop={() => {
+              if (overviewShare.share !== null) {
+                stopSharing.mutate({ token: overviewShare.share.token });
+              }
+            }}
+            onSignIn={() => void navigate(Routes.signIn(), { viewTransition: animateNavigation })}
+            onClose={() => setSharing(false)}
+          />
 
           {(!isPanel || playerDocked) && (
             <ReaderPlayerBar

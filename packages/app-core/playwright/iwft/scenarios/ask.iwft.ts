@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test";
 import { overviewPartHash, type Chat, type ChatAnswerSections, type ChatCitation, type Overview, type ProjectId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
@@ -7,6 +6,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 import { makeProject, makeProjectMember } from "../../../src/features/projects/types/ProjectFactory.testHelper.js";
 import { chatComposerTestIds } from "../../../src/features/chats/components/ChatComposer/ChatComposerTestIds.js";
 import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
+import { useATouchScreen } from "../../support/reflowConditions.testHelper.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -14,12 +14,6 @@ const SIGNED_IN = {
 };
 
 const PHONE = { width: 390, height: 800 };
-
-// Chromium's touch emulation is what turns (hover: hover) off.
-const useATouchScreen = async (page: Page) => {
-  const devtools = await page.context().newCDPSession(page);
-  await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
-};
 
 const titled = (title: string, savedAt: string): Overview => {
   const overview = makeOverview({ savedAt });

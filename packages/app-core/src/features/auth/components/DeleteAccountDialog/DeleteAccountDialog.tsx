@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SESSION_VERIFICATION_TTL_MINUTES } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDeleteAccount } from "../../../accountLibraries/useDeleteAccount.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -12,6 +13,7 @@ import styles from "./DeleteAccountDialog.module.scss";
 import { deleteAccountDialogTestIds } from "./DeleteAccountDialogTestIds.js";
 
 export interface DeleteAccountDialogProps {
+  open: boolean;
   email: string;
   accountId: string;
   onClose: () => void;
@@ -42,9 +44,8 @@ const KEPT = [
 ];
 
 // The steps and what each promises: docs/features/account-deletion.md, "The dialog".
-export const DeleteAccountDialog = ({ email, accountId, onClose }: DeleteAccountDialogProps) => {
+export const DeleteAccountDialog = ({ open, email, accountId, onClose }: DeleteAccountDialogProps) => {
   const analytics = useAnalytics();
-  const dialog = useRef<HTMLDialogElement | null>(null);
   const cancel = useRef<HTMLButtonElement | null>(null);
   const heading = useRef<HTMLHeadingElement | null>(null);
   const [step, setStep] = useState<Step>({ kind: "explain", checking: false, refused: null });
@@ -54,13 +55,15 @@ export const DeleteAccountDialog = ({ email, accountId, onClose }: DeleteAccount
   const confirmVerification = useConfirmVerificationMutation();
   const deleteAccount = useDeleteAccount();
 
-  useEffect(() => {
-    const element = dialog.current;
-    if (element && !element.open) {
-      element.showModal();
-      cancel.current?.focus();
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) {
+      setStep({ kind: "explain", checking: false, refused: null });
+      setProblem(null);
+      setStatus(null);
     }
-  }, []);
+  }
 
   useEffect(() => {
     if (step.kind === "failed") {
@@ -112,43 +115,24 @@ export const DeleteAccountDialog = ({ email, accountId, onClose }: DeleteAccount
   const closable = step.kind !== "deleting";
 
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={HEADING_ID}
-      onCancel={(event) => {
-        event.preventDefault();
-        if (closable) {
-          onClose();
-        }
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current && closable) {
-          onClose();
-        }
-      }}
-      data-testid={deleteAccountDialogTestIds.root}
-      data-step={step.kind}
+    <BottomSheet
+      open={open}
+      title="Delete your account?"
+      onClose={onClose}
+      wide="dialog"
+      width="34rem"
+      head={null}
+      labelledBy={HEADING_ID}
+      dismissible={closable}
+      initialFocus={cancel}
+      testId={deleteAccountDialogTestIds.root}
     >
-      <div className={styles.panel}>
-        <span className={styles.handle} aria-hidden="true" />
-
+      <div className={styles.content}>
         {step.kind === "explain" && (
           <>
-            <div className={styles.head}>
-              <h2 className={styles.heading} id={HEADING_ID} data-testid={deleteAccountDialogTestIds.heading}>
-                Delete your account?
-              </h2>
-              <button
-                type="button"
-                className={styles.close}
-                onClick={onClose}
-                aria-label="Close"
-                data-testid={deleteAccountDialogTestIds.closeButton}
-              >
-                <StrokeIcon name="close" size={18} />
-              </button>
-            </div>
+            <h2 className={styles.heading} id={HEADING_ID} data-testid={deleteAccountDialogTestIds.heading}>
+              Delete your account?
+            </h2>
             <p className={styles.body} data-testid={deleteAccountDialogTestIds.body}>
               Your account and everything in it are deleted straight away. This can’t be undone: creating an account with{" "}
               <strong>{email}</strong> again starts a new, empty one.
@@ -218,51 +202,40 @@ export const DeleteAccountDialog = ({ email, accountId, onClose }: DeleteAccount
         )}
 
         {step.kind === "code" && (
-          <>
-            <button
-              type="button"
-              className={`${styles.close} ${styles.closeFloating}`}
-              onClick={onClose}
-              aria-label="Close"
-              data-testid={deleteAccountDialogTestIds.closeButton}
-            >
-              <StrokeIcon name="close" size={18} />
-            </button>
-            <CodeStep
-              variant="dialog"
-              headingId={HEADING_ID}
-              heading="Confirm it’s you"
-              lead={
-                <>
-                  We sent a code to <strong>{email}</strong>. Enter it to delete your account.
-                </>
-              }
-              note={`It works for ${SESSION_VERIFICATION_TTL_MINUTES} minutes, and makes sure the deletion comes from you rather than someone else on a signed-in device.`}
-              submitLabel="Delete my account"
-              canSubmit={problem === null || problem.kind === "wrong" || problem.kind === "other"}
-              submitting={confirmVerification.isPending}
-              problem={problem?.message ?? null}
-              status={status}
-              sentAt={step.sentAt}
-              canResend={problem?.kind !== "limited"}
-              resending={requestVerification.isPending}
-              onSubmit={(code) =>
-                confirmVerification.mutate(code, {
-                  onSuccess: () => {
-                    setProblem(null);
-                    setStatus(null);
-                    runDeletion();
-                  },
-                  onError: (error) => {
-                    setProblem(codeProblem(error, step.expiresAt, new Date()));
-                    setStatus(null);
-                  },
-                })
-              }
-              onResend={() => askToVerify(true)}
-              onCancel={onClose}
-            />
-          </>
+          <CodeStep
+            variant="dialog"
+            headingId={HEADING_ID}
+            heading="Confirm it’s you"
+            lead={
+              <>
+                We sent a code to <strong>{email}</strong>. Enter it to delete your account.
+              </>
+            }
+            note={`It works for ${SESSION_VERIFICATION_TTL_MINUTES} minutes, and makes sure the deletion comes from you rather than someone else on a signed-in device.`}
+            submitLabel="Delete my account"
+            canSubmit={problem === null || problem.kind === "wrong" || problem.kind === "other"}
+            submitting={confirmVerification.isPending}
+            problem={problem?.message ?? null}
+            status={status}
+            sentAt={step.sentAt}
+            canResend={problem?.kind !== "limited"}
+            resending={requestVerification.isPending}
+            onSubmit={(code) =>
+              confirmVerification.mutate(code, {
+                onSuccess: () => {
+                  setProblem(null);
+                  setStatus(null);
+                  runDeletion();
+                },
+                onError: (error) => {
+                  setProblem(codeProblem(error, step.expiresAt, new Date()));
+                  setStatus(null);
+                },
+              })
+            }
+            onResend={() => askToVerify(true)}
+            onCancel={onClose}
+          />
         )}
 
         {step.kind === "deleting" && (
@@ -281,20 +254,9 @@ export const DeleteAccountDialog = ({ email, accountId, onClose }: DeleteAccount
 
         {step.kind === "failed" && (
           <>
-            <div className={styles.head}>
-              <h2 className={styles.heading} id={HEADING_ID} ref={heading} tabIndex={-1} data-testid={deleteAccountDialogTestIds.heading}>
-                Your account wasn’t deleted
-              </h2>
-              <button
-                type="button"
-                className={styles.close}
-                onClick={onClose}
-                aria-label="Close"
-                data-testid={deleteAccountDialogTestIds.closeButton}
-              >
-                <StrokeIcon name="close" size={18} />
-              </button>
-            </div>
+            <h2 className={styles.heading} id={HEADING_ID} ref={heading} tabIndex={-1} data-testid={deleteAccountDialogTestIds.heading}>
+              Your account wasn’t deleted
+            </h2>
             <p className={styles.refused} role="alert" data-testid={deleteAccountDialogTestIds.failed}>
               <StrokeIcon name="alertCircle" size={15} />
               <span>Something went wrong on our side, so nothing was deleted and you’re still signed in.</span>
@@ -316,6 +278,6 @@ export const DeleteAccountDialog = ({ email, accountId, onClose }: DeleteAccount
           </>
         )}
       </div>
-    </dialog>
+    </BottomSheet>
   );
 };

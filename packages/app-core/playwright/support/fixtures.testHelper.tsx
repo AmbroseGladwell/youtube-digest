@@ -1,7 +1,7 @@
 import { test as base } from "@playwright/experimental-ct-react";
 import { BackendSimulator } from "../network/BackendSimulator.testHelper.js";
 import { Launcher } from "./Launcher.testHelper.js";
-import { resetTextSizeIfChanged } from "./reflowConditions.testHelper.js";
+import { resetTextSizeIfChanged, resetTouchScreenIfUsed } from "./reflowConditions.testHelper.js";
 
 interface Fixtures {
   backendSimulator: BackendSimulator;
@@ -16,6 +16,7 @@ export const test = base.extend<Fixtures>({
     async ({ page }, use) => {
       await use();
       await resetTextSizeIfChanged(page);
+      await resetTouchScreenIfUsed(page);
     },
     { auto: true },
   ],

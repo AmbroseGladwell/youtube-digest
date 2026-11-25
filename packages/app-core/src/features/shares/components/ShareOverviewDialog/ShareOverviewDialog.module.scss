@@ -1,85 +1,11 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// DeleteOverviewDialog's dialog, widened for the link row (30b–30d).
-$enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
-
-.dialog {
-  border: 0;
-  padding: 0;
-  margin: auto;
-  max-width: none;
-  max-height: none;
-  background: transparent;
-  color: var(--ink);
-}
-
-.dialog::backdrop {
-  background: var(--scrim);
-}
-
-.dialog[open] {
-  animation: shareDialogFadeUp var(--motion-arrive) $enter-easing 60ms both;
-}
-
-.dialog[open]::backdrop {
-  animation: shareScrimFade var(--motion-travel) ease both;
-}
-
-@keyframes shareScrimFade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes shareDialogFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes shareSheetTravel {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: none;
-  }
-}
-
-.panel {
-  width: min(33.75rem, calc(100vw - 2.5rem));
+// Design 30b–30d on the shared sheet, widened for the link row.
+.content {
   display: flex;
   flex-direction: column;
   gap: 1.125rem;
-  background: var(--dialog);
-  border-radius: var(--radius-dialog);
-  box-shadow: var(--shadow-dialog);
-  padding: 1.625rem 1.75rem 1.5rem;
-}
-
-.handle {
-  display: none;
-  width: 2.5rem;
-  height: 0.25rem;
-  border-radius: var(--radius-badge);
-  background: var(--surface);
-  align-self: center;
-  margin: 0 0 0.25rem;
-}
-
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  padding: 0 0.25rem 1.25rem;
 }
 
 .heading {
@@ -88,11 +14,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   font-weight: 400;
   font-size: 1.75rem;
   line-height: 1.12;
-}
-
-.closeButton {
-  @include controls.surface-pill;
-  @include controls.circle(2.25rem);
 }
 
 .body {
@@ -240,25 +161,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 }
 
 @media (max-width: 47.9375rem) {
-  .dialog {
-    margin: auto 0 0;
-    width: 100%;
-  }
-
-  .dialog[open] {
-    animation-name: shareSheetTravel;
-  }
-
-  .panel {
-    width: 100%;
-    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
-    padding: 0.75rem 1.25rem 1.25rem;
-  }
-
-  .handle {
-    display: block;
-  }
-
   .cards {
     grid-template-columns: 1fr;
   }

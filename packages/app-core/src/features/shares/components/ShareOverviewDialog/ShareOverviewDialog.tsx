@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Share } from "@overview/domain";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { shareStatusLine } from "../../util/shareStatusLine.js";
 import { canShareToSystem, shareToSystem } from "../../util/systemShare.js";
@@ -8,6 +9,7 @@ import { shareOverviewDialogTestIds } from "./ShareOverviewDialogTestIds.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 
 export interface ShareOverviewDialogProps {
+  open: boolean;
   share: Share | null;
   edited: boolean;
   audioMissing: boolean;
@@ -20,12 +22,11 @@ export interface ShareOverviewDialogProps {
   onClose: () => void;
 }
 
-const HEADING_ID = "ShareOverviewDialog-heading";
-
 const SHARED = ["The whole overview, with its audio", "Transcript and chapters", "Video title, channel and link"];
 const PRIVATE = ["Your reason", "Your topics", "Questions to ask next", "Read and favourite state"];
 
 export const ShareOverviewDialog = ({
+  open,
   share,
   edited,
   audioMissing,
@@ -37,18 +38,17 @@ export const ShareOverviewDialog = ({
   onSignIn,
   onClose,
 }: ShareOverviewDialogProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
   const initialFocus = useRef<HTMLButtonElement | null>(null);
   const [confirmingStop, setConfirmingStop] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    const element = dialog.current;
-    if (element && !element.open) {
-      element.showModal();
-      initialFocus.current?.focus();
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) {
+      setConfirmingStop(false);
+      setCopied(false);
     }
-  }, []);
+  }
 
   // Stopping leaves no link to confirm about, so the dialog goes back to its first state.
   useEffect(() => {
@@ -323,39 +323,21 @@ export const ShareOverviewDialog = ({
   };
 
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={HEADING_ID}
-      onCancel={(event) => {
-        event.preventDefault();
-        close();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current) {
-          close();
-        }
-      }}
-      data-testid={shareOverviewDialogTestIds.root}
+    <BottomSheet
+      open={open}
+      title={confirmingStop ? "Stop sharing?" : "Share overview"}
+      onClose={close}
+      wide="dialog"
+      width="33.75rem"
+      initialFocus={initialFocus}
+      testId={shareOverviewDialogTestIds.root}
+      head={
+        <h2 className={styles.heading} data-testid={shareOverviewDialogTestIds.heading}>
+          {confirmingStop ? "Stop sharing?" : "Share overview"}
+        </h2>
+      }
     >
-      <div className={styles.panel}>
-        <span className={styles.handle} aria-hidden="true" />
-
-        <div className={styles.head}>
-          <h2 className={styles.heading} id={HEADING_ID} data-testid={shareOverviewDialogTestIds.heading}>
-            {confirmingStop ? "Stop sharing?" : "Share overview"}
-          </h2>
-          <button
-            type="button"
-            className={styles.closeButton}
-            aria-label="Close"
-            onClick={close}
-            data-testid={shareOverviewDialogTestIds.closeButton}
-          >
-            <StrokeIcon name="close" size={16} />
-          </button>
-        </div>
-
+      <div className={styles.content}>
         {failed && (
           <p className={styles.failure} role="alert" data-testid={shareOverviewDialogTestIds.failure}>
             That didn’t reach the server. Nothing has changed — try again.
@@ -364,6 +346,6 @@ export const ShareOverviewDialog = ({
 
         {body()}
       </div>
-    </dialog>
+    </BottomSheet>
   );
 };

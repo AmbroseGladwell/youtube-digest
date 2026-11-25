@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import styles from "./ChoicePicker.module.scss";
@@ -42,7 +43,6 @@ export const ChoicePicker = <Choice extends string>({
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const options = useRef<(HTMLButtonElement | null)[]>([]);
-  const sheet = useRef<HTMLDialogElement | null>(null);
   const sheetHeading = useId();
   const label = `${title} for ${subject}`;
 
@@ -57,19 +57,6 @@ export const ChoicePicker = <Choice extends string>({
       options.current[choices.indexOf(choice)]?.focus();
     }
   }, [open, asSheet, choice, choices]);
-
-  useEffect(() => {
-    const element = sheet.current;
-    if (element === null) {
-      return;
-    }
-    if (open && asSheet && !element.open) {
-      element.showModal();
-    }
-    if (!open && element.open) {
-      element.close();
-    }
-  }, [open, asSheet]);
 
   const choose = (next: Choice) => {
     if (next !== choice) {
@@ -143,53 +130,39 @@ export const ChoicePicker = <Choice extends string>({
       )}
 
       {asSheet && (
-        <dialog
-          ref={sheet}
-          className={styles.sheet}
-          aria-labelledby={sheetHeading}
-          onCancel={(event) => {
-            event.preventDefault();
-            close();
-          }}
-          onClick={(event) => {
-            if (event.target === sheet.current) {
-              close();
-            }
-          }}
-          data-testid={choicePickerTestIds.sheet(name)}
-        >
-          <div className={styles.sheetPanel}>
-            <span className={styles.handle} aria-hidden="true" />
-            <div className={styles.sheetHead}>
-              <h2 className={styles.sheetTitle} id={sheetHeading}>
-                {title}
-              </h2>
-              {sheetLine !== undefined && <p className={styles.sheetLine}>{sheetLine}</p>}
-            </div>
-            <div className={styles.radios} role="radiogroup" aria-label={label}>
-              {choices.map((option) => (
-                <label key={option} className={styles.radioOption} data-testid={choicePickerTestIds.option(name, option)}>
-                  <input
-                    type="radio"
-                    name={`${name}-${sheetHeading}`}
-                    className={styles.radio}
-                    value={option}
-                    checked={option === choice}
-                    onChange={() => choose(option)}
-                  />
-                  <span className={styles.itemText}>
-                    <span className={styles.itemName}>{labelOf(option)}</span>
-                    {optionDetail !== undefined && <span className={styles.itemDetail}>{optionDetail(option)}</span>}
-                  </span>
-                </label>
-              ))}
-            </div>
-            <p className={styles.sheetFoot}>{sheetFoot}</p>
+        <BottomSheet
+          open={open}
+          title={title}
+          onClose={close}
+          returnFocusTo={trigger.current}
+          testId={choicePickerTestIds.sheet(name)}
+          foot={
             <button type="button" className={styles.done} onClick={close} data-testid={choicePickerTestIds.doneButton(name)}>
               Done
             </button>
+          }
+        >
+          {sheetLine !== undefined && <p className={styles.sheetLine}>{sheetLine}</p>}
+          <div className={styles.radios} role="radiogroup" aria-label={label}>
+            {choices.map((option) => (
+              <label key={option} className={styles.radioOption} data-testid={choicePickerTestIds.option(name, option)}>
+                <input
+                  type="radio"
+                  name={`${name}-${sheetHeading}`}
+                  className={styles.radio}
+                  value={option}
+                  checked={option === choice}
+                  onChange={() => choose(option)}
+                />
+                <span className={styles.itemText}>
+                  <span className={styles.itemName}>{labelOf(option)}</span>
+                  {optionDetail !== undefined && <span className={styles.itemDetail}>{optionDetail(option)}</span>}
+                </span>
+              </label>
+            ))}
           </div>
-        </dialog>
+          <p className={styles.sheetFoot}>{sheetFoot}</p>
+        </BottomSheet>
       )}
     </div>
   );

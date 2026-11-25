@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { manageTagsDialogTestIds } from "../../src/features/tags/components/ManageTagsDialog/ManageTagsDialogTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class ManageTagsDialogPageObject extends PageObject {
@@ -71,7 +72,7 @@ export class ManageTagsDialogPageObject extends PageObject {
 
   undo = () => this.step("undo", () => this.click(manageTagsDialogTestIds.undoButton));
 
-  close = () => this.step("close", () => this.click(manageTagsDialogTestIds.closeButton));
+  close = () => this.step("close", () => this.click(this.get(manageTagsDialogTestIds.root).getByTestId(bottomSheetTestIds.close)));
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 }

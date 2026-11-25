@@ -175,38 +175,39 @@ export const SortMenu = ({ sort, onChange }: SortMenuProps) => {
         <StrokeIcon name="sort" size={17} />
         {!isDefaultLibrarySort(sort) && <i className={styles.dot} aria-hidden="true" data-testid={sortMenuTestIds.dot} />}
       </button>
-      {open &&
-        (asSheet ? (
-          <BottomSheet
-            open
-            title="Sort"
-            closeLabel="Close sort"
-            onClose={close}
-            foot={
-              <>
-                <button
-                  type="button"
-                  className={styles.reset}
-                  onClick={() => choose(DEFAULT_LIBRARY_SORT)}
-                  data-testid={sortMenuTestIds.reset}
-                >
-                  Reset
-                </button>
-                <button type="button" className={styles.done} onClick={close} data-testid={sortMenuTestIds.done}>
-                  Done
-                </button>
-              </>
-            }
-          >
-            <div role="menu" aria-label="Sort">
-              {body}
-            </div>
-          </BottomSheet>
-        ) : (
+      {asSheet ? (
+        <BottomSheet
+          open={open}
+          title="Sort"
+          closeLabel="Close sort"
+          onClose={close}
+          foot={
+            <>
+              <button
+                type="button"
+                className={styles.reset}
+                onClick={() => choose(DEFAULT_LIBRARY_SORT)}
+                data-testid={sortMenuTestIds.reset}
+              >
+                Reset
+              </button>
+              <button type="button" className={styles.done} onClick={close} data-testid={sortMenuTestIds.done}>
+                Done
+              </button>
+            </>
+          }
+        >
+          <div role="menu" aria-label="Sort">
+            {body}
+          </div>
+        </BottomSheet>
+      ) : (
+        open && (
           <Popover anchor={trigger} title="Sort" role="menu" titleShown={false} width={276} onClose={() => setOpen(false)}>
             {body}
           </Popover>
-        ))}
+        )
+      )}
     </>
   );
 };

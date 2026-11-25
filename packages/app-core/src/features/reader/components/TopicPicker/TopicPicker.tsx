@@ -16,17 +16,33 @@ export interface TopicPickerProps {
   onToggle: (topicId: TopicId) => void;
   onCreate: (name: string) => void;
   onClose: () => void;
+  // Inside the shared sheet on a phone, which brings the title and Done itself.
+  inSheet?: boolean;
+  searchRef?: Ref<HTMLInputElement>;
 }
 
 const HEADING_ID = "TopicPicker-heading";
 
-export const TopicPicker = ({ topics, selected, countByTopic, busy, onToggle, onCreate, onClose, ref }: TopicPickerProps) => {
+export const TopicPicker = ({
+  topics,
+  selected,
+  countByTopic,
+  busy,
+  onToggle,
+  onCreate,
+  onClose,
+  ref,
+  inSheet = false,
+  searchRef,
+}: TopicPickerProps) => {
   const [query, setQuery] = useState("");
   const search = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    search.current?.focus();
-  }, []);
+    if (!inSheet) {
+      search.current?.focus();
+    }
+  }, [inSheet]);
 
   const matches = topicMatches(topics, query);
   const analytics = useReaderAnalytics();
@@ -46,22 +62,17 @@ export const TopicPicker = ({ topics, selected, countByTopic, busy, onToggle, on
   return (
     <div
       ref={ref}
-      className={styles.root}
-      role="dialog"
-      aria-labelledby={HEADING_ID}
+      className={inSheet ? styles.inSheet : styles.root}
+      role={inSheet ? undefined : "dialog"}
+      aria-labelledby={inSheet ? undefined : HEADING_ID}
       aria-busy={busy}
       data-testid={topicPickerTestIds.root}
     >
-      <span className={styles.handle} aria-hidden="true" />
-
-      <div className={styles.sheetHead}>
-        <span className={styles.sheetTitle} id={HEADING_ID}>
+      {!inSheet && (
+        <span className={styles.visuallyHidden} id={HEADING_ID}>
           Edit topics
         </span>
-        <button type="button" className={styles.done} onClick={onClose} data-testid={topicPickerTestIds.doneButton}>
-          Done
-        </button>
-      </div>
+      )}
 
       {selected.length > 0 && (
         <div className={styles.sheetChips}>
@@ -84,7 +95,14 @@ export const TopicPicker = ({ topics, selected, countByTopic, busy, onToggle, on
 
       <div className={styles.searchRow}>
         <input
-          ref={search}
+          ref={(element) => {
+            search.current = element;
+            if (typeof searchRef === "function") {
+              searchRef(element);
+            } else if (searchRef) {
+              searchRef.current = element;
+            }
+          }}
           id={searchId}
           name="topic-search"
           type="search"

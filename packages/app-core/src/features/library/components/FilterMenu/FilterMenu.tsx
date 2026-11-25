@@ -18,6 +18,7 @@ export interface FilterMenuProps {
   filters: LibraryFilters;
   topics: Topic[];
   counts: LibraryFilterCounts;
+  open: boolean;
   shown: number;
   onChange: (patch: Partial<LibraryFilters>) => void;
   onReset: () => void;
@@ -34,6 +35,7 @@ const toggled = <T,>(values: readonly T[], value: T, on: boolean): T[] =>
 
 // Each tap applies at once; the URL stays the source of truth, so there is no Apply (design 399o).
 export const FilterMenu = ({
+  open,
   anchor,
   filters,
   topics,
@@ -49,6 +51,13 @@ export const FilterMenu = ({
   const asSheet = useMediaQuery(SHEET_QUERY);
   const [longList, setLongList] = useState<LongList | null>(null);
   const [query, setQuery] = useState("");
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) {
+      setLongList(null);
+    }
+  }
 
   const groups = (
     <FilterGroups
@@ -76,7 +85,7 @@ export const FilterMenu = ({
   );
 
   if (!asSheet) {
-    return (
+    return !open ? null : (
       <Popover
         anchor={anchor}
         title="Filters"
@@ -103,7 +112,7 @@ export const FilterMenu = ({
     const noun = longList === "source" ? "sources" : "tags";
     return (
       <BottomSheet
-        open
+        open={open}
         title={longList === "source" ? "Sources" : "Tags"}
         closeLabel="Close filters"
         onClose={onClose}
@@ -146,7 +155,7 @@ export const FilterMenu = ({
 
   return (
     <BottomSheet
-      open
+      open={open}
       title="Filters"
       closeLabel="Close filters"
       onClose={onClose}

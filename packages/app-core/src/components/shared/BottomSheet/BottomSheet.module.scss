@@ -1,5 +1,10 @@
 @use "../../../theme/shortScreens.scss";
 
+// Design 34ai's sheet (Time saved): a spring up, a quick fall away, the scrim fading with it.
+$sheet-spring: linear(0, 0.13 3.2%, 0.53 8.6%, 0.89 16.3%, 1.015 25%, 1.03 34%, 1.012 50%, 1);
+$enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
+$leave-easing: cubic-bezier(0.4, 0, 1, 1);
+
 .dialog {
   position: fixed;
   inset: auto 0 0;
@@ -8,6 +13,7 @@
   max-height: none;
   margin: 0;
   padding: 0;
+  overflow: visible;
   border: 0;
   background: transparent;
   color: var(--ink);
@@ -15,6 +21,87 @@
 
   &::backdrop {
     background: var(--scrim);
+    animation: sheetScrimIn 260ms ease backwards;
+  }
+}
+
+// Backwards, not both: a held transform would trap popovers inside the sheet under it (OV-394).
+.panel {
+  animation: sheetTravel 520ms $sheet-spring backwards;
+}
+
+.leaving::backdrop {
+  animation: sheetScrimOut 240ms ease forwards;
+}
+
+.leaving .panel {
+  animation: sheetAway 240ms $leave-easing forwards;
+}
+
+@keyframes sheetTravel {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheetAway {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheetScrimIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes sheetScrimOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialogRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes dialogFall {
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+// From 48rem a "dialog" sheet is a centred card: no handle, no drag, a rise rather than a travel.
+@media (min-width: 48rem) {
+  .centred {
+    inset: 0;
+    width: min(var(--sheet-width, 33.75rem), calc(100vw - 2.5rem));
+    margin: auto;
+  }
+
+  .centred .panel {
+    max-height: calc(100dvh - 2.5rem);
+    border-radius: var(--radius-dialog);
+    animation: dialogRise 320ms $enter-easing 60ms backwards;
+  }
+
+  .centred.leaving .panel {
+    animation: dialogFall 180ms $leave-easing forwards;
+  }
+
+  .centred .handle {
+    visibility: hidden;
+    height: 0;
+    margin-bottom: 1rem;
+  }
+
+  .centred .grip {
+    cursor: auto;
   }
 }
 
@@ -69,6 +156,11 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0 1rem 0.625rem 1.25rem;
+}
+
+.ownHead {
+  flex: 1;
+  min-width: 0;
 }
 
 .title {

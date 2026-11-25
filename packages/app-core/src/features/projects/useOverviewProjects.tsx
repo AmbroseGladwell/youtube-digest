@@ -57,8 +57,9 @@ export const useOverviewProjects = (overview: Overview | null, webApp: ProjectsL
 
   const dialogs = (
     <>
-      {picking && overview !== null && (
+      {overview !== null && (
         <ProjectPicker
+          open={picking}
           summaries={active}
           holding={(projectId) => (holding.some(({ project }) => project.id === projectId) ? 1 : 0)}
           of={1}

@@ -145,11 +145,13 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   }, [view.filters.query]);
   const selection = useOverviewSelection(place.kind === "project" ? place.projectId : place.kind);
   const toast = useToast();
+  const selectButton = useRef<HTMLButtonElement | null>(null);
   const main = useRef<HTMLElement | null>(null);
   const projects = useLibraryProjects(place, readableEntries(allEntries), {
     say: (text, undo) => toast.show(text, true, undo),
     focusList: () => main.current?.querySelector<HTMLElement>(`[data-testid="${libraryOverviewCardTestIds.titleLink}"]`)?.focus(),
     selecting: selection.selecting,
+    selectButton: selectButton.current,
   });
   const entries = projects.inScope === null ? allEntries : allEntries.filter((entry) => projects.inScope!.has(libraryEntryId(entry)));
   const defaultView = place.kind === "library" ? DEFAULT_LIBRARY_VIEW : PROJECT_VIEW;
@@ -169,8 +171,9 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const setOverviewTopics = useSetOverviewTopicsMutation();
   const deleteOverview = useDeleteOverviewMutation();
   const [choosingTopics, setChoosingTopics] = useState(false);
+  const pickedForTopics = useRef<OverviewWithState[]>([]);
+  const deletingCount = useRef(0);
   const topicSession = useRef<{ changes: Map<string, PickerChange>; writes: Promise<unknown>[] }>({ changes: new Map(), writes: [] });
-  const selectButton = useRef<HTMLButtonElement | null>(null);
   const refocusSelect = useRef(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const player = usePlayer();
@@ -332,6 +335,12 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     (entry): entry is LibraryEntry & OverviewWithState => entry.kind === "overview" && selection.picked.has(entry.overview.id),
   );
   const selectable = readableEntries(entries).length > 0;
+  if (choosingTopics) {
+    pickedForTopics.current = selected;
+  }
+  if (confirmingDelete) {
+    deletingCount.current = selected.length;
+  }
   const allRead = selected.length > 0 && selected.every((entry) => entry.state.read);
   const allFavourite = selected.length > 0 && selected.every((entry) => entry.state.favourite);
   const selectionLine = selectionLineFor(selected.length, coarsePointer);
@@ -807,58 +816,54 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         )}
       </main>
 
-      {filtersOpen && (
-        <FilterMenu
-          anchor={filterButton}
-          filters={filters}
-          topics={topics}
-          counts={counts}
-          shown={visible.length}
-          onChange={(patch) => changeFilters(patch, "panel")}
-          onReset={resetFilters}
-          onClose={closeFilters}
-          onNewTopic={() => {
-            analytics.library.newTopicDialog.opened();
-            setFiltersOpen(false);
-            setNewTopicOpen(true);
-          }}
-          onManageTags={() => {
-            analytics.library.manageTags.opened();
-            setFiltersOpen(false);
-            setManageTagsOpen(true);
-          }}
-          extra={
-            counts.unreadable > 0 && <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>
-          }
-        />
-      )}
-      {appliedOpen && (
-        <AppliedFilters
-          anchor={moreChipsButton}
-          chips={chips}
-          shown={visible.length}
-          onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
-          onClearGroup={(group) => changeFilters(clearGroupPatch(group, defaultView.filters), "filterChip")}
-          onEdit={() => {
-            setAppliedOpen(false);
-            analytics.library.filterSheet.opened();
-            setFiltersOpen(true);
-          }}
-          onReset={resetFilters}
-          onClose={() => setAppliedOpen(false)}
-        />
-      )}
+      <FilterMenu
+        open={filtersOpen}
+        anchor={filterButton}
+        filters={filters}
+        topics={topics}
+        counts={counts}
+        shown={visible.length}
+        onChange={(patch) => changeFilters(patch, "panel")}
+        onReset={resetFilters}
+        onClose={closeFilters}
+        onNewTopic={() => {
+          analytics.library.newTopicDialog.opened();
+          setFiltersOpen(false);
+          setNewTopicOpen(true);
+        }}
+        onManageTags={() => {
+          analytics.library.manageTags.opened();
+          setFiltersOpen(false);
+          setManageTagsOpen(true);
+        }}
+        extra={
+          counts.unreadable > 0 && <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>
+        }
+      />
+      <AppliedFilters
+        open={appliedOpen}
+        anchor={moreChipsButton}
+        chips={chips}
+        shown={visible.length}
+        onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
+        onClearGroup={(group) => changeFilters(clearGroupPatch(group, defaultView.filters), "filterChip")}
+        onEdit={() => {
+          setAppliedOpen(false);
+          analytics.library.filterSheet.opened();
+          setFiltersOpen(true);
+        }}
+        onReset={resetFilters}
+        onClose={() => setAppliedOpen(false)}
+      />
 
-      {timeSavedOpen && (
-        <TimeSavedSheet
-          open
-          summary={timeSaved}
-          onClose={() => {
-            analytics.timeSaved.library.breakdownClosed();
-            setTimeSavedOpen(false);
-          }}
-        />
-      )}
+      <TimeSavedSheet
+        open={timeSavedOpen}
+        summary={timeSaved}
+        onClose={() => {
+          analytics.timeSaved.library.breakdownClosed();
+          setTimeSavedOpen(false);
+        }}
+      />
 
       <ManageTagsDialog open={manageTagsOpen} entries={readableEntries(allEntries)} onClose={() => setManageTagsOpen(false)} />
 
@@ -883,20 +888,24 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
 
       {projects.dialogs}
 
-      {choosingTopics && (
+      {
         <SelectionTopicsPicker
+          open={choosingTopics}
+          returnFocusTo={selectButton.current}
           topics={topics}
-          overviews={selected}
+          overviews={pickedForTopics.current}
           countByTopic={topicCounts(readableEntries(allEntries).map((entry) => entry.overview))}
           onToggle={changeSelectedTopic}
           onCreate={createSelectedTopic}
           onClose={finishChoosingTopics}
         />
-      )}
+      }
 
-      {confirmingDelete && (
+      {
         <DeleteOverviewsDialog
-          count={selected.length}
+          open={confirmingDelete}
+          returnFocusTo={selectButton.current}
+          count={deletingCount.current}
           onDelete={() => {
             analytics.library.selection.deleted({ overviews: selected.length });
             const ids = selected.map(({ overview }) => overview.id);
@@ -909,7 +918,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
             setConfirmingDelete(false);
           }}
         />
-      )}
+      }
 
       <Toast toast={toast.toast} onDismiss={toast.dismiss} />
     </div>

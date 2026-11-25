@@ -1,22 +1,11 @@
 @use "../../../../theme/controls.scss" as controls;
-@use "../../../../theme/dialog.scss" as dialog;
 
-.dialog {
-  @include dialog.dialog-shell;
-  overflow: visible;
-}
-
-.panel {
-  @include dialog.dialog-panel(28.75rem);
+// The form on the shared sheet: a centred card on a desktop, the sheet on a phone.
+.content {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-}
-
-.handle {
-  @include dialog.dialog-handle;
-}
-
-.heading {
-  @include dialog.dialog-heading;
+  padding: 0 0.25rem 1rem;
 }
 
 .adds {
@@ -93,16 +82,11 @@
   color: var(--alert);
 }
 
-.foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
 .quietAction {
   @include controls.surface-pill;
   @include controls.pill-md;
+
+  margin-left: auto;
 }
 
 .primaryAction {
@@ -111,11 +95,6 @@
 }
 
 @media (max-width: 47.9375rem) {
-  .foot {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
   .quietAction,
   .primaryAction {
     min-height: 3rem;

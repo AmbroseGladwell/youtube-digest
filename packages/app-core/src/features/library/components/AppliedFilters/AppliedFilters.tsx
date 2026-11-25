@@ -9,6 +9,7 @@ import styles from "./AppliedFilters.module.scss";
 import { appliedFiltersTestIds } from "./AppliedFiltersTestIds.js";
 
 export interface AppliedFiltersProps {
+  open: boolean;
   anchor: RefObject<HTMLElement | null>;
   chips: readonly LibraryFilterChip[];
   shown: number;
@@ -25,7 +26,7 @@ const SHOWN_BEFORE_MORE = 5;
 const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "overviews"}`;
 
 // Every applied value, grouped as in the menu, each with its own ×: design 399o-18, 399o-25.
-export const AppliedFilters = ({ anchor, chips, shown, onRemove, onClearGroup, onEdit, onReset, onClose }: AppliedFiltersProps) => {
+export const AppliedFilters = ({ open, anchor, chips, shown, onRemove, onClearGroup, onEdit, onReset, onClose }: AppliedFiltersProps) => {
   const asSheet = useMediaQuery(SHEET_QUERY);
   const [opened, setOpened] = useState<LibraryChipGroup[]>([]);
   const groups = LIBRARY_CHIP_GROUPS.map((group) => ({ group, chips: chips.filter((chip) => chip.group === group) })).filter(
@@ -102,7 +103,7 @@ export const AppliedFilters = ({ anchor, chips, shown, onRemove, onClearGroup, o
   if (asSheet) {
     return (
       <BottomSheet
-        open
+        open={open}
         title="Applied filters"
         closeLabel="Close applied filters"
         onClose={onClose}
@@ -119,6 +120,9 @@ export const AppliedFilters = ({ anchor, chips, shown, onRemove, onClearGroup, o
         {body}
       </BottomSheet>
     );
+  }
+  if (!open) {
+    return null;
   }
   return (
     <Popover

@@ -8,6 +8,7 @@ import {
   type FollowUpAssistant,
   type Overview,
 } from "@overview/domain";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -66,7 +67,6 @@ export const ChatConversationMenu = ({
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
-  const sheet = useRef<HTMLDialogElement | null>(null);
   const items = useRef<(HTMLButtonElement | null)[]>([]);
   const detailId = useId();
   const returnFocus = useRef(false);
@@ -92,9 +92,6 @@ export const ChatConversationMenu = ({
   useEffect(() => {
     if (open !== "menu") {
       return;
-    }
-    if (compact && sheet.current !== null && !sheet.current.open) {
-      sheet.current.showModal();
     }
     items.current.find((item) => item instanceof HTMLButtonElement)?.focus({ preventScroll: true });
   }, [open, compact]);
@@ -155,8 +152,6 @@ export const ChatConversationMenu = ({
       onKeyDown={keyDown}
       data-testid={chatConversationMenuTestIds.menu}
     >
-      {compact && <span className={styles.handle} aria-hidden="true" />}
-      {compact && <p className={styles.sheetLabel}>This conversation</p>}
       {offerConversations && (
         <button
           type="button"
@@ -262,33 +257,25 @@ export const ChatConversationMenu = ({
       >
         <StrokeIcon name="more" size={16} />
       </button>
-      {open === "menu" &&
-        (compact
-          ? createPortal(
-              <dialog
-                ref={sheet}
-                className={styles.sheet}
-                aria-label="More for this conversation"
-                onCancel={(event) => {
-                  event.preventDefault();
-                  close();
-                }}
-                onClick={(event) => {
-                  if (event.target === sheet.current) {
-                    close();
-                  }
-                }}
-                data-testid={chatConversationMenuTestIds.sheet}
-              >
-                {list}
-              </dialog>,
-              document.body,
-            )
-          : list)}
-      {open === "choose" && (
+      {compact
+        ? createPortal(
+            <BottomSheet
+              open={open === "menu"}
+              title="This conversation"
+              onClose={close}
+              returnFocusTo={trigger.current}
+              testId={chatConversationMenuTestIds.sheet}
+            >
+              {list}
+            </BottomSheet>,
+            document.body,
+          )
+        : open === "menu" && list}
+      {
         // Escape here closes the chooser, never the chat behind it.
         <div onKeyDown={(event) => event.key === "Escape" && event.preventDefault()}>
           <FollowUpAssistantMenu
+            open={open === "choose"}
             firstTap={false}
             continueIn={true}
             chosen={null}
@@ -310,7 +297,7 @@ export const ChatConversationMenu = ({
             onClose={close}
           />
         </div>
-      )}
+      }
     </div>
   );
 };

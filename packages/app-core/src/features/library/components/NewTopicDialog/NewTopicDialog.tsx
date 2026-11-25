@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useId, useState } from "react";
 import { type OverviewId, type Overview, sourceName } from "@overview/domain";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./NewTopicDialog.module.scss";
 import { newTopicDialogTestIds } from "./NewTopicDialogTestIds.js";
@@ -18,27 +19,18 @@ export interface NewTopicDialogProps {
   onClose: () => void;
 }
 
-const HEADING_ID = "NewTopicDialog-heading";
-
 export const NewTopicDialog = ({ open, unsorted, busy, onCreate, onPick, onClose }: NewTopicDialogProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
+  const formId = useId();
   const [name, setName] = useState("");
   const [chosen, setChosen] = useState<OverviewId[]>([]);
-
-  useEffect(() => {
-    const element = dialog.current;
-    if (!element) {
-      return;
-    }
-    if (open && !element.open) {
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) {
       setName("");
       setChosen([]);
-      element.showModal();
     }
-    if (!open && element.open) {
-      element.close();
-    }
-  }, [open]);
+  }
 
   const trimmed = name.trim();
   const picked = unsorted.filter((overview) => chosen.includes(overview.id));
@@ -56,46 +48,40 @@ export const NewTopicDialog = ({ open, unsorted, busy, onCreate, onPick, onClose
   };
 
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={HEADING_ID}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current) {
-          onClose();
-        }
-      }}
-      data-testid={newTopicDialogTestIds.root}
+    <BottomSheet
+      open={open}
+      title="New topic"
+      onClose={onClose}
+      wide="dialog"
+      width="32.5rem"
+      testId={newTopicDialogTestIds.root}
+      foot={
+        <>
+          <button type="button" className={styles.quietAction} onClick={onClose} data-testid={newTopicDialogTestIds.cancelButton}>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form={formId}
+            className={styles.primaryAction}
+            disabled={trimmed === "" || busy}
+            data-testid={newTopicDialogTestIds.createButton}
+          >
+            Create topic
+            {picked.length > 0 && ` · ${picked.length} ${picked.length === 1 ? "overview" : "overviews"}`}
+          </button>
+        </>
+      }
     >
       <form
-        className={styles.panel}
+        id={formId}
+        className={styles.content}
         method="dialog"
         onSubmit={(event) => {
           event.preventDefault();
           submit();
         }}
       >
-        <span className={styles.handle} aria-hidden="true" />
-
-        <div className={styles.head}>
-          <h2 className={styles.heading} id={HEADING_ID}>
-            New topic
-          </h2>
-          <button
-            type="button"
-            className={styles.close}
-            onClick={onClose}
-            aria-label="Close"
-            data-testid={newTopicDialogTestIds.closeButton}
-          >
-            <StrokeIcon name="close" size={16} />
-          </button>
-        </div>
-
         <div className={styles.field}>
           <label className={styles.label} htmlFor="new-topic-name">
             Name
@@ -147,22 +133,7 @@ export const NewTopicDialog = ({ open, unsorted, busy, onCreate, onPick, onClose
             </div>
           </div>
         )}
-
-        <div className={styles.foot}>
-          <button type="button" className={styles.quietAction} onClick={onClose} data-testid={newTopicDialogTestIds.cancelButton}>
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={styles.primaryAction}
-            disabled={trimmed === "" || busy}
-            data-testid={newTopicDialogTestIds.createButton}
-          >
-            Create topic
-            {picked.length > 0 && ` · ${picked.length} ${picked.length === 1 ? "overview" : "overviews"}`}
-          </button>
-        </div>
       </form>
-    </dialog>
+    </BottomSheet>
   );
 };

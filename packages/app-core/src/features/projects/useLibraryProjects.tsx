@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useKeptWhileClosing } from "../../util/useKeptWhileClosing.js";
 import { useNavigate } from "react-router";
 import { BY_READER, type OverviewId, type ProjectId } from "@overview/domain";
 import { Routes } from "../../app/Routes.js";
@@ -37,6 +38,8 @@ export interface LibraryProjectsHost {
   say: (text: string, undo: () => void) => void;
   focusList: () => void;
   selecting: boolean;
+  // Where focus lands once a picker opened from the selection bar has gone.
+  selectButton?: HTMLElement | null | undefined;
 }
 
 export interface AddedByLine {
@@ -60,6 +63,7 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [keptNow, setKeptNow] = useState<ReadonlySet<string>>(new Set());
   const [filing, setFiling] = useState<Filing | null>(null);
+  const keptFiling = useKeptWhileClosing(filing);
   const now = new Date();
 
   const active = activeSummaries(summaries);
@@ -200,13 +204,18 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
 
   const dialogs = (
     <>
-      {filing !== null && (
+      {keptFiling.kept !== null && (
         <ProjectPicker
+          open={keptFiling.open}
+          returnFocusTo={host.selectButton ?? null}
           summaries={active}
-          holding={(projectId) => holding(projectId, filing.overviews)}
-          of={filing.overviews.length}
+          holding={(projectId) => holding(projectId, keptFiling.kept!.overviews)}
+          of={keptFiling.kept.overviews.length}
           onToggle={fileSelection}
           onNewProject={() => {
+            if (filing === null) {
+              return;
+            }
             setFiling(null);
             newProject.open(
               "selection",
@@ -215,14 +224,18 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
             );
           }}
           onClose={() => {
+            if (filing === null) {
+              return;
+            }
             setFiling(null);
             finishFiling(filing);
           }}
         />
       )}
       {newProject.dialog}
-      {confirmingDelete && current !== null && (
+      {current !== null && (
         <DeleteProjectDialog
+          open={confirmingDelete}
           name={current.project.name}
           overviews={current.items.length}
           assistantConnected={assistants.any}

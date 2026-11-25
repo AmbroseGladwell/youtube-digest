@@ -10,6 +10,8 @@ import type { ProjectSummary } from "../../util/projectSummaries.js";
 import { projectPickerTestIds } from "./ProjectPickerTestIds.js";
 
 export interface ProjectPickerProps {
+  open?: boolean;
+  returnFocusTo?: HTMLElement | null | undefined;
   // Last changed first.
   summaries: ProjectSummary[];
   // How many of the overviews being filed each project holds, out of `of`.
@@ -39,8 +41,24 @@ const inOrderAsOpened = (summaries: ProjectSummary[], openedOrder: ProjectId[]):
   return [...summaries].sort((left, right) => place(left.project.id) - place(right.project.id));
 };
 
-export const ProjectPicker = ({ summaries, holding, of, onToggle, onNewProject, onClose }: ProjectPickerProps) => {
-  const [openedOrder] = useState(() => summaries.map(({ project }) => project.id));
+export const ProjectPicker = ({
+  open = true,
+  returnFocusTo,
+  summaries,
+  holding,
+  of,
+  onToggle,
+  onNewProject,
+  onClose,
+}: ProjectPickerProps) => {
+  const [openedOrder, setOpenedOrder] = useState(() => summaries.map(({ project }) => project.id));
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) {
+      setOpenedOrder(summaries.map(({ project }) => project.id));
+    }
+  }
   const ordered = inOrderAsOpened(summaries, openedOrder);
   const options = ordered.map(({ project, items }) => {
     const held = holding(project.id);
@@ -55,6 +73,8 @@ export const ProjectPicker = ({ summaries, holding, of, onToggle, onNewProject, 
 
   return (
     <ChecklistPicker
+      open={open}
+      returnFocusTo={returnFocusTo}
       heading={of === 1 ? "Add to projects" : `Projects for ${of} overviews`}
       hint={of === 1 ? "Changes save as you go." : sharedChecklistHint}
       groupLabel="Projects"

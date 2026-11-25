@@ -6,5 +6,5 @@ export const lineRangeTagTestIds = {
   watchLink: "LineRangeTag.watchLink",
   skipButton: "LineRangeTag.skipButton",
   transcriptButton: "LineRangeTag.transcriptButton",
-  scrim: "LineRangeTag.scrim",
+  sheet: "LineRangeTag.sheet",
 };

@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from "react";
+import { useRef } from "react";
 import { createPortal } from "react-dom";
 import type { Overview, TopicId } from "@overview/domain";
 import { useCreateTopicMutation } from "../../../overviews/mutations/useCreateTopicMutation.js";
@@ -12,6 +12,8 @@ import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { TopicPicker } from "../TopicPicker/TopicPicker.js";
+import { topicPickerTestIds } from "../TopicPicker/TopicPickerTestIds.js";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import styles from "./TopicLine.module.scss";
 import { topicLineTestIds } from "./TopicLineTestIds.js";
 
@@ -21,9 +23,6 @@ export interface TopicLineProps {
   onEditingChange: (editing: boolean) => void;
 }
 
-// AppShell's pane has a view-transition-name, making it the containing block of a fixed sheet.
-const sheet = (isPhone: boolean, content: ReactNode) => (isPhone ? createPortal(content, document.body) : content);
-
 export const TopicLine = ({ overview, editing, onEditingChange }: TopicLineProps) => {
   const topicsQuery = useTopicsQuery();
   const libraryQuery = useOverviewsWithStateQuery();
@@ -31,6 +30,8 @@ export const TopicLine = ({ overview, editing, onEditingChange }: TopicLineProps
   const createTopic = useCreateTopicMutation();
   const root = useRef<HTMLDivElement | null>(null);
   const picker = useRef<HTMLDivElement | null>(null);
+  const search = useRef<HTMLInputElement | null>(null);
+  const addButton = useRef<HTMLButtonElement | null>(null);
   const isPhone = useIsPhone();
   const analytics = useReaderAnalytics();
 
@@ -39,7 +40,7 @@ export const TopicLine = ({ overview, editing, onEditingChange }: TopicLineProps
     onEditingChange(false);
   };
 
-  useDismissOnOutside(editing, close, root, picker);
+  useDismissOnOutside(editing && !isPhone, close, root, picker);
 
   const topics = topicsQuery.data ?? [];
   const selected = topics.filter((topic) => overview.topicIds.includes(topic.id));
@@ -58,8 +59,42 @@ export const TopicLine = ({ overview, editing, onEditingChange }: TopicLineProps
     });
   };
 
+  const pickerProps = {
+    topics,
+    selected,
+    countByTopic: counts,
+    busy,
+    onToggle: toggle,
+    onCreate: (name: string) => {
+      analytics.topics.created();
+      createTopic.mutate({ name, overviews: [overview] });
+    },
+    onClose: close,
+  };
+  // Design 14c on a phone: the shared sheet, kept in the tree so it can leave as it arrived.
+  const phoneSheet =
+    isPhone &&
+    createPortal(
+      <BottomSheet
+        open={editing}
+        title="Edit topics"
+        onClose={close}
+        initialFocus={search}
+        returnFocusTo={addButton.current}
+        testId={topicLineTestIds.sheet}
+        foot={
+          <button type="button" className={styles.sheetDone} onClick={close} data-testid={topicPickerTestIds.doneButton}>
+            Done
+          </button>
+        }
+      >
+        <TopicPicker ref={picker} inSheet searchRef={search} {...pickerProps} />
+      </BottomSheet>,
+      document.body,
+    );
+
   if (selected.length === 0 && !editing) {
-    return null;
+    return phoneSheet || null;
   }
 
   return (
@@ -83,30 +118,20 @@ export const TopicLine = ({ overview, editing, onEditingChange }: TopicLineProps
 
       {editing && (
         <>
-          <button type="button" className={styles.add} onClick={close} aria-expanded={true} data-testid={topicLineTestIds.addButton}>
+          <button
+            type="button"
+            ref={addButton}
+            className={styles.add}
+            onClick={close}
+            aria-expanded={true}
+            data-testid={topicLineTestIds.addButton}
+          >
             <StrokeIcon name="plus" size={12} /> Add
           </button>
-          {sheet(
-            isPhone,
-            <>
-              <span className={styles.scrim} onClick={close} aria-hidden="true" data-testid={topicLineTestIds.scrim} />
-              <TopicPicker
-                ref={picker}
-                topics={topics}
-                selected={selected}
-                countByTopic={counts}
-                busy={busy}
-                onToggle={toggle}
-                onCreate={(name) => {
-                  analytics.topics.created();
-                  createTopic.mutate({ name, overviews: [overview] });
-                }}
-                onClose={close}
-              />
-            </>,
-          )}
+          {!isPhone && <TopicPicker ref={picker} {...pickerProps} />}
         </>
       )}
+      {phoneSheet}
     </span>
   );
 };

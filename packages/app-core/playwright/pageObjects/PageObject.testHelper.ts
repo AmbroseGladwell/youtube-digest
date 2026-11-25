@@ -240,6 +240,7 @@ export abstract class PageObject {
 
   verifyFieldsIdentifyThemselves = () =>
     this.step("verifyFieldsIdentifyThemselves", async () => {
+      await expect(this.locatorOrPage().locator(TEXT_LIKE_FIELDS).first()).toBeAttached();
       const fields = await this.locatorOrPage()
         .locator(TEXT_LIKE_FIELDS)
         .evaluateAll((fields) =>

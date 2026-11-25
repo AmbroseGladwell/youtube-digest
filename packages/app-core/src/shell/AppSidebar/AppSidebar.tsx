@@ -280,16 +280,14 @@ export const AppSidebar = ({ onHide }: AppSidebarProps) => {
           }}
         />
       )}
-      {timeSavedOpen && (
-        <TimeSavedSheet
-          open
-          summary={timeSaved}
-          onClose={() => {
-            analytics.timeSaved.library.breakdownClosed();
-            setTimeSavedOpen(false);
-          }}
-        />
-      )}
+      <TimeSavedSheet
+        open={timeSavedOpen}
+        summary={timeSaved}
+        onClose={() => {
+          analytics.timeSaved.library.breakdownClosed();
+          setTimeSavedOpen(false);
+        }}
+      />
     </aside>
   );
 };

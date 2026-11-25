@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { feedbackDialogTestIds } from "../../src/features/feedback/components/FeedbackDialog/FeedbackDialogTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class FeedbackDialogPageObject extends PageObject {
@@ -69,15 +70,16 @@ export class FeedbackDialogPageObject extends PageObject {
   verifyThanks = () =>
     this.step("verifyThanks", async () => {
       await expect(this.get(feedbackDialogTestIds.sent)).toHaveAttribute("role", "status");
-      await expect(this.get(feedbackDialogTestIds.sent).getByRole("heading")).toHaveText("Thanks, we read every one.");
-      await expect(this.get(feedbackDialogTestIds.sent).getByRole("heading")).toBeFocused();
+      const heading = this.get(feedbackDialogTestIds.root).getByRole("heading", { level: 2 });
+      await expect(heading).toHaveText("Thanks, we read every one.");
+      await expect(heading).toBeFocused();
     });
 
   clickDone = () => this.step("clickDone", () => this.click(feedbackDialogTestIds.doneButton));
 
   clickCancel = () => this.step("clickCancel", () => this.click(feedbackDialogTestIds.cancelButton));
 
-  clickClose = () => this.step("clickClose", () => this.click(feedbackDialogTestIds.closeButton));
+  clickClose = () => this.step("clickClose", () => this.click(this.get(feedbackDialogTestIds.root).getByTestId(bottomSheetTestIds.close)));
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 

@@ -23,6 +23,7 @@ test.describe("on a touch screen", () => {
   test("the settings page's fields are large enough that iOS does not zoom into them", async ({ launcher }) => {
     await launcher.launch();
     const settings = await (await launcher.appShell.openSettings()).openSection("keys");
+    await settings.apiKeysPanel.openAddKey("anthropic");
 
     await settings.verifyFieldFontSizes(expectNoneBelowZoomThreshold);
   });
@@ -39,6 +40,7 @@ test.describe("on a touch screen", () => {
 test("a mouse keeps the design's smaller field sizes", async ({ launcher }) => {
   await launcher.launch();
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
+  await settings.apiKeysPanel.openAddKey("anthropic");
 
   await settings.verifyFieldFontSizes((sizes) => expect(sizes.some((size) => size < IOS_ZOOM_THRESHOLD_PX)).toBe(true));
 });

@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useKeptWhileClosing } from "../../../../util/useKeptWhileClosing.js";
 import {
   FOLLOW_UP_ASSISTANTS,
   FOLLOW_UP_QUESTIONS_SECTION,
@@ -128,6 +129,7 @@ export const FollowUpQuestions = ({
   const [set, setSet] = useState(0);
   const [motion, setMotion] = useState<Motion>(() => (prefersReducedMotion() ? "idle" : "arriving"));
   const [menu, setMenu] = useState<Menu | null>(null);
+  const menuSheet = useKeptWhileClosing(menu);
   const [pressed, setPressed] = useState<number | null>(null);
   const [said, setSaid] = useState("");
   const { toast, show: showToast } = useToast();
@@ -454,17 +456,20 @@ export const FollowUpQuestions = ({
           </span>
         </div>
       )}
-      {menu !== null && (
+      {menuSheet.kept !== null && (
         <FollowUpAssistantMenu
-          firstTap={menu.firstTap}
+          open={menuSheet.open}
+          firstTap={menuSheet.kept.firstTap}
           chosen={assistant}
           offerHere={offerHere}
           hereChosen={here}
           connectedTo={connectedTo}
           anyConnection={anyConnection}
           asSheet={compact}
-          top={menu.top}
-          inside={menu.firstTap ? { current: bubbles.current[menu.index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null } : changeButton}
+          top={menuSheet.kept.top}
+          inside={
+            menuSheet.kept.firstTap ? { current: bubbles.current[menuSheet.kept.index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null } : changeButton
+          }
           onChoose={chooseFromMenu}
           onChooseHere={chooseHereFromMenu}
           onCopyQuestion={copyQuestion}

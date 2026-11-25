@@ -1,101 +1,11 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 3a/3b. The <dialog> carries no paint: the entrance animates it, so travel is a share of its height.
-$enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
-
-.dialog {
-  border: 0;
-  padding: 0;
-  margin: auto;
-  max-width: none;
-  max-height: none;
-  background: transparent;
-  color: var(--ink);
-}
-
-.dialog::backdrop {
-  background: var(--scrim);
-}
-
-// The scrim fades first, so the dim reads as the cause and the dialog as the consequence.
-.dialog[open] {
-  animation: dialogFadeUp 480ms $enter-easing 80ms both;
-}
-
-.dialog[open]::backdrop {
-  animation: scrimFade 260ms ease both;
-}
-
-@keyframes scrimFade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes dialogFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes sheetTravel {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: none;
-  }
-}
-
-// Taller than the window (a playlist preview with its paces open), the panel scrolls.
-.panel {
-  width: min(33.75rem, calc(100vw - 2.5rem));
-  max-height: calc(100dvh - 2.5rem);
-  overflow-y: auto;
+// Design 3a/3b on the shared sheet: a centred card on a desktop, the sheet on a phone.
+.content {
   display: flex;
   flex-direction: column;
   gap: 1.125rem;
-  background: var(--dialog);
-  border-radius: var(--radius-dialog);
-  box-shadow: var(--shadow-dialog);
-  padding: 1.625rem 1.75rem 1.5rem;
-}
-
-.handle {
-  display: none;
-  width: 2.5rem;
-  height: 0.25rem;
-  border-radius: var(--radius-badge);
-  background: var(--surface);
-  align-self: center;
-}
-
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.heading {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-weight: 400;
-  font-size: 1.75rem;
-  line-height: 1.12;
-}
-
-.close {
-  @include controls.surface-pill;
-  @include controls.circle(2.25rem);
+  padding: 0 0.25rem 1.25rem;
 }
 
 .source {
@@ -185,29 +95,6 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 }
 
 @media (max-width: 47.9375rem) {
-  .dialog {
-    margin: auto 0 0;
-    width: 100%;
-  }
-
-  .dialog[open] {
-    animation-name: sheetTravel;
-  }
-
-  .panel {
-    width: 100%;
-    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
-    padding: 0.75rem 1.25rem 1.25rem;
-  }
-
-  .handle {
-    display: block;
-  }
-
-  .heading {
-    font-size: 1.5rem;
-  }
-
   .foot {
     flex-direction: column;
     align-items: stretch;
