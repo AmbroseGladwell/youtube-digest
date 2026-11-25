@@ -282,6 +282,7 @@ export class BackendSimulator {
   #chatReplies: ChatReply[] = [];
   #chatQuestions: ChatQuestionSent[] = [];
   #chatRecords = new Map<string, Chat & { rev: number }>();
+  #lastMonthOursSpent = false;
   #chatUsage: ChatUsage = { plan: "free", resetsOn: "2026-10-01", used: 0, limit: 100, share: 0, libraryFits: true };
   #generatedOutputOverrides: Record<string, unknown> = {};
   #feed: RecordChange[] = [];
@@ -1102,6 +1103,7 @@ export class BackendSimulator {
         own: { used: this.#ownMonthSpent ? limits.own : ownUsed, limit: limits.own },
         saves: { used: this.#savesUsed, limit: SIMULATED_SAVES[this.#accountPlan] },
         ...(this.#transcriptionUsage === undefined ? {} : { transcription: this.#transcriptionUsage }),
+        lastMonthOursSpent: this.#lastMonthOursSpent,
       };
     };
 
@@ -1973,6 +1975,9 @@ export class BackendSimulator {
     },
     monthHasSaved: (saves: number): void => {
       this.#savesUsed = saves;
+    },
+    lastMonthWasSpent: (): void => {
+      this.#lastMonthOursSpent = true;
     },
     monthHasMade: (made: { ours?: number; own?: number }): void => {
       this.#madeEarlierThisMonth = { ours: made.ours ?? 0, own: made.own ?? 0 };

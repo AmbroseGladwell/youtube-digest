@@ -201,6 +201,22 @@ diamond (`StrokeIcon` `gem`, drawn at a 1.8 stroke, muted at rest and ink on hov
 - The soft wall's button and the @ picker's and a saved item's offers read Get Overview Plus,
   and the wall's Plus row says "From £7.99 a month, cancel anytime".
 
+### The counter and the reset line in Create (351c, 351d)
+
+`UsageLine` in Create and in the panel (`offersPlus`) carries both:
+
+- **The counter**, for Free and BYO Plus while the next overview is on us: quiet "3 of 5 left
+  this month · More on 1 December" (BYO Plus: "1 of 10 on us left this month"), and at the last
+  one "· See plans", which opens the paid plans and can't be closed. It replaces the old on-us
+  line for them; Plus, and an overview on the reader's own key, keep the plain line.
+- **The reset line**, in the counter's place, once in a usage month and only after a month whose
+  overviews on us were all made (`lastMonthOursSpent`): "Your 5 are back for December. Make more
+  with Plus · See plans", led by the diamond, with no ×.
+
+The home hero's line, which sits behind Create, is quiet (`usePlanPrompt`'s `quiet`): the same
+counter, but no reset line and no events, so neither is counted twice. Phone Create was already
+the bottom sheet 351c-3 draws (Link label, full-width Make my overview, the counter, Cancel).
+
 ### The plans modal (351m)
 
 Outside Settings, every See plans, Get Overview Plus and Upgrade opens `PlansModal`: **the paid

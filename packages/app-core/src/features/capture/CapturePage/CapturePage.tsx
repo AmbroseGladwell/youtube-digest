@@ -452,7 +452,7 @@ export const CapturePage = () => {
           <EpisodeWordsNote words={episodeTab.words} episodeSeconds={episodeTab.episode.durationSeconds} />
         )}
 
-        {keysReady && limit === null && !episodeStopped && <UsageLine testIds={capturePageTestIds.usageLine} narrow />}
+        {keysReady && limit === null && !episodeStopped && <UsageLine testIds={capturePageTestIds.usageLine} narrow offersPlus />}
 
         {offeredPage !== null && heldId === null && keysReady && limit === null && pageAccess === false && (
           <p className={styles.note} data-testid={capturePageTestIds.firstTimeNote}>

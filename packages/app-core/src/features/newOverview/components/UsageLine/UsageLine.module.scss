@@ -10,3 +10,29 @@
   color: var(--accent);
   text-decoration: none;
 }
+
+// The counter and the reset line (351c, 351d): the count in ink, the rest muted, See plans underlined.
+.offer {
+  b {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  svg {
+    margin-right: 0.375rem;
+    vertical-align: -0.125rem;
+    color: var(--muted);
+  }
+}
+
+.plansLink {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

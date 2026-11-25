@@ -39,7 +39,7 @@ test("on Free with a key, the line counts the reader's own key first, and counts
   await again.form.verifyUsageLineReads("6 of 10 left on your own key this month · Resets 1 November · Plan");
 });
 
-test("once the reader's own key is spent, the line says this one uses ours and mentions Plus, and Generate stays", async ({
+test("once the reader's own key is spent, the counter counts the overviews on us, and Generate stays", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -48,9 +48,7 @@ test("once the reader's own key is spent, the line says this one uses ours and m
   await launcher.launch(SIGNED_IN);
   const dialog = await launcher.appShell.openNewOverview();
 
-  await dialog.form.verifyUsageLineReads(
-    "This month's 10 on your own key are made, so this one is on us: 4 of 5 left. · Get more overviews with Plus · See plans",
-  );
+  await dialog.form.verifyUsageLineReads("4 of 5 left this month · More on 1 November");
   await dialog.form.verifyGenerateButtonEnabled();
 });
 

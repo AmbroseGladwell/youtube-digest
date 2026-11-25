@@ -2,6 +2,7 @@
 export const usageLineTestIds = (prefix: string) => ({
   root: `${prefix}.usageLine.root`,
   planLink: `${prefix}.usageLine.planLink`,
+  seePlans: `${prefix}.usageLine.seePlans`,
 });
 
 export type UsageLineTestIds = ReturnType<typeof usageLineTestIds>;
