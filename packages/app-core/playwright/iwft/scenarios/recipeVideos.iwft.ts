@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 import { VideoId } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
+import { bottomSheetTestIds } from "../../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 import { makeRecipeVideoOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
@@ -112,7 +113,7 @@ test("cooking a recipe video offers each step's part of the video, and a step wi
     "src",
     "https://www.youtube-nocookie.com/embed/example?start=65&end=130&autoplay=1&rel=0",
   );
-  await page.getByTestId("CookingStepVideoSheet.close").click();
+  await page.getByTestId("CookingStepVideoSheet.root").getByTestId(bottomSheetTestIds.close).click();
 
   await mode.getByTestId("CookingMode.forward").click();
   await mode.getByTestId("CookingMode.forward").click();

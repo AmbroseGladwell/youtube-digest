@@ -1,42 +1,23 @@
 @use "../../../../theme/controls.scss" as controls;
-@use "../../../../theme/dialog.scss" as dialog;
 
 // Designs 288ae–288ag: the cooking leave sheet's shape (284x), with staying filled.
-.dialog {
-  @include dialog.dialog-shell;
-}
-
-.panel {
-  @include dialog.dialog-panel;
-
-  gap: 0;
-}
-
-.handle {
-  @include dialog.dialog-handle;
-
-  margin: 0 0 0.75rem;
-}
-
 .heading {
-  @include dialog.dialog-heading;
-
-  margin: 0 0.25rem;
-  font-size: 1.375rem;
+  margin: 0;
+  font: 400 1.375rem/1.1 var(--font-heading);
 }
 
 .sentence {
-  margin: 0.5rem 0.25rem 0;
+  margin: 0 0.25rem 0.75rem;
   color: var(--label);
   font-size: 0.9375rem;
   line-height: 1.5;
 }
 
 .buttons {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
-  margin: 1.125rem 0 0;
 }
 
 .stay {

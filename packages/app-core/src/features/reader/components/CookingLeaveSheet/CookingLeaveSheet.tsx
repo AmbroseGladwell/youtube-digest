@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { BottomSheet, NARROW_SHEET_WIDTH } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { isPaused, timeLeftMs, type CookingTimer } from "../../util/cookingTimers.js";
 import { countWord, timerClock, timerFullName, timerSpokenName } from "../../util/timerText.js";
 import { TimerRing } from "../TimerRing/TimerRing.js";
@@ -75,99 +76,77 @@ export const CookingLeaveSheet = ({
   onKeep,
   onStop,
 }: CookingLeaveSheetProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
   const first = useRef<HTMLButtonElement | null>(null);
   const onlyRinging = running.length === 0;
   const heading = headingFor(running, ringing);
   const othersText = othersLine(others);
 
-  useEffect(() => {
-    const element = dialog.current;
-    if (element === null) {
-      return;
-    }
-    if (open && !element.open) {
-      element.showModal();
-      first.current?.focus();
-    }
-    if (!open && element.open) {
-      element.close();
-    }
-  }, [open]);
-
   return (
-    <dialog
-      ref={dialog}
-      className={`${styles.dialog} ${web ? styles.web : ""}`}
+    <BottomSheet
+      open={open}
+      title={heading}
+      onClose={onStay}
+      closeLabel="Keep cooking"
+      wide="dialog"
+      width={web ? NARROW_SHEET_WIDTH : undefined}
       role="alertdialog"
-      aria-label={heading}
-      onCancel={(event) => {
-        event.preventDefault();
-        onStay();
-      }}
-      onKeyDown={(event) => {
-        if (event.key !== "Escape") {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        onStay();
-      }}
-      data-testid={cookingLeaveSheetTestIds.root}
-    >
-      {open && (
-        <div className={styles.panel}>
-          <span className={styles.handle} aria-hidden="true" />
-          <h2 className={styles.heading} data-testid={cookingLeaveSheetTestIds.heading}>
-            {heading}
-          </h2>
-          <p className={styles.sentence} data-testid={cookingLeaveSheetTestIds.sentence}>
-            {sentenceFor(running, ringing, now)}
-          </p>
-          {running.length > 1 && (
-            <ul className={styles.list}>
-              {running.map((timer) => {
-                const left = timeLeftMs(timer, now);
-                return (
-                  <li key={timer.id} className={styles.item} data-testid={cookingLeaveSheetTestIds.timer}>
-                    <TimerRing leftMs={left} totalMs={timer.totalMs} paused={isPaused(timer)} size={26} />
-                    <span>{timerFullName(timer)}</span>
-                    <b>{timerClock(left)}</b>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {othersText !== null && (
-            <p className={styles.others} data-testid={cookingLeaveSheetTestIds.others}>
-              {othersText}
-            </p>
-          )}
-          <div className={styles.buttons}>
-            <button
-              type="button"
-              ref={first}
-              className={styles.keep}
-              onClick={onlyRinging ? onStop : onKeep}
-              data-testid={onlyRinging ? cookingLeaveSheetTestIds.stop : cookingLeaveSheetTestIds.keep}
-            >
-              {onlyRinging ? "Dismiss and leave" : "Keep running"}
-            </button>
-            <button
-              type="button"
-              className={styles.leave}
-              onClick={onlyRinging ? onKeep : onStop}
-              data-testid={onlyRinging ? cookingLeaveSheetTestIds.keep : cookingLeaveSheetTestIds.stop}
-            >
-              {leaveLabel(onlyRinging, running, ringing)}
-            </button>
-            <button type="button" className={styles.stay} onClick={onStay} data-testid={cookingLeaveSheetTestIds.stay}>
-              Keep cooking
-              {stayKey}
-            </button>
-          </div>
+      initialFocus={first}
+      testId={cookingLeaveSheetTestIds.root}
+      head={
+        <h2 className={styles.heading} data-testid={cookingLeaveSheetTestIds.heading}>
+          {heading}
+        </h2>
+      }
+      foot={
+        <div className={`${styles.buttons} ${web ? styles.web : ""}`}>
+          <button
+            type="button"
+            ref={first}
+            className={styles.keep}
+            onClick={onlyRinging ? onStop : onKeep}
+            data-testid={onlyRinging ? cookingLeaveSheetTestIds.stop : cookingLeaveSheetTestIds.keep}
+          >
+            {onlyRinging ? "Dismiss and leave" : "Keep running"}
+          </button>
+          <button
+            type="button"
+            className={styles.leave}
+            onClick={onlyRinging ? onKeep : onStop}
+            data-testid={onlyRinging ? cookingLeaveSheetTestIds.keep : cookingLeaveSheetTestIds.stop}
+          >
+            {leaveLabel(onlyRinging, running, ringing)}
+          </button>
+          <button type="button" className={styles.stay} onClick={onStay} data-testid={cookingLeaveSheetTestIds.stay}>
+            Keep cooking
+            {stayKey}
+          </button>
         </div>
-      )}
-    </dialog>
+      }
+    >
+      <div className={styles.content}>
+        <p className={styles.sentence} data-testid={cookingLeaveSheetTestIds.sentence}>
+          {sentenceFor(running, ringing, now)}
+        </p>
+        {running.length > 1 && (
+          <ul className={styles.list}>
+            {running.map((timer) => {
+              const left = timeLeftMs(timer, now);
+              return (
+                <li key={timer.id} className={styles.item} data-testid={cookingLeaveSheetTestIds.timer}>
+                  <TimerRing leftMs={left} totalMs={timer.totalMs} paused={isPaused(timer)} size={26} />
+                  <span>{timerFullName(timer)}</span>
+                  <b>{timerClock(left)}</b>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {othersText !== null && (
+          <p className={styles.others} data-testid={cookingLeaveSheetTestIds.others}>
+            {othersText}
+          </p>
+        )}
+      </div>
+    </BottomSheet>
   );
 };

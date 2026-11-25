@@ -1,33 +1,8 @@
 @use "../../../../theme/controls.scss" as controls;
-@use "../../../../theme/dialog.scss" as dialog;
-
-.dialog {
-  @include dialog.dialog-shell;
-}
-
-.panel {
-  @include dialog.dialog-panel;
-
-  gap: 0;
-}
-
-.handle {
-  @include dialog.dialog-handle;
-
-  margin: 0 0 0.75rem;
-}
-
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0.25rem;
-}
 
 .heading {
-  @include dialog.dialog-heading;
-
-  font-size: 1.375rem;
+  margin: 0;
+  font: 400 1.3125rem/1.1 var(--font-heading);
 }
 
 .titles {
@@ -43,13 +18,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.close {
-  @include controls.surface-pill;
-
-  width: 2.75rem;
-  height: 2.75rem;
 }
 
 .clock {
@@ -86,8 +54,15 @@
 .cancel {
   @include controls.surface-pill;
 
+  flex: 1;
   height: 3.5rem;
   border-radius: 1.25rem;
   color: var(--alert);
   font-size: 1rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.25rem 0.5rem;
 }

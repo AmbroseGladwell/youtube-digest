@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef } from "react";
 import { recipeStepGroups, type MethodAmount, type RecipeAction, type RecipeStep } from "@overview/domain";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OvenText } from "../OvenText/OvenText.js";
 import styles from "./CookingStepsSheet.module.scss";
@@ -26,57 +26,11 @@ export const CookingStepsSheet = ({
   onChoose,
   onClose,
 }: CookingStepsSheetProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
-  const headingId = useId();
   const current = actions[at]?.step ?? 0;
 
-  useEffect(() => {
-    const element = dialog.current;
-    if (element === null) {
-      return;
-    }
-    if (open && !element.open) {
-      element.showModal();
-    }
-    if (!open && element.open) {
-      element.close();
-    }
-  }, [open]);
-
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={headingId}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current) {
-          onClose();
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key !== "Escape") {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        onClose();
-      }}
-      data-testid={cookingStepsSheetTestIds.root}
-    >
-      <div className={styles.panel}>
-        <span className={styles.handle} aria-hidden="true" />
-        <div className={styles.head}>
-          <h2 className={styles.heading} id={headingId}>
-            Steps
-          </h2>
-          <button type="button" className={styles.close} aria-label="Close" onClick={onClose}>
-            <StrokeIcon name="close" size={16} />
-          </button>
-        </div>
+    <BottomSheet open={open} title="Steps" onClose={onClose} wide="dialog" testId={cookingStepsSheetTestIds.root}>
+      <div className={styles.content}>
         {recipeStepGroups(steps).map(({ name, start, steps: grouped }) => (
           <div key={start}>
             {name !== null && <h3 className={styles.group}>{name}</h3>}
@@ -111,6 +65,6 @@ export const CookingStepsSheet = ({
           </div>
         ))}
       </div>
-    </dialog>
+    </BottomSheet>
   );
 };

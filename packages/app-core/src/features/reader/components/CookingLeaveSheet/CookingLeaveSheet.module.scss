@@ -1,37 +1,16 @@
 @use "../../../../theme/controls.scss" as controls;
-@use "../../../../theme/dialog.scss" as dialog;
-
-.dialog {
-  @include dialog.dialog-shell;
-}
-
-.panel {
-  @include dialog.dialog-panel;
-
-  gap: 0;
-  padding-top: 1.375rem;
-
-  .web & {
-    width: min(28.75rem, calc(100vw - 2.5rem));
-    border-radius: 1.5rem;
-  }
-}
-
-.handle {
-  @include dialog.dialog-handle;
-
-  margin: -0.625rem 0 0.75rem;
-}
 
 .heading {
-  @include dialog.dialog-heading;
+  margin: 0;
+  font: 400 1.5625rem/1.1 var(--font-heading);
+}
 
-  margin: 0 0.25rem;
-  font-size: 1.5625rem;
+.content {
+  padding: 0 0.25rem 0.75rem;
 }
 
 .sentence {
-  margin: 0.5rem 0.25rem 0;
+  margin: 0;
   font-size: 0.9375rem;
   line-height: 1.5;
   text-wrap: pretty;
@@ -70,10 +49,10 @@
 }
 
 .buttons {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
-  margin: 1.125rem 0 0;
 }
 
 .keep {

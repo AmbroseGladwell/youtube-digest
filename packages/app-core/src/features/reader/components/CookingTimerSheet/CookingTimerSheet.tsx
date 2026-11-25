@@ -1,5 +1,7 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useKeptWhileClosing } from "../../../../util/useKeptWhileClosing.js";
 import { isPaused, timeLeftMs, type CookingTimer } from "../../util/cookingTimers.js";
 import { timerAtClock, timerClock, timerFullName, timerLength, timerSpokenName } from "../../util/timerText.js";
 import styles from "./CookingTimerSheet.module.scss";
@@ -7,6 +9,8 @@ import { cookingTimerSheetTestIds } from "./CookingTimerSheetTestIds.js";
 
 export interface CookingTimerSheetProps {
   timer: CookingTimer | null;
+  // When the owner keeps its own timer while closing; otherwise open while there's a timer.
+  open?: boolean;
   now: number;
   onPause: (id: number) => void;
   onResume: (id: number) => void;
@@ -19,7 +23,8 @@ export interface CookingTimerSheetProps {
 }
 
 export const CookingTimerSheet = ({
-  timer,
+  timer: given,
+  open: openGiven,
   now,
   onPause,
   onResume,
@@ -29,66 +34,42 @@ export const CookingTimerSheet = ({
   recipeTitle = null,
   wayBack = null,
 }: CookingTimerSheetProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
-  const open = timer !== null;
-
-  useEffect(() => {
-    const element = dialog.current;
-    if (element === null) {
-      return;
-    }
-    if (open && !element.open) {
-      element.showModal();
-    }
-    if (!open && element.open) {
-      element.close();
-    }
-  }, [open]);
-
+  const kept = useKeptWhileClosing(given);
+  const timer = kept.kept;
+  const open = openGiven ?? kept.open;
   const left = timer === null ? 0 : timeLeftMs(timer, now);
   const paused = timer !== null && isPaused(timer);
   const length = timer === null ? "" : timerLength(Math.round(timer.totalMs / 1000));
 
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-label={timer === null ? undefined : timerSpokenName(timer)}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog.current) {
-          onClose();
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key !== "Escape") {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        onClose();
-      }}
-      data-testid={cookingTimerSheetTestIds.root}
+    <BottomSheet
+      open={open && timer !== null}
+      title={timer === null ? "Timer" : timerSpokenName(timer)}
+      onClose={onClose}
+      wide="dialog"
+      testId={cookingTimerSheetTestIds.root}
+      head={
+        timer !== null && (
+          <span className={styles.titles}>
+            <h2 className={styles.heading}>{timerFullName(timer)}</h2>
+            {recipeTitle !== null && (
+              <span className={styles.recipe} data-testid={cookingTimerSheetTestIds.recipe}>
+                {recipeTitle}
+              </span>
+            )}
+          </span>
+        )
+      }
+      foot={
+        timer !== null && (
+          <button type="button" className={styles.cancel} onClick={() => onCancel(timer.id)} data-testid={cookingTimerSheetTestIds.cancel}>
+            Cancel timer
+          </button>
+        )
+      }
     >
       {timer !== null && (
-        <div className={styles.panel}>
-          <span className={styles.handle} aria-hidden="true" />
-          <div className={styles.head}>
-            <span className={styles.titles}>
-              <h2 className={styles.heading}>{timerFullName(timer)}</h2>
-              {recipeTitle !== null && (
-                <span className={styles.recipe} data-testid={cookingTimerSheetTestIds.recipe}>
-                  {recipeTitle}
-                </span>
-              )}
-            </span>
-            <button type="button" className={styles.close} aria-label="Close" onClick={onClose}>
-              <StrokeIcon name="close" size={16} />
-            </button>
-          </div>
+        <div className={styles.content}>
           <p className={styles.clock} data-testid={cookingTimerSheetTestIds.clock}>
             {timerClock(left)}
           </p>
@@ -131,11 +112,8 @@ export const CookingTimerSheet = ({
             </button>
           </div>
           {wayBack}
-          <button type="button" className={styles.cancel} onClick={() => onCancel(timer.id)} data-testid={cookingTimerSheetTestIds.cancel}>
-            Cancel timer
-          </button>
         </div>
       )}
-    </dialog>
+    </BottomSheet>
   );
 };
