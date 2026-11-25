@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { TranscriptSearchResponse } from "@overview/domain";
 import { makeOverviewWithState, makeUnreadableEntry } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
+import { savedCaptureFrom } from "../../captures/types/SavedCaptureFactory.testHelper.js";
+import { libraryEntryId } from "../../overviews/types/LibraryEntry.js";
 import { TRANSCRIPT_ROWS, transcriptEntries } from "./transcriptEntries.js";
 
 const searching = { ...NO_LIBRARY_FILTERS, query: "zatsiorsky" };
@@ -19,7 +21,7 @@ describe("transcriptEntries", () => {
     const first = makeOverviewWithState();
     const second = makeOverviewWithState();
     const result = transcriptEntries([second, first], searching, matchesFor(first.overview.id, second.overview.id), new Set());
-    expect(result.map((entry) => [entry.overview.id, entry.moment.startMs])).toEqual([
+    expect(result.map((entry) => [libraryEntryId(entry), entry.moment.startMs])).toEqual([
       [first.overview.id, 0],
       [second.overview.id, 60_000],
     ]);
@@ -34,7 +36,7 @@ describe("transcriptEntries", () => {
       matchesFor(byWord.overview.id, said.overview.id),
       new Set([byWord.overview.id]),
     );
-    expect(result.map((entry) => entry.overview.id)).toEqual([said.overview.id]);
+    expect(result.map((entry) => libraryEntryId(entry))).toEqual([said.overview.id]);
   });
 
   it("keeps the other filters: a match outside them is not shown", () => {
@@ -46,12 +48,19 @@ describe("transcriptEntries", () => {
       matchesFor(read.overview.id, unread.overview.id),
       new Set(),
     );
-    expect(result.map((entry) => entry.overview.id)).toEqual([unread.overview.id]);
+    expect(result.map((entry) => libraryEntryId(entry))).toEqual([unread.overview.id]);
+  });
+
+  it("finds an item saved without an overview by what was said in it", () => {
+    const capture = savedCaptureFrom(makeOverviewWithState().overview);
+    const entry = { kind: "capture" as const, capture, state: makeOverviewWithState().state };
+    const result = transcriptEntries([entry], searching, matchesFor(capture.id), new Set());
+    expect(result.map((said) => [libraryEntryId(said), said.moment.startMs])).toEqual([[capture.id, 0]]);
   });
 
   it(`shows at most ${TRANSCRIPT_ROWS}`, () => {
     const entries = Array.from({ length: TRANSCRIPT_ROWS + 3 }, () => makeOverviewWithState());
-    expect(transcriptEntries(entries, searching, matchesFor(...entries.map((entry) => entry.overview.id)), new Set())).toHaveLength(
+    expect(transcriptEntries(entries, searching, matchesFor(...entries.map((entry) => libraryEntryId(entry))), new Set())).toHaveLength(
       TRANSCRIPT_ROWS,
     );
   });
@@ -60,7 +69,7 @@ describe("transcriptEntries", () => {
     const entry = makeOverviewWithState();
     const unreadable = makeUnreadableEntry();
     const unreadableId = unreadable.kind === "unreadable" ? unreadable.record.id : "";
-    expect(transcriptEntries([entry], NO_LIBRARY_FILTERS, matchesFor(entry.overview.id), new Set())).toEqual([]);
+    expect(transcriptEntries([entry], NO_LIBRARY_FILTERS, matchesFor(libraryEntryId(entry)), new Set())).toEqual([]);
     expect(transcriptEntries([entry], searching, undefined, new Set())).toEqual([]);
     expect(transcriptEntries([entry, unreadable], searching, matchesFor(unreadableId, "not-held"), new Set())).toEqual([]);
   });

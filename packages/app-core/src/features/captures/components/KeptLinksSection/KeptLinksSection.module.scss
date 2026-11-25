@@ -94,10 +94,13 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
 .action {
   @include controls.surface-pill;
   @include controls.pill-sm;
+  max-width: 100%;
+  white-space: normal;
 }

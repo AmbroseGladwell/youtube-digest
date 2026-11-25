@@ -51,6 +51,7 @@ export interface GenerateOverviewFormProps {
   active?: boolean;
   onReadOverview: (overview: Overview) => void;
   onOpen: (id: string) => void;
+  onSeeQueue: () => void;
   onCaptureReasonChange: (reason: string) => void;
   onCaptureReasonCommit: () => void;
 }
@@ -76,6 +77,12 @@ const urlPlaceholder = (articleAvailable: boolean, playlistsAvailable: boolean):
   return playlistsAvailable ? "Paste a YouTube video or playlist link" : "Paste a YouTube link";
 };
 
+const HELD_SAYS = {
+  overview: "Already in your library.",
+  saved: "Already saved · no overview yet.",
+  queued: "Already in your queue.",
+} as const;
+
 export const GenerateOverviewForm = ({
   url,
   onUrlChange,
@@ -85,6 +92,7 @@ export const GenerateOverviewForm = ({
   active = false,
   onReadOverview,
   onOpen,
+  onSeeQueue,
   onCaptureReasonChange,
   onCaptureReasonCommit,
 }: GenerateOverviewFormProps) => {
@@ -380,15 +388,21 @@ export const GenerateOverviewForm = ({
         <p className={styles.held} data-testid={newOverviewDialogTestIds.alreadyHeld}>
           <StrokeIcon name="check" size={15} />
           <span>
-            Already in your library.{" "}
-            <button
-              type="button"
-              className={styles.inlineLink}
-              onClick={() => onOpen(held.overviewId)}
-              data-testid={newOverviewDialogTestIds.openHeldButton}
-            >
-              Open it
-            </button>
+            {HELD_SAYS[held.as]}{" "}
+            {held.as === "queued" ? (
+              <button type="button" className={styles.inlineLink} onClick={onSeeQueue} data-testid={newOverviewDialogTestIds.seeQueueLink}>
+                See queue
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.inlineLink}
+                onClick={() => onOpen(held.overviewId)}
+                data-testid={newOverviewDialogTestIds.openHeldButton}
+              >
+                Open it
+              </button>
+            )}
           </span>
         </p>
       )}

@@ -10,4 +10,5 @@ export const podcastLinkStatusTestIds = {
   words: "PodcastLinkStatus.words",
   uses: "PodcastLinkStatus.uses",
   free: "PodcastLinkStatus.free",
+  keptForReset: "PodcastLinkStatus.keptForReset",
 };

@@ -57,6 +57,8 @@
 .action {
   @include controls.surface-pill;
   @include controls.pill-md;
+  max-width: 100%;
+  white-space: normal;
   text-decoration: none;
 }
 

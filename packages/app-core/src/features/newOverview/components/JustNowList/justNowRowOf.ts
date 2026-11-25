@@ -2,7 +2,7 @@ import { domainOf, SOCIAL_PLATFORM_NAME, socialTitle, tiktokTitle } from "@overv
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { generationRunSteps } from "../../util/generationRunSteps.js";
 
-export type JustNowStage = "fetch" | "write" | "done" | "saved" | "failed";
+export type JustNowStage = "fetch" | "write" | "done" | "saved" | "keptForReset" | "failed";
 
 export interface JustNowRow {
   stage: JustNowStage;
@@ -42,6 +42,9 @@ const titleOf = (run: NewOverviewRun): string => {
 };
 
 const stageOf = (run: NewOverviewRun, writing: boolean): JustNowStage => {
+  if (run.keptUntilReset === true) {
+    return "keptForReset";
+  }
   if (run.error !== null) {
     return "failed";
   }

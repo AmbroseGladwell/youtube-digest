@@ -1,4 +1,8 @@
+import { useRef } from "react";
 import { domainOf, type CaptureSurface, type KeptCapture } from "@overview/domain";
+import { Toast } from "../../../../components/shared/Toast/Toast.js";
+import { useToast } from "../../../../components/shared/Toast/useToast.js";
+import { usePendingRemovals } from "../../usePendingRemovals.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { resumeTimeText } from "../../../transcripts/util/resumeTime.js";
 import type { KeptLinksController } from "../../useKeptLinks.js";
@@ -12,6 +16,8 @@ const FROM: Record<CaptureSurface, string> = {
   playlist: "From a playlist",
 };
 
+const RESET_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+
 const continuesAt = (resumesAt: string | null | undefined): string =>
   resumesAt == null ? "Continues soon" : `Continues after ${resumeTimeText(new Date(resumesAt))}`;
 
@@ -20,7 +26,7 @@ const waitOf = (link: KeptCapture): string => {
     return "Ready in the extension";
   }
   if (link.waitingFor === "reset") {
-    return "Waiting for this month’s overviews";
+    return link.resumesAt === null ? "Waiting for the month to turn" : `Continues on ${RESET_DAY.format(new Date(link.resumesAt))}`;
   }
   return continuesAt(link.resumesAt);
 };
@@ -63,7 +69,15 @@ export interface KeptLinksSectionProps {
 
 export const KeptLinksSection = ({ controller }: KeptLinksSectionProps) => {
   const { links, making, hasExtension, remove, retry } = controller;
-  const waiting = links.filter((link) => link.queueStatus === "waiting" && link.id !== making?.id);
+  const root = useRef<HTMLElement | null>(null);
+  const toast = useToast();
+  const { pending, removeLater } = usePendingRemovals(remove);
+  const removeWithUndo = (link: KeptCapture) => {
+    const undo = removeLater(link.id);
+    toast.show(`Removed “${link.title ?? domainOf(link.url)}”.`, true, undo);
+    root.current?.focus();
+  };
+  const waiting = links.filter((link) => link.queueStatus === "waiting" && link.id !== making?.id && !pending.has(link.id));
   const onServer = waiting.filter((link) => link.waitingFor === "server");
   const onExtension = waiting.filter((link) => link.waitingFor === "extension");
   const onReset = waiting.filter((link) => link.waitingFor === "reset");
@@ -72,11 +86,12 @@ export const KeptLinksSection = ({ controller }: KeptLinksSectionProps) => {
     .map((link) => link.resumesAt)
     .filter((at): at is string => at !== null)
     .sort()[0];
-  if (making === null && waiting.length === 0 && failed.length === 0) {
+  if (making === null && waiting.length === 0 && failed.length === 0 && toast.toast === null) {
     return null;
   }
   return (
-    <section className={styles.root} aria-label="Kept links" data-testid={keptLinksSectionTestIds.root}>
+    <section ref={root} tabIndex={-1} className={styles.root} aria-label="Kept links" data-testid={keptLinksSectionTestIds.root}>
+      <Toast toast={toast.toast} onDismiss={toast.dismiss} />
       {making !== null && (
         <div className={styles.group} data-testid={keptLinksSectionTestIds.making}>
           <p className={styles.label}>Making now</p>
@@ -96,7 +111,7 @@ export const KeptLinksSection = ({ controller }: KeptLinksSectionProps) => {
           </p>
           <ul className={styles.list}>
             {onServer.map((link) => (
-              <Row key={link.id} link={link} status={waitOf(link)} onRemove={() => remove(link.id)} />
+              <Row key={link.id} link={link} status={waitOf(link)} onRemove={() => removeWithUndo(link)} />
             ))}
           </ul>
         </div>
@@ -107,7 +122,7 @@ export const KeptLinksSection = ({ controller }: KeptLinksSectionProps) => {
           <p className={styles.note}>Only the extension can read these right now. Open it on a computer and it makes them there.</p>
           <ul className={styles.list}>
             {onExtension.map((link) => (
-              <Row key={link.id} link={link} status={waitOf(link)} onRemove={() => remove(link.id)} />
+              <Row key={link.id} link={link} status={waitOf(link)} onRemove={() => removeWithUndo(link)} />
             ))}
           </ul>
         </div>
@@ -117,7 +132,7 @@ export const KeptLinksSection = ({ controller }: KeptLinksSectionProps) => {
           <p className={styles.label}>Waiting for this month’s overviews · {onReset.length}</p>
           <ul className={styles.list}>
             {onReset.map((link) => (
-              <Row key={link.id} link={link} status={waitOf(link)} onRemove={() => remove(link.id)} />
+              <Row key={link.id} link={link} status={waitOf(link)} onRemove={() => removeWithUndo(link)} />
             ))}
           </ul>
         </div>

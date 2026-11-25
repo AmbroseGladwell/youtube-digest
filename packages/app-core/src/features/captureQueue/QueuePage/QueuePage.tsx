@@ -1,4 +1,5 @@
 import { KeptLinksSection } from "../../captures/components/KeptLinksSection/KeptLinksSection.js";
+import { useArrivalFocus } from "../../../util/useArrivalFocus.js";
 import { useKeptLinksController } from "../../captures/KeptLinksContext.js";
 import { useEffect, useRef, useState } from "react";
 import type { QueuedCapture, VideoId } from "@overview/domain";
@@ -53,7 +54,7 @@ export const QueuePage = () => {
   const allowance = leftThisMonth?.resetsOn == null ? null : { left: leftThisMonth.left, resetsOn: leftThisMonth.resetsOn };
   const madeNowCount = madeNowOf(chosenCaptures.length, allowance);
 
-  useEffect(() => heading.current?.focus({ preventScroll: true }), []);
+  useArrivalFocus(heading);
   useEffect(() => {
     if (chosen === null) {
       return;
