@@ -1,4 +1,5 @@
 import { expect } from "@playwright/experimental-ct-react";
+import { questionsOfferTestIds } from "../../src/features/chats/components/QuestionsOffer/QuestionsOfferTestIds.js";
 import { chatMeterLineTestIds } from "../../src/features/chats/components/ChatMeterLine/ChatMeterLineTestIds.js";
 import { chatWaitBlockTestIds } from "../../src/features/chats/components/ChatWaitBlock/ChatWaitBlockTestIds.js";
 import { chatCodeBlockTestIds } from "../../src/features/chats/components/ChatCodeBlock/ChatCodeBlockTestIds.js";
@@ -51,6 +52,21 @@ export class AskPagePageObject extends PageObject {
     this.step(`verifyStartersRead ${questions.join(" | ")}`, () =>
       expect(this.root().getByTestId(askPageTestIds.starter)).toHaveText(questions),
     );
+
+  verifyQuestionsOffered = (body: string | null) =>
+    this.step(`verifyQuestionsOffered ${body}`, async () => {
+      const offer = this.root().getByTestId(questionsOfferTestIds.root);
+      if (body === null) {
+        await expect(offer).toHaveCount(0);
+        return;
+      }
+      await expect(offer).toContainText("Uncover connections you’d have missed");
+      await expect(offer).toContainText(body);
+    });
+
+  unlockQuestions = () => this.step("unlockQuestions", () => this.click(this.root().getByTestId(questionsOfferTestIds.unlock)));
+
+  putQuestionsOfferAway = () => this.step("putQuestionsOfferAway", () => this.click(this.root().getByTestId(questionsOfferTestIds.notNow)));
 
   chooseStarter = (index: number) =>
     this.step(`chooseStarter ${index}`, () => this.click(this.root().getByTestId(askPageTestIds.starter).nth(index)));

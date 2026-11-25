@@ -72,6 +72,59 @@ test("an episode with no transcript says so on its card before Create, and Trans
   expect(backendSimulator.podcasts.transcriptAsks()).toEqual([]);
 });
 
+test("while an episode transcribes that leaves under 2 hours this month, its row says what Plus adds (351e)", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  const used = { usedSeconds: 2 * HOUR, limitSeconds: 5 * HOUR, episodes: 1 };
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.podcasts.transcribingUsed(used);
+  backendSimulator.podcasts.answerWith({ status: "read", episode: EPISODE });
+  backendSimulator.podcasts.checkSays({
+    words: "none",
+    transcription: { status: "needed", episodeSeconds: EPISODE.durationSeconds, usage: used },
+  });
+  backendSimulator.podcasts.transcribesAs(
+    { status: "waiting", id: ID, episodeSeconds: EPISODE.durationSeconds },
+    { status: "transcribing", id: ID, episodeSeconds: null },
+    { status: "transcribing", id: ID, episodeSeconds: null },
+    { status: "ready", id: ID, transcript: WORDS },
+  );
+  await launcher.launch(SIGNED_IN);
+  await launcher.appShell.openNewOverview();
+
+  await page.getByTestId(generateOverviewFormTestIds.urlInput).fill(LINK);
+  await page.getByTestId(generateOverviewFormTestIds.generateButton).click();
+
+  await expect(page.getByTestId(justNowListTestIds.plusLine)).toHaveText("Plus gives you 25 hours more transcribing a month. See plans");
+  await expect.poll(() => backendSimulator.ourKey.generations().length, { timeout: 20_000 }).toBe(1);
+  await expect(page.getByTestId(justNowListTestIds.plusLine)).toHaveCount(0);
+});
+
+test("a fresh month's episode shows no line about Plus while it transcribes", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.podcasts.transcribingUsed(FRESH_MONTH);
+  backendSimulator.podcasts.answerWith({ status: "read", episode: EPISODE });
+  backendSimulator.podcasts.checkSays({
+    words: "none",
+    transcription: { status: "needed", episodeSeconds: EPISODE.durationSeconds, usage: FRESH_MONTH },
+  });
+  backendSimulator.podcasts.transcribesAs(
+    { status: "waiting", id: ID, episodeSeconds: EPISODE.durationSeconds },
+    { status: "transcribing", id: ID, episodeSeconds: null },
+    { status: "ready", id: ID, transcript: WORDS },
+  );
+  await launcher.launch(SIGNED_IN);
+  await launcher.appShell.openNewOverview();
+
+  await page.getByTestId(generateOverviewFormTestIds.urlInput).fill(LINK);
+  await page.getByTestId(generateOverviewFormTestIds.generateButton).click();
+
+  await expect(page.getByText("Transcribing the episode")).toBeVisible();
+  await expect(page.getByTestId(justNowListTestIds.plusLine)).toHaveCount(0);
+});
+
 test("with too little transcribing left, the limit in place names what's left, Plus and the wait, and Make my overview is disabled (351g)", async ({
   page,
   launcher,

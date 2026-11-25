@@ -196,6 +196,47 @@ test.describe("Suggested questions on the Ask page", () => {
     await ask.verifyNoQuestionCards();
   });
 
+  test("on a free plan the starters are followed by suggested questions offered with a paid plan, and Not now puts it away (351f)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    seedSuggestedQuestions(backendSimulator);
+    backendSimulator.chats.setUsage({ plan: "free" });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.verifyStartersRead(TEMPLATES);
+    await ask.verifyQuestionsOffered("We look across your saved overviews for links and differing views");
+    await ask.unlockQuestions();
+    await launcher.plansModal.verifyCardsInOrder(["byo-plus", "plus"]);
+    await launcher.plansModal.close();
+
+    await ask.putQuestionsOfferAway();
+    await ask.verifyQuestionsOffered(null);
+    await ask.verifyStartersRead(TEMPLATES);
+    await expect
+      .poll(() =>
+        backendSimulator.analytics
+          .events()
+          .filter(({ name, props }) => name.startsWith("plus.prompt.") && (props as { variant: string }).variant === "questions"),
+      )
+      .toEqual([
+        { name: "plus.prompt.shown", props: { variant: "questions", plan: "free" } },
+        { name: "plus.prompt.chosen", props: { variant: "questions", plan: "free", outcome: "seePlans" } },
+        { name: "plus.prompt.chosen", props: { variant: "questions", plan: "free", outcome: "notNow" } },
+      ]);
+  });
+
+  test("a paid plan, which has suggested questions, is never offered them", async ({ launcher, backendSimulator }) => {
+    seedSuggestedQuestions(backendSimulator);
+    backendSimulator.auth.accountIsOn("byo-plus");
+    backendSimulator.chats.setUsage({ plan: "byo-plus" });
+    await launcher.launchExpectingLibrary({ ...SIGNED_IN, plan: "byo-plus" });
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.verifyQuestionsOffered(null);
+  });
+
   test("offline the questions still show and asking one waits, as a typed question does", async ({
     launcher,
     backendSimulator,

@@ -35,6 +35,7 @@ import { useChatMeterShown } from "../useChatMeterShown.js";
 import { ChatMeterLine } from "../components/ChatMeterLine/ChatMeterLine.js";
 import { prefersReducedMotion } from "../../../util/prefersReducedMotion.js";
 import { ChatMonthLimit } from "../components/ChatMonthLimit/ChatMonthLimit.js";
+import { QuestionsOffer } from "../components/QuestionsOffer/QuestionsOffer.js";
 import styles from "./AskPage.module.scss";
 import { askPageTestIds } from "./AskPageTestIds.js";
 
@@ -441,6 +442,7 @@ export const AskPage = () => {
                   ))}
                 </ul>
               )}
+              {questionsShowing && templatesOnly && <QuestionsOffer scope={scope} />}
               {questionsShowing && !templatesOnly && (
                 <AskQuestionCards
                   questions={suggestions.questions}

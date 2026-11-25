@@ -239,6 +239,17 @@ One shape, `LimitInPlace`, its copy from `limitCopy`: what ran out and when it c
 Each sends `plus.prompt.shown` and `chosen` as `hours`, `chat` or `saves`; keeping a link until
 the reset is the `keptForReset` outcome.
 
+### While it transcribes (351e) and suggested questions (351f)
+
+- **The transcribing line**, under the progress of the run that is transcribing in Create's Just
+  now list: "Plus gives you 25 hours more transcribing a month. See plans" (BYO Plus: 15), only
+  when this one leaves the reader under 2 hours of the month's transcribing. Never "faster": Plus
+  gives more hours. No close; it goes with the progress.
+- **Suggested questions offered** (`QuestionsOffer`) on the Ask page, in library and project chat
+  alike, after a Free reader's three starters: "Uncover connections you'd have missed", what
+  suggested questions do ("this project's overviews" in a project), **Unlock with a paid plan**
+  (both paid plans have them) and **Not now**, which puts it away until tomorrow.
+
 ### The plans modal (351m)
 
 Outside Settings, every See plans, Get Overview Plus and Upgrade opens `PlansModal`: **the paid

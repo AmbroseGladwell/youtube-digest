@@ -1,4 +1,6 @@
 import { resumeTimeText } from "../../../transcripts/util/resumeTime.js";
+import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
+import { usePlanPrompt } from "../../../plus/usePlanPrompt.js";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { newOverviewDialogTestIds } from "../NewOverviewDialog/NewOverviewDialogTestIds.js";
 import { useState } from "react";
@@ -97,6 +99,46 @@ const Head = ({ run, row }: HeadProps) => (
 );
 
 // Design 358b: each link Create was given, and how far it has got.
+const transcribedSecondsOf = (run: NewOverviewRun): number | null =>
+  run.podcast?.durationSeconds ?? run.tiktok?.durationSeconds ?? run.social?.post.durationSeconds ?? null;
+
+const transcribingNow = (run: NewOverviewRun): boolean =>
+  [run.podcast, run.tiktok, run.social].some((source) => source !== null && source.words === null && source.transcription !== null);
+
+interface TranscribingPlusLineProps {
+  episodeSeconds: number | null;
+}
+
+// Design 351e: only when this one leaves under 2 hours this month; true to Plus, which gives more hours, never faster.
+const TranscribingPlusLine = ({ episodeSeconds }: TranscribingPlusLineProps) => {
+  const { prompt, plan, chose } = usePlanPrompt({ kind: "transcribing", episodeSeconds });
+  const [plansOpen, setPlansOpen] = useState(false);
+  if (prompt?.variant !== "transcribing") {
+    return null;
+  }
+  return (
+    <>
+      <p className={styles.plusLine} data-testid={justNowListTestIds.plusLine}>
+        <StrokeIcon name="gem" size={15} weight={1.8} />
+        <span>
+          Plus gives you {prompt.moreHours} hours more transcribing a month.{" "}
+          <button
+            type="button"
+            className={styles.plansLink}
+            onClick={() => {
+              chose("seePlans");
+              setPlansOpen(true);
+            }}
+          >
+            See plans
+          </button>
+        </span>
+      </p>
+      <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} />
+    </>
+  );
+};
+
 export const JustNowList = ({
   runs,
   current,
@@ -143,6 +185,7 @@ export const JustNowList = ({
             <span className={styles.bar} aria-hidden="true">
               <i />
             </span>
+            {run === running && transcribingNow(run) && <TranscribingPlusLine episodeSeconds={transcribedSecondsOf(run)} />}
           </>
         )}
         {row.stage === "done" && (
