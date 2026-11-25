@@ -1,34 +1,8 @@
 @use "../../../../theme/controls.scss" as controls;
 
-.root {
-  width: min(100% - 2rem, 60rem);
-  max-height: calc(100dvh - 2rem);
-  border: 0;
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  background: var(--ground);
-  color: var(--ink);
-  font-family: var(--font-body);
-  box-shadow: var(--shadow-card);
-
-  &::backdrop {
-    background: color-mix(in srgb, var(--ink) 40%, transparent);
-  }
-
-  @media (max-width: 40rem) {
-    width: 100%;
-    max-width: 100%;
-    height: 100dvh;
-    max-height: 100dvh;
-    border-radius: 0;
-    margin: 0;
-  }
-}
-
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+// On the shared sheet: a wide card on a desktop, a sheet on a phone.
+.content {
+  padding: 0 0.25rem 1.25rem;
 }
 
 .title {
@@ -38,17 +12,8 @@
   font-size: 2rem;
 }
 
-.close {
-  @include controls.quiet-control;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  padding: 0.5rem;
-  cursor: pointer;
-}
-
 .lead {
-  margin: 0.5rem 0 1.25rem;
+  margin: 0 0 1.25rem;
   font-size: 0.9375rem;
 }
 

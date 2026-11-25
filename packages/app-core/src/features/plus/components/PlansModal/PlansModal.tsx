@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react";
 import type { Plan } from "@overview/domain";
-import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { PLAN_CARDS, type PlanCard } from "../../planCards.js";
 import styles from "./PlansModal.module.scss";
@@ -17,40 +16,29 @@ export interface PlansModalProps {
 
 // On a phone Plus comes first, so the recommended plan is in view (design 327ah).
 export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
   const phone = useIsPhone();
-  useEffect(() => {
-    const element = dialog.current;
-    if (element === null) {
-      return;
-    }
-    if (open && !element.open) {
-      element.showModal();
-    }
-    if (!open && element.open) {
-      element.close();
-    }
-  }, [open]);
   const cards = phone ? [...PLAN_CARDS].reverse() : PLAN_CARDS;
 
   return (
-    <dialog ref={dialog} className={styles.root} aria-labelledby="plans-modal-title" onClose={onClose} data-testid={plansModalTestIds.root}>
-      <div className={styles.head}>
-        <h2 id="plans-modal-title" className={styles.title}>
-          Plans.
-        </h2>
-        <button type="button" className={styles.close} aria-label="Close" onClick={onClose} data-testid={plansModalTestIds.close}>
-          <StrokeIcon name="close" size={18} />
-        </button>
+    <BottomSheet
+      open={open}
+      title="Plans."
+      onClose={onClose}
+      wide="dialog"
+      width="60rem"
+      testId={plansModalTestIds.root}
+      head={<h2 className={styles.title}>Plans.</h2>}
+    >
+      <div className={styles.content}>
+        <p className={styles.lead}>Every plan has every feature. They differ in how much you can make and ask a month.</p>
+        <ul className={styles.cards}>
+          {cards.map((card) => (
+            <PlanCardItem key={card.name} card={card} yours={PLAN_OF_CARD[card.name] === plan} />
+          ))}
+        </ul>
+        <p className={styles.foot}>Cancel anytime. Prices in GBP.</p>
       </div>
-      <p className={styles.lead}>Every plan has every feature. They differ in how much you can make and ask a month.</p>
-      <ul className={styles.cards}>
-        {cards.map((card) => (
-          <PlanCardItem key={card.name} card={card} yours={PLAN_OF_CARD[card.name] === plan} />
-        ))}
-      </ul>
-      <p className={styles.foot}>Cancel anytime. Prices in GBP.</p>
-    </dialog>
+    </BottomSheet>
   );
 };
 

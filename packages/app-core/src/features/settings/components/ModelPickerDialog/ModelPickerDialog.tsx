@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { listProviderModels } from "@overview/generation";
 import { modelFor, PROVIDER_SHORT_LABEL, type Provider } from "@overview/domain";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useKeptWhileClosing } from "../../../../util/useKeptWhileClosing.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { catalogueIsStale, readCatalogues, writeCatalogue, type ModelCatalogue } from "../../../apiKeys/ModelCatalogue.js";
 import { matchingChoices, modelChoices, type ModelChoice } from "../../../apiKeys/modelChoices.js";
@@ -20,30 +22,14 @@ export interface ModelPickerDialogProps {
 // Five at a time: OpenAI's list runs past a hundred, and a reader looking for one is searching.
 const FIRST_FEW = 5;
 
-const HEADING_ID = "ModelPickerDialog-heading";
-
 export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDialogProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
+  const { open, kept } = useKeptWhileClosing(provider);
   const analytics = useAnalytics();
   const settingsQuery = useSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();
   const [catalogue, setCatalogue] = useState<ModelCatalogue | undefined>(undefined);
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
-
-  // showModal() makes the page behind inert, keeps focus inside, and turns Escape into a cancel event.
-  useEffect(() => {
-    const element = dialog.current;
-    if (element === null) {
-      return;
-    }
-    if (provider !== null && !element.open) {
-      element.showModal();
-    }
-    if (provider === null && element.open) {
-      element.close();
-    }
-  }, [provider]);
 
   const refetch = useCallback(async () => {
     if (provider === null || apiKey === null) {
@@ -74,9 +60,9 @@ export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDial
     }
   }, [provider, refetch]);
 
-  const choices = modelChoices(provider ?? "anthropic", catalogue);
-  const name = provider === null ? "" : PROVIDER_SHORT_LABEL[provider];
-  const chosen = provider === null ? "" : modelFor(settingsQuery.data?.modelByProvider ?? {}, provider);
+  const choices = modelChoices(kept ?? "anthropic", catalogue);
+  const name = kept === null ? "" : PROVIDER_SHORT_LABEL[kept];
+  const chosen = kept === null ? "" : modelFor(settingsQuery.data?.modelByProvider ?? {}, kept);
 
   const searching = search.trim() !== "";
   const matchedRecommended = matchingChoices(choices.recommended, search);
@@ -118,33 +104,16 @@ export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDial
   );
 
   return (
-    <dialog
-      ref={dialog}
-      className={styles.dialog}
-      aria-labelledby={HEADING_ID}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      data-testid={modelPickerDialogTestIds.root}
+    <BottomSheet
+      open={open}
+      title={`Model for ${name}`}
+      onClose={onClose}
+      wide="dialog"
+      width="36.25rem"
+      testId={modelPickerDialogTestIds.root}
     >
-      {provider !== null && (
-        <div className={styles.panel}>
-          <div className={styles.head}>
-            <h2 className={styles.heading} id={HEADING_ID} data-testid={modelPickerDialogTestIds.heading}>
-              Model for {name}
-            </h2>
-            <button
-              type="button"
-              className={styles.close}
-              aria-label="Close"
-              onClick={onClose}
-              data-testid={modelPickerDialogTestIds.close}
-            >
-              <StrokeIcon name="close" size={18} />
-            </button>
-          </div>
-
+      {kept !== null && (
+        <div className={styles.content}>
           <p className={styles.standfirst} data-testid={modelPickerDialogTestIds.standfirst}>
             Choosing saves straight away and applies to new overviews made with your {name} key.
           </p>
@@ -227,6 +196,6 @@ export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDial
           )}
         </div>
       )}
-    </dialog>
+    </BottomSheet>
   );
 };

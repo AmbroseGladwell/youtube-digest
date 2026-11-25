@@ -166,15 +166,14 @@ export const BottomSheet = ({
     }
   };
 
-  const panelStyle: CSSProperties = {
-    ...(width === undefined ? {} : { "--sheet-width": width }),
-    ...(offset === 0 ? {} : { transform: `translateY(${offset}px)` }),
-  } as CSSProperties;
+  const dialogStyle = (width === undefined ? {} : { "--sheet-width": width }) as CSSProperties;
+  const panelStyle: CSSProperties = offset === 0 ? {} : { transform: `translateY(${offset}px)` };
 
   return (
     <dialog
       ref={dialog}
       className={`${styles.dialog} ${wide === "dialog" ? styles.centred : ""} ${leaving ? styles.leaving : ""}`}
+      style={dialogStyle}
       role={role === "alertdialog" ? "alertdialog" : undefined}
       aria-labelledby={labelledBy ?? (head === undefined ? titleId : undefined)}
       aria-label={labelledBy === undefined && head !== undefined ? title : undefined}

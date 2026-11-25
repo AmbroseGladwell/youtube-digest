@@ -70,11 +70,13 @@ each one: a centred dialog, a popover, a side panel, or a sheet still. The share
 | Cooking mode's Steps, Ingredients, Step in the video, a timer, and leaving with timers | a centred card; a desktop's ingredients are the drawer instead |
 | The timers list and a timer's controls outside cooking mode, and "Your timers will stop" | a centred card |
 
+| The model picker (Settings › AI API keys) | a centred card; a phone used to get a full-screen page |
+| Plans | a wide centred card with the plans side by side; a phone used to get a full-screen page |
+
 The questions about timers (leaving cooking mode, timers that will stop) keep their buttons
 in the fixed foot. ×, Escape, the scrim and the handle all mean staying.
 
-Still their own, for OV-404's later slices: the model picker and plans (full screen on a
-phone today), and the Ask drawer and chat's sheet.
+Still their own, for OV-404's last slice: the Ask drawer and chat's sheet.
 
 ## Testing
 
