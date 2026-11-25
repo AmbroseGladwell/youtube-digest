@@ -231,7 +231,9 @@ export const ErrorScreen = z.enum([
 ]);
 export type ErrorScreen = z.infer<typeof ErrorScreen>;
 export const AccountMenuItem = z.enum([
+  "getPlus",
   "settings",
+  "plan",
   "sendFeedback",
   "connectExtension",
   "signInAgain",

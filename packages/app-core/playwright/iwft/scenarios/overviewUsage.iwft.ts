@@ -174,7 +174,11 @@ test("the wall's Get Plus and See every plan open the paid plans, where Tell me 
   await launcher.plansModal.tellMeWhen("plus");
   await launcher.plansModal.verifyOnTheList("plus");
   await expect
-    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("plus.prompt.")))
+    .poll(() =>
+      backendSimulator.analytics
+        .events()
+        .filter(({ name, props }) => name.startsWith("plus.prompt.") && (props as { variant: string }).variant === "modal"),
+    )
     .toEqual([
       { name: "plus.prompt.shown", props: { variant: "modal", plan: "free" } },
       { name: "plus.prompt.chosen", props: { variant: "modal", plan: "free", outcome: "tellMeWhen", tellMeWhen: "plus" } },

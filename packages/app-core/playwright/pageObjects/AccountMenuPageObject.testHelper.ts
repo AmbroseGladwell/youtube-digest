@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { accountMenuTestIds } from "../../src/features/auth/components/AccountMenu/AccountMenuTestIds.js";
+import { getPlusMenuItemTestIds } from "../../src/features/plus/components/GetPlusMenuItem/GetPlusMenuItemTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { createAccountThroughSample } from "./createAccountThroughSample.testHelper.js";
@@ -12,6 +13,8 @@ export type AccountMenuItem =
   | "Enter code"
   | "Connect the extension"
   | "Settings"
+  | "Plan"
+  | `Get Overview Plus ${string}`
   | "Send feedback"
   | "Sign out"
   | "Sign in again";
@@ -124,6 +127,16 @@ export class AccountMenuPageObject extends PageObject {
     });
 
   verifyTriggerIsFocused = () => this.step("verifyTriggerIsFocused", () => expect(this.get(accountMenuTestIds.trigger)).toBeFocused());
+
+  verifyGetPlusAbsent = () => this.step("verifyGetPlusAbsent", () => this.expectToHaveCount(getPlusMenuItemTestIds.item, 0));
+
+  chooseGetPlus = () => this.step("chooseGetPlus", () => this.click(getPlusMenuItemTestIds.item));
+
+  choosePlan = (): Promise<SettingsPageObject> =>
+    this.step("choosePlan", async () => {
+      await this.click(accountMenuTestIds.planItem);
+      return new SettingsPageObject(this.testContext);
+    });
 
   chooseSignOut = () => this.step("chooseSignOut", () => this.click(accountMenuTestIds.signOutItem));
 }

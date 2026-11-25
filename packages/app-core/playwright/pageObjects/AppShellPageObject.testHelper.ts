@@ -3,6 +3,8 @@ import type { NavigationDirection } from "../../src/util/viewTransitions.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { accountMenuTestIds } from "../../src/features/auth/components/AccountMenu/AccountMenuTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { getPlusButtonTestIds } from "../../src/features/plus/components/GetPlusButton/GetPlusButtonTestIds.js";
+import { floatingTipTestIds } from "../../src/components/shared/FloatingTip/FloatingTipTestIds.js";
 import { AccountMenuPageObject } from "./AccountMenuPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { GenerationStatusStripPageObject } from "./GenerationStatusStripPageObject.testHelper.js";
@@ -27,6 +29,17 @@ const pseudoOf = (entry: string) => entry.slice(0, entry.indexOf("|"));
 const keyframesOf = (entry: string) => entry.slice(entry.indexOf("|") + 1);
 
 export class AppShellPageObject extends PageObject {
+  verifyGetPlusShown = (shown: boolean) =>
+    this.step(`verifyGetPlusShown ${shown}`, () => this.expectToHaveCount(getPlusButtonTestIds.button, shown ? 1 : 0));
+
+  chooseGetPlus = () => this.step("chooseGetPlus", () => this.click(getPlusButtonTestIds.button));
+
+  verifyGetPlusTipReads = (text: string) =>
+    this.step(`verifyGetPlusTipReads ${text}`, async () => {
+      await this.get(getPlusButtonTestIds.button).hover();
+      await expect(this.page.getByTestId(floatingTipTestIds.tip)).toHaveText(text);
+    });
+
   get accountMenu(): AccountMenuPageObject {
     return new AccountMenuPageObject(this.testContext, this.get(appShellTestIds.masthead));
   }

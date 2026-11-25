@@ -17,12 +17,14 @@ export interface PlansModalProps {
   open: boolean;
   plan: Plan;
   onClose: () => void;
+  // For an opener that is gone once the modal is open, like an item in a closed menu.
+  returnFocusTo?: HTMLElement | null | undefined;
 }
 
 const PAID_FOR: Record<Plan, PaidPlan[]> = { free: ["byo-plus", "plus"], "byo-plus": ["plus"], plus: [] };
 
 // Outside Settings, every See plans opens the paid plans only (design 351m); a phone gets the full height, Plus first.
-export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
+export const PlansModal = ({ open, plan, onClose, returnFocusTo }: PlansModalProps) => {
   const analytics = useAnalytics();
   const phone = useIsPhone();
   const [billing, setBilling] = useState<Billing>("yearly");
@@ -46,6 +48,7 @@ export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
       wide="dialog"
       width={byo ? NARROW_SHEET_WIDTH : "47.5rem"}
       startsFull
+      returnFocusTo={returnFocusTo}
       testId={plansModalTestIds.root}
       head={<h2 className={styles.title}>{title}</h2>}
     >

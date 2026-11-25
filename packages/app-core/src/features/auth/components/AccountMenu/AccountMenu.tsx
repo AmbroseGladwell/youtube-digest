@@ -18,6 +18,9 @@ import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 import { shouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import { useExtensionOffered } from "../../../../util/useExtensionOffered.js";
 import { useFeedbackBox } from "../../../feedback/FeedbackContext.js";
+import { GetPlusMenuItem } from "../../../plus/components/GetPlusMenuItem/GetPlusMenuItem.js";
+import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
+import { usePlan } from "../../../plus/usePlan.js";
 
 const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
@@ -42,6 +45,8 @@ export const AccountMenu = () => {
   const { connection } = useSyncConnection();
   const { pending } = usePendingSignIn();
   const [open, setOpen] = useState(false);
+  const [plansOpen, setPlansOpen] = useState(false);
+  const { plan } = usePlan();
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
@@ -196,6 +201,15 @@ export const AccountMenu = () => {
           )}
         </div>
         <div role="separator" className={styles.separator} />
+        {!signedOutAtServer && (
+          <GetPlusMenuItem
+            onChoose={() => {
+              analytics.app.accountMenu.itemChosen({ item: "getPlus" });
+              close(false);
+              setPlansOpen(true);
+            }}
+          />
+        )}
         {extensionOffered &&
           !signedOutAtServer &&
           item(
@@ -206,6 +220,7 @@ export const AccountMenu = () => {
             accountMenuTestIds.connectExtensionItem,
           )}
         {settings}
+        {item("creditCard", "Plan", "plan", go(Routes.settingsSection("plan")), accountMenuTestIds.planItem)}
         {feedback !== null &&
           !signedOutAtServer &&
           item(
@@ -251,6 +266,7 @@ export const AccountMenu = () => {
   return (
     <div className={styles.root} ref={root} data-testid={accountMenuTestIds.root}>
       {willStop.dialog}
+      <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} returnFocusTo={trigger.current} />
       <button
         type="button"
         ref={trigger}
