@@ -6,6 +6,7 @@ import { chatMarkedTextTestIds } from "../../src/features/chats/components/ChatM
 import { askPageTestIds } from "../../src/features/chats/AskPage/AskPageTestIds.js";
 import { askAnswerTestIds } from "../../src/features/chats/components/AskAnswer/AskAnswerTestIds.js";
 import { askDrawerTestIds } from "../../src/features/chats/components/AskDrawer/AskDrawerTestIds.js";
+import { conversationSearchTestIds } from "../../src/features/chats/components/ConversationSearch/ConversationSearchTestIds.js";
 import { askPickingWaitTestIds } from "../../src/features/chats/components/AskPickingWait/AskPickingWaitTestIds.js";
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
 import { chatComposerTestIds } from "../../src/features/chats/components/ChatComposer/ChatComposerTestIds.js";
@@ -303,6 +304,25 @@ export class AskPagePageObject extends PageObject {
         await this.openDrawer();
       }
     });
+
+  private drawerSearch = () => this.drawer().getByTestId(conversationSearchTestIds.input);
+  private drawerSearchBox = () => this.drawer().getByTestId(conversationSearchTestIds.root);
+
+  searchDrawer = (text: string) => this.step(`searchDrawer ${text}`, () => this.drawerSearch().fill(text));
+
+  drawerSearchTop = () =>
+    this.step("drawerSearchTop", async () => {
+      await this.drawer().evaluate((drawer) => Promise.all(drawer.getAnimations({ subtree: true }).map((animation) => animation.finished)));
+      return Math.round((await this.drawerSearchBox().boundingBox())!.y);
+    });
+
+  verifyDrawerSearchTopIs = (top: number) =>
+    this.step(`verifyDrawerSearchTopIs ${top}`, () =>
+      expect.poll(async () => Math.round((await this.drawerSearchBox().boundingBox())!.y)).toBe(top),
+    );
+
+  verifyDrawerShows = (count: number) =>
+    this.step(`verifyDrawerShows ${count}`, () => expect(this.drawer().getByTestId(askDrawerTestIds.item)).toHaveCount(count));
 
   verifyDrawerControlsCanBeReached = () => this.verifyControlsCanBeReached(this.drawer());
 
