@@ -4,6 +4,12 @@ const CURRENCY_NAME: Record<string, [string, string]> = {
   "€": ["euro", "euros"],
 };
 
+const MINOR_CURRENCY_NAME: Record<string, [string, string]> = {
+  $: ["cent", "cents"],
+  "£": ["penny", "pence"],
+  "€": ["cent", "cents"],
+};
+
 const MAGNITUDE_NAME: Record<string, string> = { k: "thousand", m: "million", bn: "billion" };
 
 const NUMBER_NAME = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
@@ -20,7 +26,23 @@ const FRACTION_NAME: Record<number, [string, string]> = {
   10: ["tenth", "tenths"],
 };
 
+const WITH_MINOR_UNITS = /^(\d[\d,]*)\.(\d\d)$/;
+
+const minorMoney = (symbol: string, whole: string, minor: string): string => {
+  const [one, many] = CURRENCY_NAME[symbol]!;
+  if (whole !== "0") {
+    return `${whole} ${whole === "1" ? one : many}${minor === "00" ? "" : ` ${minor}`}`;
+  }
+  const [minorOne, minorMany] = MINOR_CURRENCY_NAME[symbol]!;
+  const count = String(Number(minor));
+  return `${count} ${count === "1" ? minorOne : minorMany}`;
+};
+
 const money = (_: string, article: string | undefined, symbol: string, amount: string, magnitude: string | undefined) => {
+  const withMinor = magnitude ? null : WITH_MINOR_UNITS.exec(amount);
+  if (withMinor !== null) {
+    return `${article ?? ""}${minorMoney(symbol, withMinor[1]!, withMinor[2]!)}`;
+  }
   const [one, many] = CURRENCY_NAME[symbol]!;
   const scale = magnitude ? ` ${MAGNITUDE_NAME[magnitude.toLowerCase()]}` : "";
   const unit = article || (amount === "1" && !magnitude) ? one : many;
@@ -52,6 +74,7 @@ export const speakable = (text: string): string => {
     .replace(/\s?\^\s?-/g, " to the power of minus ")
     .replace(/\s?\^\s?/g, " to the power of ")
     .replace(/(?<![\d/])(\d{1,2})\/(\d{1,2})(?![\d/])/g, fraction)
+    .replace(/(?<=\d)\.(\d+)/g, (_, digits: string) => ` point ${digits.split("").join(" ")}`)
     .replace(/\s{2,}/g, " ")
     .trim();
 };

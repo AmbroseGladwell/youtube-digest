@@ -1,4 +1,5 @@
 import type { RecipeStep } from "./Recipe.js";
+import { sentenceSpans } from "./sentenceSpans.js";
 
 export interface RecipeAction {
   step: number;
@@ -17,59 +18,10 @@ interface Span {
   then: boolean;
 }
 
-const ABBREVIATIONS = new Set(["approx", "e.g", "i.e", "vs", "ca"]);
-const SENTENCE_END = /[.!?]["'”’)\]]*(\s+)(?=["'“‘([]?[\p{Lu}\d])/gu;
 const LABEL = /^((?:[\p{L}'’&]+\s){0,3}[\p{L}'’&]+)(?:\s[-–—]\s(?=\p{Lu})|:\s)/u;
 const THEN = /,\s+(then)\s+([\p{Ll}][\p{L}'’-]*)/gu;
 const NOT_AN_ACTION = new Set(["the", "a", "an", "another", "some", "more", "any", "all", "its", "their", "your", "his", "her"]);
 const CONDITION = /^If\s[^,]*,/;
-const ASIDE = /^\([^()]*\)[.!]?$/;
-
-const trimmed = (text: string, span: Span): Span => {
-  let { start, end } = span;
-  while (start < end && /\s/.test(text[start]!)) {
-    start += 1;
-  }
-  while (end > start && /\s/.test(text[end - 1]!)) {
-    end -= 1;
-  }
-  return { start, end, then: span.then };
-};
-
-const isAbbreviation = (text: string, dot: number): boolean => {
-  if (text[dot] !== ".") {
-    return false;
-  }
-  const word = /([\p{L}.]+)$/u.exec(text.slice(0, dot))?.[1] ?? "";
-  return ABBREVIATIONS.has(word.toLowerCase());
-};
-
-const sentences = (text: string, from: number): Span[] => {
-  const spans: Span[] = [];
-  let start = from;
-  for (const match of text.slice(from).matchAll(SENTENCE_END)) {
-    const at = from + match.index;
-    if (isAbbreviation(text, at)) {
-      continue;
-    }
-    const end = at + match[0].length - match[1]!.length;
-    spans.push({ start, end, then: false });
-    start = end;
-  }
-  spans.push({ start, end: text.length, then: false });
-  return spans
-    .map((span) => trimmed(text, span))
-    .filter(({ start: s, end: e }) => e > s)
-    .reduce<Span[]>((joined, span) => {
-      const before = joined.at(-1);
-      if (before !== undefined && ASIDE.test(text.slice(span.start, span.end))) {
-        before.end = span.end;
-      } else {
-        joined.push(span);
-      }
-      return joined;
-    }, []);
-};
 
 const atThen = (text: string, sentence: Span): Span[] => {
   const body = text.slice(sentence.start, sentence.end);
@@ -98,7 +50,9 @@ export const recipeActions = (steps: readonly RecipeStep[]): RecipeAction[] => {
   return steps.flatMap(({ text }, step) => {
     const lifted = LABEL.exec(text);
     const label = lifted !== null && lifted[0].length < text.trim().length ? lifted : null;
-    const spans = sentences(text, label === null ? 0 : label[0].length).flatMap((sentence) => atThen(text, sentence));
+    const spans = sentenceSpans(text, label === null ? 0 : label[0].length).flatMap((sentence) =>
+      atThen(text, { ...sentence, then: false }),
+    );
     return spans.map(({ start, end, then }, index) => {
       const shown = text.slice(start, end);
       return {
