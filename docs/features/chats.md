@@ -968,7 +968,8 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
     it.
   - On a phone it's the shared bottom sheet (`bottom-sheets.md`, OV-404), with New chat at its
     head and Search conversations pinned at the top of its list, and starts closed. Once a search
-    starts, the sheet keeps the height it had, so it doesn't drop as the results narrow (OV-413).
+    starts, the sheet keeps the height it had, so it doesn't drop as the results narrow (OV-413). Once its list
+    has scrolled, rows fade under the pinned search as they do under the desktop drawer's top (OV-414).
   - The ⋯ menu (354t-6) is 220px and right-aligned. It opens below the ⋯, or above it when there's
     no room below, as for the last conversation in a phone's sheet (OV-362).
 - **Waits** are the overview chat's (`ChatWaitBlock`), with 50 questions to a conversation. The

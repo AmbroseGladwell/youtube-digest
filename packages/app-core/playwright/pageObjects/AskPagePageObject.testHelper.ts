@@ -392,6 +392,24 @@ export class AskPagePageObject extends PageObject {
   scrollDrawerToEnd = () =>
     this.step("scrollDrawerToEnd", () => this.drawer().evaluate((drawer) => drawer.scrollTo({ top: drawer.scrollHeight })));
 
+  scrollDrawerSheetDown = () =>
+    this.step("scrollDrawerSheetDown", () =>
+      this.drawer()
+        .getByTestId(askDrawerTestIds.sheetBody)
+        .evaluate((body) => body.parentElement!.scrollTo({ top: 400 })),
+    );
+
+  verifyDrawerSheetSearchFades = (shown: boolean) =>
+    this.step(`verifyDrawerSheetSearchFades ${shown}`, () =>
+      expect
+        .poll(() =>
+          this.drawer()
+            .getByTestId(askDrawerTestIds.sheetSearch)
+            .evaluate((search) => getComputedStyle(search, "::after").opacity),
+        )
+        .toBe(shown ? "1" : "0"),
+    );
+
   verifyDrawerTopIsPinned = (scrolled: boolean) =>
     this.step(`verifyDrawerTopIsPinned ${scrolled}`, async () => {
       const drawerBox = (await this.drawer().boundingBox())!;

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { chatOwner, type Chat } from "@overview/domain";
 import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { CutText } from "../../../../components/shared/CutText/CutText.js";
@@ -62,6 +62,15 @@ export const AskDrawer = ({
     const height = menu.current?.offsetHeight ?? 0;
     setMenuUp(item !== undefined && box !== undefined && item.bottom + height + 8 > Math.min(box.bottom, window.innerHeight));
   }, [menuFor]);
+  useEffect(() => {
+    const sheetDialog = sheet && open ? root.current?.closest("dialog") : null;
+    if (sheetDialog === null || sheetDialog === undefined) {
+      return;
+    }
+    const scrolledBy = (event: Event) => setScrolled(event.target instanceof Element && event.target.scrollTop > 0);
+    sheetDialog.addEventListener("scroll", scrolledBy, true);
+    return () => sheetDialog.removeEventListener("scroll", scrolledBy, true);
+  }, [sheet, open]);
   const [query, setQuery] = useState("");
   const [heldHeight, setHeldHeight] = useState<number | null>(null);
   const searchable = chats.length >= SEARCH_FROM;
@@ -183,8 +192,18 @@ export const AskDrawer = ({
   if (sheet) {
     return (
       <BottomSheet open={open} title="Conversations" head={newChat} onClose={onClose} testId={askDrawerTestIds.root}>
-        <div className={styles.sheetBody} ref={root} style={heldHeight === null ? undefined : { minHeight: heldHeight }}>
-          {search(styles.sheetSearch)}
+        <div
+          className={styles.sheetBody}
+          ref={root}
+          style={heldHeight === null ? undefined : { minHeight: heldHeight }}
+          data-scrolled={scrolled ? "" : undefined}
+          data-testid={askDrawerTestIds.sheetBody}
+        >
+          {searchable && (
+            <div className={styles.sheetSearch} data-testid={askDrawerTestIds.sheetSearch}>
+              {search(undefined)}
+            </div>
+          )}
           {conversations}
         </div>
       </BottomSheet>

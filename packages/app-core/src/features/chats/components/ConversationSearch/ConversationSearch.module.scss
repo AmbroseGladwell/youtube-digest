@@ -7,7 +7,7 @@
   min-height: 2.75rem;
   box-sizing: border-box;
   gap: 0.25rem;
-  padding: 0 0.375rem 0 0.75rem;
+  padding: 0 0.625rem 0 1rem;
   background: var(--conversation-search-surface, var(--surface));
 }
 
@@ -20,6 +20,12 @@
 
 .input {
   @include controls.field-input;
+
+  appearance: none;
+  height: 1.25rem;
+  line-height: 1.25rem;
+  // Raised a pixel so lowercase text, which sits low in its line, centres beside the icon.
+  margin-bottom: 0.125rem;
 
   &::-webkit-search-cancel-button,
   &::-webkit-search-decoration {
