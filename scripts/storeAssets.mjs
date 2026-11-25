@@ -61,7 +61,7 @@ const tileHtml = (svg) => {
 <div class="brand">${svg}<span>The Overview</span></div>
 <div>
   <h1>All the info,<br><span>less wait.</span></h1>
-  <p>Bookmark videos, articles and recipes. Read the overview, hear it, or hand it to your AI.</p>
+  <p>Bookmark videos, podcasts, articles and recipes. Read the overview, hear it, or hand it to your AI.</p>
 </div>`;
 };
 

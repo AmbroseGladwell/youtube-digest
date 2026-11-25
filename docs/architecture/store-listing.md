@@ -17,7 +17,7 @@ requires, and the job that sends each new release to review without anyone openi
 | A version already published, or one already in review, is not sent again | `submissionDecision` |
 | Without the four credentials the job says so and skips | `missingCredentials`, the `credentials` step |
 | The escape hatch from a laptop | `task deploy:extension:publish` |
-| The listing's screenshots, rendered from the real components | `packages/app-core/playwright/store/`, `playwright-shots.config.ts`, `task store:screenshots` |
+| The listing's screenshots, rendered from the real components at the size they are shown | `packages/app-core/playwright/store/`, `playwright-shots.config.ts`, `task store:screenshots` |
 | The words | this file, below |
 
 ## Unlisted, and why that is not a smaller public launch
@@ -63,12 +63,12 @@ draft still needs before it can be submitted.
 
 **Name.** The Overview
 
-**Short description**, the manifest's `description`, 119 characters of the 132 allowed. It
+**Short description**, the manifest's `description`, 129 characters of the 132 allowed. It
 is the store's short description *and* what Chrome shows in its own extension list, so it
 names the sources and what comes back rather than leading with the verdict:
 
-> Bookmark videos, articles and recipes. Get an overview, chapters and next steps you can
-> read, hear, or hand to your AI.
+> Bookmark videos, podcasts, articles and recipes. Get an overview, chapters and next steps
+> you can read, hear, or hand to your AI.
 
 **Category.** Productivity › Workflow & Planning. **Language.** English (United Kingdom).
 
@@ -77,11 +77,13 @@ README is: a hook, what an overview holds, how it works, what you get, and the t
 store requires. It says what the reader gains, never what their saved list is full of: the
 product is blunt with its reader, the listing is not blunt about them.
 
-The section order of "What every overview holds" is the reader's own
-(`features/reader/ReaderPage`), not the README's. The allowances come from
-`docs/architecture/tiers.md` and move when it does; no paid plan is described, because none
-can be bought yet. Podcasts and PDFs are left out, though the product's own onboarding calls
-them coming: an unshipped capability on a store page is a rejection risk.
+The section order of "What every overview holds" is the note's own
+(`packages/domain/src/overviewNoteLines.ts`), not the README's. The allowances come from
+`packages/domain/src/planAllowances.ts` and `docs/architecture/tiers.md` and move when they
+do; no paid plan is described, because none can be bought yet (the app offers them with
+"Tell me when"), and suggested questions, the one thing only a paid plan has, are not
+mentioned. PDFs are left out, though the product's own onboarding calls them coming: an
+unshipped capability on a store page is a rejection risk.
 
 **Naming the six providers got the listing rejected.** The first submission of 0.4.2 said
 "Add a key for Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral", and the store called it
@@ -100,16 +102,19 @@ listing that names nobody cannot be read as naming people for reach. Chrome went
 "between the browser extension and the web app" names the two things the reader actually holds
 rather than one of them twice. It is not "The Overview browser extension" because the page is
 already titled that, and a bullet carrying the brand twice is the shape this section just
-removed from elsewhere. No company appears in the description.
+removed from elsewhere. No company appears in the description. **That is why 0.5.0 says "a short
+video or a social post"** and not the three platforms the panel reads them from: three more
+brand names in a row is the shape that was rejected, and the panel names them where it reads one.
 
 **There is no signed-out tier to describe.** Since OV-46 (28 October 2026) a reader without
 an account sees no overviews at all, so the copy offers an account from the start and the
 privacy line says what an account actually costs: an email address, no password, no name
 required (`firstName` is optional in `MagicLinkRequest` and nullable in the column).
 
-> Bookmark the videos, articles and recipes you meant to come back to, and get something you
-> can actually use: a short overview, the chapters, the full transcript, and the steps worth
-> acting on. Read it, listen to it on the way to work, or hand it to your AI assistant.
+> Bookmark the videos, podcasts, articles and recipes you meant to come back to, and get
+> something you can actually use: a short overview, the chapters, the full transcript, and the
+> steps worth acting on. Read it, listen to it on the way to work, ask it questions, or hand it
+> to your AI assistant.
 >
 > Saving something is easy. Coming back to it is the hard part. The list grows, and the few
 > things you do get to turn out to be eight minutes of hook and story wrapped around thirty
@@ -118,10 +123,12 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 >
 > ➤ What every overview holds
 >
-> • In one line: what it is, so you can recognise it later
+> • Premise: what it is, so you can recognise it later
+> • Big picture: where it fits, when there is more to it than one claim
 > • Core claim: the single assertion it makes
 > • Verdict: how novel it actually was, and why
 > • Key points: three for a short clip, up to ten for a long interview, substance only, hook and call to action removed
+> • The steps it gives: its own process, in its own order, when it has one
 > • How to apply: one to three concrete things to do this week, or an honest "nothing"
 > • What it sells: a course, a membership, a supplement, their own app, recorded every time
 > • Watch it anyway?: and it is allowed to say no
@@ -129,13 +136,25 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 > ➤ How it works
 >
 > Open a video and press The Overview in the player's own action row, or open the side panel
-> from the toolbar and generate an overview for an article too. The overview is written from
-> the captions or page and arrives in the panel, beside what you were watching or reading.
+> from the toolbar beside a video, a podcast episode, an article, a short video or a social
+> post. The overview is written from the captions, transcript or page, and arrives in the
+> panel, beside what you were watching or reading. An episode or video with no transcript can
+> be transcribed for you, when you ask.
 >
 > • Read it, or have it read aloud with the text following the audio
 > • Chapters and the full transcript sit beside it; tap any point and the video jumps there
-> • Search your library, and filter by topic or by verdict
-> • Paste a link to an article and get the same thing for that
+> • Search your library, and filter by kind, topic or verdict
+> • Paste a link in the web app or on your phone and get the same thing for that
+>
+> ➤ Ask what you have saved
+>
+> Ask a question about one overview, a project, or everything you have kept. The answer comes
+> in sections, with every point linked to the overview it came from, and says so plainly when it
+> goes beyond them.
+>
+> ➤ Projects
+>
+> Gather overviews into a project, with its purpose in your own words, and ask about just those.
 >
 > ➤ A whole playlist, not one video
 >
@@ -148,10 +167,10 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 > Save a recipe and you get one step at a time, read aloud and waiting for you, with the
 > ingredients a tap away, the servings scaled and the oven in your own units.
 >
-> ➤ Ask your assistant what you have saved
+> ➤ Hand your library to your AI assistant
 >
 > Connect your AI assistant through MCP and it can search everything you have kept by topic,
-> tag or verdict, read any overview in full, and cite the second a point was made.
+> tag or verdict, read any overview or transcript in full, and cite the second a point was made.
 >
 > ➤ See the hours add up
 >
@@ -163,8 +182,11 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 > Free, with an account:
 >
 > • 5 overviews a month written on us, or 10 a month on your own AI API key
+> • Once those are made, save up to 50 more a month and make them later
+> • Questions about what you have saved: about 100 typical ones a month
+> • Up to 5 hours a month of transcription, for episodes and videos with no transcript
 > • Your library synced between the browser extension and the web app at theoverviewapp.com
-> • Narration in any of the voices, and your library open to your AI assistant
+> • Narration in any of the voices, sharing, projects, and your library open to your AI assistant
 >
 > ➤ Bring your own key, and it stays yours
 >
@@ -225,6 +247,12 @@ before the listing is submitted:
   which are the large part.
 - "Nothing is kept on a server unless the reader signs in" is vacuous now that an account is
   needed to make an overview at all.
+- `tabs` opens a tab as well as reloading one (OV-403): an article kept for the extension to
+  make is opened in a background tab by `readArticleAt`, read, and closed. "The one thing it
+  does to a tab" stopped being true then, and `scripting` runs in that tab too.
+- `articleReader.js` does more than read: the same script scrolls the page to a passage when
+  the reader taps a link to it in the note, while the panel is beside that article
+  (`showArticlePlaceInTab`, `useShowOnPage`).
 - Pressing the toolbar button grants nothing: the action has no `onClicked` handler and only
   opens the panel through `setPanelBehavior`, so `activeTab` comes from the menu click alone.
 - The menu item is "Create an overview of this page" on the page context, not "The Overview"
@@ -237,8 +265,8 @@ before the listing is submitted:
 | `activeTab` | The extension adds one right-click item, "Create an overview of this page". Choosing it is what grants activeTab for that tab, and that grant is the only thing that lets the extension read the page: it injects a small script into that one tab to pull out the article text, which is what the overview is written from. Nothing is read until the reader chooses the item, the access covers only the tab they right-clicked in, and it ends when that tab navigates away or closes. Without it the same right-click would have to interrupt the reader with a site access prompt first. Standing access to a site is a separate optional permission, asked for one site at a time from inside the panel, and only when the reader chooses to keep that site. |
 | `contextMenus` | The extension uses it for exactly one menu item, "Create an overview of this page", shown on the page context of any http or https page. Choosing it opens the side panel and starts an overview of the page the reader is on. That click also does two things the extension depends on: it is the user gesture Chrome requires before a side panel may be opened, and it is what grants activeTab, so the page can be read without standing access to every site. No other menu items are created. Nothing is added to selections, links, images or editable fields, and the menu does not change with what the page contains. The item is made once on install and remade on update, which is why the handler clears the old one before creating it. |
 | `sidePanel` | The extension's interface is a Chrome side panel: it is where an overview is requested, read and listened to, and where settings and the assistant connection live. The manifest also registers a full page version of the same interface as the options page, which Chrome opens from the extension's Details screen. That page is where the library of saved overviews is browsed and searched; the panel is the one video or page it sits beside. |
-| `tabs` | To tell which video or page is in front of the reader, so the overview is about the right one and the panel follows them from tab to tab. The extension reads the active tab, and queries YouTube watch tabs by URL so the button it injects into each can show the right state. Addresses and titles are all it takes from a tab. The one thing it does to a tab rather than read from it is reload it, offered only when an article could not be read and a reload is the remedy, and only when the reader presses that button. Reading the contents of a page needs the scripting permission below, and happens only when the reader asks for an overview of that page. |
-| `scripting` | To inject three small scripts into the tab the reader is on. One reads an article's text, and runs when the reader asks for an overview of that page. The other two work with the YouTube player while the panel is open beside it: one reports the player's current position, so the transcript and the read along follow the video, and one moves the video to a position when the reader taps a timestamp in the panel. None of them runs on a tab the reader has not opened the panel against or asked for an overview of. |
+| `tabs` | To tell which video or page is in front of the reader, so the overview is about the right one and the panel follows them from tab to tab. The extension reads the active tab, and queries YouTube watch tabs by URL so the button it injects into each can show the right state. Addresses and titles are all it takes from a tab. It does two things to tabs rather than read from them. It reloads one, offered only when an article could not be read and a reload is the remedy, and only when the reader presses that button. And when the reader has kept an article for the extension to make, because our server could not read it, it opens that address in a background tab, reads it and closes it, only on a site the reader has allowed from the panel. Reading the contents of a page needs the scripting permission below, and happens only for a page the reader asked about. |
+| `scripting` | To inject three small scripts into the tab the reader is on. One reads an article's text: it runs when the reader asks for an overview of that page, or in the background tab described above for an article they kept for the extension, and it also scrolls that article to a passage when the reader taps a link to it in the note. The other two work with the YouTube player while the panel is open beside it: one reports the player's current position, so the transcript and the read along follow the video, and one moves the video to a position when the reader taps a timestamp in the panel. None of them runs on a tab the reader has not opened the panel against, asked for an overview of, or kept for the extension to read. |
 | `storage` | Only chrome.storage.session, which is held in memory and gone when the browser closes. Four short-lived things go in it. The address of a video, or the address, title and tab id of a page, that the reader pressed the button or the context menu entry on, each removed as soon as the side panel has picked it up. The current run's progress, so the button injected into a YouTube page can show the right state, removed when that run is cleared. And, for a signed-in reader, the API address and session token the service worker posts error reports to. Nothing else is kept in it. Settings and the reader's own API key are in the panel's own localStorage, which needs no permission. |
 | `unlimitedStorage` | The library of overviews is held on the device in IndexedDB, along with the full transcript of every video an overview was written from. The transcripts are the large part: one long video's transcript dwarfs the overview written from it, and a few hundred of them exceed the default quota. Narration audio is not kept here, and is streamed from the account's API when the reader presses Listen. The library also syncs to the reader's account, so the device copy is what makes it searchable and available offline rather than the only copy. |
 | `declarativeNetRequestWithHostAccess` | One rule, which removes the Origin header from this extension's own requests to youtube.com. YouTube answers 403 to a player call carrying a chrome-extension origin, which is where captions come from, and Origin is a forbidden header that fetch() cannot remove itself. The rule is scoped three ways: to requests this extension initiates, to youtube.com, and to XHR. It cannot affect any other request, including calls that carry the reader's own API key. |
@@ -256,8 +284,11 @@ them, and never at install:
   `generativelanguage.googleapis.com`, `api.deepseek.com`, `api.x.ai`, `api.mistral.ai`):
   granted when the reader enters their own key for that provider, so the request goes from
   their browser straight to the provider (`docs/features/byo-providers.md`).
-- `http://*/*` and `https://*/*`, granted when the reader pastes a link to an article they
-  want a note on, for that site (`docs/features/pasted-article-links.md`).
+- `http://*/*` and `https://*/*`, granted one site at a time: when the reader pastes a link
+  to an article they want a note on (`docs/features/pasted-article-links.md`), when they allow
+  the panel to read a link kept for the extension (`docs/features/kept-links.md`, "Only the
+  extension can read"), and for TikTok's pages and caption hosts together, the first time the
+  extension reads a TikTok itself (`TIKTOK_ORIGINS`, `docs/features/tiktok-links.md`).
 
 **Remote code.** The answer is no: everything the extension runs is in the package. The
 provider APIs return text, never code.
@@ -270,14 +301,14 @@ The Privacy tab's checkboxes, and the answer each gets. These are derived from
 
 | Category | Collected | Because |
 |---|---|---|
-| Personally identifiable information | **Yes** | An optional account holds an email address and a first name (`docs/features/sign-in.md`). |
+| Personally identifiable information | **Yes** | An account holds an email address, and a first name if one is given (`docs/features/sign-in.md`). |
 | Authentication information | **Yes** | The reader's own provider API key is stored on the device, and a session token is held after sign-in. |
-| Website content | **Yes** | The captions of a video, and the text of an article the reader asks about, are read and sent to a model. |
+| Website content | **Yes** | The captions or transcript of a video, episode or TikTok, a post's description, and the text of an article the reader asks about, are read and sent to a model. |
 | User activity | **Yes** | Product analytics, which are off until the reader is asked and says yes (`docs/features/analytics-consent.md`). |
 | Location | **Yes** | Analytics events reach PostHog through our server, which sees the request's IP address. It is cut to a network and discarded, and postcode and coordinates are removed, but region-level location is derived from it, so this is declared rather than argued about. |
 | Health information | No | |
-| Financial and payment information | No | Nobody pays; there is no billing. |
-| Personal communications | No | |
+| Financial and payment information | No | Nobody pays yet: the plans are offered with "Tell me when", and there is no billing. |
+| Personal communications | **Yes** | The questions a reader asks in a chat are kept with their answers, and feedback they send is kept (`/privacy`). Neither is a message between people, but both are things the reader wrote to us, so this is declared rather than argued about, as Location is. |
 
 The three certifications are all true and all get ticked: data is not sold to third parties,
 not used or transferred for any purpose unrelated to the single purpose above, and not used or
@@ -285,10 +316,9 @@ transferred to determine creditworthiness or for lending.
 
 ## The screenshots
 
-`task store:screenshots` renders five 1280×800 PNGs into `apps/extension/store/screenshots`.
-Four of them place a capture of a real side panel, committed under
-`apps/extension/store/sources/`; one is rendered from the real components through the same
-component harness the IWFT suite uses. It is a separate Playwright config,
+`task store:screenshots` renders five 1280×800 PNGs into `apps/extension/store/screenshots`,
+every one from the real components, through the same component harness the IWFT suite uses,
+with the house account's samples as the library. It is a separate Playwright config,
 `playwright-shots.config.ts`, because these are not tests: they assert nothing, they write
 files, and CI must not run them.
 
@@ -298,80 +328,91 @@ listing is not blunt about them. Each headline is two strings, and the second is
 `--accent`; `breakAtSplit` puts them on a line each where the natural wrap would strand a
 word.
 
-| The shot | The gain | Where it comes from |
+| The shot | The gain | What it shows |
 |---|---|---|
-| `1-note` | All the info, less wait. | capture: a note in the panel |
-| `2-playlist` | Point it at a whole playlist. | capture: a real 26-video playlist, previewed |
-| `3-time-saved` | Get your evenings back. | rendered: the web app at the one-hour milestone |
-| `4-assistant` | Your whole library, one question away. | capture: Settings › Connections, with a drawn conversation beside it |
-| `5-cooking` | Cook without the scrolling. | capture: cooking mode, mid-recipe |
+| `1-note` | All the info, less wait. | the panel beside a video, on a note with a big picture |
+| `2-ask` | Ask your whole library. | the web app's Ask, answering in sections with the overview under each |
+| `3-sources` | One library for all of it. | the web app's library, led by a video, a podcast, an article and a recipe |
+| `4-cooking` | Cook without the scrolling. | the panel in cooking mode, narrated and waiting for the reader |
+| `5-assistant` | Hand your library to your AI. | the panel's Settings › Connections, with a drawn conversation beside it |
 
-**Why the panel is captured and not rendered.** A render here is taken at the harness's
-viewport, and the panel's layout is driven by media queries that read that viewport, not the
-element: `ReaderMasthead.module.scss` re-grids to `"back menu" / "head head" /
-"actions actions"` below `61.9375rem`. Shrinking `#root` to 420px inside a 1280px window
-therefore lays the panel out as the desktop app, and the first set of rendered shots put the
-Listen and favourite controls in a place that exists in no install. A capture cannot drift
-that way. `3-time-saved` stays a render because it is the wide web app at a wide viewport, so
-there is no mismatch to get wrong.
+The set was chosen for 0.5.0 (owner, 25 November 2026): Ask and the newer kinds of source
+replaced the playlist and time-saved shots, which the description still covers.
 
-Two things are also only reachable in a real install. Cooking mode's narration state,
-"Waiting for you" and "Say it again", needs the TTS pool. And a playlist preview's numbers
-are the whole point of that shot: only a real playlist has 26 videos and 780,000 tokens
-against them.
+### Rendered at its own size
 
-**All four captures are placed at one height, not one width.** `CAPTURE_HEIGHT` is 700px,
-centred in the window below the title bar, and each capture's width follows from its own
-aspect, so the four come out within about two pixels of each other. The right edge is the
-fixed one, which puts that difference against the abstracted page, where nothing lines up
-with it anyway. A 12px radius keeps a captured rectangle from reading as pasted onto a
-soft-cornered window.
+The panel's layout is driven by media queries that read the viewport, not the element:
+`ReaderMasthead.module.scss` re-grids to `"back menu" / "head head" / "actions actions"` below
+`61.9375rem`. Shrinking `#root` to a panel's width inside a 1280px window therefore lays the
+panel out as the desktop app, and the first rendered set put the Listen and favourite controls
+in a place that exists in no install. The set after that was captured by hand from a real
+install for that reason.
 
-**A capture taken by hand catches the dimmed browser behind the panel**, a line or two of
-near-black down one edge, which reads as a hairline fault once the capture is set into the
-window. `panelFrom` trims whole rows and columns of that grey off every capture before
-placing it, up to `EDGE_TRIM_LIMIT`. The sources stay exactly what came off the machine, and
-the next capture needs no cropping either.
+`rendered` removes the mismatch instead. It sets the viewport to the size the app is shown
+at, reaches the state, takes the shot, and only then widens the page to 1280×800 for
+`composed` to place it in the window. A panel is rendered at 392×780, the width Chrome opens
+it at, and placed at `PANEL_HEIGHT`, 700, so all three panels come out the same size. The two
+web-app shots are rendered at the window's own inside, 672×730, and placed one to one; that is
+the web app's compact layout, which is what it shows at that width.
 
-**What is in them.** The four captures are notes from the author's own library, each of a
-public video, article or recipe. `3-time-saved` is the house account's samples, fetched from
-`GET /api/samples` and committed as `packages/app-core/playwright/store/sampleNotes.json`:
-the same set Start offers and the home page shows (`docs/features/onboarding.md`, "Try a
-sample"), which settles the question a rendered screenshot otherwise raises, because invented
-notes would put made-up judgements in front of real-sounding channel names. `task
-store:samples` refreshes the file; committing it keeps that shot identical between runs.
+**Why not captures any more** (OV-265, 25 November 2026). By the next release all four hand
+captures showed a header and a Connections page the app no longer had, and recapturing needed
+a real install, a real library and a person. A render follows the app on every run, and shows
+the samples rather than anyone's own library. Cooking's narration is real too: the simulator
+holds the recipe's narration as ready (`narration.seedReady`), so the mode reads the step and
+settles on "Waiting for you" as it does in an install.
 
-**One window for all five**, at one height and one position, so the frame does not jump as the
-listing is scrolled through.
+**Twice the pixels.** The config renders at `deviceScaleFactor: 2` and `shoot` writes at
+`scale: "css"`, so each file is the store's 1280×800 with text as sharp as a retina capture.
+
+### What is in them
+
+The library is the house account's samples, fetched from `GET /api/samples` and committed as
+`packages/app-core/playwright/store/sampleNotes.json`: the same set Start offers and the home
+page shows (`docs/features/onboarding.md`, "Try a sample"), saved by the app's own
+`savedFromShare`, as Start saves one. Invented notes would put made-up judgements in front of
+real-sounding channel names; real samples settle that. `task store:samples` refreshes the file,
+and committing it keeps the shots identical between runs. Every shot finds its notes by title
+(`storeLibrary.testHelper.ts`), so a refresh that drops one fails that shot instead of quietly
+showing something else.
+
+**`1-note` names a creator**, the channel the video is from, with the verdict the product gave
+it. The video is public, the render is factual, and the channel name is there because the
+product shows it on every note: a listing shot that hid it would be showing a screen the
+product does not have. The verdict is a judgement about how well covered the video's subject
+already is, not about the person.
+
+**`3-sources` sets which four lead.** Unread rows come first and then the newest saved, so the
+four placed to lead are saved last and left unread (`storeLibrary`'s `newestFirst`). They are
+one of each kind, and none carries a dubious-claim flag: a flag against a named show is a
+judgement the listing has no reason to lead with.
+
+**The page behind the panel is an abstraction**: a title bar and soft grey blocks, carrying no
+site's name, mark or layout. A mocked-up YouTube page would be a picture of YouTube, which the
+store's policies treat as someone else's branding.
 
 Three departures from what a reader would see, recorded here because a store screenshot that
 misleads is a rejection:
 
-- **The page behind the panel is an abstraction**: a title bar and soft grey blocks, carrying
-  no site's name, mark or layout. A mocked-up YouTube page would be a picture of YouTube,
-  which the store's policies treat as someone else's branding.
-- **The conversation in `4-assistant` is drawn**, in onboarding's own bubble styling
+- **The answer in `2-ask` is written for the shot**, since a real one needs a model. Each line
+  restates its sample's own note, and the three it cites are the three it draws on, so it
+  claims nothing the library doesn't hold (`storeAnswer`).
+- **The conversation in `5-assistant` is drawn**, in onboarding's own bubble styling
   (`OnboardingSlide.module.scss`). It names two notes by title, and those titles are read out
-  of `sampleNotes.json` rather than written into the shot, so refreshing the samples and
-  dropping either one fails that shot instead of citing a note nobody has. The capability is
-  real and shipping (`docs/features/mcp-connector.md`); the assistant's own interface is not
-  ours to photograph, and imitating one would be passing off.
-- **`4-assistant`'s chat pane does not fade** where the grey blocks do. The blocks are a page
+  of `sampleNotes.json` rather than written into the shot. The capability is real and shipping
+  (`docs/features/mcp-connector.md`); the assistant's own interface is not ours to photograph,
+  and imitating one would be passing off.
+- **`5-assistant`'s chat pane does not fade** where the grey blocks do. The blocks are a page
   carrying on past the window, so they fade out; a conversation is the whole of what it is,
   and a faded last line reads as a rendering fault.
 
-Nothing inside a panel is scaled unevenly, recoloured or re-laid-out. The fonts in the
-rendered shot are pulled from Google Fonts, because the app's `@font-face` rules ship in the
-extension's `public/fonts.css`, which the harness never loads; they are the same two families
+Nothing inside a render is scaled unevenly, recoloured or re-laid-out. The fonts are pulled
+from Google Fonts, because the app's `@font-face` rules ship in the extension's
+`public/fonts.css`, which the harness never loads; they are the same two families
 `tokens.scss` names.
 
-**`1-note` names a creator**, the channel the video is from, with the verdict the product gave
-it. The video is public, the capture is factual, and the channel name is there because the
-product shows it on every note: a listing shot that hid it would be showing a screen the
-product does not have. The verdict is a judgement about how well covered the video's subject
-already is, not about the person. An earlier `2-playlist` capture was replaced for the
-narrower version of this: it was one individual's playlist, where the name carried no product
-meaning and read as an endorsement nobody gave. The replacement is an institution's.
+**One window for all five**, at one height and one position, so the frame does not jump as the
+listing is scrolled through. Only `5-assistant` widens it to the left, for the conversation.
 
 ## The icon and the promo tile
 
