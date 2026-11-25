@@ -1,36 +1,5 @@
-@use "../../../../theme/controls.scss" as controls;
-@use "../../../../theme/dialog.scss" as dialog;
-
-.dialog {
-  @include dialog.dialog-shell;
-}
-
-.panel {
-  @include dialog.dialog-panel;
-
-  gap: 0.25rem;
-}
-
-.handle {
-  @include dialog.dialog-handle;
-}
-
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 0.5rem;
-}
-
-.heading {
-  @include dialog.dialog-heading;
-}
-
-.close {
-  @include controls.surface-pill;
-
-  width: 2.75rem;
-  height: 2.75rem;
+.content {
+  padding: 0 0.25rem 1rem;
 }
 
 .group {

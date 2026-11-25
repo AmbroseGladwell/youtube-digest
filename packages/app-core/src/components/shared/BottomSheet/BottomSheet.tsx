@@ -22,7 +22,7 @@ export interface BottomSheetProps {
   foot?: ReactNode;
   // From 48rem: "sheet" stays a sheet (its owner shows something else there), "dialog" is a centred card.
   wide?: "sheet" | "dialog";
-  width?: string;
+  width?: string | undefined;
   role?: "dialog" | "alertdialog";
   initialFocus?: RefObject<HTMLElement | null>;
   // Where focus goes once it has closed; otherwise whatever had it when it opened.
@@ -36,6 +36,8 @@ interface Drag {
   startedAt: number;
   height: number;
 }
+
+export const NARROW_SHEET_WIDTH = "28.75rem";
 
 const FLICK = 0.6;
 const GROW = 40;
@@ -101,10 +103,12 @@ export const BottomSheet = ({
       return;
     }
     const finish = () => {
+      const focused = document.activeElement;
+      const stillOurs = focused === null || focused === document.body || dialog.current?.contains(focused) === true;
       dialog.current?.close();
       setLeaving(false);
       const back = latestReturn.current ?? opener.current;
-      if (back?.isConnected) {
+      if (stillOurs && back?.isConnected) {
         back.focus({ preventScroll: true });
       }
     };
@@ -183,6 +187,11 @@ export const BottomSheet = ({
       onClick={(event) => {
         if (event.target === dialog.current && dismissible) {
           onClose();
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.stopPropagation();
         }
       }}
       data-testid={testId}

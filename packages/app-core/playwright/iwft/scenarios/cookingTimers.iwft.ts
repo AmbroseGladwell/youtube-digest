@@ -39,6 +39,7 @@ const goToStep = async (page: Page, step: number) => {
     .getByTestId("CookingStepsSheet.step")
     .nth(step - 1)
     .click();
+  await expect(page.getByTestId("CookingStepsSheet.root")).toBeHidden();
   await expect(page.getByTestId("CookingMode.place")).toHaveText(`Step ${step}`);
 };
 

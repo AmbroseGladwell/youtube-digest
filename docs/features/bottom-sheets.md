@@ -26,7 +26,10 @@ each one: a centred dialog, a popover, a side panel, or a sheet still. The share
 - **Focus:** a native `<dialog>` with `showModal()`, so the page behind is inert, and Tab is
   held inside (`useFocusTrap`). `initialFocus` names where focus starts; otherwise the first
   control. Once it has closed, focus goes to `returnFocusTo` if given, otherwise to whatever
-  had it when the sheet opened.
+  had it when the sheet opened. It goes back only if focus is still in the sheet, so a
+  sheet opened from another one as it leaves (a timer from the timers list) keeps it.
+  Escape stops at the sheet, so it never also reaches the page behind (cooking mode's
+  Escape leaves the mode).
 - **Reduced motion:** no travel and no fade; it closes at once.
 
 ## Options
@@ -64,9 +67,14 @@ each one: a centred dialog, a popover, a side panel, or a sheet still. The share
 | A timestamp in an overview | a menu beside the tag |
 | Edit topics on an overview | a popover under the line |
 | About you (Settings, onboarding) | a popover under the sentence; the extension panel keeps its full-screen takeover |
+| Cooking mode's Steps, Ingredients, Step in the video, a timer, and leaving with timers | a centred card; a desktop's ingredients are the drawer instead |
+| The timers list and a timer's controls outside cooking mode, and "Your timers will stop" | a centred card |
 
-Still their own, for OV-404's later slices: cooking mode's sheets and the timers, the model
-picker and plans (full screen on a phone today), and the Ask drawer and chat's sheet.
+The questions about timers (leaving cooking mode, timers that will stop) keep their buttons
+in the fixed foot. ×, Escape, the scrim and the handle all mean staying.
+
+Still their own, for OV-404's later slices: the model picker and plans (full screen on a
+phone today), and the Ask drawer and chat's sheet.
 
 ## Testing
 

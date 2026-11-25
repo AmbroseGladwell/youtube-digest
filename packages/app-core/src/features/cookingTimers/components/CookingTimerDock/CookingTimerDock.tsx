@@ -166,8 +166,8 @@ export const CookingTimerDock = ({ children }: CookingTimerDockProps) => {
       )}
       {dockBody()}
       {children}
-      {listing && <TimersListSheet open onOpen={open} onClose={() => setListing(false)} />}
-      {shownTimer !== null && <TimerControlsSheet timer={shownTimer} onClose={() => setShown(null)} />}
+      <TimersListSheet open={listing} onOpen={open} onClose={() => setListing(false)} />
+      <TimerControlsSheet timer={shownTimer} onClose={() => setShown(null)} />
     </div>
   );
 };

@@ -736,9 +736,11 @@ export const CookingMode = ({
                 onClose={() => setWatching(false)}
               />
             )}
-            {shownTimer !== null && !ours(shownTimer) && (
-              <TimerControlsSheet timer={shownTimer} onClose={() => setTimerShown(null)} onLeaving={mode.done} />
-            )}
+            <TimerControlsSheet
+              timer={shownTimer !== null && !ours(shownTimer) ? shownTimer : null}
+              onClose={() => setTimerShown(null)}
+              onLeaving={mode.done}
+            />
             <CookingTimerSheet
               timer={shownTimer !== null && ours(shownTimer) ? shownTimer : null}
               now={timers.now}

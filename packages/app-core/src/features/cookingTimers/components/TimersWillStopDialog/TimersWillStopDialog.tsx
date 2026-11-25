@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
+import { useKeptWhileClosing } from "../../../../util/useKeptWhileClosing.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import styles from "./TimersWillStopDialog.module.scss";
@@ -19,56 +21,45 @@ export interface TimersWillStopDialogProps {
 }
 
 export const TimersWillStopDialog = ({ open, heading, copy, onStay, onGo }: TimersWillStopDialogProps) => {
-  const dialog = useRef<HTMLDialogElement | null>(null);
   const stay = useRef<HTMLButtonElement | null>(null);
   const web = !useIsPhone() && !useIsPanel();
-
-  useEffect(() => {
-    const element = dialog.current;
-    if (element === null) {
-      return;
-    }
-    if (open && !element.open) {
-      element.showModal();
-      stay.current?.focus();
-    }
-    if (!open && element.open) {
-      element.close();
-    }
-  }, [open]);
+  const shown = useKeptWhileClosing(open ? copy : null);
+  const kept = shown.kept;
 
   return (
-    <dialog
-      ref={dialog}
-      className={`${styles.dialog} ${web ? styles.web : ""}`}
+    <BottomSheet
+      open={shown.open}
+      title={heading}
+      onClose={onStay}
+      closeLabel={kept?.stay ?? "Close"}
+      wide="dialog"
       role="alertdialog"
-      aria-label={heading}
-      onCancel={(event) => {
-        event.preventDefault();
-        onStay();
-      }}
-      data-testid={timersWillStopDialogTestIds.root}
-    >
-      {open && copy !== null && (
-        <div className={styles.panel}>
-          <span className={styles.handle} aria-hidden="true" />
-          <h2 className={styles.heading} data-testid={timersWillStopDialogTestIds.heading}>
-            {heading}
-          </h2>
-          <p className={styles.sentence} data-testid={timersWillStopDialogTestIds.sentence}>
-            {copy.sentence}
-          </p>
+      initialFocus={stay}
+      testId={timersWillStopDialogTestIds.root}
+      head={
+        <h2 className={styles.heading} data-testid={timersWillStopDialogTestIds.heading}>
+          {heading}
+        </h2>
+      }
+      foot={
+        kept !== null && (
           <div className={styles.buttons}>
             <button type="button" ref={stay} className={styles.stay} onClick={onStay} data-testid={timersWillStopDialogTestIds.stay}>
-              {copy.stay}
+              {kept.stay}
               {web && <kbd className={styles.key}>Esc</kbd>}
             </button>
             <button type="button" className={styles.go} onClick={onGo} data-testid={timersWillStopDialogTestIds.go}>
-              {copy.go}
+              {kept.go}
             </button>
           </div>
-        </div>
+        )
+      }
+    >
+      {kept !== null && (
+        <p className={styles.sentence} data-testid={timersWillStopDialogTestIds.sentence}>
+          {kept.sentence}
+        </p>
       )}
-    </dialog>
+    </BottomSheet>
   );
 };

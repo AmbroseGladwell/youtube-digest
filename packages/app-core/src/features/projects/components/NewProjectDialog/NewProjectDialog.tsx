@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type FormEvent } from "react";
 import { MAX_PROJECT_NAME_LENGTH, MAX_PROJECT_PURPOSE_LENGTH, sameTopicName } from "@overview/domain";
-import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
+import { BottomSheet, NARROW_SHEET_WIDTH } from "../../../../components/shared/BottomSheet/BottomSheet.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./NewProjectDialog.module.scss";
 import { newProjectDialogTestIds } from "./NewProjectDialogTestIds.js";
@@ -56,7 +56,7 @@ export const NewProjectDialog = ({ open, adds, assistantConnected, takenNames, b
       title="New project"
       onClose={onClose}
       wide="dialog"
-      width="28.75rem"
+      width={NARROW_SHEET_WIDTH}
       initialFocus={nameInput}
       testId={newProjectDialogTestIds.root}
       foot={
