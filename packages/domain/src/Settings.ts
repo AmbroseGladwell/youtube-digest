@@ -19,6 +19,7 @@ import { LearnedItems } from "./LearnedItem.js";
 import { DEFAULT_PLAYLIST_ORDER, PlaylistOrder } from "./PlaylistOrder.js";
 import { DEFAULT_PLAYLIST_PACE, PlaylistPace } from "./PlaylistPace.js";
 import { ChosenAssistant } from "./FollowUpAssistant.js";
+import { PlanPromptDismissals } from "./PlanPromptVariant.js";
 
 export const SectionsEnabled = z.object({
   verdict: z.boolean(),
@@ -60,6 +61,8 @@ export const Settings = z.object({
   modelByProvider: ModelByProvider.catch({}),
   plan: Plan,
   plusNoticeDismissed: z.boolean(),
+  // On the account, so Not now holds on every device (docs/features/plus-upsell.md, OV-351).
+  planPromptsDismissed: PlanPromptDismissals.catch({}),
   narrationVoice: NarrationVoice.catch(DEFAULT_NARRATION_VOICE),
   // What a cooking timer rings with, on every device (docs/features/recipe-notes.md, "Timers").
   timerSound: TimerSound.catch(DEFAULT_TIMER_SOUND),
@@ -107,6 +110,7 @@ export const DEFAULT_SETTINGS: Settings = {
   modelByProvider: {},
   plan: DEFAULT_PLAN,
   plusNoticeDismissed: false,
+  planPromptsDismissed: {},
   narrationVoice: DEFAULT_NARRATION_VOICE,
   timerSound: DEFAULT_TIMER_SOUND,
   readStepsAloud: true,

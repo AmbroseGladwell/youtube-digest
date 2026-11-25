@@ -1,9 +1,8 @@
-import type { KeySource, OverviewUsage, Plan } from "@overview/domain";
+import { overviewQuotas, type KeySource, type OverviewUsage, type Plan } from "@overview/domain";
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
-import { overviewQuotas } from "./overviewQuotas.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
-import { nextUsageMonth, usageMonth } from "./usageMonth.js";
+import { nextUsageMonth, previousUsageMonth, usageMonth } from "./usageMonth.js";
 
 // The slot's own month, so a generation started before midnight gives back the month it counted against.
 export type OverviewReservation =
@@ -51,11 +50,13 @@ export class OverviewUsageRepository {
       [month, accountId],
     );
     const used = (keySource: KeySource) => rows.find((row) => row.key_source === keySource)?.overviews ?? 0;
+    const oursLastMonth = await this.#usedIn(previousUsageMonth(now), accountId, "ours");
     return {
       plan,
       resetsOn: nextUsageMonth(now),
       ours: { used: used("ours"), limit: overviewQuotas[plan].ours },
       own: { used: used("own"), limit: overviewQuotas[plan].own },
+      lastMonthOursSpent: oursLastMonth >= overviewQuotas[plan].ours,
     };
   }
 

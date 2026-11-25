@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyBaseLogger } from "fastify";
-import { apiLogLines, type Plan, type PodcastTranscription, type TranscriptionOffer, type TranscriptionUsage } from "@overview/domain";
+import {
+  apiLogLines,
+  transcriptionHours,
+  type PodcastTranscription,
+  type TranscriptionOffer,
+  type TranscriptionUsage,
+} from "@overview/domain";
 import type { createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js";
 import { callerKey, type ServiceCaller } from "../transcripts/ServiceTranscripts.js";
 import { secondsToNextUsageMonth } from "../usage/usageMonth.js";
@@ -11,8 +17,6 @@ import type { TranscriptionQueue } from "./TranscriptionQueue.js";
 
 const HOUR = 3600;
 
-// A guard against misuse more than a cost, at about a cent an hour (OV-305).
-export const transcriptionHours = { free: 5, "byo-plus": 15, plus: 30 } as const satisfies Record<Plan, number>;
 export const LONGEST_EPISODE_SECONDS = 4 * HOUR;
 // A feed's length is the publisher's word, so the audio itself may run a little past it.
 const MEASURED_SLACK_SECONDS = 10 * 60;

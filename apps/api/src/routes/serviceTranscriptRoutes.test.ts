@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, VideoId } from "@overview/domain";
+import { overviewQuotas, saveQuotas, CLIENT_VERSION, CLIENT_VERSION_HEADER, VideoId } from "@overview/domain";
 import { makeOverview } from "@overview/store-conformance";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { FIXTURE_VIDEO_ID } from "@overview/transcripts/testing";
@@ -9,8 +9,6 @@ import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { makeFakeYouTube, type FakeYouTube } from "../transcripts/FakeYouTube.testHelper.js";
 import { PROXY_PRICE, serviceTranscriptQuotas } from "../transcripts/ServiceTranscripts.js";
-import { overviewQuotas } from "../usage/overviewQuotas.js";
-import { saveQuotas } from "../usage/saveQuotas.js";
 import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
 import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";

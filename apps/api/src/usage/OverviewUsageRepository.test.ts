@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { makeSession } from "../auth/SessionFactory.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
-import { overviewQuotas } from "./overviewQuotas.js";
+import { overviewQuotas } from "@overview/domain";
 import { OverviewUsageRepository } from "./OverviewUsageRepository.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -73,6 +73,21 @@ test("a new UTC month starts both counts again", async () => {
 
   assert.equal(nextMonth.ours.used, 0);
   assert.equal(nextMonth.resetsOn, "2026-11-01");
+  await testApp.close();
+});
+
+test("last month's overviews on us all made is said for the reset line, and a month short of it isn't", async () => {
+  const { testApp, accountId, usage } = await usageApp();
+  for (let made = 0; made < overviewQuotas.free.ours; made += 1) {
+    await usage.reserve(testApp.clock.now, accountId, "ours", overviewQuotas.free.ours);
+  }
+  assert.equal((await usage.usage(testApp.clock.now, accountId, "free")).lastMonthOursSpent, false);
+
+  testApp.clock.advance(31 * DAY_MS);
+  assert.equal((await usage.usage(testApp.clock.now, accountId, "free")).lastMonthOursSpent, true);
+
+  testApp.clock.advance(31 * DAY_MS);
+  assert.equal((await usage.usage(testApp.clock.now, accountId, "free")).lastMonthOursSpent, false);
   await testApp.close();
 });
 

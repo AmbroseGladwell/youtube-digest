@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { FastifyBaseLogger } from "fastify";
 import {
+  SUGGESTED_QUESTION_PLANS,
   apiLogLines,
   composeReaderContext,
   isInProject,
@@ -41,7 +42,6 @@ import { writeSuggestedQuestions, type NewSuggestedQuestion } from "./writeSugge
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const QUESTION_PLANS: ReadonlySet<Plan> = new Set(["byo-plus", "plus"]);
 export const REFRESHES_PER_WINDOW = 3;
 export const REFRESH_WINDOW_DAYS = 7;
 export const REFRESH_GAP_DAYS = 2;
@@ -133,7 +133,7 @@ export class SuggestedQuestionRefresher {
       log.info(apiLogLines.questions.refreshed({ plan, status }));
       return { status, finished: Promise.resolve(null) };
     };
-    if (!QUESTION_PLANS.has(plan)) {
+    if (!SUGGESTED_QUESTION_PLANS.has(plan)) {
       return stopped("free");
     }
     const now = clock();

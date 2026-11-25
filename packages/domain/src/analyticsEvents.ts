@@ -5,6 +5,7 @@ import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
 import { ModelId } from "./ModelId.js";
 import { NoteKind } from "./NoteKind.js";
 import { Plan } from "./Plan.js";
+import { PlanPromptOutcome, PlanPromptVariant } from "./PlanPromptVariant.js";
 import { Provider } from "./Provider.js";
 import { AuthIntent } from "./AuthIntent.js";
 import { EmailChangeRevertRefusal } from "./EmailChangeReverted.js";
@@ -680,6 +681,15 @@ export const analyticsEvents = {
     },
     planPanel: {
       recheckChosen: event("The reader asks to check their plan again after it couldn't be checked"),
+    },
+    prompt: {
+      shown: event("A place Plus is offered came on screen, once per showing (OV-351)", { variant: PlanPromptVariant, plan: Plan }),
+      chosen: event("The reader acted on a place Plus is offered: See plans, Not now, ×, Keep it until the reset, or Tell me when", {
+        variant: PlanPromptVariant,
+        plan: Plan,
+        outcome: PlanPromptOutcome,
+        tellMeWhen: Plan.optional(),
+      }),
     },
   },
   account: {

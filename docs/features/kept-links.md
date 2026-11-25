@@ -84,7 +84,7 @@ saved item.
 ## The save limit
 
 Saves without an overview are counted on the server, per account per UTC month, in
-`capture_saves`: **Free 50, BYO Plus 150, Plus 300** (`apps/api/src/usage/saveQuotas.ts`).
+`capture_saves`: **Free 50, BYO Plus 50, Plus 300** (`saveQuotas` in `@overview/domain`; BYO Plus came down from 150 to Free's in OV-351's design round, 25 Nov 2026).
 A capture counts once, when it is first written as `saved` (new, or moving from `kept`).
 Past the limit the write is refused with `429 too_many_requests`, `quota: "saves"`, the
 count, the limit and `resetsOn`; a refused write gives its count back.

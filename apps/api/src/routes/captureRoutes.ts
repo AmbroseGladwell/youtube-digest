@@ -1,6 +1,7 @@
 import type { FastifyBaseLogger, FastifyInstance } from "fastify";
 import { z } from "zod";
 import {
+  saveQuotas,
   apiLogLines,
   CAPTURE_CLAIMS_PATH,
   CAPTURES_PATH,
@@ -24,7 +25,6 @@ import type { WriteDecision } from "../records/WriteDecision.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { CaptureClaimsRepository } from "../usage/CaptureClaimsRepository.js";
 import type { CaptureSavesRepository } from "../usage/CaptureSavesRepository.js";
-import { saveQuotas } from "../usage/saveQuotas.js";
 import { nextUsageMonth } from "../usage/usageMonth.js";
 
 const Params = z.object({ id: OverviewId });

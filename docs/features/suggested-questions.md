@@ -146,7 +146,7 @@ marked `failed`.
 
 | Constant                                        | Value          | Rule                                                                       |
 | ----------------------------------------------- | -------------- | -------------------------------------------------------------------------- |
-| `QUESTION_PLANS`                                | BYO Plus, Plus | anything else is `free`, and nothing is recorded                           |
+| `SUGGESTED_QUESTION_PLANS` (`@overview/domain`) | BYO Plus, Plus | anything else is `free`, and nothing is recorded                           |
 | `QUESTIONS_MONTHLY_CAP_DOLLARS`                 | $0.40          | this calendar month's (UTC) `questions` costs at or over it stop a refresh |
 | `REFRESHES_PER_WINDOW` in `REFRESH_WINDOW_DAYS` | 3 in 7 days    | rolling                                                                    |
 | `REFRESH_GAP_DAYS`                              | 2              | since the last counted refresh started                                     |

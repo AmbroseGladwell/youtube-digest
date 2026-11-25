@@ -12,5 +12,6 @@ export const mergeSettingsRecord = (base: Record<string, unknown>, patch: Record
     ...mergeOneLevel("milestones", base, patch),
     ...mergeOneLevel("modelByProvider", base, patch),
     ...mergeOneLevel("learned", base, patch),
+    ...mergeOneLevel("planPromptsDismissed", base, patch),
   };
 };

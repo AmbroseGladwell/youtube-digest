@@ -35,3 +35,11 @@ test("one device removing a learned item and another adding one both land", () =
 
   assert.deepEqual(Object.keys(merged.learned as object), ["a", "b", "c"]);
 });
+
+test("Not now on one device and another prompt put away elsewhere both hold", () => {
+  const merged = mergeSettingsRecord(
+    { planPromptsDismissed: { questions: "2026-11-25T09:00:00.000Z" } },
+    { planPromptsDismissed: { chat: "2026-11-25T10:00:00.000Z" } },
+  );
+  assert.deepEqual(merged.planPromptsDismissed, { questions: "2026-11-25T09:00:00.000Z", chat: "2026-11-25T10:00:00.000Z" });
+});
