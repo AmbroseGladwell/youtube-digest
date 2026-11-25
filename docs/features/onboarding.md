@@ -207,7 +207,11 @@ A playlist starts with its first available video, and "Choose a different video"
 
 **The moments** (`OnboardingSavingMoment`, `OnboardingKnowledgeMoment`, `OnboardingStepsMoment`)
 are fixed and illustrative: nothing is tailored live before the account. Moment 3 says "the
-video", "the article" or "the episode", and a recipe's own line.
+video", "the article" or "the episode", and a recipe's own line. On a phone the examples of
+Moments 2 and 3 are a carousel (`OnboardingCarousel`, OV-411), so the page doesn't scroll: one
+card at a time, Ask across your library first, swiped or chosen by its dot, moving on by itself
+every 4.5 s. Touch or focus holds it, and its pause button stops it; with reduced motion it
+starts paused. Wider, the cards sit side by side as before.
 
 **Topics** (327e): up to three suggested for this source, pre-ticked until the reader presses a
 chip; "Popular" shows eight (Finance stands in for the design's Money), and See all opens the 27

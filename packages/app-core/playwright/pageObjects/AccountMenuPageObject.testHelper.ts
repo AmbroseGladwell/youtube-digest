@@ -54,7 +54,7 @@ export class AccountMenuPageObject extends PageObject {
 
   verifyTriggerMarksAccountPage = (marked: boolean) =>
     this.step(`verifyTriggerMarksAccountPage ${marked}`, () =>
-      expect(this.get(accountMenuTestIds.trigger)).toHaveCSS("box-shadow", marked ? /inset/ : "none"),
+      expect(this.get(accountMenuTestIds.trigger)).toHaveCSS("box-shadow", marked ? /^(?!.*inset).*3\.5px/ : "none"),
     );
 
   verifyTriggerLabel = (label: string) =>

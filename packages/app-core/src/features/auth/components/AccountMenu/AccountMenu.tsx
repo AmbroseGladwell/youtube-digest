@@ -245,7 +245,8 @@ export const AccountMenu = () => {
     );
   }
 
-  const current = open || ACCOUNT_PATHS.has(pathname) || pathname.startsWith(`${Routes.settings()}/`);
+  const onAccountPage = ACCOUNT_PATHS.has(pathname) || pathname.startsWith(`${Routes.settings()}/`);
+  const triggerState = onAccountPage ? styles.triggerOnPage : (open && styles.triggerCurrent) || "";
 
   return (
     <div className={styles.root} ref={root} data-testid={accountMenuTestIds.root}>
@@ -253,7 +254,7 @@ export const AccountMenu = () => {
       <button
         type="button"
         ref={trigger}
-        className={`${styles.trigger} ${current ? styles.triggerCurrent : ""} ${isPanel ? "" : styles.triggerBar}`}
+        className={`${styles.trigger} ${triggerState} ${isPanel ? "" : styles.triggerBar}`}
         onClick={() => {
           if (open) {
             dismiss(false);

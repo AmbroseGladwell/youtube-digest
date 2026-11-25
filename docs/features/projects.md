@@ -262,7 +262,7 @@ From the Claude Design round, "OV-168 1–6" in the design project, decided with
 - **The page.** "← All projects", which goes back to All projects rather than the library; "Project · Made 4 Nov" or "Made by Claude · 9 Nov"; the name; what it's for on
   the stone tint, or a dashed invitation to write it; counts, from code (the verdict spread
   stays in the Markdown only: on the page its chips looked busy and tappable); Ask project and
-  ⋯, right-aligned, with Copy as Markdown (which copies `projectMarkdown` whole), Rename, Edit
+  ⋯, right-aligned, its menu opening leftwards under it, with Copy as Markdown (which copies `projectMarkdown` whole), Rename, Edit
   what it's for, Archive and Delete project…. Rename and the purpose edit in place. An archived project says
   so under the name and offers Restore. A row an assistant put there says "Added by Claude ·
   11 Nov · Remove"; removing offers Undo.

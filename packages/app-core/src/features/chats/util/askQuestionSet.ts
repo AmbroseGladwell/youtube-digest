@@ -18,14 +18,21 @@ export interface CustomQuestionFacts {
 
 const templateOf = (text: string): TemplateAskQuestion => ({ kind: "template", id: `template:${text}`, text });
 
-// A question whose overview isn't on the device yet waits until it is.
+// A question whose overview isn't on the device yet waits until it is; one already asked is used.
 export const customAskQuestions = (
   questions: readonly SuggestedQuestion[],
   { overviewOf, removed, goodOf }: CustomQuestionFacts,
 ): CustomAskQuestion[] =>
   questions.flatMap((question) => {
     const [first, second] = question.overviewIds.map(overviewOf);
-    if (removed.has(question.id) || first === null || first === undefined || second === null || second === undefined) {
+    if (
+      removed.has(question.id) ||
+      question.askedAt !== null ||
+      first === null ||
+      first === undefined ||
+      second === null ||
+      second === undefined
+    ) {
       return [];
     }
     return [{ kind: "custom", id: question.id, text: question.text, overviews: [first, second], good: goodOf(question) }];

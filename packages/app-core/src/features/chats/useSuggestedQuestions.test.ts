@@ -248,6 +248,18 @@ describe("useSuggestedQuestionsWith", () => {
       expect(eventsNamed("ask.question.asked")).toEqual([{ plan: "plus", scope: "library", kind: "custom" }]);
     });
 
+    it("takes an asked question away, and leaves one asked on another device out", () => {
+      seed(2);
+      render();
+      act(() => void hook.ask(custom(0)));
+      expect(texts()).toEqual(["Custom 2?", ...TEMPLATES.slice(0, 2)]);
+      questions = [{ ...questions[0]!, askedAt: NOW.toISOString() }, questions[1]!];
+      unmount();
+      root = createRoot(document.createElement("div"));
+      render();
+      expect(texts()).toEqual(["Custom 2?", ...TEMPLATES.slice(0, 2)]);
+    });
+
     it("pins nothing and writes nothing for a template", () => {
       render({ plan: "free" });
       expect(hook.ask(hook.questions[0]!)).toEqual({ text: TEMPLATES[0], pinnedOverviews: [] });

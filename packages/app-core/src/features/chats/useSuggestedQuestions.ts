@@ -257,6 +257,7 @@ export const useSuggestedQuestionsWith = ({
     if (question.kind === "template") {
       return { text: question.text, pinnedOverviews: [] };
     }
+    setGone((current) => new Set(current).add(question.id));
     write(question.id, { askedAt: now().toISOString() });
     return { text: question.text, pinnedOverviews: question.overviews.map((overview) => overview.id) };
   };

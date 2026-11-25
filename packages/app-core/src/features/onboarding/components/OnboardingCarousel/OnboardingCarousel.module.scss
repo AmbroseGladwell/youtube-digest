@@ -1,0 +1,108 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  align-items: stretch;
+
+  @media (min-width: 64rem) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.track {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.slide {
+  display: flex;
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+
+  > * {
+    flex: 1;
+  }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dots {
+  display: flex;
+}
+
+.dotButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+    border-radius: 0.5rem;
+  }
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--muted);
+  opacity: 0.45;
+  transition:
+    width var(--motion-arrive) var(--motion-ease),
+    opacity var(--motion-arrive) var(--motion-ease);
+
+  [aria-current] > & {
+    width: 1.25rem;
+    background: var(--action);
+    opacity: 1;
+  }
+}
+
+.round {
+  @include controls.surface-pill;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    transition: none;
+  }
+}

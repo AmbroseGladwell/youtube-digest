@@ -35,7 +35,8 @@ replaced wholesale when it is made again (`CLAUDE.md`, the read and favourite le
 regenerated overview keeps the questions resting on it.
 
 **Live** means not dismissed and not marked obvious (`isSuggestedQuestionLive`). A question the
-reader asked or was glad of is still live; whether it comes round again is slice 2's call. The
+reader asked or was glad of is still live to the server, but the Ask page never shows an asked one
+again (OV-411), so the same question isn't offered twice. The
 server reads the rest: obvious ones become examples of what not to ask, and dismissed or obvious
 ones never come back.
 
@@ -128,13 +129,13 @@ model decides whether, when or how much.
 calls it when the library or a project's chat opens. It answers **202** at once with
 `{ status }` (`SuggestedQuestionRefreshStatus`):
 
-| `status` | Meaning |
-|---|---|
-| `started` | a refresh began; any questions it writes arrive through sync |
-| `free` | the account's plan doesn't have suggested questions |
-| `capped` | this month's `questions` costs reached the cap |
-| `busy` | a refresh for this account is still running |
-| `not-due` | too soon, too many this week, or nothing new saved since the last |
+| `status`      | Meaning                                                                  |
+| ------------- | ------------------------------------------------------------------------ |
+| `started`     | a refresh began; any questions it writes arrive through sync             |
+| `free`        | the account's plan doesn't have suggested questions                      |
+| `capped`      | this month's `questions` costs reached the cap                           |
+| `busy`        | a refresh for this account is still running                              |
+| `not-due`     | too soon, too many this week, or nothing new saved since the last        |
 | `unavailable` | this server has no OpenAI or Anthropic key of ours, or no meaning search |
 
 The route awaits only the policy, never the writing: the refresh runs in the background and its
@@ -143,13 +144,13 @@ marked `failed`.
 
 ### Policy
 
-| Constant | Value | Rule |
-|---|---|---|
-| `QUESTION_PLANS` | BYO Plus, Plus | anything else is `free`, and nothing is recorded |
-| `QUESTIONS_MONTHLY_CAP_DOLLARS` | $0.40 | this calendar month's (UTC) `questions` costs at or over it stop a refresh |
-| `REFRESHES_PER_WINDOW` in `REFRESH_WINDOW_DAYS` | 3 in 7 days | rolling |
-| `REFRESH_GAP_DAYS` | 2 | since the last counted refresh started |
-| `REFRESH_STALE_MINUTES` | 15 | a refresh still `running` after this no longer holds the lock |
+| Constant                                        | Value          | Rule                                                                       |
+| ----------------------------------------------- | -------------- | -------------------------------------------------------------------------- |
+| `QUESTION_PLANS`                                | BYO Plus, Plus | anything else is `free`, and nothing is recorded                           |
+| `QUESTIONS_MONTHLY_CAP_DOLLARS`                 | $0.40          | this calendar month's (UTC) `questions` costs at or over it stop a refresh |
+| `REFRESHES_PER_WINDOW` in `REFRESH_WINDOW_DAYS` | 3 in 7 days    | rolling                                                                    |
+| `REFRESH_GAP_DAYS`                              | 2              | since the last counted refresh started                                     |
+| `REFRESH_STALE_MINUTES`                         | 15             | a refresh still `running` after this no longer holds the lock              |
 
 - **Something new.** A refresh starts only when an overview was saved or changed (its record
   stored) since the last counted refresh started, or there has never been one.
@@ -172,13 +173,13 @@ finished, the scopes it filled, the pairs it labelled, the questions it wrote an
 A question is **used up** once asked, dismissed, marked obvious, or first shown more than
 `SHOWN_QUESTION_LASTS_DAYS` (3) days ago (`isUsedUp`). The rest are unused, and on show.
 
-| Constant | Value |
-|---|---|
+| Constant                       | Value                      |
+| ------------------------------ | -------------------------- |
 | `UNUSED_LIBRARY_QUESTIONS_MAX` | 6 unused library questions |
-| `UNUSED_PROJECT_QUESTIONS_MAX` | 4 unused per project |
-| `NEW_QUESTIONS_PER_REFRESH` | 6 in all |
-| `NEW_LIBRARY_QUESTIONS_MAX` | 3 for the library |
-| `NEW_PROJECT_QUESTIONS_MAX` | 2 per project |
+| `UNUSED_PROJECT_QUESTIONS_MAX` | 4 unused per project       |
+| `NEW_QUESTIONS_PER_REFRESH`    | 6 in all                   |
+| `NEW_LIBRARY_QUESTIONS_MAX`    | 3 for the library          |
+| `NEW_PROJECT_QUESTIONS_MAX`    | 2 per project              |
 
 `allocateQuestionSlots` fills the library first, then each opened project that isn't archived
 and has at least `PROJECT_MEMBERS_MIN` (2) live members, until six are allocated. Nothing to fill
@@ -267,13 +268,13 @@ The library and each project use the same logic, keyed by scope.
 
 ### What the reader does to one
 
-| Action | Writes | When |
-|---|---|---|
-| **Good question** | `feedback` glad, or `none` to take the mark off | at once |
-| **Not useful** | `feedback` obvious | when Undo's 5 s are up |
-| **Hide** | `dismissedAt` | when Undo's 5 s are up |
-| **Asking it** | `askedAt` | at once |
-| **Shown** | `shownAt` | the first time it is among the three on show |
+| Action            | Writes                                          | When                                         |
+| ----------------- | ----------------------------------------------- | -------------------------------------------- |
+| **Good question** | `feedback` glad, or `none` to take the mark off | at once                                      |
+| **Not useful**    | `feedback` obvious                              | when Undo's 5 s are up                       |
+| **Hide**          | `dismissedAt`                                   | when Undo's 5 s are up                       |
+| **Asking it**     | `askedAt`, and the card goes                    | at once                                      |
+| **Shown**         | `shownAt`                                       | the first time it is among the three on show |
 
 - **The held write.** `dismissedAt` keeps the earliest time and syncs, and obvious stops a question
   coming back, so an undone removal must never have been written. Not useful and Hide take the card
