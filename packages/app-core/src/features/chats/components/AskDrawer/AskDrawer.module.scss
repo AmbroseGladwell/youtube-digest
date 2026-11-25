@@ -113,9 +113,26 @@ $drawer-width: 280px;
 .sheetSearch {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 5;
   padding: 2px 0 10px;
-  background: var(--dialog);
+  background: var(--drawer-surface);
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: var(--sticky-fade-height);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--motion-state) var(--motion-ease);
+    @include stickyFade.fade-gradient(var(--drawer-surface));
+  }
+}
+
+.sheetBody[data-scrolled] .sheetSearch::after {
+  opacity: 1;
 }
 
 .close {

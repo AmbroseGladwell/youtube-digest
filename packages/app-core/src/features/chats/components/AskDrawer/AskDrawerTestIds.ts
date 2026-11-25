@@ -13,4 +13,6 @@ export const askDrawerTestIds = {
   delete: "ask-drawer-delete",
   empty: "ask-drawer-empty",
   noMatches: "ask-drawer-no-matches",
+  sheetBody: "ask-drawer-sheet-body",
+  sheetSearch: "ask-drawer-sheet-search",
 } as const;
