@@ -184,6 +184,20 @@ timestamp per variant, merged a key at a time (`mergeSettingsRecord`), so a prom
 the phone stays away on the web and in the panel (`isPlanPromptHidden`). The counter's See
 plans, the reset line and the transcribing line have no close.
 
+### The plans modal (351m)
+
+Outside Settings, every See plans, Get Overview Plus and Upgrade opens `PlansModal`: **the paid
+plans only**, since the reader is on Free. A BYO Plus reader sees Plus alone, headed "Get more
+with Plus". A centred card on a wide screen; on a phone the shared sheet opens at its full
+height (`startsFull`) with Plus first. The Monthly / Yearly switch starts on Yearly. Each card
+(`PlanOfferCard`, shared with Settings › Plan) lists every benefit from `PLAN_OFFERS`, whose
+figures come from the server's own allowances in `@overview/domain`, and the prices from
+`PAID_PRICES`. "Compare all plans in Settings" goes to Settings › Plan.
+
+**Tell me when** stands where paying will be. Pressing it says "On the list", disabled and
+announced, for the rest of the tab's session (`useToldWhen`, in `sessionStorage`), and sends
+`plus.prompt.chosen` with `tellMeWhen`. Nothing is stored on the server.
+
 ### Events
 
 `plus.prompt.shown` once per showing, and `plus.prompt.chosen` with the `outcome` (See plans,

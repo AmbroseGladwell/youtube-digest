@@ -1,12 +1,17 @@
+import { useEffect, useState } from "react";
 import type { Plan } from "@overview/domain";
-import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
+import { Routes } from "../../../../app/Routes.js";
+import { BottomSheet, NARROW_SHEET_WIDTH } from "../../../../components/shared/BottomSheet/BottomSheet.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
-import { PLAN_CARDS, type PlanCard } from "../../planCards.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import type { Billing, PaidPlan } from "../../planCards.js";
+import { PLAN_LABEL } from "../../planLabel.js";
+import { useToldWhen } from "../../useToldWhen.js";
+import { BillingSwitch } from "../BillingSwitch/BillingSwitch.js";
+import { PlanOfferCard } from "../PlanOfferCard/PlanOfferCard.js";
 import styles from "./PlansModal.module.scss";
 import { plansModalTestIds } from "./PlansModalTestIds.js";
-
-const PLAN_OF_CARD: Record<string, Plan> = { Free: "free", "BYO Plus": "byo-plus", Plus: "plus" };
-const CHOOSE: Record<Plan, string> = { free: "", "byo-plus": "Choose BYO Plus", plus: "Get Plus" };
 
 export interface PlansModalProps {
   open: boolean;
@@ -14,89 +19,67 @@ export interface PlansModalProps {
   onClose: () => void;
 }
 
-// On a phone Plus comes first, so the recommended plan is in view (design 327ah).
+const PAID_FOR: Record<Plan, PaidPlan[]> = { free: ["byo-plus", "plus"], "byo-plus": ["plus"], plus: [] };
+
+// Outside Settings, every See plans opens the paid plans only (design 351m); a phone gets the full height, Plus first.
 export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
+  const analytics = useAnalytics();
   const phone = useIsPhone();
-  const cards = phone ? [...PLAN_CARDS].reverse() : PLAN_CARDS;
+  const [billing, setBilling] = useState<Billing>("yearly");
+  const { told, tell } = useToldWhen();
+  const byo = plan === "byo-plus";
+  const offered = phone ? [...PAID_FOR[plan]].reverse() : PAID_FOR[plan];
+  const title = byo ? "Get more with Plus" : "Get more from your library";
+
+  useEffect(() => {
+    if (open) {
+      analytics.plus.prompt.shown({ variant: "modal", plan });
+    }
+  }, [open]);
 
   return (
     <BottomSheet
       open={open}
-      title="Plans."
+      title={title}
       onClose={onClose}
+      closeLabel="Close plans"
       wide="dialog"
-      width="60rem"
+      width={byo ? NARROW_SHEET_WIDTH : "47.5rem"}
+      startsFull
       testId={plansModalTestIds.root}
-      head={<h2 className={styles.title}>Plans.</h2>}
+      head={<h2 className={styles.title}>{title}</h2>}
     >
       <div className={styles.content}>
-        <p className={styles.lead}>Every plan has every feature. They differ in how much you can make and ask a month.</p>
-        <ul className={styles.cards}>
-          {cards.map((card) => (
-            <PlanCardItem key={card.name} card={card} yours={PLAN_OF_CARD[card.name] === plan} />
+        <p className={styles.lead}>
+          {byo ? "You’re on BYO Plus. Plus adds the most on us." : "You’re on Free. Both plans include everything in Free."} Paid plans are
+          coming soon.
+        </p>
+        <BillingSwitch billing={billing} onChange={setBilling} testId={plansModalTestIds.billing} />
+        <ul className={`${styles.cards} ${offered.length === 1 ? styles.one : ""}`}>
+          {offered.map((paid) => (
+            <PlanOfferCard
+              key={paid}
+              plan={paid}
+              billing={billing}
+              yours={false}
+              told={told.includes(paid)}
+              onTell={(chosen) => {
+                tell(chosen);
+                analytics.plus.prompt.chosen({ variant: "modal", plan, outcome: "tellMeWhen", tellMeWhen: chosen });
+              }}
+            />
           ))}
         </ul>
-        <p className={styles.foot}>Cancel anytime. Prices in GBP.</p>
+        <p className={styles.foot}>
+          *Question counts are typical, not fixed. Yearly is billed once a year. Prices in GBP.{" "}
+          <PageLink to={Routes.settingsSection("plan")} onClick={onClose} className={styles.link} data-testid={plansModalTestIds.compare}>
+            Compare all plans in Settings
+          </PageLink>
+        </p>
+        <p className={styles.announce} role="status">
+          {told.length > 0 ? `You’re on the list for ${told.map((paid) => PLAN_LABEL[paid]).join(" and ")}.` : ""}
+        </p>
       </div>
     </BottomSheet>
-  );
-};
-
-interface PlanCardItemProps {
-  card: PlanCard;
-  yours: boolean;
-}
-
-const PlanCardItem = ({ card, yours }: PlanCardItemProps) => {
-  const plan = PLAN_OF_CARD[card.name]!;
-  const recommended = plan === "plus";
-  return (
-    <li className={`${styles.card} ${yours ? styles.yours : ""}`} data-testid={plansModalTestIds.card(plan)}>
-      <div className={styles.cardHead}>
-        <span className={styles.name}>{card.name}</span>
-        {yours && <span className={styles.tag}>Your plan</span>}
-        {!yours && recommended && <span className={styles.tag}>Recommended</span>}
-      </div>
-      <span className={styles.price}>{card.price}</span>
-      <dl className={styles.figures}>
-        <div>
-          <dt>On us</dt>
-          <dd>{card.ourKey}</dd>
-        </div>
-        <div>
-          <dt>On your own AI API key</dt>
-          <dd>{card.ownKey}</dd>
-        </div>
-        <div>
-          <dt>Chat, on us</dt>
-          <dd>{card.chat}</dd>
-        </div>
-        <div>
-          <dt>Transcribing episodes</dt>
-          <dd>{card.transcribing}</dd>
-        </div>
-      </dl>
-      <p className={styles.note}>{card.note}</p>
-      {yours ? (
-        <span className={styles.current}>What you’re on now</span>
-      ) : (
-        plan !== "free" && (
-          <>
-            <button
-              type="button"
-              className={recommended ? styles.primary : styles.secondary}
-              disabled
-              aria-describedby={`plans-modal-billing-${plan}`}
-              data-testid={plansModalTestIds.choose(plan)}
-            >
-              {CHOOSE[plan]}
-            </button>
-            <span id={`plans-modal-billing-${plan}`} className={styles.soon}>
-              Paying for a plan opens soon.
-            </span>
-          </>
-        )
-      )}
-    </li>
   );
 };

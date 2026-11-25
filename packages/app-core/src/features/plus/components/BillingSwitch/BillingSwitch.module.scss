@@ -1,0 +1,8 @@
+.root {
+  display: flex;
+  justify-content: center;
+
+  @media (max-width: 47.9375rem) {
+    justify-content: flex-start;
+  }
+}

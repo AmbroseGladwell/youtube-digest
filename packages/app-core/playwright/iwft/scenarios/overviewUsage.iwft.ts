@@ -137,7 +137,7 @@ test("on Free with no key, our key's 5 spent: saving a link meets the wall, whic
   await launcher.settingsPage.verifySectionIsShown("keys");
 });
 
-test("the wall's Get Plus and See every plan open the plans, where paying for a plan isn't open yet", async ({
+test("the wall's Get Plus and See every plan open the paid plans, where Tell me when puts the reader on the list", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -150,20 +150,34 @@ test("the wall's Get Plus and See every plan open the plans, where paying for a 
   await launcher.softWall.getPlus();
 
   await launcher.plansModal.verifyIsShown();
-  await launcher.plansModal.verifyCardsInOrder(["free", "byo-plus", "plus"]);
+  await launcher.plansModal.verifyHeading("Get more from your library");
+  await launcher.plansModal.verifyCardsInOrder(["byo-plus", "plus"]);
   await launcher.plansModal.verifyCardsRead([
-    { plan: "free", lines: ["£0", "Your plan", "5 a month", "10 a month"] },
-    { plan: "byo-plus", lines: ["£4.99 a month", "10 a month", "200 a month"] },
-    { plan: "plus", lines: ["£7.99 a month", "Recommended", "50 a month", "200 a month"] },
+    {
+      plan: "byo-plus",
+      lines: ["£4.99 a month", "Billed yearly at £59.88 · save 17%", "Everything in Free, plus:", "10 overviews a month, on us"],
+    },
+    { plan: "plus", lines: ["£7.99 a month", "Recommended", "Coming soon", "50 overviews a month, on us", "300 saves a month"] },
   ]);
-  await launcher.plansModal.verifyCannotChoose("free");
-  await launcher.plansModal.verifyPayingOpensSoon("byo-plus");
-  await launcher.plansModal.verifyPayingOpensSoon("plus");
+  await launcher.plansModal.chooseMonthly();
+  await launcher.plansModal.verifyCardsRead([
+    { plan: "byo-plus", lines: ["£5.99 a month"] },
+    { plan: "plus", lines: ["£9.49 a month"] },
+  ]);
+  await launcher.plansModal.tellMeWhen("plus");
+  await launcher.plansModal.verifyOnTheList("plus");
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("plus.prompt.")))
+    .toEqual([
+      { name: "plus.prompt.shown", props: { variant: "modal", plan: "free" } },
+      { name: "plus.prompt.chosen", props: { variant: "modal", plan: "free", outcome: "tellMeWhen", tellMeWhen: "plus" } },
+    ]);
   await launcher.plansModal.close();
   await launcher.plansModal.verifyIsClosed();
 
   await launcher.softWall.seeEveryPlan();
   await launcher.plansModal.verifyIsShown();
+  await launcher.plansModal.verifyOnTheList("plus");
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "capture.newOverviewForm.plansOpened"))
     .toEqual([
@@ -172,7 +186,21 @@ test("the wall's Get Plus and See every plan open the plans, where paying for a 
     ]);
 });
 
-test("on a phone the plans put Plus first", async ({ page, launcher, backendSimulator }) => {
+test("a BYO Plus reader at the wall is offered Plus alone", async ({ launcher, backendSimulator }) => {
+  backendSimulator.auth.accountIsOn("byo-plus");
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 10, own: 200 });
+  await launcher.launch(SIGNED_IN);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+
+  await launcher.softWall.seeEveryPlan();
+
+  await launcher.plansModal.verifyHeading("Get more with Plus");
+  await launcher.plansModal.verifyCardsInOrder(["plus"]);
+});
+
+test("on a phone the plans fill the screen with Plus first", async ({ page, launcher, backendSimulator }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.monthHasMade({ ours: 5 });
@@ -182,7 +210,8 @@ test("on a phone the plans put Plus first", async ({ page, launcher, backendSimu
 
   await launcher.softWall.seeEveryPlan();
 
-  await launcher.plansModal.verifyCardsInOrder(["plus", "byo-plus", "free"]);
+  await launcher.plansModal.verifyCardsInOrder(["plus", "byo-plus"]);
+  await launcher.plansModal.verifyFullHeight();
 });
 
 test("on Free with both quotas spent, the wall offers no key to a reader who has one", async ({ launcher, backendSimulator }) => {
