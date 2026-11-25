@@ -31,7 +31,7 @@ test("drops a parenthetical aside", () => {
 test("says a multiplication, a power and a simple fraction in words", () => {
   assert.equal(speakable("Leave 8x7 until last."), "Leave 8 times 7 until last.");
   assert.equal(speakable("Pair 4 x 5 with 5x4."), "Pair 4 times 5 with 5 times 4.");
-  assert.equal(speakable("It scales as mass^0.75."), "It scales as mass to the power of 0.75.");
+  assert.equal(speakable("It scales as mass^0.75."), "It scales as mass to the power of 0 point 7 5.");
   assert.equal(speakable("Heart rate scales as M^-1/4."), "Heart rate scales as M to the power of minus one quarter.");
   assert.equal(speakable("About 1/6 of the dose, or 3/4 of it."), "About one sixth of the dose, or three quarters of it.");
 });
@@ -44,6 +44,28 @@ test("leaves a date or an odd ratio as it is rather than guessing a fraction", (
 test("says a thousands suffix, and a 401k as it is named", () => {
   assert.equal(speakable("A 50k salary."), "A 50 thousand salary.");
   assert.equal(speakable("Raise your 401k and your 401(k)."), "Raise your four oh one k and your four oh one k.");
+});
+
+test("says a decimal point as a word, so the phonemiser never cuts the sentence at it", () => {
+  assert.equal(speakable("Use 1.5 litres."), "Use 1 point 5 litres.");
+  assert.equal(speakable("Up 2.5% on 0.75 of it."), "Up 2 point 5 percent on 0 point 7 5 of it.");
+  assert.equal(speakable("Python 3.11.2 ships it."), "Python 3 point 1 1 point 2 ships it.");
+  assert.equal(speakable("Earn $1.5k more, a 2.5k rise."), "Earn 1 point 5 thousand dollars more, a 2 point 5 thousand rise.");
+});
+
+test("says pounds and pence, and pence alone under a pound", () => {
+  assert.equal(speakable("It costs £2.50."), "It costs 2 pounds 50.");
+  assert.equal(speakable("It costs $1.99 or €3.00."), "It costs 1 dollar 99 or 3 euros.");
+  assert.equal(speakable("Only £0.99, or $0.01."), "Only 99 pence, or 1 cent.");
+  assert.equal(speakable("A $1.5m fund."), "A 1 point 5 million dollar fund.");
+});
+
+test("says every amount the card lists as people say it, and leaves a full stop after a year alone", () => {
+  assert.equal(speakable("£4.99, £4.00 and £4.05."), "4 pounds 99, 4 pounds and 4 pounds 5.");
+  assert.equal(speakable("It raised $1.5m."), "It raised 1 point 5 million dollars.");
+  assert.equal(speakable("a $4.99 coat"), "a 4 dollars 99 coat");
+  assert.equal(speakable("Update to v2.5.1 now."), "Update to v2 point 5 point 1 now.");
+  assert.equal(speakable("It grew in 2026."), "It grew in 2026.");
 });
 
 test("leaves ordinary prose alone", () => {
