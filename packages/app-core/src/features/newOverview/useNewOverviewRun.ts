@@ -394,7 +394,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
             if (options.savedCapture !== undefined) {
               analytics.keptLinks.saved.overviewMadeLater({
                 plan,
-                surface: captureSurfaceOf(surface),
+                captureSurface: captureSurfaceOf(surface),
                 ...madeLaterOf(options.savedCapture.savedAt, new Date()),
               });
             }
@@ -445,7 +445,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
             if (error instanceof SavedWithoutOverview) {
               analytics.keptLinks.saved.savedWithoutOverview({
                 plan,
-                surface: captureSurfaceOf(surface),
+                captureSurface: captureSurfaceOf(surface),
                 transcribed: (podcastRequest?.transcribe ?? tiktokRequest?.transcribe ?? socialRequest?.transcribe) !== undefined,
                 fromKeptLink: false,
               });
@@ -592,7 +592,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         queueStatus: "waiting",
         problem: null,
       });
-      analytics.keptLinks.queue.linkKept({ plan, surface: captureSurfaceOf(surface), waitingFor: "server" });
+      analytics.keptLinks.queue.linkKept({ plan, captureSurface: captureSurfaceOf(surface), waitingFor: "server" });
       setJustNow((current) => current.map((done) => (done.startedAt === kept.startedAt ? { ...done, kept: true } : done)));
       void queryClient.invalidateQueries({ queryKey: captureKeys.all });
     },

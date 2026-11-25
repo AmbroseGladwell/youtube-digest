@@ -272,7 +272,7 @@ test("at the wall, Save it for now keeps the link with its transcript, makes not
   expect(backendSimulator.ourKey.generations()).toEqual([]);
   await expect
     .poll(() => keptLinkEvents(backendSimulator, "savedWithoutOverview"))
-    .toEqual([{ plan: "free", surface: "web", transcribed: false, fromKeptLink: false }]);
+    .toEqual([{ plan: "free", captureSurface: "web", transcribed: false, fromKeptLink: false }]);
   const [capture] = await backendSimulator.captureStore.list();
   expect(capture).toMatchObject({ stage: "saved", sourceKey: IWFT_VIDEO_ID });
   await launcher.softWall.savedDone();
@@ -302,7 +302,7 @@ test("with the month's saves made, the wall offers only Plus and a key", async (
   await dialog.form.submitUrl(VALID_URL);
 
   await launcher.softWall.verifyOffersSaving(false);
-  await expect.poll(() => keptLinkEvents(backendSimulator, "saveCapReached")).toEqual([{ plan: "free", surface: "web" }]);
+  await expect.poll(() => keptLinkEvents(backendSimulator, "saveCapReached")).toEqual([{ plan: "free", captureSurface: "web" }]);
 });
 
 test("once overviews are back, a saved item's Make overview writes it from its kept transcript, under its own id", async ({
@@ -349,5 +349,5 @@ test("once overviews are back, a saved item's Make overview writes it from its k
   expect(await backendSimulator.captureStore.list()).toEqual([]);
   await expect
     .poll(() => keptLinkEvents(backendSimulator, "overviewMadeLater"))
-    .toMatchObject([{ plan: "free", surface: "web", after: "reset" }]);
+    .toMatchObject([{ plan: "free", captureSurface: "web", after: "reset" }]);
 });

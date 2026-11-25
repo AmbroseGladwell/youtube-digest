@@ -1206,12 +1206,12 @@ export const analyticsEvents = {
     queue: {
       linkKept: event("The reader keeps a link that can't be made right now, to be made once what it waits for clears", {
         plan: Plan,
-        surface: CaptureSurface,
+        captureSurface: CaptureSurface,
         waitingFor: CaptureWait,
       }),
       keptLinkMade: event("A kept link's overview is written: how long it waited, what for, where it was kept and which device made it", {
         plan: Plan,
-        surface: CaptureSurface,
+        captureSurface: CaptureSurface,
         keptFrom: CaptureSurface,
         waitingFor: CaptureWait,
         waitedMinutes: z.number().int().nonnegative(),
@@ -1219,12 +1219,12 @@ export const analyticsEvents = {
       }),
       keptLinkRemoved: event("The reader takes a kept link out of the queue before it's made", {
         plan: Plan,
-        surface: CaptureSurface,
+        captureSurface: CaptureSurface,
         waitingFor: CaptureWait,
       }),
       keptLinkFailed: event("A kept link couldn't be made, and why; the reader can try it again", {
         plan: Plan,
-        surface: CaptureSurface,
+        captureSurface: CaptureSurface,
         problem: QueuedCaptureProblem,
       }),
     },
@@ -1233,7 +1233,7 @@ export const analyticsEvents = {
         "A link is saved with its transcript but no overview, as the month's overviews are spent; whether it was transcribed and whether it was a kept link",
         {
           plan: Plan,
-          surface: CaptureSurface,
+          captureSurface: CaptureSurface,
           transcribed: z.boolean(),
           fromKeptLink: z.boolean(),
         },
@@ -1242,14 +1242,14 @@ export const analyticsEvents = {
         "An item saved without an overview gets its overview: how long it waited, and whether its month had reset or more overviews came the same month",
         {
           plan: Plan,
-          surface: CaptureSurface,
+          captureSurface: CaptureSurface,
           waitedHours: z.number().int().nonnegative(),
           after: z.enum(["reset", "sameMonth"]),
         },
       ),
       saveCapReached: event("A reader at the month's limit meets the wall with no saves left, so Save it for now isn't offered", {
         plan: Plan,
-        surface: CaptureSurface,
+        captureSurface: CaptureSurface,
       }),
     },
   },
@@ -1265,7 +1265,7 @@ export const analyticsEvents = {
       }),
       // A website is only "website": its domain says what the reader reads (docs/architecture/analytics.md).
       sourceSwitched: event("The reader adds a source to the library's filter, or takes one off", {
-        platform: z.enum(["youtube", "tiktok", "instagram", "facebook", "spotify", "applePodcasts", "website"]),
+        source: z.enum(["youtube", "tiktok", "instagram", "facebook", "spotify", "applePodcasts", "website"]),
         on: z.boolean(),
         from: FilterControl,
       }),
@@ -1383,30 +1383,30 @@ export const analyticsEvents = {
       opened: event("The reader opens an overview from its library row; `said` is the moment a transcript match showed", {
         overviewId: OverviewId,
         from: z.enum(["title", "thumbnail", "said"]),
-        layout: LibraryRowLayout,
+        rowLayout: LibraryRowLayout,
         plan: Plan,
       }),
       readSwitched: event("The reader marks a library row read or unread, to the state chosen", {
         overviewId: OverviewId,
         read: z.boolean(),
-        layout: LibraryRowLayout,
+        rowLayout: LibraryRowLayout,
         plan: Plan,
       }),
       favouriteSwitched: event("The reader favourites or unfavourites a library row, to the state chosen", {
         overviewId: OverviewId,
         favourite: z.boolean(),
-        layout: LibraryRowLayout,
+        rowLayout: LibraryRowLayout,
         plan: Plan,
       }),
       listenPressed: event("The reader presses Listen on a library row, to the state chosen", {
         overviewId: OverviewId,
         listening: z.boolean(),
-        layout: LibraryRowLayout,
+        rowLayout: LibraryRowLayout,
         plan: Plan,
       }),
       imageFailed: event("A library row's image failed to load and its name tile or nothing showed instead, once per overview a session", {
         kind: z.enum(["youtube", "web", "podcast", "tiktok", "instagram", "facebook"]),
-        layout: LibraryRowLayout,
+        rowLayout: LibraryRowLayout,
         plan: Plan,
       }),
     },

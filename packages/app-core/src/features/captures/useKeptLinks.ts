@@ -91,7 +91,7 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
         }
         analytics.keptLinks.queue.keptLinkMade({
           plan,
-          surface,
+          captureSurface: surface,
           keptFrom: link.keptFrom,
           waitingFor: link.waitingFor,
           waitedMinutes: Math.max(0, Math.floor((Date.now() - new Date(link.keptAt).getTime()) / MINUTE_MS)),
@@ -99,7 +99,7 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
         });
       } catch (error) {
         if (error instanceof SavedWithoutOverview) {
-          analytics.keptLinks.saved.savedWithoutOverview({ plan, surface, transcribed: false, fromKeptLink: true });
+          analytics.keptLinks.saved.savedWithoutOverview({ plan, captureSurface: surface, transcribed: false, fromKeptLink: true });
           return;
         }
         const problem = queueProblemOf(error);
@@ -109,7 +109,7 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
           return;
         }
         const failed = isQueueHoldReason(problem) ? "failed" : problem;
-        analytics.keptLinks.queue.keptLinkFailed({ plan, surface, problem: failed });
+        analytics.keptLinks.queue.keptLinkFailed({ plan, captureSurface: surface, problem: failed });
         await captureStore.saveCapture({ ...link, queueStatus: "failed", problem: failed });
       } finally {
         void claimApi?.release(link.sourceKey, holder).catch(() => undefined);
@@ -132,7 +132,7 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
     (id: OverviewId) => {
       const link = links.find((candidate) => candidate.id === id);
       if (link !== undefined) {
-        analytics.keptLinks.queue.keptLinkRemoved({ plan, surface, waitingFor: link.waitingFor });
+        analytics.keptLinks.queue.keptLinkRemoved({ plan, captureSurface: surface, waitingFor: link.waitingFor });
       }
       void captureStore.removeCapture(id).then(refresh);
     },

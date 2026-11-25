@@ -72,10 +72,12 @@ test("stopped at our server's cap, Keep it keeps the link, and it is made by its
 
   await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.id)).toEqual([kept!.id]);
   expect(await backendSimulator.captureStore.list()).toEqual([]);
-  await expect.poll(() => propsOf(backendSimulator, "queue.linkKept")).toEqual([{ plan: "free", surface: "web", waitingFor: "server" }]);
+  await expect
+    .poll(() => propsOf(backendSimulator, "queue.linkKept"))
+    .toEqual([{ plan: "free", captureSurface: "web", waitingFor: "server" }]);
   await expect
     .poll(() => propsOf(backendSimulator, "queue.keptLinkMade"))
-    .toEqual([{ plan: "free", surface: "web", keptFrom: "web", waitingFor: "server", waitedMinutes: 151, byExtension: false }]);
+    .toEqual([{ plan: "free", captureSurface: "web", keptFrom: "web", waitingFor: "server", waitedMinutes: 151, byExtension: false }]);
 });
 
 test("once overviews are back, Make all on No overview yet makes every saved one, one after another", async ({
@@ -135,5 +137,5 @@ test("the extension makes a link kept on a phone at once, and its panel says so 
   await expect(page.getByTestId(keptHereBannerTestIds.root)).toHaveCount(0);
   await expect
     .poll(() => propsOf(backendSimulator, "queue.keptLinkMade"))
-    .toMatchObject([{ surface: "panel", keptFrom: "phone", waitingFor: "server", byExtension: true }]);
+    .toMatchObject([{ captureSurface: "panel", keptFrom: "phone", waitingFor: "server", byExtension: true }]);
 });

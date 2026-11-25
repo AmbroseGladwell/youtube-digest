@@ -74,9 +74,9 @@ test("a row's read and favourite are counted with the state chosen, the overview
   await expect
     .poll(() => libraryEvents(backendSimulator))
     .toEqual([
-      { name: "library.overviewCard.readSwitched", props: { overviewId, read: true, layout: "row", plan: "free" } },
-      { name: "library.overviewCard.favouriteSwitched", props: { overviewId, favourite: true, layout: "row", plan: "free" } },
-      { name: "library.overviewCard.opened", props: { overviewId, from: "title", layout: "row", plan: "free" } },
+      { name: "library.overviewCard.readSwitched", props: { overviewId, read: true, rowLayout: "row", plan: "free" } },
+      { name: "library.overviewCard.favouriteSwitched", props: { overviewId, favourite: true, rowLayout: "row", plan: "free" } },
+      { name: "library.overviewCard.opened", props: { overviewId, from: "title", rowLayout: "row", plan: "free" } },
     ]);
 });
 
@@ -104,7 +104,7 @@ test("on a phone the row's events say it was the banner", async ({ launcher, bac
   await expect
     .poll(() => libraryEvents(backendSimulator).filter(({ name }) => name === "library.overviewCard.listenPressed"))
     .toEqual([
-      { name: "library.overviewCard.listenPressed", props: { overviewId: grid.id, listening: true, layout: "banner", plan: "free" } },
+      { name: "library.overviewCard.listenPressed", props: { overviewId: grid.id, listening: true, rowLayout: "banner", plan: "free" } },
     ]);
 });
 
@@ -126,5 +126,5 @@ test("a row whose image fails is counted once by its kind, however often it is d
 
   await expect
     .poll(() => libraryEvents(backendSimulator).filter(({ name }) => name === "library.overviewCard.imageFailed"))
-    .toEqual([{ name: "library.overviewCard.imageFailed", props: { kind: "youtube", layout: "row", plan: "free" } }]);
+    .toEqual([{ name: "library.overviewCard.imageFailed", props: { kind: "youtube", rowLayout: "row", plan: "free" } }]);
 });

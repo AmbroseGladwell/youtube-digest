@@ -81,7 +81,8 @@ was: a place the reader went rather than how they like the list (`library-view.m
 ## Chips and analytics
 
 Every chosen value has its own chip, and its × takes off only that value. Each value
-switched on or off is one event: `kindSwitched`, `sourceSwitched` (platform only),
+switched on or off is one event: `kindSwitched`, `sourceSwitched` (`source`: the platform only;
+named `platform` until 25 Nov, which the event's context overwrote with the device's OS),
 `noveltySwitched`, `tagChosen`/`tagCleared` (never the tag), and `addedChosen` and
 `noTopicChosen` for the single-choice groups.
 

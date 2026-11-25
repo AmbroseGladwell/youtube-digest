@@ -100,8 +100,10 @@ move. From 48rem up it sits beside the line as before.
 ## Analytics
 
 The row's four events (`library.overviewCard.opened`, `readSwitched`, `favouriteSwitched`,
-`listenPressed`) carry `layout` (`banner` below 30rem, `narrowRow` to 48rem, `row` above,
+`listenPressed`) carry `rowLayout` (`banner` below 30rem, `narrowRow` to 48rem, `row` above,
 from `useLibraryRowLayout`, on the stylesheet's breakpoints) and the reader's `plan`.
+Not `layout`: the server stamps that on every event (`full`, `panel`) and it would overwrite
+the row's, as it did for the first day; `analyticsEvents.test.ts` now refuses such a name.
 `library.overviewCard.imageFailed` counts a row whose image failed to load, by the source's
 kind, once per overview a session, so a list redrawn on scroll doesn't count it again.
 

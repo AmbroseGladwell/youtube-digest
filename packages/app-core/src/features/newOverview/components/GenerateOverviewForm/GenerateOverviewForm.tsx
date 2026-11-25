@@ -157,7 +157,7 @@ export const GenerateOverviewForm = ({
     if (walled !== null && url.trim() !== "") {
       analytics.capture.newOverviewForm.wallShown({ plan });
       if (usage?.saves !== undefined && usage.saves.used >= usage.saves.limit) {
-        analytics.keptLinks.saved.saveCapReached({ plan, surface: captureSurfaceOf(surface) });
+        analytics.keptLinks.saved.saveCapReached({ plan, captureSurface: captureSurfaceOf(surface) });
       }
       setWallShown(true);
       return;
