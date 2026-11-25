@@ -126,7 +126,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: npx playwright install --with-deps chromium
+      - name: Install Chromium, retrying when a runner's apt fetch comes back short (OV-416)
+        run: |
+          for attempt in 1 2 3; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "::warning::Chromium install attempt $attempt failed; refreshing apt and retrying"
+            sleep $((attempt * 15))
+            sudo apt-get update || true
+          done
+          exit 1
       - run: npm run test:iwft --workspace packages/app-core -- --shard=${{ matrix.shard }}/4
       - if: failure()
         uses: actions/upload-artifact@v7
