@@ -1,7 +1,5 @@
 export const modelPickerDialogTestIds = {
   root: "ModelPickerDialog.root",
-  heading: "ModelPickerDialog.heading",
-  close: "ModelPickerDialog.close",
   standfirst: "ModelPickerDialog.standfirst",
   search: "ModelPickerDialog.search",
   searchCount: "ModelPickerDialog.searchCount",

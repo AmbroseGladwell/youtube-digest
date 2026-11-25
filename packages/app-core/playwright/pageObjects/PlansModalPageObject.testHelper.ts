@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import type { Plan } from "@overview/domain";
 import { plansModalTestIds } from "../../src/features/plus/components/PlansModal/PlansModalTestIds.js";
+import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class PlansModalPageObject extends PageObject {
@@ -35,5 +36,9 @@ export class PlansModalPageObject extends PageObject {
   verifyCannotChoose = (plan: Plan) =>
     this.step(`verifyCannotChoose ${plan}`, () => this.expectToHaveCount(plansModalTestIds.choose(plan), 0));
 
-  close = () => this.step("close", () => this.click(plansModalTestIds.close));
+  close = () =>
+    this.step("close", async () => {
+      await this.click(this.get(plansModalTestIds.root).getByTestId(bottomSheetTestIds.close));
+      await expect(this.get(plansModalTestIds.root)).toBeHidden();
+    });
 }
