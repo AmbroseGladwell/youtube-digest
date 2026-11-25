@@ -69,14 +69,20 @@ each one: a centred dialog, a popover, a side panel, or a sheet still. The share
 | About you (Settings, onboarding) | a popover under the sentence; the extension panel keeps its full-screen takeover |
 | Cooking mode's Steps, Ingredients, Step in the video, a timer, and leaving with timers | a centred card; a desktop's ingredients are the drawer instead |
 | The timers list and a timer's controls outside cooking mode, and "Your timers will stop" | a centred card |
-
 | The model picker (Settings › AI API keys) | a centred card; a phone used to get a full-screen page |
 | Plans | a wide centred card with the plans side by side; a phone used to get a full-screen page |
+| The Ask page's conversations | the drawer at the left |
 
 The questions about timers (leaving cooking mode, timers that will stop) keep their buttons
 in the fixed foot. ×, Escape, the scrim and the handle all mean staying.
 
-Still their own, for OV-404's last slice: the Ask drawer and chat's sheet.
+Chat beside a note (`chats.md`) keeps its own sheet, because it has two heights: raised over
+the note, or lowered to its title under the read-aloud bar. It moves on the same curves
+(`theme/sheetMotion.scss`). It springs up on opening and raising, and falls away on lowering
+and closing. Its handle widens while dragged, and the chat's own × and Escape close it.
+
+No other sheet in the app builds its own scrim, drag or animation. Cooking mode stays full
+screen.
 
 ## Testing
 

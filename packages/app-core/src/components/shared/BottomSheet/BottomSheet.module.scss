@@ -1,9 +1,5 @@
 @use "../../../theme/shortScreens.scss";
-
-// Design 34ai's sheet (Time saved): a spring up, a quick fall away, the scrim fading with it.
-$sheet-spring: linear(0, 0.13 3.2%, 0.53 8.6%, 0.89 16.3%, 1.015 25%, 1.03 34%, 1.012 50%, 1);
-$enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
-$leave-easing: cubic-bezier(0.4, 0, 1, 1);
+@use "../../../theme/sheetMotion.scss" as *;
 
 .dialog {
   position: fixed;
@@ -21,21 +17,21 @@ $leave-easing: cubic-bezier(0.4, 0, 1, 1);
 
   &::backdrop {
     background: var(--scrim);
-    animation: sheetScrimIn 260ms ease backwards;
+    animation: sheetScrimIn $scrim-in-ms ease backwards;
   }
 }
 
 // Backwards, not both: a held transform would trap popovers inside the sheet under it (OV-394).
 .panel {
-  animation: sheetTravel 520ms $sheet-spring backwards;
+  animation: sheetTravel $sheet-rise-ms $sheet-spring backwards;
 }
 
 .leaving::backdrop {
-  animation: sheetScrimOut 240ms ease forwards;
+  animation: sheetScrimOut $sheet-fall-ms ease forwards;
 }
 
 .leaving .panel {
-  animation: sheetAway 240ms $leave-easing forwards;
+  animation: sheetAway $sheet-fall-ms $leave-easing forwards;
 }
 
 @keyframes sheetTravel {

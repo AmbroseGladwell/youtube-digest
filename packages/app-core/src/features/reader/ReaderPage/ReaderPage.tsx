@@ -1175,8 +1175,9 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
             />
           </div>
         )}
-        {chatSheet && chat.open && (
+        {chatSheet && (
           <ChatSheet
+            open={chat.open}
             rest={sheetRest}
             label={`Ask about this ${sourceWord}`}
             loweredTitle={chat.title}
