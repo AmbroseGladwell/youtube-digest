@@ -1,7 +1,7 @@
 import type { ActivePage, ArticlePages } from "@overview/app-core";
 import { canonicalArticleUrl } from "@overview/domain";
 import { BridgeMessage, isPageMenuRequest } from "./overviewBridge.js";
-import { readArticleInTab, showArticlePlaceInTab } from "./chromeArticleReader.js";
+import { readArticleAt, readArticleInTab, showArticlePlaceInTab } from "./chromeArticleReader.js";
 import { chromePageAccess, pagePermission } from "./chromePageAccess.js";
 
 const RELOAD_TIMEOUT_MS = 20_000;
@@ -98,6 +98,7 @@ export const chromeArticlePages: ArticlePages = {
   hasAccess: chromePageAccess.granted,
   requestAccess: chromePageAccess.request,
   read: readArticleInTab,
+  readAt: readArticleAt,
   reload: reloadTab,
   showPlace: showArticlePlaceInTab,
   takeMenuRequest: () => {

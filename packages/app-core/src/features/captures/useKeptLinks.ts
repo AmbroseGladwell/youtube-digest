@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFetchPodcastApi } from "@overview/sync";
 import type { KeptCapture, OverviewId } from "@overview/domain";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
@@ -13,10 +12,7 @@ import { isQueueHoldReason, queueHoldOf, queueProblemOf } from "../captureQueue/
 import { SavedWithoutOverview } from "../newOverview/api/SavedWithoutOverview.js";
 import { useGenerationReadiness } from "../newOverview/useGenerationReadiness.js";
 import { useNextQuota } from "../newOverview/useNextQuota.js";
-import { useRunOverviewGeneration, useRunPodcastGeneration } from "../newOverview/useRunOverviewGeneration.js";
 import { TranscriptionRefusedError } from "../podcasts/api/TranscriptionRefusedError.js";
-import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
-import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { nextUsageMonth } from "./util/nextUsageMonth.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
 import { usePlan } from "../plus/usePlan.js";
@@ -24,6 +20,7 @@ import { captureKeys } from "./captureKeys.js";
 import { useKeptLinksQuery } from "./queries/keptLinksQuery.js";
 import { captureSurfaceOf } from "./util/captureSurfaceOf.js";
 import { keptLinkDue } from "./util/keptLinkDue.js";
+import { useKeptLinkMakers } from "./useKeptLinkMakers.js";
 
 const RECHECK_MS = 60_000;
 const MINUTE_MS = 60_000;
@@ -34,6 +31,9 @@ export interface KeptLinksController {
   hasExtension: boolean;
   remove: (id: OverviewId) => void;
   retry: (id: OverviewId) => void;
+  // Kept for the extension, waiting for the reader's leave to read their site.
+  needsAccess: KeptCapture[];
+  allow: (link: KeptCapture) => void;
 }
 
 // Made by whichever open device can, once: docs/features/kept-links.md, "Kept links".
@@ -45,28 +45,14 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
   const { captureStore } = useStores();
   const queryClient = useQueryClient();
   const { apiKeys } = useApiKeys();
-  const generate = useRunOverviewGeneration(apiKeys);
-  const runPodcast = useRunPodcastGeneration(apiKeys);
-  const knownApiUrl = useKnownApiUrl();
-  const { connection } = useSyncConnection();
-  const episodeOf = useCallback(
-    async (url: string) => {
-      if (knownApiUrl === null) {
-        throw new Error("Episodes are read through our server, and there isn't one here");
-      }
-      const read = await createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token }).read(url);
-      if (read.status !== "read") {
-        throw new Error(`The episode couldn't be read: ${read.reason}`);
-      }
-      return read.episode;
-    },
-    [knownApiUrl, connection.token],
-  );
+  const makers = useKeptLinkMakers(apiKeys);
+  const [needsAccess, setNeedsAccess] = useState<ReadonlySet<string>>(new Set());
   const readiness = useGenerationReadiness();
   const hasExtension = useYouTubeFetch() !== null;
   const next = useNextQuota();
   const claimApi = useCaptureClaimApi();
   const holder = useRef(globalThis.crypto.randomUUID()).current;
+  const inFlight = useRef(false);
   const links = useKeptLinksQuery().data ?? [];
   const [making, setMaking] = useState<KeptCapture | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -86,8 +72,12 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
     await queryClient.invalidateQueries({ queryKey: overviewKeys.all });
   }, [queryClient]);
 
-  const make = useCallback(
+  const makeOne = useCallback(
     async (link: KeptCapture) => {
+      if (!(await makers.hasAccess(link))) {
+        setNeedsAccess((current) => new Set(current).add(link.id));
+        return;
+      }
       const claim = await claimOrSkip(claimApi, link.sourceKey, holder);
       if (claim.made === "elsewhere") {
         setElsewhere((current) => new Map(current).set(link.id, claim.until));
@@ -100,10 +90,7 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
           captureReason: () => link.captureReason ?? "",
           ...(saveInstead ? { saveInstead: link.keptFrom } : {}),
         };
-        if (link.source?.kind !== "podcast") {
-          return generate(link.url, options);
-        }
-        return runPodcast({ episode: await episodeOf(link.url), sharedFrom: link.url, transcribe: "chosen" }, options);
+        return makers.make(link, options);
       };
       try {
         try {
@@ -152,10 +139,28 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
         await refresh();
       }
     },
-    [claimApi, holder, generate, runPodcast, episodeOf, monthSpent, captureStore, refresh, analytics, plan, surface],
+    [claimApi, holder, makers, monthSpent, captureStore, refresh, analytics, plan, surface],
   );
 
-  const due = links.find((link) => (elsewhere.get(link.id) ?? 0) <= now && keptLinkDue(link, { now, hasExtension, monthSpent }));
+  // One at a time: the effect can see the same link due again before the first await settles.
+  const make = useCallback(
+    async (link: KeptCapture) => {
+      if (inFlight.current) {
+        return;
+      }
+      inFlight.current = true;
+      try {
+        await makeOne(link);
+      } finally {
+        inFlight.current = false;
+      }
+    },
+    [makeOne],
+  );
+
+  const due = links.find(
+    (link) => !needsAccess.has(link.id) && (elsewhere.get(link.id) ?? 0) <= now && keptLinkDue(link, { now, hasExtension, monthSpent }),
+  );
   const canMake = !busy && making === null && readiness.ready && next?.kind !== "checking";
   useEffect(() => {
     if (canMake && due !== undefined) {
@@ -183,5 +188,15 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
     [links, captureStore, refresh],
   );
 
-  return { links, making, hasExtension, remove, retry };
+  const allow = useCallback(
+    (link: KeptCapture) =>
+      void makers.askAccess(link).then((granted) => {
+        if (granted) {
+          setNeedsAccess(new Set());
+        }
+      }),
+    [makers],
+  );
+
+  return { links, making, hasExtension, remove, retry, needsAccess: links.filter((link) => needsAccess.has(link.id)), allow };
 };

@@ -1,0 +1,22 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root,
+.kept {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.kept b {
+  color: var(--ink);
+}
+
+.keep {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}

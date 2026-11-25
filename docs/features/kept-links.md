@@ -282,6 +282,25 @@ toast's six seconds (`usePendingRemovals`); focus goes to the Kept links group. 
 is removed, and `keptLinkRemoved` sent, only once the Undo has passed, or at once if the page
 closes first.
 
+## Only the extension can read
+
+OV-403. A TikTok our server can't read ("TikTok didn't let us read this one", or TikTok links
+not working) and an article our server can't read (a site that blocks us, a paywall: the
+stops that already send a computer to the extension) offer **Keep it** under their stop on
+the web and a phone (`KeepForExtension`), "and it's made the next time the extension is open
+on a computer". Never in the extension itself, which reads the link directly. The link is
+kept with `waitingFor: "extension"` and no source yet; a TikTok's key is its video's, an
+article's its address's (`keepForExtension`).
+
+The panel makes them like any kept link, one at a time (`useKeptLinkMakers`, by
+`keptLinkKind`): a TikTok through the extension's own read, then the TikTok pipeline; an
+article in a tab of its own that opens out of sight and closes after
+(`ArticlePages.readAt`, `readArticleAt`), then the article pipeline, all under the kept id.
+Both need the reader's leave for the site, which Chrome grants only inside a click: without
+it the link waits, and the banner says "The extension needs your OK to read
+theharbourpost.example first." with **Allow and make it**. With the month's overviews made,
+it is saved instead, as other kept links are.
+
 ## Not built yet
 
-- Keeping a TikTok only the extension can read, and making it there (OV-403).
+- Instagram and Facebook posts the vendor can't read are not kept yet.

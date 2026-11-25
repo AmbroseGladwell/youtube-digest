@@ -7,6 +7,8 @@ import { pastedLinkFailureCopy, type ReaderPlace } from "../../util/pastedLinkFa
 import styles from "./ArticleLinkStatus.module.scss";
 import { articleLinkStatusTestIds } from "./ArticleLinkStatusTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
+import { KeepForExtension } from "../../../captures/components/KeepForExtension/KeepForExtension.js";
+import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 
 export interface ArticleLinkStatusProps {
   link: ArticleLink;
@@ -20,6 +22,7 @@ export interface ArticleLinkStatusProps {
 const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
 export const ArticleLinkStatus = ({ link, url, place, onRetry, onClear, onOpened }: ArticleLinkStatusProps) => {
+  const { keepForExtension } = useNewOverviewRunController();
   switch (link.status) {
     case "none":
       return null;
@@ -65,7 +68,14 @@ export const ArticleLinkStatus = ({ link, url, place, onRetry, onClear, onOpened
       );
     case "failed": {
       const copy = pastedLinkFailureCopy(link.failure, url, place);
-      return <ArticleFailureNotice copy={copy} href={copy.href} after={copy.after} onWay={copy.way === "tryAgain" ? onRetry : onClear} />;
+      return (
+        <>
+          <ArticleFailureNotice copy={copy} href={copy.href} after={copy.after} onWay={copy.way === "tryAgain" ? onRetry : onClear} />
+          {copy.sentToExtension && place !== "extension" && (
+            <KeepForExtension onKeep={() => keepForExtension(url, link.failure.siteName ?? null)} />
+          )}
+        </>
+      );
     }
   }
 };

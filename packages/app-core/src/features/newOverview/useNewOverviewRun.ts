@@ -16,8 +16,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   heldOverviewOf,
   OverviewId,
+  articleSourceId,
+  parseTikTokLink,
   podcastSource,
   podcastSourceId,
+  sourceKey,
   SourceKey,
   type ArticleRead,
   type CaptureEntry,
@@ -111,6 +114,7 @@ export interface NewOverviewRunController {
   startSocial: (request: SocialRunRequest & StartOverviewRunOptions) => void;
   startFromSaved: (capture: SavedCapture) => void;
   keepForReset: (request: PodcastRunRequest) => Promise<void>;
+  keepForExtension: (url: string, title: string | null) => Promise<void>;
   makeAllSaved: (captures: readonly SavedCapture[]) => void;
   keep: (run: NewOverviewRun) => Promise<void>;
   dismiss: () => void;
@@ -196,6 +200,37 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
 
   const resetsOnRef = useRef<string | null>(null);
   resetsOnRef.current = useOverviewUsageQuery().data?.resetsOn ?? null;
+
+  // docs/features/kept-links.md, "Only the extension can read".
+  const keepForExtension = useCallback(
+    async (url: string, title: string | null) => {
+      const tiktok = parseTikTokLink(url);
+      const at = new Date().toISOString();
+      await captureStore.saveCapture({
+        id: OverviewId.parse(globalThis.crypto.randomUUID()),
+        sourceKey: tiktok?.kind === "video" ? sourceKey({ kind: "tiktok", id: tiktok.videoId })! : await articleSourceId(url),
+        url,
+        keptAt: at,
+        keptFrom: captureSurfaceOf(surface),
+        captureReason: draftRef.current.trim() === "" ? null : draftRef.current.trim(),
+        title,
+        thumbnailUrl: null,
+        fromPlaylist: null,
+        addedAt: null,
+        playlistIndex: null,
+        chosenAt: null,
+        stage: "kept",
+        source: null,
+        waitingFor: "extension",
+        resumesAt: null,
+        queueStatus: "waiting",
+        problem: null,
+      });
+      analytics.keptLinks.queue.linkKept({ plan, captureSurface: captureSurfaceOf(surface), waitingFor: "extension" });
+      void queryClient.invalidateQueries({ queryKey: captureKeys.all });
+    },
+    [captureStore, surface, analytics, plan, queryClient],
+  );
 
   // docs/features/kept-links.md, "Saving at the limit": no transcribing left, so it waits for the month to turn.
   const keepUntilReset = useCallback(
@@ -807,6 +842,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     startSocial,
     startFromSaved,
     keepForReset: (request: PodcastRunRequest) => keepUntilReset(request, draftRef.current),
+    keepForExtension,
     makeAllSaved,
     keep,
     dismiss,
