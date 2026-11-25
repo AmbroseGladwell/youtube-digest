@@ -4,6 +4,7 @@ import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbna
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { LibraryViewState } from "../../util/libraryViewState.js";
+import { SaidMomentLink, type SaidMoment } from "../SaidMomentLink/SaidMomentLink.js";
 import styles from "./LibraryCaptureCard.module.scss";
 import { libraryCaptureCardTestIds } from "./LibraryCaptureCardTestIds.js";
 
@@ -12,10 +13,11 @@ export interface LibraryCaptureCardProps {
   entering?: boolean;
   onOpen: () => void;
   readerState: LibraryViewState;
+  said?: SaidMoment | null;
 }
 
 // Design 358h-5: an ordinary row, without the topics, verdict and times only its overview brings.
-export const LibraryCaptureCard = ({ capture, entering = false, onOpen, readerState }: LibraryCaptureCardProps) => {
+export const LibraryCaptureCard = ({ capture, entering = false, onOpen, readerState, said = null }: LibraryCaptureCardProps) => {
   const path = Routes.overview(capture.id);
   const hasTranscript = capture.source.kind !== "web";
   return (
@@ -40,6 +42,9 @@ export const LibraryCaptureCard = ({ capture, entering = false, onOpen, readerSt
           <StrokeIcon name="bookmark" size={12} />
           {hasTranscript ? "No overview yet · Transcript ready" : "No overview yet"}
         </p>
+        {said !== null && (
+          <SaidMomentLink said={said} to={path} readerState={readerState} onClick={onOpen} testId={libraryCaptureCardTestIds.saidLink} />
+        )}
       </div>
     </article>
   );

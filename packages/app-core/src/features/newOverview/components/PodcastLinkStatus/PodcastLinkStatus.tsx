@@ -8,6 +8,8 @@ import { TranscriptionNotice } from "../../../podcasts/components/TranscriptionN
 import { episodeActionOf } from "../../../podcasts/util/episodeActionOf.js";
 import { transcriptionCopy } from "../../../podcasts/util/transcriptionCopy.js";
 import { useOverviewUsageQuery } from "../../queries/overviewUsageQuery.js";
+import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
+import { resetDate } from "../../util/usageLine.js";
 import type { EpisodeWords, PodcastLink } from "../../usePodcastLink.js";
 import { podcastLinkFailureCopy } from "../../util/podcastLinkFailureCopy.js";
 import styles from "./PodcastLinkStatus.module.scss";
@@ -35,6 +37,7 @@ export const episodeFacts = (episode: Pick<PodcastEpisode, "durationSeconds" | "
     .join(" · ");
 
 export const PodcastLinkStatus = ({ link, url, onRetry, onClear, onOpened }: PodcastLinkStatusProps) => {
+  const { keepForReset } = useNewOverviewRunController();
   switch (link.status) {
     case "none":
       return null;
@@ -54,7 +57,12 @@ export const PodcastLinkStatus = ({ link, url, onRetry, onClear, onOpened }: Pod
       return (
         <>
           <EpisodeCard episode={link.episode} from={FROM[podcastPlatform(url)]} words={link.words} />
-          <EpisodeWordsNote words={link.words} episodeSeconds={link.episode.durationSeconds} onFollowed={onOpened} />
+          <EpisodeWordsNote
+            words={link.words}
+            episodeSeconds={link.episode.durationSeconds}
+            onFollowed={onOpened}
+            onKeep={() => keepForReset({ episode: link.episode, sharedFrom: url })}
+          />
         </>
       );
     case "held":
@@ -95,11 +103,15 @@ export interface EpisodeWordsNoteProps {
   episodeSeconds: number | null;
   onFollowed?: (() => void) | undefined;
   source?: TranscribedSource;
+  // Out of transcribing, the link can wait for the month to turn (docs/features/kept-links.md, "Saving at the limit").
+  onKeep?: (() => Promise<void>) | undefined;
 }
 
-export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed, source = "podcast" }: EpisodeWordsNoteProps) => {
+export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed, source = "podcast", onKeep }: EpisodeWordsNoteProps) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const action = episodeActionOf(words);
+  const [kept, setKept] = useState(false);
+  const backOn = usage === null ? "next month" : `on ${resetDate(usage.resetsOn)}`;
   switch (action.kind) {
     case "transcribe":
       return (
@@ -114,8 +126,19 @@ export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed, source = "
         </p>
       );
     case "stop": {
+      if (kept) {
+        return (
+          <p className={styles.line} role="status" data-testid={podcastLinkStatusTestIds.keptForReset}>
+            Kept. It’s transcribed and made {backOn}, when your hours are back.
+          </p>
+        );
+      }
       const stop = transcriptionCopy.stop(action.offer, usage?.plan ?? "free", usage?.resetsOn ?? null);
-      return <TranscriptionNotice notice={stop} route={stop.route} onFollowed={onFollowed} />;
+      const keep =
+        onKeep === undefined || action.offer.status !== "not-enough"
+          ? null
+          : { label: `Keep it until ${backOn.replace(/^on /, "")}`, onPress: () => void onKeep().then(() => setKept(true)) };
+      return <TranscriptionNotice notice={stop} route={stop.route} primary={keep} onFollowed={onFollowed} />;
     }
     default:
       return null;

@@ -1,7 +1,7 @@
 import test, { type TestContext } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { TranscriptSearchResponse, VideoId, youTubeSource, type TranscriptSegment } from "@overview/domain";
+import { CURRENT_SCHEMA_VERSIONS, TranscriptSearchResponse, VideoId, youTubeSource, type TranscriptSegment } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
@@ -30,6 +30,28 @@ const kept = async (account: TestAccount, segments: TranscriptSegment[], videoId
   assert.equal((await account.inject({ method: "POST", url: "/api/overviews", body: overview })).statusCode, 201);
   assert.equal((await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript })).statusCode, 204);
   return { overviewId: overview.id, videoId: transcript.videoId };
+};
+
+const savedWithout = async (account: TestAccount, segments: TranscriptSegment[], videoId = randomUUID().slice(0, 11)) => {
+  const transcript = makeStoredTranscript({ videoId: VideoId.parse(videoId), segments });
+  const source = youTubeSource(transcript.video!);
+  const id = randomUUID();
+  const capture = {
+    id,
+    sourceKey: source.id,
+    url: source.url,
+    keptAt: "2026-11-24T09:00:00.000Z",
+    keptFrom: "phone",
+    captureReason: null,
+    stage: "saved",
+    source,
+    savedAt: "2026-11-24T09:00:00.000Z",
+    schemaVersion: CURRENT_SCHEMA_VERSIONS.capture,
+    updatedAt: "2026-11-24T09:00:00.000Z",
+  };
+  assert.equal((await account.inject({ method: "POST", url: "/api/captures", body: capture })).statusCode, 201);
+  assert.equal((await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript })).statusCode, 204);
+  return { id, videoId: transcript.videoId };
 };
 
 const search = async (account: TestAccount, query: string): Promise<TranscriptSearchResponse> => {
@@ -130,4 +152,15 @@ test("a search is logged by how many matched, never by its words", async (t) => 
     [["app", 1]],
   );
   assert.doesNotMatch(JSON.stringify(searched), /ashwagandha/);
+});
+
+test("an item saved without an overview is found by what its transcript says, under its own id", async (t) => {
+  const reader = await makeAccount(await setUp(t));
+  const { id } = await savedWithout(reader, sleepTalk);
+
+  const [match, ...rest] = (await search(reader, "ashwagandha")).matches;
+
+  assert.deepEqual(rest, []);
+  assert.equal(match?.overviewId, id);
+  assert.equal(match?.moments[0]?.startMs, 70_000);
 });

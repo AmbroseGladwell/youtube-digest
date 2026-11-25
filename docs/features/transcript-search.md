@@ -108,7 +108,7 @@ settles (`useSettledText`, as search by meaning does), the page asks `GET /api/s
 once for that text (`useTranscriptMatchesQuery`), signed in only, since only a signed-in library's
 transcripts are on our server.
 
-`transcriptEntries` keeps the overviews no word in their overview already matched and that pass
+`transcriptEntries` keeps the overviews, and the items saved without an overview (OV-358), no word in their overview already matched and that pass
 every other filter, at most `TRANSCRIPT_ROWS` (10), and lists them under the word matches as
 **Said in the transcripts**, with "Your words aren't in these overviews, but they were said."
 Meaning matches come after and leave out anything already listed here, so a source said and

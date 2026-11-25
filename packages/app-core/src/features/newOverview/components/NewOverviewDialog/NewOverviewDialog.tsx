@@ -24,6 +24,7 @@ export interface NewOverviewDialogProps {
   held: AlreadyHeld | null;
   onSubmit: (url: string, options?: { saveInstead: boolean }) => void;
   onOpenHeld: (overviewId: Overview["id"]) => void;
+  onSeeQueue: () => void;
   onClose: () => void;
   onDismiss: () => void;
   onReadOverview: (overview: Overview) => void;
@@ -38,6 +39,7 @@ export const NewOverviewDialog = ({
   held,
   onSubmit,
   onOpenHeld,
+  onSeeQueue,
   onClose,
   onDismiss,
   onReadOverview,
@@ -143,6 +145,7 @@ export const NewOverviewDialog = ({
           onReadOverview(overview);
         }}
         onOpen={(id) => onOpenHeld(id as OverviewId)}
+        onSeeQueue={onSeeQueue}
         onCaptureReasonChange={onCaptureReasonChange}
         onCaptureReasonCommit={onCaptureReasonCommit}
       />

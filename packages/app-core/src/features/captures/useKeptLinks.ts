@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { createFetchPodcastApi } from "@overview/sync";
 import type { KeptCapture, OverviewId } from "@overview/domain";
 import { useSurface } from "../../app/SurfaceContext.js";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
@@ -12,7 +13,11 @@ import { isQueueHoldReason, queueHoldOf, queueProblemOf } from "../captureQueue/
 import { SavedWithoutOverview } from "../newOverview/api/SavedWithoutOverview.js";
 import { useGenerationReadiness } from "../newOverview/useGenerationReadiness.js";
 import { useNextQuota } from "../newOverview/useNextQuota.js";
-import { useRunOverviewGeneration } from "../newOverview/useRunOverviewGeneration.js";
+import { useRunOverviewGeneration, useRunPodcastGeneration } from "../newOverview/useRunOverviewGeneration.js";
+import { TranscriptionRefusedError } from "../podcasts/api/TranscriptionRefusedError.js";
+import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
+import { useSyncConnection } from "../sync/useSyncConnection.js";
+import { nextUsageMonth } from "./util/nextUsageMonth.js";
 import { overviewKeys } from "../overviews/overviewKeys.js";
 import { usePlan } from "../plus/usePlan.js";
 import { captureKeys } from "./captureKeys.js";
@@ -41,6 +46,22 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
   const queryClient = useQueryClient();
   const { apiKeys } = useApiKeys();
   const generate = useRunOverviewGeneration(apiKeys);
+  const runPodcast = useRunPodcastGeneration(apiKeys);
+  const knownApiUrl = useKnownApiUrl();
+  const { connection } = useSyncConnection();
+  const episodeOf = useCallback(
+    async (url: string) => {
+      if (knownApiUrl === null) {
+        throw new Error("Episodes are read through our server, and there isn't one here");
+      }
+      const read = await createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token }).read(url);
+      if (read.status !== "read") {
+        throw new Error(`The episode couldn't be read: ${read.reason}`);
+      }
+      return read.episode;
+    },
+    [knownApiUrl, connection.token],
+  );
   const readiness = useGenerationReadiness();
   const hasExtension = useYouTubeFetch() !== null;
   const next = useNextQuota();
@@ -73,12 +94,17 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
         return;
       }
       setMaking(link);
-      const attempt = (saveInstead: boolean) =>
-        generate(link.url, {
+      const attempt = async (saveInstead: boolean) => {
+        const options = {
           overviewId: link.id,
           captureReason: () => link.captureReason ?? "",
           ...(saveInstead ? { saveInstead: link.keptFrom } : {}),
-        });
+        };
+        if (link.source?.kind !== "podcast") {
+          return generate(link.url, options);
+        }
+        return runPodcast({ episode: await episodeOf(link.url), sharedFrom: link.url, transcribe: "chosen" }, options);
+      };
       try {
         try {
           await attempt(monthSpent);
@@ -99,7 +125,16 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
         });
       } catch (error) {
         if (error instanceof SavedWithoutOverview) {
-          analytics.keptLinks.saved.savedWithoutOverview({ plan, captureSurface: surface, transcribed: false, fromKeptLink: true });
+          analytics.keptLinks.saved.savedWithoutOverview({
+            plan,
+            captureSurface: surface,
+            transcribed: link.source?.kind === "podcast",
+            fromKeptLink: true,
+          });
+          return;
+        }
+        if (error instanceof TranscriptionRefusedError && error.refusal === "not-enough") {
+          await captureStore.saveCapture({ ...link, waitingFor: "reset", resumesAt: nextUsageMonth(new Date()).toISOString() });
           return;
         }
         const problem = queueProblemOf(error);
@@ -117,7 +152,7 @@ export const useKeptLinks = ({ busy }: KeptLinksOptions): KeptLinksController =>
         await refresh();
       }
     },
-    [claimApi, holder, generate, monthSpent, captureStore, refresh, analytics, plan, surface],
+    [claimApi, holder, generate, runPodcast, episodeOf, monthSpent, captureStore, refresh, analytics, plan, surface],
   );
 
   const due = links.find((link) => (elsewhere.get(link.id) ?? 0) <= now && keptLinkDue(link, { now, hasExtension, monthSpent }));

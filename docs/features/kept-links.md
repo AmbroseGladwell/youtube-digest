@@ -120,7 +120,11 @@ Design 358h-5. A saved capture is an ordinary row (`LibraryCaptureCard`): thumbn
 source, title and "No overview yet · Transcript ready". It counts as unread, so it shows
 under Unread only, and is never under a topic, a verdict, a tag, Read or Only favourites,
 which its overview decides. **Show › No overview yet** shows only these, and appears in the
-Show group while there are any. Keyword search finds one by its title. A capture whose
+Show group while there are any. Keyword search finds one by its title, and **Said in the
+transcripts** by what its transcript says (`itemTranscriptMatches` on the server, which also
+resolves a source to a live saved capture; the MCP connector's `transcriptMatches` still
+resolves only overviews). Its "Said in the video at 1:05" opens the item with its
+transcript at that moment. A capture whose
 source already has an overview (made on another device, say) is left out until its
 tombstone comes down.
 
@@ -249,8 +253,35 @@ never the link. Until 25 Nov it was `surface`, which the event's context overwro
 The server logs `capture claim expired` when a device takes over a claim another left to
 run out. The "Kept links" dashboard in PostHog reads these.
 
+## Already here
+
+Design 358c-2. Before a run starts, Create checks the library for the video (`alreadyHeld`):
+an overview says "Already in your library. Open it"; a saved capture "Already saved · no
+overview yet. Open it"; a kept or queued one "Already in your queue. See queue". Nothing is
+counted, and `capture.newOverview.alreadyHeld` carries which (`held`). Open it and See queue
+close the dialog without cancelling links still waiting in Just now. A link already being
+made or waiting in Just now is never added again, and Try again on a failed row takes that
+row's place.
+
+## Out of transcribing
+
+When a podcast needs transcribing and the month's hours are used, the stop under the link
+(`EpisodeWordsNote`) offers **Keep it until 1 November**, the usage's reset. It keeps the
+link with `waitingFor: "reset"` and `resumesAt` at the reset, with its podcast source, and
+says "Kept. It's transcribed and made on 1 November, when your hours are back." Saving at
+the limit that meets the same refusal mid-run keeps it the same way (`keepUntilReset`). Once
+the reset has passed, the kept-link runner reads the episode again (`POST /podcasts/read`),
+transcribes it and makes it under the kept id; still short of hours, it waits for the next
+month. On the Queue page it reads "Continues on 1 November". TikToks and posts wait for
+OV-403, since only the extension reads some of them.
+
+## Removing one
+
+Remove on a kept link hides it at once and says "Removed “title”." with **Undo** for the
+toast's six seconds (`usePendingRemovals`); focus goes to the Kept links group. The capture
+is removed, and `keptLinkRemoved` sent, only once the Undo has passed, or at once if the page
+closes first.
+
 ## Not built yet
 
 - Keeping a TikTok only the extension can read, and making it there (OV-403).
-- "Already saved · no overview yet" and "Already in your queue" under the field (358c-2).
-- Undo after removing a kept link.

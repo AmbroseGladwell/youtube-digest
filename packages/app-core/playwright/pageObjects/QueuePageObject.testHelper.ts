@@ -3,6 +3,8 @@ import { queuePageTestIds } from "../../src/features/captureQueue/QueuePage/Queu
 import { attentionRowTestIds } from "../../src/features/captureQueue/components/AttentionRow/AttentionRowTestIds.js";
 import { pacedQueueGroupTestIds } from "../../src/features/captureQueue/components/PacedQueueGroup/PacedQueueGroupTestIds.js";
 import { queueRowTestIds } from "../../src/features/captureQueue/components/QueueRow/QueueRowTestIds.js";
+import { keptLinksSectionTestIds } from "../../src/features/captures/components/KeptLinksSection/KeptLinksSectionTestIds.js";
+import { toastTestIds } from "../../src/components/shared/Toast/ToastTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class QueuePageObject extends PageObject {
@@ -124,4 +126,20 @@ export class QueuePageObject extends PageObject {
     });
 
   removeChosen = () => this.step("removeChosen", () => this.click(queuePageTestIds.removeChosenButton));
+
+  verifyKeptLinks = (titles: string[]) =>
+    this.step(`verifyKeptLinks ${titles.join(", ")}`, () => expect(this.get(keptLinksSectionTestIds.row).locator("b")).toHaveText(titles));
+
+  removeKeptLink = (title: string) =>
+    this.step(`removeKeptLink ${title}`, () =>
+      this.click(this.get(keptLinksSectionTestIds.row).filter({ hasText: title }).getByTestId(keptLinksSectionTestIds.remove)),
+    );
+
+  verifyRemovedSays = (text: string) =>
+    this.step(`verifyRemovedSays ${text}`, async () => {
+      await expect(this.get(toastTestIds.root)).toContainText(text);
+      await expect(this.get(keptLinksSectionTestIds.root)).toBeFocused();
+    });
+
+  undoRemove = () => this.step("undoRemove", () => this.click(toastTestIds.undoButton));
 }

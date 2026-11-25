@@ -60,6 +60,8 @@ export interface NewOverviewRun {
   // Our server couldn't fetch it now; it can be kept and made later (docs/features/kept-links.md, "Kept links").
   keepable?: { resumesAt: string } | null;
   kept?: boolean;
+  // Out of transcribing at the month's limit: kept, and transcribed and made after the reset (docs/features/kept-links.md).
+  keptUntilReset?: boolean;
   error: RunError | null;
   // Kept on the run, not the form: docs/features/capture-reason.md, "Where it is written".
   captureReason: string;

@@ -427,8 +427,12 @@ export const AppShell = () => {
                     held={newOverview.held}
                     onSubmit={(url, options) => newOverview.start(url, { from: "dialog", saveInstead: options?.saveInstead })}
                     onOpenHeld={(overviewId) => {
-                      newOverview.dismiss();
+                      newOverview.close();
                       void navigate(Routes.overview(overviewId), { viewTransition: shouldAnimateNavigation() });
+                    }}
+                    onSeeQueue={() => {
+                      newOverview.close();
+                      void navigate(Routes.queue(), { viewTransition: shouldAnimateNavigation() });
                     }}
                     onClose={newOverview.close}
                     onDismiss={newOverview.dismiss}

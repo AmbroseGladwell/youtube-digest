@@ -2,8 +2,8 @@ import type { PodcastEpisode, StoredTranscript } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
-import { podcastLinkStatusTestIds } from "../../../src/features/newOverview/components/PodcastLinkStatus/PodcastLinkStatusTestIds.js";
 import { justNowListTestIds } from "../../../src/features/newOverview/components/JustNowList/JustNowListTestIds.js";
+import { podcastLinkStatusTestIds } from "../../../src/features/newOverview/components/PodcastLinkStatus/PodcastLinkStatusTestIds.js";
 import { transcriptionNoticeTestIds } from "../../../src/features/podcasts/components/TranscriptionNotice/TranscriptionNoticeTestIds.js";
 
 const SIGNED_IN = {
@@ -96,6 +96,44 @@ test("with too little transcribing left, the stop takes Create's place, names wh
   );
   await expect(page.getByTestId(transcriptionNoticeTestIds.plans)).toHaveText("See plans");
   await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveCount(0);
+});
+
+test("out of transcribing, Keep it keeps the episode until the reset, when it is transcribed and made under the kept id", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  await page.clock.install({ time: new Date("2026-10-31T23:00:00.000Z") });
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.podcasts.answerWith({ status: "read", episode: EPISODE });
+  backendSimulator.podcasts.checkSays({
+    words: "none",
+    transcription: {
+      status: "not-enough",
+      episodeSeconds: EPISODE.durationSeconds,
+      usage: { usedSeconds: 5 * HOUR, limitSeconds: 5 * HOUR, episodes: 3 },
+    },
+  });
+  backendSimulator.podcasts.transcribesAs({ status: "ready", id: ID, transcript: WORDS });
+  await launcher.launch(SIGNED_IN);
+  await launcher.appShell.openNewOverview();
+  await page.getByTestId(generateOverviewFormTestIds.urlInput).fill(LINK);
+
+  await page.getByTestId(transcriptionNoticeTestIds.primary).click();
+
+  await expect(page.getByTestId(podcastLinkStatusTestIds.keptForReset)).toHaveText(
+    "Kept. It’s transcribed and made on 1 November, when your hours are back.",
+  );
+  const [kept] = await backendSimulator.captureStore.list();
+  expect(kept).toMatchObject({ stage: "kept", waitingFor: "reset", resumesAt: "2026-11-01T00:00:00.000Z", url: LINK });
+  expect(backendSimulator.podcasts.transcriptionAsks()).toHaveLength(0);
+
+  await page.clock.fastForward(60 * 60 * 1000 + 61_000);
+
+  await expect
+    .poll(async () => (await backendSimulator.overviewStore.listOverviews()).map((overview) => overview.id), { timeout: 20_000 })
+    .toEqual([kept!.id]);
+  expect(backendSimulator.podcasts.transcriptionAsks()).toHaveLength(1);
 });
 
 test("when the check couldn't tell, Create asks before transcribing, and choosing it makes the overview", async ({
