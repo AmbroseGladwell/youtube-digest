@@ -11,6 +11,7 @@ import { chatSourceChipTestIds } from "../../src/features/chats/components/ChatS
 import { floatingTipTestIds } from "../../src/components/shared/FloatingTip/FloatingTipTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
+import { conversationSearchTestIds } from "../../src/features/chats/components/ConversationSearch/ConversationSearchTestIds.js";
 import { chatConversationMenuTestIds } from "../../src/features/chats/components/ChatConversationMenu/ChatConversationMenuTestIds.js";
 import { chatWaitBlockTestIds } from "../../src/features/chats/components/ChatWaitBlock/ChatWaitBlockTestIds.js";
 import { chatSheetTestIds } from "../../src/features/chats/components/ChatSheet/ChatSheetTestIds.js";
@@ -343,6 +344,9 @@ export class ChatPanelPageObject extends PageObject {
         await expect(list.nth(index).getByTestId(chatConversationListTestIds.meta)).toHaveText(meta);
       }
     });
+
+  searchConversations = (text: string) =>
+    this.step(`searchConversations ${text}`, () => this.panel().getByTestId(conversationSearchTestIds.input).fill(text));
 
   openConversationRow = (index: number) =>
     this.step(`openConversationRow ${index}`, () => this.click(this.panel().getByTestId(chatConversationListTestIds.open).nth(index)));

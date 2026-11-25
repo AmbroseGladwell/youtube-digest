@@ -494,6 +494,7 @@ export const ChatPanel = ({
             onNew={panel.newConversation}
             onOpen={panel.openConversation}
             onDelete={panel.deleteConversation}
+            onSearched={(matches) => analytics.reader.chat.conversationsSearched({ overviewId: overview.id, matches })}
           />
         ) : (
           conversationBody()

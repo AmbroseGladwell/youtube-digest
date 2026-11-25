@@ -65,6 +65,24 @@ test.describe("An overview's conversations", () => {
     await expect.poll(() => chatEvents(backendSimulator.analytics.events())).toContain("reader.chat.conversationOpened");
   });
 
+  test("searching them keeps the matches and counts how many, never the words", async ({ launcher, backendSimulator }) => {
+    const overview = creatine();
+    backendSimulator.overviews.seedSynced(overview);
+    backendSimulator.chats.seed(conversation(overview, "older", "2026-11-10T09:00:00.000Z", [WORKOUT]));
+    backendSimulator.chats.seed(conversation(overview, "newer", "2026-11-12T09:00:00.000Z", [DOSE]));
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.openFromMenu();
+    await reader.chat.openList();
+
+    await reader.chat.searchConversations("workout");
+
+    await reader.chat.verifyConversationsRead([{ title: WORKOUT, meta: "10 Nov · 1 question" }]);
+    await expect
+      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "reader.chat.conversationsSearched"))
+      .toEqual([{ name: "reader.chat.conversationsSearched", props: { overviewId: overview.id, matches: 1 } }]);
+  });
+
   test("the note's link opens the list", async ({ launcher, backendSimulator }) => {
     const overview = creatine();
     backendSimulator.overviews.seedSynced(overview);
