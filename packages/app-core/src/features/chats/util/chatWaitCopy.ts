@@ -5,6 +5,10 @@ import type { ChatWait } from "./chatWaitOf.js";
 
 export type ShownWait = Exclude<ChatWait, { kind: "noSource" }> | { kind: "offline" };
 
+// The month's questions used takes the limit in place (design 351h); every other wait keeps its block.
+export const monthSpentOf = (wait: ShownWait | null, resetsOn: string | null): string | null =>
+  wait?.kind === "month" ? (wait.resetsOn ?? resetsOn) : null;
+
 export interface WaitCopy {
   icon: "clock" | "chat" | "wifiOff";
   heading: string;

@@ -5,8 +5,12 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { ArticleFailureNotice } from "../../../capture/components/ArticleFailureNotice/ArticleFailureNotice.js";
 import { TranscriptionNotice } from "../../../podcasts/components/TranscriptionNotice/TranscriptionNotice.js";
+import { LimitInPlace, type LimitWaitAction } from "../../../plus/components/LimitInPlace/LimitInPlace.js";
+import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
+import { usePlanPrompt } from "../../../plus/usePlanPrompt.js";
+import { limitCopy, type LimitCopy } from "../../../plus/util/limitCopy.js";
 import { episodeActionOf } from "../../../podcasts/util/episodeActionOf.js";
-import { transcriptionCopy } from "../../../podcasts/util/transcriptionCopy.js";
+import { TRANSCRIBED_NOUN, transcriptionCopy } from "../../../podcasts/util/transcriptionCopy.js";
 import { useOverviewUsageQuery } from "../../queries/overviewUsageQuery.js";
 import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { resetDate } from "../../util/usageLine.js";
@@ -128,9 +132,30 @@ export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed, source = "
     case "stop": {
       if (kept) {
         return (
-          <p className={styles.line} role="status" data-testid={podcastLinkStatusTestIds.keptForReset}>
-            Kept. It’s transcribed and made {backOn}, when your hours are back.
+          <p className={styles.kept} role="status" data-testid={podcastLinkStatusTestIds.keptForReset}>
+            <b>Kept. It’s transcribed and made {backOn}, when your hours are back.</b>
+            <span>It waits in your queue. Nothing else to do.</span>
           </p>
+        );
+      }
+      if (action.offer.status === "not-enough" && usage !== null) {
+        const { usage: spent } = action.offer;
+        return (
+          <HoursLimit
+            copy={limitCopy.hours({
+              plan: usage.plan,
+              resetsOn: usage.resetsOn,
+              usedSeconds: spent.usedSeconds,
+              limitSeconds: spent.limitSeconds,
+              episodeSeconds: action.offer.episodeSeconds ?? episodeSeconds,
+              noun: TRANSCRIBED_NOUN[source],
+            })}
+            keep={
+              onKeep === undefined
+                ? null
+                : { label: `Keep it until ${resetDate(usage.resetsOn)}`, onPress: () => void onKeep().then(() => setKept(true)) }
+            }
+          />
         );
       }
       const stop = transcriptionCopy.stop(action.offer, usage?.plan ?? "free", usage?.resetsOn ?? null);
@@ -143,6 +168,40 @@ export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed, source = "
     default:
       return null;
   }
+};
+
+interface HoursLimitProps {
+  copy: LimitCopy;
+  keep: LimitWaitAction | null;
+}
+
+// Design 351g: the month's hours used, under the pasted link, with Plus and the wait.
+const HoursLimit = ({ copy, keep }: HoursLimitProps) => {
+  const { plan, chose } = usePlanPrompt({ kind: "hours" });
+  const [plansOpen, setPlansOpen] = useState(false);
+  return (
+    <>
+      <LimitInPlace
+        {...copy}
+        onGetPlus={() => {
+          chose("seePlans");
+          setPlansOpen(true);
+        }}
+        waitAction={
+          keep === null
+            ? null
+            : {
+                label: keep.label,
+                onPress: () => {
+                  chose("keptForReset");
+                  keep.onPress();
+                },
+              }
+        }
+      />
+      <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} />
+    </>
+  );
 };
 
 const wordsLine = (words: EpisodeWords, episodeSeconds: number | null): string | null => {

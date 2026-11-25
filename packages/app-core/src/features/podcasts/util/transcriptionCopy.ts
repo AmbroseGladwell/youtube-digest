@@ -15,7 +15,12 @@ const A_FEW_MINUTES = "a few minutes";
 export const audioLength = (seconds: number): string =>
   seconds < 60 ? `${Math.max(1, Math.round(seconds))} s` : recipeMinutes(Math.round(seconds / 60));
 
-const NOUN: Record<TranscribedSource, string> = { podcast: "episode", tiktok: "TikTok", instagram: "video", facebook: "video" };
+export const TRANSCRIBED_NOUN: Record<TranscribedSource, string> = {
+  podcast: "episode",
+  tiktok: "TikTok",
+  instagram: "video",
+  facebook: "video",
+};
 
 // About a minute of waiting for each hour of audio, measured on 16 Nov 2026.
 export const transcribeMinutes = (episodeSeconds: number | null): number | null =>
@@ -75,8 +80,8 @@ export const transcriptionCopy = {
 
   free: (why: Extract<TranscriptionOffer, { status: "free" }>["why"], source: TranscribedSource = "podcast"): string =>
     why === "transcribed"
-      ? `You transcribed this ${NOUN[source]} before, so it uses no transcribing time.`
-      : `You’re already transcribing this ${NOUN[source]}, so this joins it and uses no more time.`,
+      ? `You transcribed this ${TRANSCRIBED_NOUN[source]} before, so it uses no transcribing time.`
+      : `You’re already transcribing this ${TRANSCRIBED_NOUN[source]}, so this joins it and uses no more time.`,
 
   // Asked after Create, when the check couldn't tell.
   ask: (episodeSeconds: number | null): TranscriptionNotice => {
@@ -144,7 +149,7 @@ export const transcriptionCopy = {
     if (reason === "no-speech") {
       return {
         heading: "We couldn’t hear any words in it",
-        body: `The ${NOUN[source]}’s ${source === "podcast" ? "audio" : "sound"} has no speech we could transcribe. ${counted}`,
+        body: `The ${TRANSCRIBED_NOUN[source]}’s ${source === "podcast" ? "audio" : "sound"} has no speech we could transcribe. ${counted}`,
         retry: false,
       };
     }

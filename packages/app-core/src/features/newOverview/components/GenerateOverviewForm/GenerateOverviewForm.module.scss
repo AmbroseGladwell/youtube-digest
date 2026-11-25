@@ -114,6 +114,20 @@
   @include controls.action-pill;
   @include controls.pill-md;
   min-height: 2.75rem;
+
+  &[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 // On a phone the sheet stacks the field over a full-width Make button, rather than wrapping inside the pill.

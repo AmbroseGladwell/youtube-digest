@@ -1,4 +1,6 @@
 import { chatMeterLineTestIds } from "../../src/features/chats/components/ChatMeterLine/ChatMeterLineTestIds.js";
+import { limitInPlaceTestIds } from "../../src/features/plus/components/LimitInPlace/LimitInPlaceTestIds.js";
+import { chatMonthLimitTestIds } from "../../src/features/chats/components/ChatMonthLimit/ChatMonthLimitTestIds.js";
 import { expect } from "@playwright/experimental-ct-react";
 import type { Locator } from "@playwright/test";
 import { chatCodeBlockTestIds } from "../../src/features/chats/components/ChatCodeBlock/ChatCodeBlockTestIds.js";
@@ -414,6 +416,28 @@ export class ChatPanelPageObject extends PageObject {
     this.step("verifyNoWait", async () => {
       await expect(this.panel().getByTestId(chatWaitBlockTestIds.root)).toHaveCount(0);
       await expect(this.field()).toBeVisible();
+    });
+
+  verifyMonthLimitReads = (heading: string, plusLine: string | null) =>
+    this.step(`verifyMonthLimitReads ${heading}`, async () => {
+      const limit = this.panel().getByTestId(limitInPlaceTestIds.root);
+      await expect(limit.getByTestId(limitInPlaceTestIds.heading)).toHaveText(heading);
+      if (plusLine === null) {
+        await expect(limit.getByTestId(limitInPlaceTestIds.plus)).toHaveCount(0);
+      } else {
+        await expect(limit.getByTestId(limitInPlaceTestIds.plus)).toContainText(plusLine);
+      }
+    });
+
+  getPlusFromLimit = () => this.step("getPlusFromLimit", () => this.click(this.panel().getByTestId(limitInPlaceTestIds.getPlus)));
+
+  putLimitAway = () => this.step("putLimitAway", () => this.click(this.panel().getByTestId(limitInPlaceTestIds.notNow)));
+
+  verifyLimitFolded = (field: string) =>
+    this.step(`verifyLimitFolded ${field}`, async () => {
+      await expect(this.panel().getByTestId(limitInPlaceTestIds.root)).toHaveCount(0);
+      await expect(this.panel().getByTestId(chatMonthLimitTestIds.foldedField)).toHaveText(field);
+      await expect(this.panel().getByTestId(chatMonthLimitTestIds.foldedField)).toHaveAttribute("aria-disabled", "true");
     });
 
   clickWaitAction = () => this.step("clickWaitAction", () => this.click(this.panel().getByTestId(chatWaitBlockTestIds.action)));

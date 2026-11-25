@@ -1,4 +1,6 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
+import { limitInPlaceTestIds } from "../../../src/features/plus/components/LimitInPlace/LimitInPlaceTestIds.js";
+import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID, makeServiceTranscriptFixture } from "../../network/fixtures/innerTubeFixtures.js";
@@ -331,7 +333,11 @@ test("near the month's saves the wall counts what's left, and with none left it 
   await launcher.softWall.verifySavesLeftReads("6 of 50 saves left this month.");
 });
 
-test("with the month's saves made, the wall offers only Plus and a key", async ({ launcher, backendSimulator }) => {
+test("with the month's overviews and saves made, the saves limit sits under the link, with Make my overview disabled (351i)", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.monthHasMade({ ours: 5 });
   backendSimulator.ourKey.monthHasSaved(50);
@@ -339,7 +345,12 @@ test("with the month's saves made, the wall offers only Plus and a key", async (
   const dialog = await launcher.appShell.openNewOverview();
   await dialog.form.submitUrl(VALID_URL);
 
-  await launcher.softWall.verifyOffersSaving(false);
+  await expect(page.getByTestId(limitInPlaceTestIds.heading)).toHaveText("You’ve saved 50 this month without an overview.");
+  await expect(page.getByTestId(limitInPlaceTestIds.wait)).toContainText("paste it again when your 5 overviews are back.");
+  await expect(page.getByTestId(limitInPlaceTestIds.waitAction)).toHaveCount(0);
+  await expect(page.getByTestId(generateOverviewFormTestIds.generateButton)).toHaveAttribute("aria-disabled", "true");
+  await page.getByTestId(limitInPlaceTestIds.getPlus).click();
+  await launcher.plansModal.verifyIsShown();
   await expect.poll(() => keptLinkEvents(backendSimulator, "saveCapReached")).toEqual([{ plan: "free", captureSurface: "web" }]);
 });
 

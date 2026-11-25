@@ -217,6 +217,28 @@ The home hero's line, which sits behind Create, is quiet (`usePlanPrompt`'s `qui
 counter, but no reset line and no events, so neither is counted twice. Phone Create was already
 the bottom sheet 351c-3 draws (Link label, full-width Make my overview, the counter, Cancel).
 
+### Limits met in place (351g, 351h, 351i)
+
+One shape, `LimitInPlace`, its copy from `limitCopy`: what ran out and when it comes back; a
+**Plus** row whose one primary is Get Overview Plus (left out for a Plus reader); and **Wait for
+1 December** with its action where there is one.
+
+- **Transcribing hours**, under a podcast link in Create (`EpisodeWordsNote`), for a `not-enough`
+  offer: "You've used this month's 5 hours of transcribing." (or what's left against what the
+  episode needs). The wait keeps the link: **Keep it until 1 December**, then the Kept state.
+  Make my overview stays, disabled, with the reason as its description. Other stops (an episode
+  too long) keep `TranscriptionNotice`.
+- **Chat questions**, in the composer's place when the month is spent (`ChatMonthLimit`, in an
+  overview's chat and on the Ask page): Plus weighs about 1,000 questions against the reader's
+  own. **Not now** puts it away until tomorrow and folds it to a disabled field ("Asking is back on
+  1 December") over one line ("Questions are back on 1 December. See plans").
+- **Saves**, when the month's overviews and saves are both made: the limit sits under the link in
+  Create in place of the wall, Make my overview disabled. The extension panel still shows the
+  wall there.
+
+Each sends `plus.prompt.shown` and `chosen` as `hours`, `chat` or `saves`; keeping a link until
+the reset is the `keptForReset` outcome.
+
 ### The plans modal (351m)
 
 Outside Settings, every See plans, Get Overview Plus and Upgrade opens `PlansModal`: **the paid

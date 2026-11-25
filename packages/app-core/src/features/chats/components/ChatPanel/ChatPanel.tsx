@@ -18,7 +18,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { useChatUsageQuery } from "../../queries/chatUsageQuery.js";
 import { useSlowAnswer } from "../../useSlowAnswer.js";
-import { chatWaitCopy, type ShownWait } from "../../util/chatWaitCopy.js";
+import { chatWaitCopy, monthSpentOf, type ShownWait } from "../../util/chatWaitCopy.js";
 import { chatMeterOf, chatMeterStateOf, spentWaitOf } from "../../util/chatMeterOf.js";
 import { useChatMeterShown } from "../../useChatMeterShown.js";
 import { ChatMeterLine } from "../ChatMeterLine/ChatMeterLine.js";
@@ -37,6 +37,7 @@ import { ChatConversationMenu } from "../ChatConversationMenu/ChatConversationMe
 import { ChatComposer } from "../ChatComposer/ChatComposer.js";
 import { ChatDrewOn } from "../ChatDrewOn/ChatDrewOn.js";
 import { ChatStreamedText } from "../ChatStreamedText/ChatStreamedText.js";
+import { ChatMonthLimit } from "../ChatMonthLimit/ChatMonthLimit.js";
 import styles from "./ChatPanel.module.scss";
 import { chatPanelTestIds } from "./ChatPanelTestIds.js";
 
@@ -141,6 +142,24 @@ export const ChatPanel = ({
   const full = asked >= MAX_CHAT_QUESTIONS;
   const refused = ask.status === "waiting" && ask.wait.kind !== "noSource" ? ask.wait : null;
   const wait: ShownWait | null = shownWaitOf({ online, full, refused, pending: pending !== null, usage });
+  const monthSpentOn = monthSpentOf(wait, usage?.resetsOn ?? null);
+  const plansFollowed = () => analytics.reader.chat.plansFollowed({ overviewId: overview.id });
+  const waitInFieldOf = () => {
+    if (monthSpentOn !== null) {
+      return <ChatMonthLimit plan={usage?.plan ?? "free"} resetsOn={monthSpentOn} onPlansFollowed={plansFollowed} />;
+    }
+    if (wait !== null) {
+      return (
+        <ChatWaitBlock
+          copy={chatWaitCopy(wait, usage?.plan ?? "free", usage?.resetsOn ?? null)}
+          onNewConversation={panel.newConversation}
+          onPlansFollowed={plansFollowed}
+        />
+      );
+    }
+    return null;
+  };
+  const waitInField = waitInFieldOf();
   const meter = chatMeterOf(usage);
   useChatMeterShown(chatMeterStateOf(wait?.kind ?? null, meter), (state) =>
     analytics.reader.chat.meterShown({ overviewId: overview.id, state, plan: usage?.plan ?? "free" }),
@@ -539,13 +558,7 @@ export const ChatPanel = ({
               </ul>
             </div>
           )}
-          {wait !== null ? (
-            <ChatWaitBlock
-              copy={chatWaitCopy(wait, usage?.plan ?? "free", usage?.resetsOn ?? null)}
-              onNewConversation={panel.newConversation}
-              onPlansFollowed={() => analytics.reader.chat.plansFollowed({ overviewId: overview.id })}
-            />
-          ) : (
+          {waitInField ?? (
             <ChatComposer
               ref={fieldRef}
               exclude={overview.id}
