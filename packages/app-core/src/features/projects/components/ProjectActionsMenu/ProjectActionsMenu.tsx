@@ -11,9 +11,18 @@ export interface ProjectActionsMenuProps {
   onEditPurpose: () => void;
   onArchive: () => void;
   onDelete: () => void;
+  onCopy?: (() => void) | undefined;
 }
 
-export const ProjectActionsMenu = ({ archived, onRename, onEditPurpose, onArchive, onDelete, ref: trigger }: ProjectActionsMenuProps) => {
+export const ProjectActionsMenu = ({
+  archived,
+  onRename,
+  onEditPurpose,
+  onArchive,
+  onDelete,
+  onCopy,
+  ref: trigger,
+}: ProjectActionsMenuProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   useDismissOnOutside(open, () => setOpen(false), root);
@@ -39,6 +48,18 @@ export const ProjectActionsMenu = ({ archived, onRename, onEditPurpose, onArchiv
       </button>
       {open && (
         <div className={styles.menu} role="menu" data-testid={projectActionsMenuTestIds.menu}>
+          {onCopy !== undefined && (
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.item}
+              onClick={choose(onCopy)}
+              data-testid={projectActionsMenuTestIds.copyItem}
+            >
+              <StrokeIcon name="copy" size={13} />
+              Copy as Markdown
+            </button>
+          )}
           <button
             type="button"
             role="menuitem"

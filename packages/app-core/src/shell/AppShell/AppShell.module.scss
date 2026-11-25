@@ -8,6 +8,7 @@
   min-height: 100dvh;
   background: var(--ground);
   --masthead-height: var(--masthead-size);
+  --bar-height: var(--masthead-height);
 
   &:has(#{shortScreens.$masthead-lets-go}) {
     @include shortScreens.sticky-offset(--masthead-height, --masthead-size);
@@ -96,7 +97,7 @@
   }
 
   &[aria-current="page"] {
-    background: var(--surface);
+    box-shadow: inset 0 0 0 2px var(--ink);
     color: var(--ink);
   }
 }
@@ -146,6 +147,18 @@
   flex-direction: column;
   padding-bottom: var(--mini-player-clearance, 0px);
   view-transition-name: pane;
+
+  &[data-strip] {
+    --masthead-height: calc(var(--bar-height) + var(--pane-strip-size, 0px));
+  }
+}
+
+// Beside the sidebar, the run's strip sits over the page alone, so the sidebar keeps its place.
+.paneStrip {
+  position: sticky;
+  top: var(--bar-height);
+  z-index: 3;
+  background: var(--ground);
 }
 
 // Design 399c-14: the sidebar slides in or out while the page narrows or widens with it; nothing dims.
@@ -174,11 +187,16 @@
   }
 }
 
-// Design 399c-15: hidden, a floating button in the bottom left brings it back.
+// What a page's own bottom-left surface leaves free for the floating button.
+.showSidebarClear {
+  --show-sidebar-clearance: 3.375rem;
+}
+
+// Design 399c-15: hidden, a floating button brings it back from where the hide button was.
 .showSidebarHost {
   position: fixed;
-  left: 1.5rem;
-  bottom: calc(1.375rem + var(--mini-player-clearance, 0px));
+  left: 1.75rem;
+  bottom: calc(1.125rem + var(--mini-player-clearance, 0px));
   z-index: 4;
   display: inline-flex;
 
@@ -188,7 +206,7 @@
 }
 
 .showSidebar {
-  @include controls.circle(2.5rem);
+  @include controls.circle(2.25rem);
   @include controls.control-motion;
 
   display: inline-grid;
@@ -297,14 +315,40 @@
     display: none;
   }
 
+  // Only the current page is orange and ringed; Ask and + sit quiet like the page icons until then.
+  .actions .askButton:not([aria-current="page"]),
+  .actions .iconOnPhone {
+    background: transparent;
+    color: var(--muted);
+
+    &:hover:not(:disabled) {
+      background: var(--surface);
+      color: var(--ink);
+    }
+  }
+
+  .pageIcon[aria-current="page"],
+  .actions .askButton[aria-current="page"] {
+    background: var(--action);
+    color: var(--on-action);
+    box-shadow:
+      0 0 0 2px var(--ground),
+      0 0 0 3.5px var(--action);
+  }
+
   .brandSlot {
     flex: 1 1 auto;
     min-width: 0;
   }
 
-  // While the bar holds the way back, the page icons give way so its label fits.
-  .brandSlotBack ~ .actions .nav {
-    display: none;
+  // The way back is the arrow alone here, so the page icons keep their place beside it.
+  .backLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .title:not(.titlePanel) {

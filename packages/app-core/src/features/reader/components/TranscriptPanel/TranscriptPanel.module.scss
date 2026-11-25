@@ -205,6 +205,7 @@
   flex-direction: column;
   gap: 2px;
   margin: 0 -0.875rem;
+  --row-radius: 16px;
 }
 
 .row {
@@ -215,7 +216,7 @@
   align-items: start;
   width: 100%;
   padding: 0.875rem;
-  border-radius: 16px;
+  border-radius: var(--row-radius);
   scroll-margin-block: 25vh;
   transition: background var(--motion-state) var(--motion-ease);
 }
@@ -242,13 +243,13 @@
 }
 
 .rowTargetOpens {
-  border-start-start-radius: 16px;
-  border-start-end-radius: 16px;
+  border-start-start-radius: var(--row-radius);
+  border-start-end-radius: var(--row-radius);
 }
 
 .rowTargetCloses {
-  border-end-start-radius: 16px;
-  border-end-end-radius: 16px;
+  border-end-start-radius: var(--row-radius);
+  border-end-end-radius: var(--row-radius);
 }
 
 // A chapter held in a single block is one tile again, as it was before the band.
@@ -258,7 +259,7 @@
 
 // The playing block keeps its own card inside the band, so it stays findable.
 .rowTarget.rowCurrent {
-  border-radius: 16px;
+  border-radius: var(--row-radius);
 }
 
 .rowPast .text,
@@ -403,6 +404,7 @@
 @media (max-width: 61.9375rem) {
   .rows {
     margin: 0 -0.75rem;
+    --row-radius: 14px;
   }
 
   .row,
@@ -410,7 +412,6 @@
     grid-template-columns: 2.5rem minmax(0, 1fr);
     gap: 0.625rem;
     padding: 0.75rem;
-    border-radius: 14px;
   }
 
   .time {

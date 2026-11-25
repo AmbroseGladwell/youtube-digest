@@ -1,8 +1,11 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { Chat } from "@overview/domain";
 import { CutText } from "../../../../components/shared/CutText/CutText.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useTypingSettled } from "../../../analytics/useTypingSettled.js";
+import { chatMatchesQuery } from "../../util/chatMatchesQuery.js";
 import { conversationLine, firstQuestionOf, lastActive } from "../../util/conversationLine.js";
+import { ConversationSearch } from "../ConversationSearch/ConversationSearch.js";
 import styles from "./ChatConversationList.module.scss";
 import { chatConversationListTestIds } from "./ChatConversationListTestIds.js";
 
@@ -13,12 +16,21 @@ export interface ChatConversationListProps {
   onNew: () => void;
   onOpen: (chat: Chat) => void;
   onDelete: (chat: Chat) => void;
+  onSearched?: (matches: number) => void;
 }
 
-export const ChatConversationList = ({ chats, openChatId, now, onNew, onOpen, onDelete }: ChatConversationListProps) => {
-  const rows = [...chats].sort((a, b) => lastActive(b).localeCompare(lastActive(a)));
+const SEARCH_FROM = 2;
+
+export const ChatConversationList = ({ chats, openChatId, now, onNew, onOpen, onDelete, onSearched }: ChatConversationListProps) => {
+  const [query, setQuery] = useState("");
+  const searchable = chats.length >= SEARCH_FROM;
+  const rows = [...chats]
+    .filter((chat) => !searchable || chatMatchesQuery(chat, query))
+    .sort((a, b) => lastActive(b).localeCompare(lastActive(a)));
   const openButtons = useRef<(HTMLButtonElement | null)[]>([]);
   const newButton = useRef<HTMLButtonElement | null>(null);
+
+  useTypingSettled(query, () => onSearched?.(rows.length));
 
   const remove = (chat: Chat, index: number) => {
     onDelete(chat);
@@ -37,6 +49,12 @@ export const ChatConversationList = ({ chats, openChatId, now, onNew, onOpen, on
         <StrokeIcon name="pencil" size={16} />
         New conversation
       </button>
+      {searchable && <ConversationSearch className={styles.search} query={query} onQuery={setQuery} />}
+      {searchable && query.trim() !== "" && rows.length === 0 && (
+        <p className={styles.noMatches} role="status" data-testid={chatConversationListTestIds.noMatches}>
+          No conversations match “{query.trim()}”.
+        </p>
+      )}
       <ul className={styles.rows}>
         {rows.map((chat, index) => (
           <li

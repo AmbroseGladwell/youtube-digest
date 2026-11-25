@@ -36,9 +36,6 @@ export class ProjectHeadPageObject extends PageObject {
     this.step("verifyPurposeReads", () => expect(this.get(projectHeadTestIds.purposeText)).toHaveText(text));
   verifyFactsRead = (text: string) =>
     this.step(`verifyFactsRead ${text}`, () => expect(this.get(projectHeadTestIds.facts)).toHaveText(text));
-  verifySpreadReads = (text: string) =>
-    this.step(`verifySpreadReads ${text}`, () => expect(this.get(projectHeadTestIds.spread)).toHaveText(text));
-
   verifyAssistantHintIsShown = (shown: boolean) =>
     this.step(`verifyAssistantHintIsShown ${shown}`, () =>
       shown ? this.expectToBeVisible(projectHeadTestIds.purposeHint) : this.expectNotToBeVisible(projectHeadTestIds.purposeHint),
@@ -68,9 +65,9 @@ export class ProjectHeadPageObject extends PageObject {
 
   clickKeep = () => this.step("clickKeep", () => this.click(projectHeadTestIds.keepButton));
   clickRestore = () => this.step("clickRestore", () => this.click(projectHeadTestIds.restoreButton));
-  clickCopy = () => this.step("clickCopy", () => this.click(projectHeadTestIds.copyButton));
+  clickCopy = () => this.step("clickCopy", () => this.menu(projectActionsMenuTestIds.copyItem));
   verifyCopyReads = (text: string) =>
-    this.step(`verifyCopyReads ${text}`, () => expect(this.get(projectHeadTestIds.copyButton)).toHaveText(text));
+    this.step(`verifyCopyReads ${text}`, () => expect(this.get(projectHeadTestIds.copiedNote)).toHaveText(text));
 
   private menu = async (item: string) => {
     await this.click(projectActionsMenuTestIds.trigger);

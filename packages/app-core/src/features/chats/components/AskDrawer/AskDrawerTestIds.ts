@@ -12,4 +12,5 @@ export const askDrawerTestIds = {
   menuButton: "ask-drawer-menu-button",
   delete: "ask-drawer-delete",
   empty: "ask-drawer-empty",
+  noMatches: "ask-drawer-no-matches",
 } as const;

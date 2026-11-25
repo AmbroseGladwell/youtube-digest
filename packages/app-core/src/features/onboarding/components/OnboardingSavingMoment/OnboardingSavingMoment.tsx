@@ -9,11 +9,17 @@ import { onboardingPageTestIds } from "../../OnboardingPage/OnboardingPageTestId
 
 const HEADING = "Save the content you want to come back to.";
 const LIBRARY = "Your library";
-const LIBRARY_NOTE = "4 kinds, one place";
+const LIBRARY_NOTE = "5 kinds, one place";
 const KINDS: readonly { icon: StrokeIconName; name: string; from: string; becomes: string }[] = [
   { icon: "play", name: "Videos", from: "YouTube", becomes: "The good bits, and the part worth watching." },
   { icon: "fileText", name: "Articles", from: "Any web page", becomes: "The point in 2 minutes." },
   { icon: "mic", name: "Podcasts", from: "Apple Podcasts, Spotify", becomes: "The ideas from any episode." },
+  {
+    icon: "smartphone",
+    name: "Social posts",
+    from: "TikTok, Instagram, Facebook",
+    becomes: "What a reel or post says, without the scroll.",
+  },
   { icon: "chefHat", name: "Recipes", from: "Any recipe site", becomes: "Made easy to follow with cooking mode." },
 ];
 const EXTENSION_TITLE = "Add content in 1 click with the extension";

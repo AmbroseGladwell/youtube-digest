@@ -21,10 +21,9 @@ export const projectHeadTestIds = {
   cancelButton: "ProjectHead.cancelButton",
   facts: "ProjectHead.facts",
   suggestionsLine: "ProjectHead.suggestionsLine",
-  spread: "ProjectHead.spread",
   nudge: "ProjectHead.nudge",
   keepButton: "ProjectHead.keepButton",
   nudgeArchiveButton: "ProjectHead.nudgeArchiveButton",
   restoreButton: "ProjectHead.restoreButton",
-  copyButton: "ProjectHead.copyButton",
+  copiedNote: "ProjectHead.copiedNote",
 };

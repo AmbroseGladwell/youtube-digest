@@ -209,7 +209,7 @@ export const AccountMenu = () => {
         {feedback !== null &&
           !signedOutAtServer &&
           item(
-            "chat",
+            "messageSquare",
             "Send feedback",
             "sendFeedback",
             () => {

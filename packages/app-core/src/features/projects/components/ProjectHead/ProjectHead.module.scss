@@ -159,14 +159,6 @@
   }
 }
 
-.spread {
-  margin: 0.5rem 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  align-items: center;
-}
-
 .suggestionsLine {
   display: inline-flex;
   align-items: center;
@@ -191,20 +183,6 @@
     outline: 2px solid var(--brand);
     outline-offset: 2px;
   }
-}
-
-.verdict {
-  @include controls.chip;
-  font-variant-numeric: tabular-nums;
-}
-
-.dubious {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--alert);
 }
 
 .nudge {
@@ -234,12 +212,26 @@
   gap: 0.5rem;
   align-items: center;
   flex-wrap: wrap;
+  justify-content: flex-end;
   margin: 1rem 0 1.25rem;
 }
 
 .pill {
   @include controls.surface-pill;
   @include controls.pill-md;
+}
+
+.copied {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+
+  &:empty {
+    display: none;
+  }
 }
 
 .onTint {

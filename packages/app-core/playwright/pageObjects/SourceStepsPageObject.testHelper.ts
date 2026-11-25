@@ -62,6 +62,15 @@ export class SourceStepsPageObject extends PageObject {
       await this.expectToHaveCount(readAlongNoteTestIds.showAllSteps, 0);
     });
 
+  clickHideSteps = () =>
+    this.step("clickHideSteps", async () => {
+      await this.click(readAlongNoteTestIds.hideSteps);
+      await this.expectToHaveCount(readAlongNoteTestIds.hideSteps, 0);
+    });
+
+  verifyShowAllIsFocused = () =>
+    this.step("verifyShowAllIsFocused", () => expect(this.get(readAlongNoteTestIds.showAllSteps)).toBeFocused());
+
   verifyFocusIsOnStep = (text: string) =>
     this.step(`verifyFocusIsOnStep ${text}`, () =>
       expect(this.stepLines().filter({ hasText: text }).getByTestId(readAlongNoteTestIds.lineText)).toBeFocused(),

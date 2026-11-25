@@ -38,7 +38,9 @@ So every band that can come to sit over content carries `data-sticky-fade`, and 
 `theme/global.scss` draws the fade on the last of them:
 
 ```scss
-[data-sticky-fade]:has(~ [data-sticky-fade], ~ * [data-sticky-fade])::after { content: none; }
+[data-sticky-fade]:has(~ [data-sticky-fade], ~ * [data-sticky-fade])::after {
+  content: none;
+}
 ```
 
 A band gives the fade up to any band that follows it, whether that band is its own next
@@ -50,16 +52,18 @@ layout and the surface, and none of that needs saying twice.
 
 Where that lands, surface by surface:
 
-| Surface | The bands, in order | What carries the fade |
-|---|---|---|
-| Library, settings, anything else in the shell | the app's bar | the bar |
-| Overview, Note tab | the bar, the tab strip | the tab strip |
-| Overview, Transcript tab | the bar, the tab strip, the tools | the tools |
-| Panel | the bar, the note's head, the tab strip, the tools | the lowest of them |
-| Shared page | its own header, the tab strip, the tools | the lowest of them |
+| Surface                               | The bands, in order                                   | What carries the fade     |
+| ------------------------------------- | ----------------------------------------------------- | ------------------------- |
+| Overviews, a project, a source's page | the app's bar, then the search toolbar once it sticks | the bar, then the toolbar |
+| Settings, anything else in the shell  | the app's bar                                         | the bar                   |
+| Overview, Note tab                    | the bar, the tab strip                                | the tab strip             |
+| Overview, Transcript tab              | the bar, the tab strip, the tools                     | the tools                 |
+| Panel                                 | the bar, the note's head, the tab strip, the tools    | the lowest of them        |
+| Shared page                           | its own header, the tab strip, the tools              | the lowest of them        |
 
-On the library the fade runs the full width, so the filter rail — whose body sticks beside
-the list and scrolls on its own — dissolves at its top edge too.
+The library's toolbar (search, sort, filters, select) sticks under the bar and only becomes a
+band once it is held there (`useToolbarStuck`), so until then the bar keeps the fade. On a short
+screen it scrolls away with the page and never becomes one.
 
 A page with only one tab, such as a recipe page or an article without chapters, has no tab
 strip, so the bar is its lowest band. With chat open beside the note, the bar's fade stops where

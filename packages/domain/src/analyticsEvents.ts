@@ -1620,6 +1620,9 @@ export const analyticsEvents = {
       }),
       conversationDeleted: event("The reader deletes a conversation from the drawer", { scope: AskDrawerScope }),
       deleteUndone: event("The reader undoes deleting a conversation from the drawer", { scope: AskDrawerScope }),
+      searched: event("The reader searches the drawer's conversations, counted once they stop typing; never the words", {
+        matches: z.number().int().nonnegative(),
+      }),
     },
   },
   sharedPage: {

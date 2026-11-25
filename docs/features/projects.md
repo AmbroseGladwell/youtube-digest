@@ -4,7 +4,7 @@ OV-168 (https://trello.com/c/Uof1EGZB). A project is what the reader is working 
 "Kitchen renovation" or "Launching my app": a name, a **purpose line** that the reader's
 assistant reads as its brief, and a set of overviews. Topics say what an overview is about,
 tags come from the source and the reader, and followed playlists are where videos come from.
-A project says what an overview is *for*.
+A project says what an overview is _for_.
 
 The assistant is treated as a project's main user, and the reader is the person who sets its
 purpose and checks its work. The server gathers and counts; it never writes anything about a
@@ -260,11 +260,12 @@ From the Claude Design round, "OV-168 1–6" in the design project, decided with
   it. A membership record taken out leaves nothing on the device to date it by, and a project's
   rename isn't dated either, so neither counts.
 - **The page.** "← All projects", which goes back to All projects rather than the library; "Project · Made 4 Nov" or "Made by Claude · 9 Nov"; the name; what it's for on
-  the stone tint, or a dashed invitation to write it; counts and the verdict spread, from code;
-  Copy as Markdown, which copies `projectMarkdown` whole; ⋯ with Rename, Edit what it's for,
-  Archive and Delete project…. Rename and the purpose edit in place. An archived project says
+  the stone tint, or a dashed invitation to write it; counts, from code (the verdict spread
+  stays in the Markdown only: on the page its chips looked busy and tappable); Ask project and
+  ⋯, right-aligned, with Copy as Markdown (which copies `projectMarkdown` whole), Rename, Edit
+  what it's for, Archive and Delete project…. Rename and the purpose edit in place. An archived project says
   so under the name and offers Restore. A row an assistant put there says "Added by Claude ·
-  11 Nov · Remove"; removing is silent.
+  11 Nov · Remove"; removing offers Undo.
 - **Assistant lines only with a connection.** "Your assistant works from this", the
   invitation's sentence about an assistant, the create dialog's first helper sentence and the
   archived and delete clauses show only when the reader has at least one connection. An empty

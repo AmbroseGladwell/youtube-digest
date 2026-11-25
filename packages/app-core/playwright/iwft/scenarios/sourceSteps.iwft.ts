@@ -97,6 +97,11 @@ test("a long list shows its first five and says how many more there are and wher
         .map(({ props }) => props["steps"]),
     )
     .toEqual([18]);
+
+  await reader.sourceSteps.clickHideSteps();
+
+  await reader.sourceSteps.verifyShownStepsRead(LONG_STEPS.slice(0, 5).map(({ text }) => text));
+  await reader.sourceSteps.verifyShowAllIsFocused();
 });
 
 test("with the steps switched off, an overview that has them doesn't show them", async ({ launcher, backendSimulator }) => {

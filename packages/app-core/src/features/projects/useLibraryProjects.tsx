@@ -42,6 +42,11 @@ export interface LibraryProjectsHost {
   selectButton?: HTMLElement | null | undefined;
 }
 
+export interface ProjectRemoval {
+  writes: Promise<unknown>[];
+  undo: () => void;
+}
+
 export interface AddedByLine {
   label: string;
   on: string;
@@ -102,8 +107,10 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
           updateProject.mutate({ projectId: current.project.id, patch: { purpose, purposeBy: purpose === null ? null : BY_READER } });
         }}
         onArchive={(from) => {
-          analytics.projects.page.archived({ projectId: current.project.id, from });
-          updateProject.mutate({ projectId: current.project.id, patch: { archivedAt: new Date().toISOString() } });
+          const projectId = current.project.id;
+          analytics.projects.page.archived({ projectId, from });
+          updateProject.mutate({ projectId, patch: { archivedAt: new Date().toISOString() } });
+          host.say(`Archived ${current.project.name}`, () => restore(projectId));
         }}
         onRestore={() => restore(current.project.id)}
         onKeep={() => {
@@ -149,24 +156,33 @@ export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithS
       onRemove: () => {
         analytics.projects.membership.removed({ projectId: project.id, overviewId, addedBy: addedBy.by, from: "row" });
         setMember.mutate({ projectId: project.id, overviewId, inProject: false });
+        host.say(`Removed from ${project.name}`, () => setMember.mutate({ projectId: project.id, overviewId, inProject: true }));
       },
     };
   };
 
-  const removeFromCurrent = (overviewIds: OverviewId[]): Promise<unknown>[] => {
+  const removeFromCurrent = (overviewIds: OverviewId[]): ProjectRemoval => {
     if (current === null) {
-      return [];
+      return { writes: [], undo: () => {} };
     }
+    const projectId = current.project.id;
     const writes: Promise<unknown>[] = [];
+    const removed: OverviewId[] = [];
     for (const overviewId of overviewIds) {
       const item = current.items.find((each) => each.overview.id === overviewId);
       if (item === undefined) {
         continue;
       }
-      analytics.projects.membership.removed({ projectId: current.project.id, overviewId, addedBy: item.addedBy.by, from: "selection" });
-      writes.push(setMember.mutateAsync({ projectId: current.project.id, overviewId, inProject: false }));
+      analytics.projects.membership.removed({ projectId, overviewId, addedBy: item.addedBy.by, from: "selection" });
+      removed.push(overviewId);
+      writes.push(setMember.mutateAsync({ projectId, overviewId, inProject: false }));
     }
-    return writes;
+    const undo = () => {
+      for (const overviewId of removed) {
+        setMember.mutate({ projectId, overviewId, inProject: true });
+      }
+    };
+    return { writes, undo };
   };
 
   const holding = (projectId: ProjectId, overviews: OverviewWithState[]) => {

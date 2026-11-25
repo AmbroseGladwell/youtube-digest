@@ -144,6 +144,7 @@ export const OverviewActionsMenu = ({
               data-testid={overviewActionsMenuTestIds.chatItem}
             >
               Ask overview
+              <StrokeIcon name="chat" size={16} />
             </button>
           )}
           <button
@@ -209,7 +210,7 @@ export const OverviewActionsMenu = ({
               <button
                 type="button"
                 role="menuitem"
-                className={`${styles.item} ${styles.itemStandout}`}
+                className={styles.item}
                 onClick={choose("share", onShare)}
                 data-testid={overviewActionsMenuTestIds.shareItem}
               >
@@ -303,7 +304,7 @@ export const OverviewActionsMenu = ({
                 data-testid={overviewActionsMenuTestIds.feedbackItem}
               >
                 Send feedback
-                <StrokeIcon name="chat" size={16} />
+                <StrokeIcon name="messageSquare" size={16} />
               </button>
             </>
           )}

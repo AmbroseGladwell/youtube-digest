@@ -25,3 +25,12 @@
     animation: libraryGlideEnter 240ms var(--motion-ease) 120ms both;
   }
 }
+
+// Rows' snapshots paint above the page, so the toolbar and an open popover are captured too and kept on top.
+::view-transition-group(library-toolbar) {
+  z-index: 4;
+}
+
+::view-transition-group(library-popover) {
+  z-index: 5;
+}

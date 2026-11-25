@@ -314,8 +314,14 @@ test.describe("selecting in a project", () => {
 
     await library.verifyCardOrder(["The kitchen layout"]);
     await library.selectionBar.verifyIsShown(false);
-    await library.toast.verifyReads("Removed 1 from Kitchen renovation");
+    await library.toast.verifyReads("Removed 1 from Kitchen renovationUndo");
     await expect.poll(async () => (await backendSimulator.projects.members()).map((member) => member.overviewId)).toEqual([layout.id]);
+
+    await library.toast.clickUndo();
+    await library.verifyCardOrder(["What moving a sink", "The kitchen layout"]);
+    await expect
+      .poll(async () => (await backendSimulator.projects.members()).map((member) => member.overviewId).sort())
+      .toEqual([layout.id, sink.id].sort());
   });
 });
 

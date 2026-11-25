@@ -1,4 +1,5 @@
 @use "../../../theme/controls.scss" as controls;
+@use "../../../theme/shortScreens.scss";
 
 .root {
   position: relative;
@@ -19,6 +20,27 @@
   display: flex;
   flex-direction: column;
   gap: 1.125rem;
+}
+
+// Search, sort, filters and select stay in reach under the masthead; the fade moves under them.
+.toolbar {
+  position: sticky;
+  top: var(--masthead-height, 0px);
+  z-index: 2;
+  margin-block: -0.5rem;
+  padding-block: 0.5rem;
+  background: var(--ground);
+
+  @include shortScreens.short-screen {
+    position: relative;
+    top: auto;
+  }
+}
+
+// Cancels the list's gap and the toolbar's margin, so it marks exactly where the toolbar starts to stick.
+.toolbarSentinel {
+  height: 0;
+  margin-bottom: -1.625rem;
 }
 
 .listHead {
