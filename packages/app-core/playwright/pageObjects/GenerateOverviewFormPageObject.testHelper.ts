@@ -101,6 +101,11 @@ export class GenerateOverviewFormPageObject extends PageObject {
   verifyHasNoUsageLine = () =>
     this.step("verifyHasNoUsageLine", () => this.expectToHaveCount(generateOverviewFormTestIds.usageLine.root, 0));
 
+  clickUsageSeePlans = () => this.step("clickUsageSeePlans", () => this.click(generateOverviewFormTestIds.usageLine.seePlans));
+
+  verifyUsageLineOffersNoPlans = () =>
+    this.step("verifyUsageLineOffersNoPlans", () => this.expectToHaveCount(generateOverviewFormTestIds.usageLine.seePlans, 0));
+
   clickUsagePlanLink = () => this.step("clickUsagePlanLink", () => this.click(generateOverviewFormTestIds.usageLine.planLink));
 
   verifyLimitMessage = ({ title, body, actions }: { title: string; body?: string; actions: string[] }) =>

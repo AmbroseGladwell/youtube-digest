@@ -18,8 +18,13 @@ export interface PlanPromptState {
 
 const ONCE_SHOWN: ReadonlySet<PlanPromptVariant> = new Set(["reset"]);
 
+export interface PlanPromptOptions {
+  // A copy of a prompt shown elsewhere too, like the home hero's line behind Create: it decides, records nothing.
+  quiet?: boolean;
+}
+
 // One place decides and records every Plus prompt: docs/features/plus-upsell.md (OV-351).
-export const usePlanPrompt = (moment: PlanPromptMoment): PlanPromptState => {
+export const usePlanPrompt = (moment: PlanPromptMoment, { quiet = false }: PlanPromptOptions = {}): PlanPromptState => {
   const analytics = useAnalytics();
   const { plan, status } = usePlan();
   const overviews = useOverviewUsageQuery().data ?? null;
@@ -40,7 +45,7 @@ export const usePlanPrompt = (moment: PlanPromptMoment): PlanPromptState => {
   const record = (shown: PlanPromptVariant) => updateSettings.mutate({ planPromptsDismissed: { [shown]: new Date().toISOString() } });
 
   useEffect(() => {
-    if (variant === null) {
+    if (variant === null || quiet) {
       return;
     }
     analytics.plus.prompt.shown({ variant, plan });

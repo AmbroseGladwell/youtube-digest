@@ -383,7 +383,7 @@ export const GenerateOverviewForm = ({
           )}
         </span>
       </label>
-      {keysReady && limit === null && <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />}
+      {keysReady && limit === null && <UsageLine testIds={generateOverviewFormTestIds.usageLine} offersPlus onPlanFollowed={onCancel} />}
       {held !== null && (
         <p className={styles.held} data-testid={newOverviewDialogTestIds.alreadyHeld}>
           <StrokeIcon name="check" size={15} />

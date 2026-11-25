@@ -8,6 +8,14 @@ export const CHECKING = "Checking…";
 
 export const resetDate = (resetsOn: string, narrow = false): string => (narrow ? SHORT : LONG).format(new Date(`${resetsOn}T00:00:00Z`));
 
+const MONTH = new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" });
+
+// The month the reader is in: the one before the reset.
+export const monthBefore = (resetsOn: string): string => {
+  const reset = new Date(`${resetsOn}T00:00:00Z`);
+  return MONTH.format(new Date(Date.UTC(reset.getUTCFullYear(), reset.getUTCMonth() - 1, 1)));
+};
+
 export const leftOf = (left: number, limit: number): string => `${left} of ${limit} left`;
 
 const ON_KEY: Record<KeySource, string> = { ours: "on us", own: "on your own key" };

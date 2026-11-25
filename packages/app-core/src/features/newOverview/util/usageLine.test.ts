@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planRowCount, usageLineOf } from "./usageLine.js";
+import { monthBefore, planRowCount, usageLineOf } from "./usageLine.js";
 
 const RESETS_ON = "2026-11-01";
 
@@ -49,5 +49,12 @@ describe("planRowCount", () => {
     expect(planRowCount({ kind: "quota", key: "ours", left: 7, limit: 10, resetsOn: RESETS_ON, passedOver: null })).toBe("7 of 10 left");
     expect(planRowCount({ kind: "checking" })).toBe("Checking…");
     expect(planRowCount(null)).toBeNull();
+  });
+});
+
+describe("monthBefore", () => {
+  it("names the month the reader is in from the next reset, across a year start", () => {
+    expect(monthBefore("2026-12-01")).toBe("November");
+    expect(monthBefore("2027-01-01")).toBe("December");
   });
 });
