@@ -67,6 +67,30 @@ export class BottomSheetPageObject extends PageObject {
       await expect(this.sheet.getByTestId(bottomSheetTestIds.bar)).not.toBeVisible();
     });
 
+  private pageScrollY = () => this.page.evaluate(() => window.scrollY);
+
+  private scrollThePage = async () => {
+    await this.page.mouse.move(20, 20);
+    await this.page.mouse.wheel(0, 600);
+    await this.page.keyboard.press("PageDown");
+  };
+
+  verifyPageBehindStaysPut = () =>
+    this.step("verifyPageBehindStaysPut", async () => {
+      await this.settled();
+      const before = await this.pageScrollY();
+      await this.scrollThePage();
+      await this.page.waitForTimeout(300);
+      expect(await this.pageScrollY()).toBe(before);
+    });
+
+  verifyPageScrollsAgain = () =>
+    this.step("verifyPageScrollsAgain", async () => {
+      const before = await this.pageScrollY();
+      await this.scrollThePage();
+      await expect.poll(this.pageScrollY).toBeGreaterThan(before);
+    });
+
   // Read as it starts to leave: the sheet is still there, travelling down.
   verifyLeavesByTravellingDown = () =>
     this.step("verifyLeavesByTravellingDown", async () => {

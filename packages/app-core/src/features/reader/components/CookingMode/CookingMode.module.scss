@@ -29,10 +29,6 @@
   }
 }
 
-:global(html):has(.root[open]) {
-  overflow: hidden;
-}
-
 .panel {
   --action-max: 1.875rem;
   --action-min: 1.25rem;
