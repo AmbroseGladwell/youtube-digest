@@ -421,6 +421,35 @@ test.describe("Ask", () => {
     await ask.verifyDrawerItemMenuIsInView();
   });
 
+  test("on a phone the drawer's sheet keeps its height while a search narrows the list, and the search field stays put (OV-413)", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(PHONE);
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    const now = Date.now();
+    for (let day = 0; day < 12; day += 1) {
+      backendSimulator.chats.seed(
+        conversation(
+          `library:${String(day).padStart(8, "0")}-2c3d-4e5f-8a6b-7c8d9e0f1a2b`,
+          day === 0 ? "Which beans keep best?" : `Earlier question ${day}?`,
+          new Date(now - day * 86_400_000).toISOString(),
+        ),
+      );
+    }
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(12);
+    const ask = await launcher.appShell.openAsk();
+    await ask.openDrawer();
+    const top = await ask.drawerSearchTop();
+
+    await ask.searchDrawer("beans");
+
+    await ask.verifyDrawerShows(1);
+    await ask.verifyDrawerSearchTopIs(top);
+  });
+
   test("an answer's bold shows as bold, a long source row folds into +N, a list item has its own chip, and following it opens that overview at the cited key point", async ({
     launcher,
     backendSimulator,

@@ -63,6 +63,7 @@ export const AskDrawer = ({
     setMenuUp(item !== undefined && box !== undefined && item.bottom + height + 8 > Math.min(box.bottom, window.innerHeight));
   }, [menuFor]);
   const [query, setQuery] = useState("");
+  const [heldHeight, setHeldHeight] = useState<number | null>(null);
   const searchable = chats.length >= SEARCH_FROM;
 
   const scopeOf = (chat: Chat) => {
@@ -86,8 +87,20 @@ export const AskDrawer = ({
       New chat
     </button>
   );
+  // On a phone the sheet keeps the height it had when a search starts, so it doesn't drop as results narrow.
+  const searchFor = (next: string) => {
+    const body = root.current;
+    if (sheet && query === "" && next !== "" && body !== null) {
+      const height = body.getBoundingClientRect().height;
+      setHeldHeight(Math.min(height, body.parentElement?.getBoundingClientRect().height ?? height));
+    }
+    if (next === "") {
+      setHeldHeight(null);
+    }
+    setQuery(next);
+  };
   const search = (className: string | undefined) =>
-    searchable && <ConversationSearch className={className} query={query} onQuery={setQuery} />;
+    searchable && <ConversationSearch className={className} query={query} onQuery={searchFor} />;
   const conversations = (
     <>
       {searchable && query.trim() !== "" && shown.length === 0 && (
@@ -170,7 +183,7 @@ export const AskDrawer = ({
   if (sheet) {
     return (
       <BottomSheet open={open} title="Conversations" head={newChat} onClose={onClose} testId={askDrawerTestIds.root}>
-        <div className={styles.sheetBody} ref={root}>
+        <div className={styles.sheetBody} ref={root} style={heldHeight === null ? undefined : { minHeight: heldHeight }}>
           {search(styles.sheetSearch)}
           {conversations}
         </div>
