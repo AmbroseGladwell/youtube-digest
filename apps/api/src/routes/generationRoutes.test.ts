@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_TOKEN_HEADER } from "@overview/domain";
+import { overviewQuotas, CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_TOKEN_HEADER } from "@overview/domain";
 import { generationRequest, makeFakeOpenAi, type FakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { ourKeyModel } from "../generation/ourKeyModel.js";
@@ -10,7 +10,6 @@ import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
-import { overviewQuotas } from "../usage/overviewQuotas.js";
 import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 
 const OUR_KEY = "sk-test-ours";

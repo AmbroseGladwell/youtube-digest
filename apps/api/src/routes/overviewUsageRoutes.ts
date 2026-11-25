@@ -1,11 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import type { OverviewUsage } from "@overview/domain";
+import { saveQuotas, type OverviewUsage } from "@overview/domain";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import type { createPodcastTranscriptions } from "../podcasts/createPodcastTranscriptions.js";
 import type { CaptureSavesRepository } from "../usage/CaptureSavesRepository.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
-import { saveQuotas } from "../usage/saveQuotas.js";
 
 export interface OverviewUsageRoutesOptions {
   usage: OverviewUsageRepository;

@@ -40,7 +40,7 @@ rather than replacing it.
 | Price a month (launch, 18 Oct 2026)                           | free                                                     | free                   | £4.99               | £7.99               |
 | Overviews on our key                                          | — (needs an account; onboarding's first is made after it) | 5 a month              | 10 a month          | 50 a month          |
 | Overviews on your own key                                     | —                                                        | 10 a month             | 200 a month         | 200 a month         |
-| Saves without an overview, once the month's are made (OV-358) | —                                                      | 50 a month             | 150 a month         | 300 a month         |
+| Saves without an overview, once the month's are made (OV-358) | —                                                      | 50 a month             | 50 a month (OV-351) | 300 a month         |
 | Chat on our key, in usage (OV-309, OV-376)                    | — (needs an account)                                     | About 100 typical questions | About 500     | About 1,000         |
 | Seeing an overview                                            | — (needs an account)                                     | Yes                    | Yes                 | Yes                 |
 | Transcripts from our server                                   | Onboarding's video read only (OV-327)                     | Part of an overview, or of a save without one | Same | Same |

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { nextUsageMonth, secondsToNextUsageMonth, usageMonth } from "./usageMonth.js";
+import { nextUsageMonth, previousUsageMonth, secondsToNextUsageMonth, usageMonth } from "./usageMonth.js";
 
 test("a month is the UTC calendar month, whatever the reader's own clock says", () => {
   const lastMinuteOfOctoberUtc = new Date("2026-10-31T23:59:00.000Z");
@@ -11,6 +11,10 @@ test("a month is the UTC calendar month, whatever the reader's own clock says", 
 
 test("the reset is the first of the next month, across a year end", () => {
   assert.equal(nextUsageMonth(new Date("2026-12-15T12:00:00.000Z")), "2027-01-01");
+});
+
+test("the month before is the first of the last month, across a year start", () => {
+  assert.equal(previousUsageMonth(new Date("2027-01-15T12:00:00.000Z")), "2026-12-01");
 });
 
 test("the wait until the reset is counted to UTC midnight on the first", () => {

@@ -1,14 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CLIENT_VERSION, FIRST_RESERVING_CLIENT_VERSION, schemaVersionsForClient, type Share } from "@overview/domain";
+import { overviewQuotas, CLIENT_VERSION, FIRST_RESERVING_CLIENT_VERSION, schemaVersionsForClient, type Share } from "@overview/domain";
 import { makeOverview } from "@overview/store-conformance";
 import { generationRequest, makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { storedOverview, withVideo } from "../testing/storedRecords.testHelper.js";
-import { overviewQuotas } from "../usage/overviewQuotas.js";
 
 const RESERVING = CLIENT_VERSION;
 const OUR_KEY = {

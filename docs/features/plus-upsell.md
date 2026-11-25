@@ -148,6 +148,49 @@ Signed out there is nothing to count, since overviews need an account (`tiers.md
 out"; the trial's one cell went with OV-46): what a free account makes and Create account.
 No card is ringed as the reader's.
 
+## OV-351: Plus offered at real moments
+
+Designs 351a–351m (Claude Design, `design_handoff_ov351_upgrade_prompts/`, 25 Nov 2026). Plus is
+offered where a limit or the one paid feature is felt, never as a popup on open or a badge.
+**Get Overview Plus** in the account menu is the one standing place; everything else is light.
+Suggested questions (OV-350, `SUGGESTED_QUESTION_PLANS`) is the one thing a paid plan has that
+Free doesn't; every other prompt sells volume.
+
+### Who sees what
+
+One pure function decides every prompt, `planPromptFor(plan, usage, moment)`, so no two places
+disagree. "An allowance on us spent" means one Plus raises: overviews on us (10 against 50),
+transcribing hours (15 against 30) or chat (500 against 1,000). A BYO Plus reader's own-key
+count never prompts, since Plus gives no more there.
+
+| Prompt | Free | BYO Plus | Plus |
+|---|---|---|---|
+| Get Overview Plus in the top bar (desktop) | always, where the bar has room | never | never |
+| Get Overview Plus in the account menu | always | once an allowance on us is spent, naming it | never |
+| Counter in Create | quiet; See plans at the last one | once overviews on us count down | never |
+| Transcribing line | when the episode leaves under 2 hours | the same | never |
+| Suggested questions offer | Ask page, library and project chat | never | never |
+| Hours, chat, saves used, in place | Plus row and the wait | Plus row and the wait | the wait only |
+| Reset line | once, after a month whose overviews on us were all made | the same | never |
+
+"Last month's overviews on us were all made" is the server's count (`lastMonthOursSpent` on
+`GET /api/overview-usage`), never a device flag, so every device agrees.
+
+### Dismissing
+
+Not now and × put a prompt away until the reader's tomorrow. The reset line is recorded when
+shown and appears once per usage month. Both live in `Settings.planPromptsDismissed`, one
+timestamp per variant, merged a key at a time (`mergeSettingsRecord`), so a prompt put away on
+the phone stays away on the web and in the panel (`isPlanPromptHidden`). The counter's See
+plans, the reset line and the transcribing line have no close.
+
+### Events
+
+`plus.prompt.shown` once per showing, and `plus.prompt.chosen` with the `outcome` (See plans,
+Not now, ×, Keep it until the reset, Tell me when), each with `variant` and `plan`. Tell me when
+is only an event while billing isn't built (owner, 25 Nov 2026): nothing is stored, and
+`tellMeWhen` says which plan. `usePlanPrompt` sends both.
+
 ## Not built
 
 - **Anything that takes money.** No checkout, no trial, no account. 16a's

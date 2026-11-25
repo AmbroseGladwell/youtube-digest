@@ -89,7 +89,7 @@ import {
 import type {} from "./iwftWindow.testHelper.js";
 
 // Mirrors apps/api/src/usage/overviewQuotas.ts.
-const SIMULATED_SAVES: Record<Plan, number> = { free: 50, "byo-plus": 150, plus: 300 };
+const SIMULATED_SAVES: Record<Plan, number> = { free: 50, "byo-plus": 50, plus: 300 };
 
 const SIMULATED_QUOTAS: Record<Plan, { ours: number; own: number }> = {
   free: { ours: 5, own: 10 },

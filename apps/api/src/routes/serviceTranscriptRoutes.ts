@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, VideoId, type ServiceTranscriptStatus } from "@overview/domain";
+import { saveQuotas, apiLogLines, VideoId, type ServiceTranscriptStatus } from "@overview/domain";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -11,7 +11,6 @@ import { rateLimits } from "../rateLimit/rateLimits.js";
 import { QuotaSpentError, type ServiceCaller, type ServiceTranscripts } from "../transcripts/ServiceTranscripts.js";
 import type { CaptureSavesRepository } from "../usage/CaptureSavesRepository.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
-import { saveQuotas } from "../usage/saveQuotas.js";
 import { secondsToNextUsageMonth } from "../usage/usageMonth.js";
 
 const Params = z.object({ videoId: VideoId });

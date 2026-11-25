@@ -12,5 +12,7 @@ export const OverviewUsage = z.object({
   own: Allowance,
   saves: Allowance.optional(),
   transcription: TranscriptionUsage.optional(),
+  // Last month's overviews on us all made, for the reset line (OV-351); absent from servers before it.
+  lastMonthOursSpent: z.boolean().optional(),
 });
 export type OverviewUsage = z.infer<typeof OverviewUsage>;
