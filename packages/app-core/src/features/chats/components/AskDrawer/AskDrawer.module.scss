@@ -1,5 +1,4 @@
 @use "../../../../theme/stickyFade.scss";
-@use "../../../../theme/shortScreens.scss";
 
 $drawer-width: 280px;
 
@@ -91,84 +90,15 @@ $drawer-width: 280px;
   }
 }
 
-// Design 354t-5.
-.sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
+// Design 354t-5, on the shared sheet.
+.sheetBody {
   --drawer-surface: var(--dialog);
   --drawer-inset: 16px;
-  max-height: 78vh;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
-  border-radius: 22px 22px 0 0;
-  box-shadow: var(--shadow-dialog);
-
-  > .top {
-    padding-top: 8px;
-  }
-
-  @include shortScreens.very-short-screen {
-    max-height: calc(100dvh - var(--masthead-size, 3.5rem));
-  }
-
-  &.arriving {
-    animation: sheet-in var(--motion-travel) var(--motion-ease) both;
-  }
-
-  &.leaving {
-    animation: sheet-out var(--motion-travel) var(--motion-ease) both;
-  }
-}
-
-@keyframes sheet-in {
-  from {
-    transform: translateY(100%);
-  }
-}
-
-@keyframes sheet-out {
-  to {
-    transform: translateY(100%);
-  }
-}
-
-.scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 19;
-  background: var(--scrim);
-
-  &.arriving {
-    animation: scrim-in var(--motion-travel) var(--motion-ease) both;
-  }
-
-  &.leaving {
-    animation: scrim-out var(--motion-travel) var(--motion-ease) both;
-  }
-}
-
-@keyframes scrim-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes scrim-out {
-  to {
-    opacity: 0;
-  }
-}
-
-.handle {
-  flex: none;
-  align-self: center;
-  width: 36px;
-  height: 4px;
-  margin-bottom: 8px;
-  border-radius: 2px;
-  background: var(--divider);
+  display: flex;
+  flex-direction: column;
+  min-height: 10rem;
+  padding: 0 0.25rem 1rem;
+  box-sizing: border-box;
 }
 
 .close {

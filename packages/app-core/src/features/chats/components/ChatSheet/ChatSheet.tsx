@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
@@ -8,6 +8,8 @@ import styles from "./ChatSheet.module.scss";
 import { chatSheetTestIds } from "./ChatSheetTestIds.js";
 
 export interface ChatSheetProps {
+  // Stays mounted: it springs in when this turns true and falls away when it turns false.
+  open: boolean;
   rest: SheetRest;
   label: string;
   loweredTitle: string;
@@ -20,6 +22,7 @@ export interface ChatSheetProps {
 }
 
 const DRAG_START_PX = 4;
+const LEAVE_FALLBACK_MS = 400;
 
 const scrimOpacityOf = (travel: number, raised: boolean, offset: number): number => {
   if (travel === 0) {
@@ -40,6 +43,7 @@ interface Drag {
 
 // How the sheet moves: docs/features/chats.md, "Beside the note (design 310a, 310d–310p)".
 export const ChatSheet = ({
+  open,
   rest,
   label,
   loweredTitle,
@@ -61,7 +65,32 @@ export const ChatSheet = ({
   const travel = Math.max(0, height - LOWERED_SHOWS_PX);
   const offset = dragOffset ?? (raised ? 0 : travel);
 
-  useFocusTrap(raised, sheet);
+  const [leaving, setLeaving] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    setLeaving(!open && !prefersReducedMotion());
+  }
+
+  useFocusTrap(open && raised, sheet);
+
+  useEffect(() => {
+    const element = sheet.current;
+    if (!leaving || element === null) {
+      return;
+    }
+    const timer = setTimeout(() => setLeaving(false), LEAVE_FALLBACK_MS);
+    const ended = (event: AnimationEvent) => {
+      if (event.target === element) {
+        setLeaving(false);
+      }
+    };
+    element.addEventListener("animationend", ended);
+    return () => {
+      clearTimeout(timer);
+      element.removeEventListener("animationend", ended);
+    };
+  }, [leaving]);
 
   // The sheet is portalled above the app's bar, so it reads the masthead's height where it stands.
   useLayoutEffect(() => {
@@ -82,7 +111,7 @@ export const ChatSheet = ({
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
     observer?.observe(element);
     return () => observer?.disconnect();
-  }, []);
+  }, [open]);
 
   const start = (event: PointerEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
@@ -139,21 +168,30 @@ export const ChatSheet = ({
 
   const scrim = scrimOpacityOf(travel, raised, offset);
 
+  if (!open && !leaving) {
+    return <span ref={anchor} hidden />;
+  }
+
   return (
     <>
       <span ref={anchor} hidden />
       {createPortal(
         <>
           <div
-            className={styles.scrim}
-            style={{ opacity: scrim, pointerEvents: raised ? "auto" : "none" } as CSSProperties}
+            className={`${styles.scrim} ${leaving ? styles.leaving : ""}`}
+            style={{ opacity: scrim, pointerEvents: raised && !leaving ? "auto" : "none" } as CSSProperties}
             onClick={() => onRestChange("lowered")}
             aria-hidden="true"
             data-testid={chatSheetTestIds.scrim}
           />
           <div
             ref={sheet}
-            className={`${styles.sheet} ${dragOffset !== null || prefersReducedMotion() ? styles.following : ""}`}
+            className={[
+              styles.sheet,
+              dragOffset !== null || prefersReducedMotion() ? styles.following : "",
+              dragOffset !== null ? styles.dragging : "",
+              leaving ? styles.leaving : "",
+            ].join(" ")}
             style={
               {
                 transform: `translateY(${offset}px)`,
@@ -162,6 +200,7 @@ export const ChatSheet = ({
             }
             role="dialog"
             aria-modal={raised}
+            inert={leaving}
             aria-label={label}
             onPointerDown={start}
             onPointerMove={move}
