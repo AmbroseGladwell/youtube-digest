@@ -70,7 +70,7 @@ each one: a centred dialog, a popover, a side panel, or a sheet still. The share
 | Cooking mode's Steps, Ingredients, Step in the video, a timer, and leaving with timers | a centred card; a desktop's ingredients are the drawer instead |
 | The timers list and a timer's controls outside cooking mode, and "Your timers will stop" | a centred card |
 | The model picker (Settings › AI API keys) | a centred card; a phone used to get a full-screen page |
-| Plans | a wide centred card with the plans side by side; a phone used to get a full-screen page |
+| Plans | a wide centred card with the paid plans side by side; on a phone it opens at the full height (`startsFull`, design 351m) |
 | The Ask page's conversations | the drawer at the left |
 
 The questions about timers (leaving cooking mode, timers that will stop) keep their buttons

@@ -1,0 +1,137 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Sizes from design 351j and 351m (_gen/ov351.js, .pln).
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 1.125rem 1rem 1rem;
+  border-radius: 1.25rem;
+  background: var(--surface);
+  text-align: left;
+}
+
+.yours {
+  box-shadow: inset 0 0 0 1.5px var(--label);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.tag {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.recommended {
+  background: var(--action);
+  color: var(--on-action);
+}
+
+.outlined {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.price {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  line-height: 1.1;
+
+  small {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+.billed {
+  margin-top: -0.25rem;
+  font-size: 0.78125rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.tagline {
+  margin-bottom: 0.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.includes {
+  margin: 0.125rem 0 -0.125rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+  margin: 0 0 0.25rem;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.84375rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  svg {
+    flex: none;
+    margin-top: 0.125rem;
+    color: var(--muted);
+  }
+}
+
+.primary,
+.secondary {
+  margin-top: auto;
+  width: 100%;
+  min-height: 2.75rem;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+
+  &[aria-disabled="true"] {
+    opacity: 0.7;
+    cursor: default;
+  }
+}
+
+.primary {
+  @include controls.action-pill;
+}
+
+.secondary {
+  @include controls.surface-pill;
+  background: var(--card);
+}

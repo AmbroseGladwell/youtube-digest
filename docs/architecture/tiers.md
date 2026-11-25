@@ -37,7 +37,7 @@ rather than replacing it.
 
 |                                                               | Signed out                                               | Free account           | BYO Plus            | Plus                |
 | ------------------------------------------------------------- | -------------------------------------------------------- | ---------------------- | ------------------- | ------------------- |
-| Price a month (launch, 18 Oct 2026)                           | free                                                     | free                   | £4.99               | £7.99               |
+| Price a month (OV-351, 25 Nov 2026): yearly, monthly          | free                                                     | free                   | £4.99, £5.99        | £7.99, £9.49        |
 | Overviews on our key                                          | — (needs an account; onboarding's first is made after it) | 5 a month              | 10 a month          | 50 a month          |
 | Overviews on your own key                                     | —                                                        | 10 a month             | 200 a month         | 200 a month         |
 | Saves without an overview, once the month's are made (OV-358) | —                                                      | 50 a month             | 50 a month (OV-351) | 300 a month         |
@@ -103,6 +103,11 @@ to spare, and nothing pushed them towards a paid plan. At 15, a reader who uses 
 days meets the limit, and BYO Plus's 200 is the obvious next step.
 
 ## Price guidance
+
+**Shown since 25 Nov 2026 (OV-351's design round), to be checked against costs before launch:**
+yearly at £4.99 a month for BYO Plus (£59.88 a year) and £7.99 for Plus (£95.88), or monthly at
+£5.99 and £9.49. Yearly saves 17% and 16%. The figures below were worked at £4.99 and £7.99 a
+month, so they now describe the yearly price; the monthly price only adds margin.
 
 **Launch prices, set 18 Oct 2026, and expected to change: BYO Plus at £4.99 a month and
 Plus at £7.99.** OV-18 builds the billing. The reasoning OV-78 handed it is below, and the

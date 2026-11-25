@@ -8,6 +8,7 @@ export type StrokeIconName =
   | "volumeOn"
   | "volumeOff"
   | "check"
+  | "gem"
   | "sun"
   | "moon"
   | "close"
@@ -100,6 +101,8 @@ export type StrokeIconName =
 export interface StrokeIconProps {
   name: StrokeIconName;
   size?: number;
+  // Plus's diamond is drawn lighter than the rest (design 351a).
+  weight?: number;
 }
 
 const GEOMETRY: Record<StrokeIconName, ReactNode> = {
@@ -138,6 +141,13 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     </>
   ),
   check: <path d="M20 6 9 17l-5-5" />,
+  gem: (
+    <>
+      <path d="M6 3h12l4 6-10 12L2 9z" />
+      <path d="M2 9h20" />
+      <path d="m9 3-2 6 5 12 5-12-2-6" />
+    </>
+  ),
   chefHat: (
     <>
       <path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z" />
@@ -661,7 +671,7 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
   ),
 };
 
-export const StrokeIcon = ({ name, size = 14 }: StrokeIconProps) => {
+export const StrokeIcon = ({ name, size = 14, weight = 2.25 }: StrokeIconProps) => {
   return (
     <svg
       className={styles.icon}
@@ -670,7 +680,7 @@ export const StrokeIcon = ({ name, size = 14 }: StrokeIconProps) => {
       height={size}
       fill="none"
       stroke="currentColor"
-      strokeWidth="2.25"
+      strokeWidth={weight}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"

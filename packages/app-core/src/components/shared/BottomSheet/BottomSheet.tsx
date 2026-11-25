@@ -23,6 +23,8 @@ export interface BottomSheetProps {
   // From 48rem: "sheet" stays a sheet (its owner shows something else there), "dialog" is a centred card.
   wide?: "sheet" | "dialog";
   width?: string | undefined;
+  // Opens at the full height on a phone, for a sheet with more than a sheet's room of content (design 351m).
+  startsFull?: boolean;
   role?: "dialog" | "alertdialog";
   initialFocus?: RefObject<HTMLElement | null>;
   // Where focus goes once it has closed; otherwise whatever had it when it opened.
@@ -60,6 +62,7 @@ export const BottomSheet = ({
   foot,
   wide = "sheet",
   width,
+  startsFull = false,
   role = "dialog",
   initialFocus,
   returnFocusTo,
@@ -91,7 +94,7 @@ export const BottomSheet = ({
     if (element === null || !open || element.open) {
       return;
     }
-    setFull(false);
+    setFull(startsFull && !isCentred(wide));
     setOffset(0);
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     element.showModal();
