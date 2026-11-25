@@ -1,6 +1,7 @@
 import { newOverviewDialogTestIds } from "../NewOverviewDialog/NewOverviewDialogTestIds.js";
 
 export const justNowListTestIds = {
+  plusLine: "JustNowList.plusLine",
   root: "JustNowList.root",
   row: "JustNowList.row",
   status: "JustNowList.status",
