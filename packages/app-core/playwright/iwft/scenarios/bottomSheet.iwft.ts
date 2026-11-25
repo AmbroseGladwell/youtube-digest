@@ -9,8 +9,10 @@ const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 800 };
 
 // Any sheet would do: Time saved's is the one every library has.
-const openASheet = async (launcher: Launcher, backendSimulator: BackendSimulator) => {
-  backendSimulator.overviews.seed(makeOverview());
+const openASheet = async (launcher: Launcher, backendSimulator: BackendSimulator, overviews = 1) => {
+  for (let index = 0; index < overviews; index += 1) {
+    backendSimulator.overviews.seed(makeOverview());
+  }
   const library = await launcher.launchExpectingLibrary();
   await library.openTimeSaved();
   const sheet = new BottomSheetPageObject(library.testContext, library.testContext.page.getByTestId(timeSavedSheetTestIds.root));
@@ -89,3 +91,23 @@ test.describe("with reduced motion", () => {
     await sheet.verifyIsClosed();
   });
 });
+
+for (const [where, viewport] of [
+  ["a phone", PHONE],
+  ["a desktop", DESKTOP],
+] as const) {
+  test(`on ${where} the page behind an open sheet doesn't scroll, and scrolls again once it closes`, async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    const { sheet } = await openASheet(launcher, backendSimulator, 40);
+
+    await sheet.verifyPageBehindStaysPut();
+
+    await sheet.pressEscape();
+    await sheet.verifyIsClosed();
+    await sheet.verifyPageScrollsAgain();
+  });
+}

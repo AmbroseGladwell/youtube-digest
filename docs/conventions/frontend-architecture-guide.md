@@ -626,6 +626,10 @@ fine. What has to hold:
   its scroll area shows at least a quarter of the screen. A menu hung from a sticky bar,
   which the page's own scroll can't reveal, caps itself with `shortScreens.fits-below`
   (the account menu, OV-386).
+- **The page behind a modal stays put.** While any `<dialog>` opened with `showModal()`
+  is open, `theme/global.scss` hides the root's overflow, so the page keeps its place
+  and only the sheet or dialog scrolls (OV-415). A modal needs nothing of its own for
+  this; a non-modal surface (a popover, the desktop Ask drawer) leaves the page scrolling.
 - **Bars leave room.** Fixed and sticky bars together cover at most half the screen; on a
   short screen they scroll away or fold. `theme/shortScreens.scss` holds the heights
   (`short-screen`, `very-short-screen`, both in `rem`, so 200% text counts as shorter). A

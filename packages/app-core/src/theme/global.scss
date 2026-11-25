@@ -20,6 +20,10 @@ html {
   text-size-adjust: 100%;
 }
 
+html:has(dialog:modal) {
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   background: var(--ground);
