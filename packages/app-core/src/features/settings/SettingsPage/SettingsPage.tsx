@@ -9,6 +9,7 @@ import { APPEARANCE_STANDFIRST, AppearanceSection } from "../../appearance/compo
 import { ConnectionsSection } from "../../connections/components/ConnectionsSection/ConnectionsSection.js";
 import { PlaylistsSection } from "../../playlists/components/PlaylistsSection/PlaylistsSection.js";
 import { PlusPlanPanel } from "../../plus/components/PlusPlanPanel/PlusPlanPanel.js";
+import { UsagePanel } from "../../plus/components/UsagePanel/UsagePanel.js";
 import { SHARED_LINKS_STANDFIRST, SharedLinksPanel } from "../../shares/components/SharedLinksPanel/SharedLinksPanel.js";
 import { SyncPanel } from "../../sync/components/SyncPanel/SyncPanel.js";
 import { MILESTONES_STANDFIRST, MilestonesSection } from "../../timeSaved/components/MilestonesSection/MilestonesSection.js";
@@ -46,6 +47,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   milestones: MILESTONES_STANDFIRST,
   shared: SHARED_LINKS_STANDFIRST,
   plan: null,
+  usage: null,
   privacy: null,
   about: null,
 };
@@ -79,6 +81,8 @@ const SectionBody = ({ id }: { id: SettingsSectionId }) => {
       return <SharedLinksPanel />;
     case "plan":
       return <PlusPlanPanel />;
+    case "usage":
+      return <UsagePanel />;
     case "privacy":
       return <PrivacySection />;
     case "about":
@@ -133,6 +137,7 @@ export const SettingsPage = ({ section }: SettingsPageProps) => {
       title={summary.title}
       intro={isPanel && summary.id === "appearance" ? null : INTROS[summary.id]}
       focusOnArrival={requested !== undefined}
+      wide={summary.id === "plan"}
     >
       <SectionBody id={summary.id} />
     </SettingsSection>

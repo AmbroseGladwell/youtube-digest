@@ -62,6 +62,7 @@ export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
               plan={paid}
               billing={billing}
               yours={false}
+              offered
               told={told.includes(paid)}
               onTell={(chosen) => {
                 tell(chosen);

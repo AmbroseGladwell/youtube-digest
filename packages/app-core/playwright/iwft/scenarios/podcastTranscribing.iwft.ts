@@ -206,9 +206,6 @@ test("Settings › Plan counts the month's transcribing in its own row, and the 
   const settings = await launcher.appShell.openSettings();
 
   await settings.verifyRowReads("plan", "Free · 5 of 5 left · 3 hr 4 min transcribing");
-  await settings.openSection("plan");
-  await settings.verifyPlanUsageCellReads("transcribing", [
-    "3 hr 4 min of 5 hr left",
-    "Episodes with no transcript are made from their audio. Ones you’ve transcribed before are free.",
-  ]);
+  await settings.openSection("usage");
+  await settings.verifyPlanUsageCellReads("transcribing", ["3 hr 4 min of 5 hr left"]);
 });

@@ -100,6 +100,11 @@ export const useSettingsSections = (): SettingsSectionSummary[] => {
       value: planValue(),
     },
     {
+      id: "usage",
+      title: "Usage",
+      value: planRowCount(nextQuota) ?? "This month",
+    },
+    {
       id: "keys",
       title: "API keys",
       value: keysRowValue(apiKeys, settings?.provider ?? DEFAULT_PROVIDER, settings?.modelByProvider ?? {}),

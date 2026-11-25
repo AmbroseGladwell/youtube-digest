@@ -1,6 +1,7 @@
 export const SETTINGS_SECTION_IDS = [
   "account",
   "plan",
+  "usage",
   "keys",
   "connections",
   "voice",

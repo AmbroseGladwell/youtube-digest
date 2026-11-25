@@ -1,9 +1,9 @@
 export const plusPlanPanelTestIds = {
   root: "PlusPlanPanel.root",
   planName: "PlusPlanPanel.planName",
-  planCard: "PlusPlanPanel.planCard",
-  feature: "PlusPlanPanel.feature",
-  notOnSaleNote: "PlusPlanPanel.notOnSaleNote",
-  includedNote: "PlusPlanPanel.includedNote",
+  summary: "PlusPlanPanel.summary",
+  seeUsageLink: "PlusPlanPanel.seeUsageLink",
+  createAccountLink: "PlusPlanPanel.createAccountLink",
+  billing: "PlusPlanPanel.billing",
   recheckButton: "PlusPlanPanel.recheckButton",
 };

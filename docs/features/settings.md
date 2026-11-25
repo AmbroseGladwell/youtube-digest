@@ -14,7 +14,8 @@ In order, each with the value its row shows:
 | Section | Route | Row value | Shown when |
 |---|---|---|---|
 | Account & sync | `/settings/account` | first name (or email) · the sync status line; signed out, "Not signed in" | the shell can sync |
-| Plan | `/settings/plan` | Free or Plus | always |
+| Plan | `/settings/plan` | the plan and the count the next overview uses ("Free · 7 of 10 left") | always |
+| Usage | `/settings/usage` | that count, or "This month" (OV-351) | always |
 | API keys | `/settings/keys` | whether the Anthropic key is set · model | always |
 | Connections | `/settings/connections` | "N connected" or "None", or "Sign in first" | the shell can sync |
 | Narration voice | `/settings/voice` | voice · accent | there is narration (signed in) |

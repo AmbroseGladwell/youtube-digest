@@ -21,6 +21,7 @@ test("on a wide screen, Settings opens beside its first section, and every row c
   await settings.verifyRowsAre([
     "account",
     "plan",
+    "usage",
     "keys",
     "connections",
     "voice",

@@ -15,6 +15,7 @@ export const PlanPromptVariant = z.enum([
   "wall",
   "panelWall",
   "modal",
+  "settings",
 ]);
 export type PlanPromptVariant = z.infer<typeof PlanPromptVariant>;
 

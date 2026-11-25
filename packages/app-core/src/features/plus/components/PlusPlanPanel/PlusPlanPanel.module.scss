@@ -1,121 +1,72 @@
 @use "../../../../theme/controls.scss" as controls;
-@use "../../../connections/consent" as consent;
 
-// Design: docs/features/plus-upsell.md, "16c — in Settings, redrawn by 95d–95h".
+// Design 351j: the plan, one usage line, the switch, every plan's card and the footnote.
 .root {
-  @include controls.tile;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1.25rem 1.375rem;
-  max-width: 35rem;
+  gap: 1rem;
+  container-type: inline-size;
+}
+
+.yourPlan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
 }
 
 .eyebrow {
-  @include controls.section-label;
   margin: 0;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .planName {
-  margin: 0 0 0.25rem;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 1.125rem;
-  line-height: 1.12;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.625rem;
+  line-height: 1.15;
 }
 
-.features {
-  margin: 0;
-  padding-left: 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.summary {
+  margin: -0.125rem 0 0;
   font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--muted);
+  font-weight: 500;
+
+  b {
+    font-weight: 600;
+  }
+}
+
+.link {
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .plans {
-  margin: 0.125rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
 
-.plan {
-  @include consent.card;
-  gap: 0.625rem;
-  padding: 0.875rem 1rem 1rem;
-  border-radius: 18px;
-}
-
-.yours {
-  background: var(--stone-tint);
-  color: var(--on-stone-tint);
-  box-shadow: inset 0 0 0 1.5px var(--label);
-}
-
-.planHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.625rem;
-}
-
-.planCardName {
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.yoursPill {
-  padding: 0.125rem 0.625rem;
-  border-radius: 999px;
-  background: var(--label);
-  color: var(--ground);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.allowances {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-  gap: 0.75rem;
-
-  div {
+  @container (max-width: 47.9375rem) {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-  }
-
-  dt {
-    font-size: 0.78125rem;
-    color: var(--muted);
-  }
-
-  dd {
-    margin: 0;
-    font-size: 0.9375rem;
-    font-weight: 600;
-  }
-
-  .yours & dt,
-  .yours & dd {
-    color: inherit;
   }
 }
 
-.planNote {
+.foot {
   margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  max-width: 51.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
   color: var(--muted);
-
-  .yours & {
-    color: inherit;
-  }
 }
 
 .note {
@@ -136,4 +87,13 @@
   color: inherit;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.announce {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

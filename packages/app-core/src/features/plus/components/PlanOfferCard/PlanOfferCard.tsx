@@ -8,12 +8,14 @@ export interface PlanOfferCardProps {
   plan: Plan;
   billing: Billing;
   yours: boolean;
+  // Above the reader's plan: Tell me when stands where paying will be.
+  offered: boolean;
   told: boolean;
   onTell: (plan: PaidPlan) => void;
 }
 
 // One plan, every benefit it gives (design 351j); Tell me when stands in for paying until billing.
-export const PlanOfferCard = ({ plan, billing, yours, told, onTell }: PlanOfferCardProps) => {
+export const PlanOfferCard = ({ plan, billing, yours, offered, told, onTell }: PlanOfferCardProps) => {
   const offer = PLAN_OFFERS[plan];
   const recommended = plan === "plus";
   return (
@@ -37,7 +39,7 @@ export const PlanOfferCard = ({ plan, billing, yours, told, onTell }: PlanOfferC
           </li>
         ))}
       </ul>
-      {plan !== "free" && !yours && (
+      {plan !== "free" && offered && (
         <button
           type="button"
           className={recommended ? styles.primary : styles.secondary}

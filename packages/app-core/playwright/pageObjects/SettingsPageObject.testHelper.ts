@@ -4,7 +4,10 @@ import { expect } from "@playwright/experimental-ct-react";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
 import type { SettingsSectionId } from "../../src/features/settings/SettingsSectionId.js";
-import { planUsageTestIds } from "../../src/features/plus/components/PlanUsage/PlanUsageTestIds.js";
+import type { Plan } from "@overview/domain";
+import { planUsageTestIds, type UsageRowId } from "../../src/features/plus/components/PlanUsage/PlanUsageTestIds.js";
+import { planOfferCardTestIds } from "../../src/features/plus/components/PlanOfferCard/PlanOfferCardTestIds.js";
+import { usagePanelTestIds } from "../../src/features/plus/components/UsagePanel/UsagePanelTestIds.js";
 import { plusPlanPanelTestIds } from "../../src/features/plus/components/PlusPlanPanel/PlusPlanPanelTestIds.js";
 import { buildLineTestIds } from "../../src/features/settings/components/BuildLine/BuildLineTestIds.js";
 import { settingsSectionTestIds } from "../../src/features/settings/components/SettingsSection/SettingsSectionTestIds.js";
@@ -142,40 +145,52 @@ export class SettingsPageObject extends PageObject {
   verifyPlanReads = (plan: string) =>
     this.step(`verifyPlanReads ${plan}`, () => expect(this.get(plusPlanPanelTestIds.planName)).toHaveText(plan));
 
-  verifyEveryAccountIncludes = (features: string[]) =>
-    this.step(`verifyEveryAccountIncludes ${features.join(", ")}`, () =>
-      expect(this.get(plusPlanPanelTestIds.feature)).toHaveText(features),
-    );
+  verifyPlanSummaryReads = (text: string) =>
+    this.step(`verifyPlanSummaryReads ${text}`, () => expect(this.get(plusPlanPanelTestIds.summary)).toHaveText(text));
 
-  verifyPlanCardsRead = (cards: string[][]) =>
-    this.step(`verifyPlanCardsRead ${cards.map((lines) => lines[0]).join(", ")}`, async () => {
-      await this.expectToHaveCount(plusPlanPanelTestIds.planCard, cards.length);
-      for (const [index, lines] of cards.entries()) {
+  seeUsage = () =>
+    this.step("seeUsage", async () => {
+      await this.click(plusPlanPanelTestIds.seeUsageLink);
+      await expect(this.get(usagePanelTestIds.root)).toBeVisible();
+    });
+
+  verifyPlanCardsRead = (cards: Array<{ plan: Plan; lines: string[] }>) =>
+    this.step(`verifyPlanCardsRead ${cards.map(({ plan }) => plan).join(", ")}`, async () => {
+      for (const { plan, lines } of cards) {
         for (const line of lines) {
-          await expect(this.get(plusPlanPanelTestIds.planCard).nth(index)).toContainText(line);
+          await expect(this.get(planOfferCardTestIds.card(plan))).toContainText(line);
         }
       }
     });
 
-  verifyPlanMarkedAsYours = (name: string) =>
-    this.step(`verifyPlanMarkedAsYours ${name}`, async () => {
-      const yours = this.get(plusPlanPanelTestIds.planCard).filter({ hasText: "Your plan" });
+  verifyPlanMarkedAsYours = (plan: Plan) =>
+    this.step(`verifyPlanMarkedAsYours ${plan}`, async () => {
+      const yours = this.get(plusPlanPanelTestIds.root).locator(`[data-testid^="plan-offer-"]`).filter({ hasText: "Your plan" });
       await expect(yours).toHaveCount(1);
-      await expect(yours).toContainText(name);
+      await expect(yours).toHaveAttribute("data-testid", planOfferCardTestIds.card(plan));
     });
+
+  verifyTellMeWhenOffered = (plans: Plan[]) =>
+    this.step(`verifyTellMeWhenOffered ${plans.join(", ")}`, async () => {
+      for (const plan of ["free", "byo-plus", "plus"] as const) {
+        await this.expectToHaveCount(planOfferCardTestIds.tellMeWhen(plan), plans.includes(plan) ? 1 : 0);
+      }
+    });
+
+  verifyUsagePlanReads = (text: string) =>
+    this.step(`verifyUsagePlanReads ${text}`, () => expect(this.get(usagePanelTestIds.yourPlan)).toHaveText(text));
+
+  verifyUpgradeOffered = (offered: boolean) =>
+    this.step(`verifyUpgradeOffered ${offered}`, () => this.expectToHaveCount(usagePanelTestIds.upgrade, offered ? 1 : 0));
+
+  upgradePlan = () => this.step("upgradePlan", () => this.click(usagePanelTestIds.upgrade));
 
   verifyPlanUsagePeriodReads = (text: string) =>
     this.step(`verifyPlanUsagePeriodReads ${text}`, () => expect(this.get(planUsageTestIds.period)).toHaveText(text));
 
-  verifyChatMeterReads = (percent: string, foot: string[]) =>
-    this.step(`verifyChatMeterReads ${percent}`, async () => {
-      await expect(this.get(planUsageTestIds.chatPercent)).toHaveText(percent);
-      await expect(this.get(planUsageTestIds.chatMeter).locator("p").last().locator("span")).toHaveText(foot);
-    });
-
-  verifyPlanUsageCellReads = (quota: "ours" | "own" | "transcribing", lines: string[]) =>
-    this.step(`verifyPlanUsageCellReads ${quota} ${lines.join(" ")}`, () =>
-      expect(this.get(planUsageTestIds.cell(quota)).locator("dd")).toHaveText(lines),
+  verifyPlanUsageCellReads = (row: UsageRowId, lines: string[]) =>
+    this.step(`verifyPlanUsageCellReads ${row} ${lines.join(" ")}`, () =>
+      expect(this.get(planUsageTestIds.cell(row)).locator("dd:not([aria-hidden])")).toHaveText(lines),
     );
 
   verifyPlanUsageCellsAre = (quotas: Array<"ours" | "own">) =>
@@ -184,9 +199,6 @@ export class SettingsPageObject extends PageObject {
         await this.expectToHaveCount(planUsageTestIds.cell(quota), quotas.includes(quota) ? 1 : 0);
       }
     });
-
-  verifyPlansAreNotOnSale = (text: string) =>
-    this.step(`verifyPlansAreNotOnSale ${text}`, () => expect(this.get(plusPlanPanelTestIds.notOnSaleNote)).toContainText(text));
 
   verifyBuildLineReads = (text: string) =>
     this.step(`verifyBuildLineReads ${text}`, () => expect(this.get(buildLineTestIds.root)).toHaveText(text));
