@@ -48,6 +48,24 @@ test("an older client's event still counts without a property added since, and a
   assert.equal(parseAnalyticsEvent({ name, props: { ...newer, howToApplyItems: -1 }, at: AT }), null);
 });
 
+test("a library row's events from a build before OV-407 still count without its layout and plan", () => {
+  const overviewId = "6f1c2a4e-8b3d-4c5e-9f7a-1b2c3d4e5f60";
+  const older = [
+    { name: "library.overviewCard.opened", props: { overviewId, from: "title" } },
+    { name: "library.overviewCard.readSwitched", props: { overviewId, read: true } },
+    { name: "library.overviewCard.favouriteSwitched", props: { overviewId, favourite: true } },
+    { name: "library.overviewCard.listenPressed", props: { overviewId, listening: true } },
+  ];
+  for (const { name, props } of older) {
+    assert.deepEqual(parseAnalyticsEvent({ name, props, at: AT })?.props, props, name);
+    assert.deepEqual(parseAnalyticsEvent({ name, props: { ...props, rowLayout: "banner", plan: "plus" }, at: AT })?.props, {
+      ...props,
+      rowLayout: "banner",
+      plan: "plus",
+    });
+  }
+});
+
 test("a batch is one context and between one and the maximum number of events", () => {
   const events = [{ name: "mcp.consentScreen.approved", props: {}, at: AT }];
   assert.ok(AnalyticsEventBatch.safeParse({ context, events }).success);
