@@ -8,6 +8,11 @@
   gap: 1.75rem;
 }
 
+// Room for Settings › Plan's three cards side by side (design 351j).
+.rootWide {
+  max-width: 80rem;
+}
+
 .rootStacked {
   padding: 0.5rem 1.25rem 4rem;
   gap: 1.125rem;

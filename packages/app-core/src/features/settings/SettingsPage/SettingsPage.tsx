@@ -112,6 +112,9 @@ export const SettingsPage = ({ section }: SettingsPageProps) => {
   const requested = sections.find((summary) => summary.id === section);
   const current = requested ?? (stacked ? undefined : sections[0]);
   const sectionPage = stacked && current !== undefined;
+  const rootClass = [styles.root, stacked && styles.rootStacked, !stacked && current?.id === "plan" && styles.rootWide]
+    .filter(Boolean)
+    .join(" ");
   const backToSettings = useBackTo(Routes.settings());
   const backToOverviews = useBackTo(Routes.home());
   const backLink = useLentBackLink({
@@ -166,7 +169,7 @@ export const SettingsPage = ({ section }: SettingsPageProps) => {
   }
 
   return (
-    <div className={`${styles.root} ${stacked ? styles.rootStacked : ""}`} data-testid={settingsPageTestIds.root}>
+    <div className={rootClass} data-testid={settingsPageTestIds.root}>
       {!isPanel && (
         <PageLink
           ref={backLink}

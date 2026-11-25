@@ -269,8 +269,10 @@ announced, for the rest of the tab's session (`useToldWhen`, in `sessionStorage`
 **Plan** is for choosing: Your plan, one usage line ("This month: 1 of 5 overviews on us left ·
 See usage", the quota the next overview uses), the Monthly / Yearly switch and all three
 `PlanOfferCard`s, the reader's own ringed with "Your plan" and Tell me when on the plans above
-it only, then the full footnote. The section is wider than the others to hold three cards; when
-it is narrower than 48rem the cards stack, in plan order so focus follows what is on screen
+it only, then the full footnote. The section is wider than the others, and on a desktop the
+whole Settings page widens to 80rem while Plan is open, so the three cards sit side by side
+(about 54rem at 1280px wide). Only below 45rem, where each card would drop under 14.5rem and
+its benefits wrap line after line, do the cards stack, in plan order so focus follows what is on screen
 (the design put Plus first on a phone; the modal does, since it builds the list in that order).
 
 **Usage** is its own section: "Your plan: Free" with **Upgrade plan** (Free and BYO Plus),

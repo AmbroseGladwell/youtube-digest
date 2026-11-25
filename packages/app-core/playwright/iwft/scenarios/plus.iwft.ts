@@ -49,6 +49,19 @@ test("on Plus, Settings rings the reader's own plan among the three, and offers 
   await settings.verifyTellMeWhenOffered([]);
 });
 
+test("on a desktop screen Settings › Plan sets the three cards side by side, and stacks them only once the page is too narrow", async ({
+  page,
+  launcher,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await launcher.launch({ sync: true, syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL } });
+  const settings = await (await launcher.appShell.openSettings()).openSection("plan");
+  await settings.verifyPlanCardsSideBySide(true);
+
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await settings.verifyPlanCardsSideBySide(false);
+});
+
 test("Listen on a free plan docks the player and plays, with no case for Plus", async ({ launcher, backendSimulator }) => {
   seedHeldOverview(backendSimulator);
   const capture = await launcher.launchPanel(panel);

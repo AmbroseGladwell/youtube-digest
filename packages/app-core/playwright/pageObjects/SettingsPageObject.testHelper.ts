@@ -4,7 +4,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { settingsPageTestIds } from "../../src/features/settings/SettingsPage/SettingsPageTestIds.js";
 import type { SettingsSectionId } from "../../src/features/settings/SettingsSectionId.js";
-import type { Plan } from "@overview/domain";
+import { Plan } from "@overview/domain";
 import { planUsageTestIds, type UsageRowId } from "../../src/features/plus/components/PlanUsage/PlanUsageTestIds.js";
 import { planOfferCardTestIds } from "../../src/features/plus/components/PlanOfferCard/PlanOfferCardTestIds.js";
 import { usagePanelTestIds } from "../../src/features/plus/components/UsagePanel/UsagePanelTestIds.js";
@@ -161,6 +161,14 @@ export class SettingsPageObject extends PageObject {
           await expect(this.get(planOfferCardTestIds.card(plan))).toContainText(line);
         }
       }
+    });
+
+  verifyPlanCardsSideBySide = (sideBySide: boolean) =>
+    this.step(`verifyPlanCardsSideBySide ${sideBySide}`, async () => {
+      const tops = await Promise.all(
+        Plan.options.map(async (plan) => Math.round((await this.get(planOfferCardTestIds.card(plan)).boundingBox())?.y ?? -1)),
+      );
+      expect(new Set(tops).size).toBe(sideBySide ? 1 : Plan.options.length);
     });
 
   verifyPlanMarkedAsYours = (plan: Plan) =>
