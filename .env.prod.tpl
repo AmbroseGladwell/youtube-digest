@@ -30,3 +30,5 @@ ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
 # The token production's speech-to-text app on Modal checks; STT_URL is in fly.toml, and the two go
 # together (docs/features/speech-to-text.md, "Switching it on").
 STT_TOKEN="${STT_TOKEN}"
+# A TTS pool machine's hourly price; unset, chat read aloud spends no usage (docs/features/chat-read-aloud.md).
+TTS_DOLLARS_PER_MACHINE_HOUR="${TTS_DOLLARS_PER_MACHINE_HOUR}"
