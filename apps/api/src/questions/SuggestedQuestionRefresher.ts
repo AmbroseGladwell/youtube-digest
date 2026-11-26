@@ -14,6 +14,7 @@ import {
   SUGGESTED_QUESTION_MIGRATIONS,
   SuggestedQuestion,
   SuggestedQuestionText,
+  type Overview,
   type Plan,
   type RecordMigration,
   type SuggestedQuestionRefreshStatus,
@@ -36,8 +37,9 @@ import { compactNote, LABEL_PROMPT, PAIR_LABEL_SHAPE, PairLabel, pairNotes, TENS
 import { libraryCandidates, pairKeyOf, projectCandidates, readOverviews, type QuestionCandidate } from "./questionCandidates.js";
 import { QUESTION_LABEL_MODEL, QUESTION_WRITER_MODEL } from "./questionModels.js";
 import { askedPairKey, QuestionRefreshesRepository, type RefreshOutcome } from "./QuestionRefreshesRepository.js";
-import { questionWriterPrompt, WRITTEN_QUESTIONS_SHAPE, WrittenQuestions } from "./questionWriterPrompt.js";
+import { MIN_QUESTION_RATING, questionWriterPrompt, WRITTEN_QUESTIONS_SHAPE, WrittenQuestions } from "./questionWriterPrompt.js";
 import { recordQuestionCost } from "./recordQuestionCost.js";
+import { spreadAcrossTopics } from "./spreadAcrossTopics.js";
 import { writeSuggestedQuestions, type NewSuggestedQuestion } from "./writeSuggestedQuestions.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -47,9 +49,9 @@ export const REFRESH_WINDOW_DAYS = 7;
 export const REFRESH_GAP_DAYS = 2;
 export const REFRESH_STALE_MINUTES = 15;
 export const QUESTIONS_MONTHLY_CAP_DOLLARS = 0.4;
-export const LIBRARY_PAIRS_LABELLED = 8;
-export const PROJECT_PAIRS_LABELLED = 4;
-export const SPARE_PAIRS_PER_SCOPE = 1;
+export const LIBRARY_PAIRS_LABELLED = 16;
+export const PROJECT_PAIRS_LABELLED = 8;
+export const PAIRS_TO_WRITER_PER_SLOT = 2;
 export const PROJECT_MEMBERS_MIN = 2;
 export const OBVIOUS_EXAMPLES = 4;
 
@@ -66,7 +68,7 @@ export interface SuggestedQuestionRefresherOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
-export type DropReason = "badPair" | "textLimits" | "notOneSentence" | "samePair" | "noRoom";
+export type DropReason = "badPair" | "textLimits" | "notOneSentence" | "lowRating" | "samePair" | "noRoom";
 
 export interface RefreshFunnel {
   candidates: number;
@@ -96,7 +98,7 @@ const emptyFunnel = (): RefreshFunnel => ({
   labelsFailed: 0,
   pairsToWriter: 0,
   writerReturned: 0,
-  dropped: { badPair: 0, textLimits: 0, notOneSentence: 0, samePair: 0, noRoom: 0 },
+  dropped: { badPair: 0, textLimits: 0, notOneSentence: 0, lowRating: 0, samePair: 0, noRoom: 0 },
   skippedOnWrite: 0,
 });
 
@@ -123,7 +125,12 @@ export interface LabelledPair {
   slots: ScopeSlots;
   candidate: QuestionCandidate;
   label: PairLabel;
+  topics: readonly string[];
 }
+
+const pairTopics = (overviews: ReadonlyMap<string, Overview>, ids: readonly string[]): string[] => [
+  ...new Set(ids.flatMap((id) => overviews.get(id)?.topicIds ?? [])),
+];
 
 const readAll = <T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrations: readonly RecordMigration[]): T[] =>
   rows.flatMap((row) => {
@@ -253,25 +260,44 @@ export class SuggestedQuestionRefresher {
 
     const asked = await this.#refreshes.askedPairs(accountId);
     const sources = { claimPairs: this.#claimPairs, records, model: this.#options.embeddingModel };
-    const toLabel: Array<{ slots: ScopeSlots; candidate: QuestionCandidate }> = [];
+    const freshByScope: Array<{ slots: ScopeSlots; fresh: QuestionCandidate[] }> = [];
     for (const slots of allocated) {
       const project = projects.find((each) => scopeKeyOf(each.scope) === slots.scopeKey);
       const candidates =
         project === undefined ? await libraryCandidates(sources, accountId) : await projectCandidates(sources, accountId, project.members);
-      const limit = project === undefined ? LIBRARY_PAIRS_LABELLED : PROJECT_PAIRS_LABELLED;
       const fresh = candidates.filter((candidate) => !asked.has(askedPairKey(slots.scopeKey, [candidate.first, candidate.second])));
       funnel.candidates += fresh.length;
-      toLabel.push(...fresh.slice(0, limit).map((candidate) => ({ slots, candidate })));
+      freshByScope.push({ slots, fresh });
     }
+
+    const scopeKeys = new Set(allocated.map((slots) => slots.scopeKey));
+    const onShowQuestions = questions.filter((question) => scopeKeys.has(scopeKeyOf(question.scope)) && !isUsedUp(question, now));
+    const overviews = await readOverviews(records, accountId, [
+      ...freshByScope.flatMap(({ fresh }) => fresh.flatMap((candidate) => [candidate.first, candidate.second])),
+      ...onShowQuestions.flatMap((question) => question.overviewIds),
+    ]);
+    const coveredTopics = new Map(
+      allocated.map((slots) => [
+        slots.scopeKey,
+        pairTopics(
+          overviews,
+          onShowQuestions.filter((question) => scopeKeyOf(question.scope) === slots.scopeKey).flatMap((question) => question.overviewIds),
+        ),
+      ]),
+    );
+    const candidateTopics = (candidate: QuestionCandidate) => pairTopics(overviews, [candidate.first, candidate.second]);
+    const toLabel = freshByScope.flatMap(({ slots, fresh }) => {
+      const limit = slots.scope.kind === "library" ? LIBRARY_PAIRS_LABELLED : PROJECT_PAIRS_LABELLED;
+      const readable = fresh.filter((candidate) => overviews.has(candidate.first) && overviews.has(candidate.second));
+      return spreadAcrossTopics(readable, candidateTopics, limit, coveredTopics.get(slots.scopeKey)).map((candidate) => ({
+        slots,
+        candidate,
+      }));
+    });
     if (toLabel.length === 0) {
       return { ...progress, outcome: "no-pairs" };
     }
 
-    const overviews = await readOverviews(
-      records,
-      accountId,
-      toLabel.flatMap(({ candidate }) => [candidate.first, candidate.second]),
-    );
     const settings = await readSettings(records, accountId);
     const reader = settings === null ? null : composeReaderContext(settings.aboutYou, settings.learned);
     const allProjects = readAll(await records.listLive(accountId, "project", "%"), Project, PROJECT_MIGRATIONS).filter(
@@ -284,10 +310,9 @@ export class SuggestedQuestionRefresher {
       .filter((part) => part !== "")
       .join("\n\n");
 
-    const labellable = toLabel.filter(({ candidate }) => overviews.has(candidate.first) && overviews.has(candidate.second));
-    progress.pairsLabelled = labellable.length;
+    progress.pairsLabelled = toLabel.length;
     const labelled = await Promise.all(
-      labellable.map(async ({ slots, candidate }) => {
+      toLabel.map(async ({ slots, candidate }) => {
         const project = projects.find((each) => scopeKeyOf(each.scope) === slots.scopeKey)?.project;
         const context =
           project === undefined
@@ -303,13 +328,13 @@ export class SuggestedQuestionRefresher {
           log,
         ).catch(() => null);
         countLabel(funnel, label);
-        return label === null ? [] : [{ slots, candidate, label }];
+        return label === null ? [] : [{ slots, candidate, label, topics: candidateTopics(candidate) }];
       }),
     );
     const kept = allocated.flatMap((slots) =>
       withTensionsFirst(labelled.flat().filter((pair) => pair.slots === slots && pair.label.verdict === "real")).slice(
         0,
-        slots.slots + SPARE_PAIRS_PER_SCOPE,
+        slots.slots * PAIRS_TO_WRITER_PER_SLOT,
       ),
     );
     funnel.pairsToWriter = kept.length;
@@ -317,20 +342,16 @@ export class SuggestedQuestionRefresher {
       return { ...progress, outcome: "no-pairs" };
     }
 
-    const scopeKeys = new Set(allocated.map((slots) => slots.scopeKey));
     const obvious = questions
       .filter((question) => question.feedback?.verdict === "obvious")
       .sort((x, y) => y.feedback!.at.localeCompare(x.feedback!.at))
       .slice(0, OBVIOUS_EXAMPLES)
       .map((question) => question.text);
-    const onShow = questions
-      .filter((question) => scopeKeys.has(scopeKeyOf(question.scope)) && !isUsedUp(question, now))
-      .map((question) => question.text);
+    const onShow = onShowQuestions.map((question) => question.text);
     const projectsNow = projects.filter((each) => scopeKeys.has(scopeKeyOf(each.scope))).map((each) => each.project);
     const placeOf = (slots: ScopeSlots) => {
       const project = projects.find((each) => scopeKeyOf(each.scope) === slots.scopeKey)?.project;
-      const name = project === undefined ? "the whole library" : `the project "${project.name}"`;
-      return `${name}, which can take ${slots.slots}`;
+      return project === undefined ? "the whole library" : `the project "${project.name}"`;
     };
     const pairsText = kept
       .map(
@@ -350,7 +371,7 @@ export class SuggestedQuestionRefresher {
     );
 
     funnel.writerReturned = written.questions.length;
-    const { questions: toWrite, dropped } = keptQuestions(written, kept);
+    const { questions: toWrite, dropped } = keptQuestions(written, kept, coveredTopics);
     funnel.dropped = dropped;
     const outcomes = await writeSuggestedQuestions(records, accountId, toWrite, clock());
     const questionsWritten = outcomes.filter((outcome) => outcome !== null).length;
@@ -428,41 +449,67 @@ export interface KeptQuestions {
   dropped: Record<DropReason, number>;
 }
 
-export const keptQuestions = (written: WrittenQuestions, kept: readonly LabelledPair[]): KeptQuestions => {
-  const taken = new Map<ScopeSlots, number>();
-  const usedPairs = new Set<string>();
-  const out: NewSuggestedQuestion[] = [];
+interface Rated {
+  row: LabelledPair;
+  text: string;
+  rating: number;
+}
+
+// Valid and rated well enough, best first, then spread across topics: docs/features/suggested-questions.md, "Writing".
+export const keptQuestions = (
+  written: WrittenQuestions,
+  kept: readonly LabelledPair[],
+  coveredTopics: ReadonlyMap<string, readonly string[]> = new Map(),
+): KeptQuestions => {
   const dropped = emptyFunnel().dropped;
-  const reasonToDrop = (row: LabelledPair, text: string): DropReason | null => {
+  const usedPairs = new Set<string>();
+  const rated: Rated[] = [];
+  const reasonToDrop = (row: LabelledPair, text: string, rating: number): DropReason | null => {
     if (!SuggestedQuestionText.safeParse(text).success) {
       return "textLimits";
     }
     if (!isOneSentence(text)) {
       return "notOneSentence";
     }
+    if (!(rating >= MIN_QUESTION_RATING)) {
+      return "lowRating";
+    }
     if (usedPairs.has(`${row.slots.scopeKey}|${pairKeyOf(row.candidate)}`)) {
       return "samePair";
     }
-    if (out.length >= NEW_QUESTIONS_PER_REFRESH || (taken.get(row.slots) ?? 0) >= row.slots.slots) {
-      return "noRoom";
-    }
     return null;
   };
-  for (const { pair, question } of written.questions) {
+  const bestFirst = [...written.questions].sort((x, y) => y.rating - x.rating);
+  for (const { pair, question, rating } of bestFirst) {
     const row = Number.isInteger(pair) ? kept[pair - 1] : undefined;
     const text = question.trim();
     if (row === undefined) {
       dropped.badPair += 1;
       continue;
     }
-    const reason = reasonToDrop(row, text);
+    const reason = reasonToDrop(row, text, rating);
     if (reason !== null) {
       dropped[reason] += 1;
       continue;
     }
     usedPairs.add(`${row.slots.scopeKey}|${pairKeyOf(row.candidate)}`);
-    taken.set(row.slots, (taken.get(row.slots) ?? 0) + 1);
-    out.push({ scope: row.slots.scope, overviewIds: [row.candidate.first, row.candidate.second], text });
+    rated.push({ row, text, rating });
+  }
+
+  const slotsInOrder = [...new Set(kept.map((row) => row.slots))];
+  const out: NewSuggestedQuestion[] = [];
+  for (const slots of slotsInOrder) {
+    const room = Math.min(slots.slots, NEW_QUESTIONS_PER_REFRESH - out.length);
+    const inScope = rated.filter((each) => each.row.slots === slots);
+    const picked = spreadAcrossTopics(inScope, (each) => each.row.topics, room, coveredTopics.get(slots.scopeKey));
+    dropped.noRoom += inScope.length - picked.length;
+    out.push(
+      ...picked.map(({ row, text }) => ({
+        scope: row.slots.scope,
+        overviewIds: [row.candidate.first, row.candidate.second] as const,
+        text,
+      })),
+    );
   }
   return { questions: out, dropped };
 };
