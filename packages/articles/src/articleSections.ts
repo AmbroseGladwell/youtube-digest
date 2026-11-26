@@ -4,6 +4,7 @@ import { articleLinks } from "./articleLinks.js";
 const HEADINGS = "h1, h2, h3, h4, h5, h6";
 const BLOCKS = `${HEADINGS}, p, li, blockquote, pre, figcaption, td, th`;
 const TOO_MUCH_LOST = 0.5;
+const PERMALINK_ICON = "svg, img";
 
 const clean = (text: string | null): string => (text ?? "").replace(/\s+/g, " ").trim();
 
@@ -12,6 +13,21 @@ const repeatsTitle = (heading: string, title: string): boolean => title.includes
 
 const anchorOf = (heading: Element): string | null =>
   heading.getAttribute("id") || heading.querySelector("[id]")?.getAttribute("id") || null;
+
+const headingText = (heading: Element): string => {
+  const anchor = anchorOf(heading);
+  const whole = clean(heading.textContent);
+  if (anchor === null) {
+    return whole;
+  }
+  const words = heading.cloneNode(true) as Element;
+  for (const link of words.querySelectorAll("a[href]")) {
+    if (link.getAttribute("href") === `#${anchor}` && link.querySelector(PERMALINK_ICON) !== null) {
+      link.remove();
+    }
+  }
+  return clean(words.textContent) || whole;
+};
 
 const uniqueLinks = (links: ArticleLink[]): ArticleLink[] =>
   links.filter((link, index) => links.findIndex(({ href }) => href === link.href) === index);
@@ -24,7 +40,7 @@ export const articleSections = (body: HTMLElement, title: string, pageUrl: strin
   const linked = new Set<string>();
   for (const element of body.querySelectorAll(BLOCKS)) {
     if (element.matches(HEADINGS)) {
-      const heading = clean(element.textContent);
+      const heading = headingText(element);
       if (heading !== "" && !(sections.length === 0 && repeatsTitle(heading, clean(title)))) {
         sections.push({ heading, anchor: anchorOf(element), blocks: [], links: [] });
       }
