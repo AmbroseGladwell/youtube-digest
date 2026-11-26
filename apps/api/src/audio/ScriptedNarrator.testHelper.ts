@@ -67,6 +67,7 @@ export const makeScriptedNarrator = (host: SpeechHost = "fly"): ScriptedNarrator
         trailingSegments: [segmentOf(request.lines.length, "the gap after")],
         host,
         fellBack: false,
+        gpu: null,
       };
     },
   };

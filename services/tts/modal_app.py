@@ -40,6 +40,10 @@ class Speaker:
         if self.synthesiser.providers[0] != "CUDAExecutionProvider":
             raise RuntimeError(f"Kokoro is not on the GPU: {self.synthesiser.providers}")
         self.synthesiser.speak("Ready.", "af_heart", "en-us")
+        import subprocess
+
+        named = subprocess.run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"], capture_output=True, text=True)
+        self.synthesiser.gpu = named.stdout.strip() or None
 
     @modal.asgi_app()
     def web(self):

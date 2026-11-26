@@ -402,13 +402,14 @@ const sections: readonly LegalSection[] = [
     body: (
       <>
         <p>
-          Overviews can be read aloud. The audio is rendered by our own text-to-speech service on Fly.io and stored as a file on Cloudflare
-          R2, named by a hash of the words and the voice, so two readers whose overviews contain the same words in the same voice share one
-          file. The file can be fetched by anyone who holds its name, which isn't listed anywhere and isn't guessable; this is also how a
-          shared link plays its narration without an account. We count renders per account per day, and keep each file for as long as an
-          overview uses it, which for a file two readers share means while either does. So that narration can start playing before it is
-          finished, it is also stored in short pieces as it is made, fetched the same way; the pieces are deleted an hour after the file is
-          finished.
+          Overviews can be read aloud. The audio is rendered by our own text-to-speech model, running on Modal's GPUs in the United States
+          and, when Modal is slow or unavailable, on our servers at Fly.io; it is sent only the words to speak and the voice. It is stored
+          as a file on Cloudflare R2, named by a hash of the words and the voice, so two readers whose overviews contain the same words in
+          the same voice share one file. The file can be fetched by anyone who holds its name, which isn't listed anywhere and isn't
+          guessable; this is also how a shared link plays its narration without an account. We count renders per account per day, and keep
+          each file for as long as an overview uses it, which for a file two readers share means while either does. So that narration can
+          start playing before it is finished, it is also stored in short pieces as it is made, fetched the same way; the pieces are deleted
+          an hour after the file is finished.
         </p>
         <p>
           An answer in chat can be read aloud too. Our server sends the words of the answer, as stored with your conversation, to the same
@@ -623,7 +624,7 @@ const sections: readonly LegalSection[] = [
             ],
             [
               "Modal",
-              "runs our speech-to-text model when you ask for a podcast episode, a TikTok or an Instagram or Facebook video to be transcribed; sent only the address of the episode's audio or the video's file",
+              "runs our speech-to-text model when you ask for a podcast episode, a TikTok or an Instagram or Facebook video to be transcribed, sent only the address of the episode's audio or the video's file; and our text-to-speech model, sent only the words of a narration or a chat answer and the voice, which it keeps no copy of",
               UNITED_STATES,
             ],
             [

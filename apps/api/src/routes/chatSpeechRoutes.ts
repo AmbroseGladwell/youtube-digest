@@ -22,7 +22,7 @@ import { readChat } from "../mcp/readChats.js";
 import { readSettings } from "../records/readSettings.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { HostSeconds, LiveSpeechLane, LiveSpeechOutcome, LiveSpeechWarmUp } from "../speech/LiveSpeechLane.js";
-import { speechDetail, speechDollars, type HostPrices } from "../speech/speechCost.js";
+import { hostPrice, speechDetail, speechDollars, type HostPrices } from "../speech/speechCost.js";
 import { NdjsonChannel } from "../speech/NdjsonChannel.js";
 import { DEFAULT_CHUNK_SIZING, speechChunks, type ChunkSizing } from "../speech/speechChunks.js";
 import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
@@ -59,13 +59,19 @@ interface Payer {
 
 // How a play becomes usage and cost: docs/features/chat-read-aloud.md, "What a play costs".
 export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage, costs, sql, clock }: ChatSpeechRoutesOptions): void => {
-  const charge = async ({ accountId }: Payer, machineSeconds: HostSeconds, detail: string, log: FastifyBaseLogger): Promise<number> => {
+  const charge = async (
+    { accountId }: Payer,
+    machineSeconds: HostSeconds,
+    detail: string,
+    modalGpu: string | null,
+    log: FastifyBaseLogger,
+  ): Promise<number> => {
     if (speech === null) {
       return 0;
     }
     let units = 0;
     for (const host of ["modal", "fly"] as const) {
-      const price = speech.prices[host];
+      const price = hostPrice(speech.prices, host, modalGpu);
       const seconds = machineSeconds[host];
       if (price === null || seconds <= 0) {
         continue;
@@ -113,7 +119,8 @@ export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage,
     const { machineSeconds, warmed, host } = await speech.lane
       .warm()
       .catch((): LiveSpeechWarmUp => ({ machineSeconds: 0, warmed: false, host: null }));
-    const usageUnits = host === null ? 0 : await charge(payer, { fly: 0, modal: 0, [host]: machineSeconds }, "chat-warm", request.log);
+    const usageUnits =
+      host === null ? 0 : await charge(payer, { fly: 0, modal: 0, [host]: machineSeconds }, "chat-warm", null, request.log);
     request.log.info(apiLogLines.speech.warmed({ plan: payer.plan, warmed, host, machineSeconds, usageUnits }));
     return reply.status(204).send();
   });
@@ -167,7 +174,7 @@ export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage,
 
     void played
       .then(async (outcome: LiveSpeechOutcome) => {
-        const usageUnits = await charge(payer, outcome.machineSeconds, "chat", request.log);
+        const usageUnits = await charge(payer, outcome.machineSeconds, "chat", outcome.modalGpu, request.log);
         if (!stop.signal.aborted) {
           channel.push({ type: "done" });
         }
