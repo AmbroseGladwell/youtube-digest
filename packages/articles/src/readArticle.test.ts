@@ -84,6 +84,28 @@ test("a heading that styles itself with a class Readability reads as clutter sti
   );
 });
 
+test("a heading's own icon permalink is left out of its text, and a self-link that is the heading stays", () => {
+  const { sections } = articleOf(
+    read(
+      NEWS_PAGE.replace(
+        '<h2 id="who-pays">Who pays',
+        '<h2 id="who-pays"><a href="#who-pays"><svg></svg><span class="sr-only">Copy link to heading</span></a>Who pays',
+      ).replace(
+        '<h2><span id="what-next">What happens next</span>',
+        '<h2 id="what-next"><a href="#what-next">What happens <a href="https://example.com/next">next</a></a>',
+      ),
+    ),
+  );
+  assert.deepEqual(
+    sections.map(({ heading, anchor }) => [heading, anchor]),
+    [
+      [null, null],
+      ["Who pays", "who-pays"],
+      ["What happens next", "what-next"],
+    ],
+  );
+});
+
 test("a heading named as clutter by its id is still left out", () => {
   const { sections } = articleOf(read(NEWS_PAGE.replace('<h2 id="who-pays">', '<h2 id="sidebar-who-pays">')));
   assert.ok(!sections.some(({ heading }) => heading === "Who pays"));
