@@ -180,6 +180,9 @@ Five folders, five different questions.
   recipe, the summary, servings and units, copy and print, each list read aloud, and sharing.
 - `source-steps.md` — the steps a source gives, carried whole and from it alone: what counts as a
   step, why it is not How to apply, dubious steps kept, and how it is measured.
+- `chat-read-aloud.md` — reading a chat answer aloud in the reader's narration voice: the
+  speech version of an answer (code, tables, links and marks never read as shown), sentence
+  by sentence, each pointing at where it is shown; the live lane and the player to follow.
 - `audio-player.md` — the reader's bar playing narration: one player in the app shell,
   asking whether narration exists without making any, every state the design draws, the
   pacer marked as the pacer, the mini-player, iOS and the lock screen, and the Plus prompt
