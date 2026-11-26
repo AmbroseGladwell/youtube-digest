@@ -3,7 +3,7 @@ import type { AccountId } from "../auth/AccountId.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { ClaimPair, ClaimPairsRepository } from "./ClaimPairsRepository.js";
 
-export const RECENT_OVERVIEWS_PAIRED = 20;
+export const RECENT_OVERVIEWS_PAIRED = 40;
 export const PARTNERS_LOOKED_AT = 10;
 export const PROJECT_MEMBERS_PAIRED = 30;
 

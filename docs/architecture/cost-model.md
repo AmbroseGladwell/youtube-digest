@@ -25,12 +25,12 @@ Run `ov19-2026-10-19`, on OV-92's 20 videos (`model-comparison.md`, "The transcr
 GPT-6.1 Sol, the model on our key. Every cost comes from the provider's own usage report,
 never a model's estimate (`docs/prototype/constraints.md`). $1.53 in all, judging included.
 
-| | Mean cost | Per 20 min of video | Median prompt tokens | Median output tokens | Median wait |
-|---|---|---|---|---|---|
-| Shared note, no reader (OV-92's run `2026-10-12`) | $0.0379 | $0.0326 | 7,957 | 1,687 | 34s |
-| **Single pass, personalised (today)** | **$0.0381** | $0.0328 | 8,389 | 1,636 | 41s |
-| **Personal pass, from the shared note** | **$0.0047** | $0.0040 | 2,244 | 241 | 9s |
-| Personal pass, with the transcript | $0.0193 | $0.0166 | 6,906 | 242 | 9s |
+|                                                   | Mean cost   | Per 20 min of video | Median prompt tokens | Median output tokens | Median wait |
+| ------------------------------------------------- | ----------- | ------------------- | -------------------- | -------------------- | ----------- |
+| Shared note, no reader (OV-92's run `2026-10-12`) | $0.0379     | $0.0326             | 7,957                | 1,687                | 34s         |
+| **Single pass, personalised (today)**             | **$0.0381** | $0.0328             | 8,389                | 1,636                | 41s         |
+| **Personal pass, from the shared note**           | **$0.0047** | $0.0040             | 2,244                | 241                  | 9s          |
+| Personal pass, with the transcript                | $0.0193     | $0.0166             | 6,906                | 242                  | 9s          |
 
 All 60 runs passed their schema first time.
 
@@ -47,11 +47,11 @@ whole note again for each reader.
 ### What it costs per reader of one video
 
 | Readers of the video | Single pass | Hybrid, seeded by the first reader | Hybrid, separate shared pass |
-|---|---|---|---|
-| 1 | $0.0381 | $0.0381 | $0.0426 |
-| 2 | $0.0381 | $0.0214 | $0.0237 |
-| 5 | $0.0381 | $0.0114 | $0.0123 |
-| 10 | $0.0381 | $0.0080 | $0.0085 |
+| -------------------- | ----------- | ---------------------------------- | ---------------------------- |
+| 1                    | $0.0381     | $0.0381                            | $0.0426                      |
+| 2                    | $0.0381     | $0.0214                            | $0.0237                      |
+| 5                    | $0.0381     | $0.0114                            | $0.0123                      |
+| 10                   | $0.0381     | $0.0080                            | $0.0085                      |
 
 "Seeded by the first reader" is the decision: the first reader's single pass becomes the shared
 note, so their overview costs what it does today. A separate shared pass with no reader, then a
@@ -64,12 +64,12 @@ A judge compared each video's personal parts (how to apply, filing and similar p
 from the single pass against each personal pass. Both sides sit on the same shared note, so only
 the personal parts differ. Wins are the personal pass's:
 
-| | From the note | With the transcript |
-|---|---|---|
-| How to apply | 6 wins, 6 ties, 8 losses | 5, 7, 8 |
-| Filing | 5, 14, 1 | 3, 16, 1 |
-| Similar past claims | 0, 20, 0 | 0, 20, 0 |
-| **Overall** | **8, 4, 8** | 5, 7, 8 |
+|                     | From the note            | With the transcript |
+| ------------------- | ------------------------ | ------------------- |
+| How to apply        | 6 wins, 6 ties, 8 losses | 5, 7, 8             |
+| Filing              | 5, 14, 1                 | 3, 16, 1            |
+| Similar past claims | 0, 20, 0                 | 0, 20, 0            |
+| **Overall**         | **8, 4, 8**              | 5, 7, 8             |
 
 - **From the note, it comes out level overall.** Filing is a little better, and how to apply a
   little worse.
@@ -81,7 +81,7 @@ the personal parts differ. Wins are the personal pass's:
   what the video teaches, so a step the video doesn't spell out is fine as long as it
   sensibly applies what the video teaches. The judge's rubric was stricter than the product,
   so on the product's own standard the personal pass does better than 6 wins, 6 ties and
-  8 losses. Facts are different: a name, number or claim stated *about the video* still has to
+  8 losses. Facts are different: a name, number or claim stated _about the video_ still has to
   come from the video (OV-120).
 - **Giving it the transcript doesn't help.** It costs four times as much, does no better, and
   still adds steps the video doesn't give.
@@ -150,15 +150,15 @@ the note, whose schema now carries only that kind's sections (`overview-generati
 
 **The 20-video set** (no recipes), mean cost per overview:
 
-| | Before | After: the note | After: the check | After: in all | Change |
-|---|---|---|---|---|---|
-| GPT-6.1 Sol, our key | $0.0333 | $0.0301 | $0.0019 | **$0.0319** | **−4%** |
-| Claude Sonnet 5.5 | $0.0552 | $0.0553 | $0.0044 | **$0.0597** | **+8%** |
+|                      | Before  | After: the note | After: the check | After: in all | Change  |
+| -------------------- | ------- | --------------- | ---------------- | ------------- | ------- |
+| GPT-6.1 Sol, our key | $0.0333 | $0.0301         | $0.0019          | **$0.0319**   | **−4%** |
+| Claude Sonnet 5.5    | $0.0552 | $0.0553         | $0.0044          | **$0.0597**   | **+8%** |
 
-| | Note input tokens, median | Note output tokens, median | Check input / output | Median wait |
-|---|---|---|---|---|
-| Sol, before → after | 9,500 → 8,578 | 1,570 → 1,638 | 1,317 / 12 | 35.5s → 38.1s |
-| Sonnet, before → after | 14,921 → 14,130 | 1,712 → 1,851 | 2,084 / 13 | 13.6s → 16.2s |
+|                        | Note input tokens, median | Note output tokens, median | Check input / output | Median wait   |
+| ---------------------- | ------------------------- | -------------------------- | -------------------- | ------------- |
+| Sol, before → after    | 9,500 → 8,578             | 1,570 → 1,638              | 1,317 / 12           | 35.5s → 38.1s |
+| Sonnet, before → after | 14,921 → 14,130           | 1,712 → 1,851              | 2,084 / 13           | 13.6s → 16.2s |
 
 - **Taking the recipe block out saves about 800 to 900 input tokens on every video.** On Sol that
   more than pays for the check, so an overview on our key costs slightly less than before. On
@@ -171,10 +171,10 @@ the note, whose schema now carries only that kind's sections (`overview-generati
 
 **The recipe set**, mean cost per overview:
 
-| | Before | After, in all | Change |
-|---|---|---|---|
-| Sol | $0.0325 | $0.0290 | −11% |
-| Sonnet | $0.0654 | $0.0464 | −29% |
+|        | Before  | After, in all | Change |
+| ------ | ------- | ------------- | ------ |
+| Sol    | $0.0325 | $0.0290       | −11%   |
+| Sonnet | $0.0654 | $0.0464       | −29%   |
 
 A recipe video's note no longer pays for key points, a verdict and the rest it never showed, so
 its note costs far less and the check is more than paid for.
@@ -196,12 +196,12 @@ Measured on 9 Nov 2026, not estimated (`docs/prototype/constraints.md`). OpenAI'
 for embedding 111 of the owner's overviews (826 claims and key points) and 29 searches with
 `text-embedding-3-small` came to **37,702 tokens**, about **335 tokens an overview**.
 
-| | Tokens | Cost at $0.02 per million |
-|---|---|---|
-| Embedding one overview, once | ~335 | **~$0.0000067**, 0.02% of the $0.0381 single pass |
-| One search | ~10 | ~$0.0000002 |
-| A million searches | ~10M | ~$0.20 |
-| Re-embedding a million overviews, if the model ever changes | ~335M | ~$6.70 |
+|                                                             | Tokens | Cost at $0.02 per million                         |
+| ----------------------------------------------------------- | ------ | ------------------------------------------------- |
+| Embedding one overview, once                                | ~335   | **~$0.0000067**, 0.02% of the $0.0381 single pass |
+| One search                                                  | ~10    | ~$0.0000002                                       |
+| A million searches                                          | ~10M   | ~$0.20                                            |
+| Re-embedding a million overviews, if the model ever changes | ~335M  | ~$6.70                                            |
 
 The price is OpenAI's published rate for `text-embedding-3-small` as of November 2026; check
 it before relying on these figures. Every embedding is paid on our key, whichever key wrote the
@@ -215,14 +215,14 @@ so the real figure can be read back from the logs. The spike behind the choice o
 Measured on 23 Nov 2026 on the owner's library, at the list prices in `modelPrices.ts`; the
 rounds and the owner's review are in `docs/features/connections.md`.
 
-| | Cost |
-|---|---|
-| Luna labelling one candidate pair | $0.00036 |
-| Sonnet writing an insight for one pair | $0.0068 |
-| A connection written on every save (about 6–7 pairs) | ~$0.034 an overview, not built |
-| A question refresh (about 16 pairs labelled, one Sonnet call for up to 6 questions) | **$0.016** |
-| Questions per paid reader a month, at 3 refreshes a week | **~$0.21**, capped at $0.40 |
-| Switching questions on for an existing library, any size | $0 |
+|                                                                                     | Cost                           |
+| ----------------------------------------------------------------------------------- | ------------------------------ |
+| Luna labelling one candidate pair                                                   | $0.00036                       |
+| Sonnet writing an insight for one pair                                              | $0.0068                        |
+| A connection written on every save (about 6–7 pairs)                                | ~$0.034 an overview, not built |
+| A question refresh (about 16 pairs labelled, one Sonnet call for up to 6 questions) | **$0.016**                     |
+| Questions per paid reader a month, at 3 refreshes a week                            | **~$0.21**, capped at $0.40    |
+| Switching questions on for an existing library, any size                            | $0                             |
 
 Questions are written only when shown, on our key, for paid plans only, and aren't counted
 against the chat allowance (OV-350). Finding candidate pairs is vector maths on the embeddings
@@ -236,3 +236,9 @@ paid reader can be read beside the measured figure above, which comes from the h
 `connections.md` ("Cost"). The $0.40 a month is `QUESTIONS_MONTHLY_CAP_DOLLARS`, a limit the
 refresh checks against that tally before it starts (`suggested-questions.md`, "Policy"); it adds
 no spend figure of its own.
+
+OV-424 doubled the pairs labelled (16 for the library, 8 per project) and sends the writer twice
+as many pairs as a refresh can keep, so a refresh now costs more than the measured row above. Most
+of the increase is the writer's longer call; labelling is cheap. The owner accepted it on
+26 Nov 2026 as fitting under the cap at 3 refreshes a week. What it really costs is read from the
+`questions` area of the tally once live refreshes run.
