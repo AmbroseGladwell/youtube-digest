@@ -13,7 +13,8 @@ export default defineConfig({
     ...devices["Desktop Chrome"],
     // The larger of the two sizes the Web Store accepts.
     viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 1,
+    // Twice the pixels, written back at the store's own size by `shoot`, so text stays sharp.
+    deviceScaleFactor: 2,
     ctPort: 3105,
   },
   projects: [{ name: "chromium" }],
