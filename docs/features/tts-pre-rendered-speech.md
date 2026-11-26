@@ -123,6 +123,44 @@ python3 blind_listen.py --name <listen> --pair kokoro/af_heart:ming/US_Emma [--p
 Renders, results and picks go to `.local/tts-benchmark/`. Start Modal runs one at a time: starting six at once got a
 429 from the secrets fetch. Keep the Mac awake, too, because Modal stops an app whose client stops sending heartbeats.
 
+## Where Kokoro runs (OV-421)
+
+Measured 26 Nov 2026, after the first chat read-alouds (OV-418) took 16–20 s to first audio: every play found the pool
+stopped and paid for a boot and a Kokoro load before the first sentence. The same Kokoro v1.0 model and `af_heart`
+voice, through `kokoro-onnx` 0.6.1, on Modal (`services/tts/modal_kokoro_spike.py`). The "first sentence" is one
+sentence of about 4.9 s of audio; a cold start is a container that scaled down at least 90 s earlier.
+
+| Where | First sentence, cold | First sentence, warm | Speed vs playback, full note | Many at once, cold | List price |
+|---|---|---|---|---|---|
+| Fly `performance-4x`, stopped (today) | 16–20 s (in production) | about 1.5 s | 3.2x | a pool of 5, then a queue | $0.195/h |
+| Modal CPU, 2 cores (4 vCPU), memory snapshot | 9–12 s | 3.5 s | 1.9x | one container each, 7–9 s | about $0.13/h |
+| **Modal T4** | **6.3–8.8 s, middle 6.8 s** (5 runs) | **0.55 s** | **14.9x** | 6.3–7.3 s on 3 containers | $0.59/h |
+| Modal T4, alpha GPU snapshot | 4.6–19.6 s, middle 7.3 s (5 runs) | 0.53 s | 15.1x | 222 s while snapshots were built | $0.59/h |
+| Modal L4 | 273 s, 429 s waiting for a GPU | 0.36 s | 18.1x | 286–289 s, one container | $0.80/h |
+
+- **Nothing that scales to zero comes near a second from cold.** On a T4 the 0.4–0.5 s of synthesis sits behind
+  about 6 s of finding a GPU and starting the container. Only a container kept warm starts in half a second.
+- **The GPU snapshot (alpha) doesn't reliably help**, and after each deploy its first starts take minutes while
+  snapshots are built.
+- **An L4 took 4.5 to 10 minutes to arrive, every time a new one was needed.** Speech-to-text hit the same and fixed
+  it with a list of GPU types; chat can't wait at all, so any GPU lane needs a short timeout and a fallback.
+- **A GPU makes narration nearly instant:** a 4-minute note renders in about 17 s on a T4 against about 80 s here.
+- **Cost per play doesn't change.** A T4 costs three times as much a second and finishes five times sooner: a
+  14-sentence chat answer is about $0.004 on either (cold start, synthesis and a short idle), a full note about
+  $0.006.
+- **onnxruntime on a GPU:** `kokoro-onnx` installs the CPU `onnxruntime`, which hides `onnxruntime-gpu`, so remove
+  it; and `onnxruntime-gpu` 1.30 needs CUDA 13, so the CUDA 12 image takes 1.22. `Kokoro.from_session` takes a
+  session built with `CUDAExecutionProvider`.
+
+**Decided (owner, 26 Nov 2026):** Kokoro moves to a Modal T4 for chat and narration, scaling to zero, with this Fly
+pool kept as the fallback for both (stopped machines cost only their image). A suspended Fly `performance-1x` for
+chat's first chunk (about 3–5 s expected, unmeasured) waits until the T4's cold starts prove too slow in use, and a
+T4 kept warm (about $9 a day for 16 hours) isn't worth it yet.
+
+Run it again from `services/tts/` with the Modal token from `overview-dev`: `modal deploy modal_kokoro_spike.py`,
+then `python modal_kokoro_spike.py --only t4 --cold 3`. Results go to `.local/tts-benchmark/ov421/`. Stop the app
+afterwards (`modal app stop overview-tts-spike`).
+
 ## The spoken script
 
 What gets narrated is `spokenScript(overview)` in `@overview/domain`: one entry for every `NoteLine` the reader shows, in order, headings included. Each entry is the line's `spoken` text when it has one and its `text` otherwise, passed through `speakable`. Five decisions are packed into that:
