@@ -1,7 +1,8 @@
 import { Fragment, type ReactNode } from "react";
 import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
-import { inlineMarks, type MarkedPiece } from "../../util/inlineMarks.js";
+import { inlineMarks, placedMarks, type MarkedPiece } from "../../util/inlineMarks.js";
+import { spokenPieces, type SpokenRange } from "../../util/spokenPieces.js";
 import { chatAnswerTestIds } from "../ChatAnswer/ChatAnswerTestIds.js";
 import styles from "./ChatMarkedText.module.scss";
 import { chatMarkedTextTestIds } from "./ChatMarkedTextTestIds.js";
@@ -49,12 +50,32 @@ export const MarkedPieceView = ({ piece, className }: MarkedPieceViewProps) => {
   return className === undefined ? <>{node}</> : <span className={className}>{node}</span>;
 };
 
-export const ChatMarkedText = ({ text }: { text: string }) => {
+export interface ChatMarkedTextProps {
+  text: string;
+  spoken?: SpokenRange | null;
+}
+
+export const ChatMarkedText = ({ text, spoken = null }: ChatMarkedTextProps) => {
+  if (spoken === null) {
+    return (
+      <>
+        {inlineMarks(text).map((piece, index) => (
+          <MarkedPieceView key={index} piece={piece} />
+        ))}
+      </>
+    );
+  }
   return (
     <>
-      {inlineMarks(text).map((piece, index) => (
-        <MarkedPieceView key={index} piece={piece} />
-      ))}
+      {spokenPieces(placedMarks(text), spoken).map(({ piece, spoken: read }, index) =>
+        read ? (
+          <mark key={index} className={styles.spoken} data-spoken="">
+            <MarkedPieceView piece={piece} />
+          </mark>
+        ) : (
+          <MarkedPieceView key={index} piece={piece} />
+        ),
+      )}
     </>
   );
 };

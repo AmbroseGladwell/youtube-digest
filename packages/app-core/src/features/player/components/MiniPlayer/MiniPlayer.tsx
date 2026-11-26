@@ -9,6 +9,7 @@ import { SKIP_SECONDS } from "../../PlayerEngine.js";
 import type { PlayerSnapshot } from "../../types/PlayerSnapshot.js";
 import { lineAtTime } from "../../util/lineAtTime.js";
 import { playerBarView, sectionHeadingAt, type PlayerBarView } from "../../util/playerBarView.js";
+import { useReadAloudSnapshot } from "../../../chats/readAloud/ReadAloudContext.js";
 import styles from "./MiniPlayer.module.scss";
 import { miniPlayerTestIds } from "./MiniPlayerTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -36,13 +37,26 @@ const metaText = (
   view: PlayerBarView,
   status: PlayerSnapshot["status"],
   waiting: boolean,
-  pausedForTimer: boolean,
+  pausedFor: "timer" | "chatAnswer" | null,
   clock: string,
 ): string => {
   if (status === "preparing" || waiting) {
     return view.label.rest === null ? view.label.lead : `${view.label.lead} · ${view.label.rest}`;
   }
-  return pausedForTimer ? "Paused for the timer" : clock;
+  if (pausedFor === null) {
+    return clock;
+  }
+  return pausedFor === "timer" ? "Paused for the timer" : "Paused for the chat answer";
+};
+
+const pausedForOf = (status: PlayerSnapshot["status"], timer: boolean, answer: boolean): "timer" | "chatAnswer" | null => {
+  if (status !== "paused") {
+    return null;
+  }
+  if (timer) {
+    return "timer";
+  }
+  return answer ? "chatAnswer" : null;
 };
 
 const mainLabel = (view: PlayerBarView, status: PlayerSnapshot["status"]): string => {
@@ -62,6 +76,7 @@ const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
   const time = usePlayerTime();
   const analytics = useAnalytics();
   const { narrationHeld } = useCookingTimerList();
+  const heldForAnswer = useReadAloudSnapshot()?.heldNarration === true;
   const [artworkFailed, setArtworkFailed] = useState(false);
   const track = snapshot.track!;
   const { timings, status, source } = snapshot;
@@ -96,7 +111,7 @@ const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
               view,
               status,
               waiting,
-              narrationHeld && status === "paused",
+              pausedForOf(status, narrationHeld, heldForAnswer),
               `${section} · ${estimated}${formatClock(time)} / ${length}`,
             )}
           </span>

@@ -1,7 +1,10 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import type { ChatAnswerSections, ChatCitation, ChatScopeStats, OtherOverviewCitation } from "@overview/domain";
 import { askStatsLine } from "../../util/askStatsLine.js";
 import { citationKey } from "../../util/chatSourceGroups.js";
+import type { SentenceOnScreen } from "../../readAloud/ReadAloudEngine.js";
+import { SpokenSentenceProvider } from "../../readAloud/SpokenSentenceContext.js";
+import { useTallerThanView } from "../../readAloud/useTallerThanView.js";
 import { ChatAnswerSectionsView, ChatSourcesMenu, otherOverviewChipLabel, type ChatChip } from "../ChatAnswer/ChatAnswer.js";
 import { ChatAnswerText } from "../ChatAnswerText/ChatAnswerText.js";
 import { ChatOtherOverviewCitation } from "../ChatOtherOverviewCitation/ChatOtherOverviewCitation.js";
@@ -25,6 +28,8 @@ export interface AskAnswerProps {
   onFollowed: (citation: OtherOverviewCitation) => void;
   onSourcesOpened: (count: number) => void;
   actions: (sources: ReactNode) => ReactNode;
+  spoken?: SentenceOnScreen | null;
+  top?: ReactNode;
 }
 
 const othersOf = (cited: readonly ChatCitation[]) => cited.flatMap((citation) => ("overviewId" in citation ? [citation] : []));
@@ -41,7 +46,11 @@ export const AskAnswer = ({
   onFollowed,
   onSourcesOpened,
   actions,
+  spoken = null,
+  top,
 }: AskAnswerProps) => {
+  const root = useRef<HTMLDivElement | null>(null);
+  const taller = useTallerThanView(root);
   const chipsOf = (cited: readonly ChatCitation[]): ChatChip[] =>
     othersOf(cited).map((citation, index) => {
       const image = imageOf(citation.overviewId);
@@ -69,16 +78,23 @@ export const AskAnswer = ({
       </ChatSourcesMenu>
     );
   return (
-    <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} data-testid={askAnswerTestIds.root}>
-      <div className={styles.text}>
-        {sections === undefined ? <ChatAnswerText text={text} /> : <ChatAnswerSectionsView sections={sections} chipsOf={chipsOf} />}
+    <SpokenSentenceProvider value={spoken}>
+      <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} ref={root} data-testid={askAnswerTestIds.root}>
+        {taller && top !== undefined && <div className={styles.top}>{top}</div>}
+        <div className={styles.text}>
+          {sections === undefined ? (
+            <ChatAnswerText text={text} place={{ part: "text" }} />
+          ) : (
+            <ChatAnswerSectionsView sections={sections} chipsOf={chipsOf} />
+          )}
+        </div>
+        {stats !== undefined && (
+          <p className={styles.stats} data-testid={askAnswerTestIds.stats}>
+            {askStatsLine(stats, scope)}
+          </p>
+        )}
+        {actions(sourcesMenu)}
       </div>
-      {stats !== undefined && (
-        <p className={styles.stats} data-testid={askAnswerTestIds.stats}>
-          {askStatsLine(stats, scope)}
-        </p>
-      )}
-      {actions(sourcesMenu)}
-    </div>
+    </SpokenSentenceProvider>
   );
 };

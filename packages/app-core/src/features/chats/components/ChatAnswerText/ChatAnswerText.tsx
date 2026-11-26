@@ -1,19 +1,55 @@
-import { answerBlocks } from "@overview/domain";
+import { answerBlocks, type SpokenAnswerPlace } from "@overview/domain";
+import { useSpokenRange } from "../../readAloud/SpokenSentenceContext.js";
 import { ChatCodeBlock } from "../ChatCodeBlock/ChatCodeBlock.js";
 import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
+import styles from "./ChatAnswerText.module.scss";
 
-export const ChatAnswerText = ({ text }: { text: string }) => {
+const TABLE_ROW = /^\|.*\|$/;
+
+export interface ChatAnswerTextProps {
+  text: string;
+  place?: SpokenAnswerPlace | undefined;
+}
+
+export const ChatAnswerText = ({ text, place }: ChatAnswerTextProps) => {
   return (
     <>
-      {answerBlocks(text).map((block, index) =>
-        block.kind === "code" ? (
-          <ChatCodeBlock key={index} language={block.language} code={block.code} />
-        ) : (
-          <p key={index}>
-            <ChatMarkedText text={block.text} />
-          </p>
-        ),
-      )}
+      {answerBlocks(text).map((block, index) => (
+        <AnswerBlock key={index} block={block} index={index} place={place} />
+      ))}
     </>
+  );
+};
+
+interface AnswerBlockProps {
+  block: ReturnType<typeof answerBlocks>[number];
+  index: number;
+  place: SpokenAnswerPlace | undefined;
+}
+
+// A code block or table is spoken as one line, so it is marked whole (design 418l).
+const AnswerBlock = ({ block, index, place }: AnswerBlockProps) => {
+  const spoken = useSpokenRange(place, index);
+  if (block.kind === "code") {
+    const code = <ChatCodeBlock language={block.language} code={block.code} />;
+    return spoken === null ? (
+      code
+    ) : (
+      <div className={styles.spokenWhole} data-spoken="">
+        {code}
+      </div>
+    );
+  }
+  if (spoken !== null && TABLE_ROW.test(block.text)) {
+    return (
+      <p className={styles.spokenWhole} data-spoken="">
+        <ChatMarkedText text={block.text} />
+      </p>
+    );
+  }
+  return (
+    <p>
+      <ChatMarkedText text={block.text} spoken={spoken} />
+    </p>
   );
 };

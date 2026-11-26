@@ -1,18 +1,8 @@
 .root {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   margin-top: 0.625rem;
-}
-
-.earlier {
-  opacity: 0;
-  transition: opacity var(--motion-state);
-
-  :global([data-answer]:hover) &,
-  :global([data-answer][data-revealed]) &,
-  &:focus-within {
-    opacity: 1;
-  }
 }
 
 .copy {
@@ -29,11 +19,5 @@
   &:hover {
     background: var(--chat-raised, var(--surface));
     color: var(--ink);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .earlier {
-    transition: none;
   }
 }

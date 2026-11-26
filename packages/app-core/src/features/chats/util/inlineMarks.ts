@@ -6,23 +6,33 @@ export interface MarkedPiece {
   href?: string;
 }
 
+// Where each piece came from in the marked text, for the read-aloud highlight (OV-418).
+export interface PlacedPiece extends MarkedPiece {
+  from: number;
+  to: number;
+}
+
 const LINK = /^\[([^\]\n]+)\]\(([^)\s]+)\)/;
 const PARTIAL_LINK = /^\[[^\]\n]*(?:\]\([^)\s]*)?$/;
 const SAFE_HREF = /^https?:\/\//i;
 const WORD = /[\p{L}\p{N}]/u;
 
 // The rules: docs/features/chats.md, "Inside an overview's chat (OV-354, pages 1, 2 and 5)".
-export const inlineMarks = (text: string, { open = "plain" }: { open?: "bold" | "plain" } = {}): MarkedPiece[] => {
+export const inlineMarks = (text: string, options: { open?: "bold" | "plain" } = {}): MarkedPiece[] =>
+  placedMarks(text, options).map(({ from: _from, to: _to, ...piece }) => piece);
+
+export const placedMarks = (text: string, { open = "plain" }: { open?: "bold" | "plain" } = {}): PlacedPiece[] => {
   const streaming = open === "bold";
-  const pieces: MarkedPiece[] = [];
+  const pieces: PlacedPiece[] = [];
   let bold = false;
   let italic = false;
   let boldFrom = 0;
   let italicFrom = 0;
   let buffer = "";
+  let bufferFrom = 0;
   const flush = () => {
     if (buffer !== "") {
-      pieces.push({ text: buffer, bold, italic, code: false });
+      pieces.push({ text: buffer, bold, italic, code: false, from: bufferFrom, to: bufferFrom + buffer.length });
     }
     buffer = "";
   };
@@ -37,7 +47,14 @@ export const inlineMarks = (text: string, { open = "plain" }: { open?: "bold" | 
       const end = text.indexOf("`", at + 1);
       if (end > at + 1 || (end === -1 && streaming)) {
         flush();
-        pieces.push({ text: text.slice(at + 1, end === -1 ? text.length : end), bold, italic, code: true });
+        pieces.push({
+          text: text.slice(at + 1, end === -1 ? text.length : end),
+          bold,
+          italic,
+          code: true,
+          from: at,
+          to: end === -1 ? text.length : end + 1,
+        });
         at = end === -1 ? text.length : end + 1;
         continue;
       }
@@ -63,7 +80,15 @@ export const inlineMarks = (text: string, { open = "plain" }: { open?: "bold" | 
       if (link !== null) {
         flush();
         const [whole, words, href] = link;
-        pieces.push({ text: words!, bold, italic, code: false, ...(SAFE_HREF.test(href!) ? { href: href! } : {}) });
+        pieces.push({
+          text: words!,
+          bold,
+          italic,
+          code: false,
+          from: at,
+          to: at + whole.length,
+          ...(SAFE_HREF.test(href!) ? { href: href! } : {}),
+        });
         at += whole.length;
         continue;
       }
@@ -71,6 +96,9 @@ export const inlineMarks = (text: string, { open = "plain" }: { open?: "bold" | 
         buffer += rest.slice(1).replace(/\]\(.*$/, "");
         break;
       }
+    }
+    if (buffer === "") {
+      bufferFrom = at;
     }
     buffer += char;
     at += 1;
