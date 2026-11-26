@@ -6,6 +6,7 @@ import { expect, test } from "../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../network/BackendSimulator.testHelper.js";
 import { recentOverviewsTestIds } from "../../src/features/capture/components/RecentOverviews/RecentOverviewsTestIds.js";
 import {
+  STORE_ANSWER_READ,
   STORE_QUESTION,
   oneOfEachKind,
   storeAnswer,
@@ -360,7 +361,7 @@ test("a note in the panel, which is what saving something gets you", async ({ la
     lead: "All the info,",
     accent: "less wait.",
     breakAtSplit: true,
-    sub: "Videos, podcasts, articles and recipes become a short overview: the premise, the big picture, the core claim and what to do next.",
+    sub: "Videos, podcasts, articles, recipes and social posts become a short overview: the premise, the big picture, the core claim and what to do next.",
   });
 
   await shoot(page, "1-note");
@@ -373,7 +374,7 @@ test("a question across the whole library, answered in sections from what it hol
     await launcher.launchExpectingLibrary({ ...SIGNED_IN, showMilestoneCards: false });
     const ask = await launcher.appShell.openAsk();
     await ask.ask(STORE_QUESTION);
-    await ask.verifyReadLineReads(0, "Read 3 overviews");
+    await ask.verifyReadLineReads(0, `Read ${STORE_ANSWER_READ} overviews`);
   });
   await composed(
     page,

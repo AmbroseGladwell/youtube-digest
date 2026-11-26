@@ -1,4 +1,10 @@
-import { SharedNote, type ChatAnswerSections, type ChatCitation, type Overview as OverviewRecord } from "@overview/domain";
+import {
+  SharedNote,
+  type ChatAnswerSections,
+  type ChatCitation,
+  type ChatListItem,
+  type Overview as OverviewRecord,
+} from "@overview/domain";
 import type { BackendSimulator, ChatAnswerReply } from "../network/BackendSimulator.testHelper.js";
 import { makeOverviewState } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { savedFromShare } from "../../src/features/sharedPage/util/savedFromShare.js";
@@ -58,37 +64,56 @@ export const storeLibrary = (backendSimulator: BackendSimulator, newestFirst: Ov
   return ordered;
 };
 
-export const STORE_QUESTION = "What have I saved about the brain and attention?";
+export const STORE_QUESTION = "How do I keep my focus through a long work day?";
 
 const cite = (overview: OverviewRecord): ChatCitation => ({ overviewId: overview.id, title: overview.source.title, item: null });
 
-const section = (heading: string, paragraph: string, from: OverviewRecord): ChatAnswerSections["sections"][number] => ({
+const point = (text: string, ...from: OverviewRecord[]): ChatListItem => ({ text, sources: from.map(cite) });
+
+const section = (heading: string, bullets: ChatListItem[]): ChatAnswerSections["sections"][number] => ({
   heading,
-  paragraphs: [paragraph],
+  paragraphs: [],
   numbered: [],
-  bullets: [],
-  sources: [{ citation: cite(from), relation: "Supports" }],
+  bullets,
+  sources: [],
 });
 
-// Each line restates its sample's own note, so the answer claims nothing the library doesn't hold.
+const answerSources = (): OverviewRecord[] => [theDataNote(), theMusicNote(), theAttentionNote(), theSellingNote(), theSleepNote()];
+export const STORE_ANSWER_READ = answerSources().length;
+
+// Each point restates its sample's own note, so the answer claims nothing the library doesn't hold.
 export const storeAnswer = (): ChatAnswerReply => {
-  const sleep = theSleepNote();
-  const music = theMusicNote();
-  const attention = theAttentionNote();
-  const read = [sleep, music, attention];
+  const read = answerSources();
+  const [work, music, attention, routines, sleep] = read as [
+    OverviewRecord,
+    OverviewRecord,
+    OverviewRecord,
+    OverviewRecord,
+    OverviewRecord,
+  ];
+  const intro = "Five of your overviews agree that focus runs out, so plan for it rather than push through.";
   return {
-    text: "Three of your overviews come at it from different sides.",
+    text: intro,
     citations: read.map(cite),
     picked: read.map((overview) => ({ overviewId: overview.id, title: overview.source.title })),
     sections: {
-      intro: "Three of your overviews come at it from different sides.",
+      intro,
       introSources: [],
       sections: [
-        section("Sleep came before brains", "Hydras have no brain, yet they meet the behavioural tests for sleep.", sleep),
-        section("Music as a memory cue", "Familiar music can bring back memories for some people with Alzheimer’s.", music),
-        section("Attention you can train", "Greene argues that slow, deliberate attention makes ordinary things vivid.", attention),
+        section("Do fewer things at once", [
+          point("Kakkar ran 3 to 5 agent workstreams and was spent by mid-afternoon, so he now caps them.", work),
+          point("Greene warns that split attention undermines the slow learning that mastery needs.", attention),
+        ]),
+        section("Take a real break", [
+          point("When attention flags, Levitin takes 5 to 10 minutes of music he enjoys instead of a coffee.", music),
+          point("Greene’s alternative: a minute of close attention on something ordinary, like an espresso pour.", attention),
+        ]),
+        section("Stop on purpose", [
+          point("Kakkar leaves his laptop at work; agents and scheduled routines carry on while you’re away.", work, routines),
+          point("Rest is more than a mental reset: sleep is regulated by muscles and other tissues too.", sleep),
+        ]),
       ],
-      takeaway: "One to try this week: Levitin’s five to ten minutes of music when your attention flags.",
+      takeaway: "Set a stop time, and when you flag before it, take ten minutes of music, not a coffee.",
     },
     stats: { overviews: SAMPLES.length, read: read.length, looked: SAMPLES.length },
   };
