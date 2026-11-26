@@ -80,6 +80,14 @@ a section can be linked to when it has no id is the note's question (text fragme
 one's. Headings Readability keeps vary: of the real articles measured, BBC stories came back as
 one section.
 
+## Headings Readability drops
+Readability removes an `h1` or `h2` whose class or id scores as clutter ("scroll", "share",
+"hidden", "meta" and so on). Utility classes trip it: Tailwind's `scroll-mt-24` on every heading
+cost an expo.dev post 7 of its 8 sections, and kept the eighth only because its id contained
+"content", which scores as a positive (OV-422). So a heading carrying an anchor id, its own or a
+descendant's, loses its class in the clone Readability reads. Its id still counts, so a heading
+named `sidebar` or `related` still goes.
+
 ## The picture
 
 `imageUrl` is the page's own share image, which publishers set to control how a link looks when

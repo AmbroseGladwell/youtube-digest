@@ -69,6 +69,26 @@ test("sections follow the headings, keep the ids a link can point at, and leave 
   assert.ok(!sections.some(({ heading }) => heading === title));
 });
 
+test("a heading that styles itself with a class Readability reads as clutter still starts its section", () => {
+  const { sections } = articleOf(
+    read(
+      NEWS_PAGE.replace('<h2 id="who-pays">', '<h2 id="who-pays" class="group scroll-mt-24">').replace(
+        "<h2>",
+        '<h2 class="share-heading">',
+      ),
+    ),
+  );
+  assert.deepEqual(
+    sections.map(({ heading }) => heading),
+    [null, "Who pays", "What happens next"],
+  );
+});
+
+test("a heading named as clutter by its id is still left out", () => {
+  const { sections } = articleOf(read(NEWS_PAGE.replace('<h2 id="who-pays">', '<h2 id="sidebar-who-pays">')));
+  assert.ok(!sections.some(({ heading }) => heading === "Who pays"));
+});
+
 test("the word count is measured from the sections rather than taken from anywhere else", () => {
   const { sections, wordCount } = articleOf(read(NEWS_PAGE));
   assert.equal(
