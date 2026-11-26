@@ -681,7 +681,7 @@ spoken line.
 
 Reading a chat answer aloud (OV-418, `docs/features/chat-read-aloud.md`) runs inside its
 request, so its lines carry `reqId` and the account: `chat answer read aloud` (plan, voice,
-sentences and chunks, how many were spoken, skipped or dropped, `stopped`, `cold`,
+sentences and chunks, `firstChunkCharacters`, how many were spoken, skipped or dropped, `stopped`, `cold`,
 `queueWaitSeconds`, `firstAudioSeconds`, `machineSeconds`, `usageUnits`, `priced`),
 `speech warmed`, `speech allowance spent` and `speech charge failed` (`error`). None carries
 the answer's words.

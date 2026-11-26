@@ -23,7 +23,7 @@ import { readSettings } from "../records/readSettings.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { LiveSpeechLane, LiveSpeechOutcome } from "../speech/LiveSpeechLane.js";
 import { NdjsonChannel } from "../speech/NdjsonChannel.js";
-import { speechChunks } from "../speech/speechChunks.js";
+import { DEFAULT_CHUNK_SIZING, speechChunks, type ChunkSizing } from "../speech/speechChunks.js";
 import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { nextUsageMonth, secondsToNextUsageMonth } from "../usage/usageMonth.js";
@@ -40,6 +40,7 @@ const NO_VOICE = "This server has no voice";
 export interface ChatSpeech {
   lane: LiveSpeechLane;
   dollarsPerMachineHour: number | null;
+  sizing?: ChunkSizing;
 }
 
 export interface ChatSpeechRoutesOptions {
@@ -118,7 +119,7 @@ export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage,
       throw new ApiError("unavailable", "Your settings couldn't be read");
     }
     const sentences = spokenAnswer(message);
-    const chunks = speechChunks(sentences);
+    const chunks = speechChunks(sentences, ({ spoken }) => spoken.length, speech.sizing ?? DEFAULT_CHUNK_SIZING);
     const channel = new NdjsonChannel<ChatSpeechEvent>();
     channel.push({ type: "sentences", sentences: sentences.map(({ place, block, start, end }) => ({ place, block, start, end })) });
     const firsts = chunks.map((_, at) => chunks.slice(0, at).reduce((sum, chunk) => sum + chunk.length, 0));
@@ -162,6 +163,7 @@ export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage,
             voice: settings.narrationVoice,
             sentences: sentences.length,
             chunks: chunks.length,
+            firstChunkCharacters: chunks[0]?.reduce((sum, { spoken }) => sum + spoken.length, 0) ?? 0,
             ...outcome,
             stopped: stop.signal.aborted,
             firstAudioSeconds,
