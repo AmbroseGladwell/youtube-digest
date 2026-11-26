@@ -17,10 +17,18 @@ VOICES_FILE = "voices-v1.0.bin"
 class KokoroSynthesiser:
     sample_rate = 24000
 
-    def __init__(self, model_dir: Path):
+    # On a GPU the session is built with CUDAExecutionProvider first (OV-423).
+    def __init__(self, model_dir: Path, providers: list[str] | None = None):
         from kokoro_onnx import Kokoro
 
-        self._kokoro = Kokoro(str(model_dir / MODEL_FILE), str(model_dir / VOICES_FILE))
+        if providers is None:
+            self._kokoro = Kokoro(str(model_dir / MODEL_FILE), str(model_dir / VOICES_FILE))
+            return
+        import onnxruntime
+
+        session = onnxruntime.InferenceSession(str(model_dir / MODEL_FILE), providers=providers)
+        self._kokoro = Kokoro.from_session(session, str(model_dir / VOICES_FILE))
+        self.providers = session.get_providers()
 
     def voices(self) -> set[str]:
         return set(self._kokoro.get_voices())
