@@ -82,9 +82,19 @@ and answers with NDJSON, one `ChatSpeechEvent` a line:
    instead.
 3. `done`, after the last chunk.
 
-**Chunks.** The first sentence goes to the voice alone, so it plays soonest; the rest go in
-threes (`speechChunks`), each one request to the pool, the answer's lines as the request's
-lines.
+**Chunks** (`speechChunks`, OV-420), each one request to the pool with the answer's sentences
+as its lines, by length, never cutting a sentence:
+
+- **The first** takes sentences until it holds at least 70 characters, about 3 s of speech,
+  so a one-word opener like "Yes." joins the sentence after it. Sent alone, it played in half
+  a second and left a pause while the next chunk was made (the first real plays, 26 Nov).
+- **Each later chunk** holds at most 2.5 times the one before: what `performance-4x`, at 3.2x
+  playback, makes while the last one plays, so chunks grow quickly and leave no gap.
+- **No chunk grows past 600 characters**, so another reader's turn never waits behind a huge
+  one; a single longer sentence still goes whole.
+
+The three numbers are `DEFAULT_CHUNK_SIZING`, to move with the voice's speed if the lane
+moves host (OV-421). The `played` line carries `firstChunkCharacters`.
 
 **Scheduling** (`LiveSpeechLane`). In memory, in the API process, beside the render queue:
 

@@ -44,7 +44,7 @@ const eventsOf = (payload: string): ChatSpeechEvent[] =>
     .split("\n")
     .map((line) => ChatSpeechEvent.parse(JSON.parse(line)));
 
-test("an answer is read aloud from what the server stored: its sentences first, then the first alone and the rest in threes", async (t) => {
+test("an answer is read aloud from what the server stored: its sentences first, then chunks by length, the first at least 3 s of speech", async (t) => {
   const { testApp, speak } = await setUp(t);
 
   const response = await speak();
@@ -54,16 +54,15 @@ test("an answer is read aloud from what the server stored: its sentences first, 
   const events = eventsOf(response.payload);
   assert.deepEqual(
     events.map((event) => (event.type === "audio" || event.type === "skipped" ? [event.type, event.first, event.count] : [event.type])),
-    [["sentences"], ["audio", 0, 1], ["audio", 1, 3], ["audio", 4, 1], ["done"]],
+    [["sentences"], ["audio", 0, 3], ["audio", 3, 2], ["done"]],
   );
   const [sentences] = events;
   assert.equal(sentences?.type === "sentences" && sentences.sentences.length, 5);
   assert.deepEqual(
     testApp.narrator.requests.map((request) => request.lines),
     [
-      ["Take 1 point 5 litres a day."],
-      ["It helps most in the heat.", "Drink before you're thirsty.", "Salt matters too."],
-      ["So does sleep."],
+      ["Take 1 point 5 litres a day.", "It helps most in the heat.", "Drink before you're thirsty."],
+      ["Salt matters too.", "So does sleep."],
     ],
   );
 });
@@ -126,7 +125,7 @@ test("a chunk that fails is skipped for the reader and the rest still plays", as
 
   assert.deepEqual(
     events.map((event) => event.type),
-    ["sentences", "skipped", "audio", "audio", "done"],
+    ["sentences", "skipped", "audio", "done"],
   );
 });
 

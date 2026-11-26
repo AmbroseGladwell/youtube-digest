@@ -141,7 +141,7 @@ export const apiLogLines = coded("api", {
     played: line(
       "info",
       "chat answer read aloud",
-      "A chat answer went through the live lane: plan, voice, how many sentences and chunks, how many chunks were spoken, skipped after a failure or dropped when the reader stopped (`stopped`), whether the machine was started cold, the wait for the first slot, seconds to the first audio, machine seconds charged, the usage it spent (`usageUnits`) and whether a price was set (`priced`). Never the text.",
+      "A chat answer went through the live lane: plan, voice, how many sentences and chunks and the first chunk's characters (`firstChunkCharacters`), how many chunks were spoken, skipped after a failure or dropped when the reader stopped (`stopped`), whether the machine was started cold, the wait for the first slot, seconds to the first audio, machine seconds charged, the usage it spent (`usageUnits`) and whether a price was set (`priced`). Never the text.",
     ),
     warmed: line(
       "info",
