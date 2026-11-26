@@ -1,5 +1,5 @@
 import type { AudioStore } from "./AudioStore.js";
-import type { LineNarrated, Narration, NarrationRequest, Narrator } from "./Narrator.js";
+import type { LineNarrated, Narration, NarrationRequest, Narrator, SpeechHost } from "./Narrator.js";
 
 export interface ScriptedNarrator extends Narrator {
   requests: NarrationRequest[];
@@ -12,7 +12,7 @@ export interface ScriptedNarrator extends Narrator {
 const segmentOf = (index: number, line: string) => ({ index, durationSeconds: 1, audio: Buffer.from(`segment ${index}: ${line}`) });
 
 // Each line is one second long and arrives as one segment, then one trailing segment of silence.
-export const makeScriptedNarrator = (): ScriptedNarrator => {
+export const makeScriptedNarrator = (host: SpeechHost = "fly"): ScriptedNarrator => {
   const failures: string[] = [];
   const requests: NarrationRequest[] = [];
   const lineFailures = new Map<number, string>();
@@ -22,6 +22,7 @@ export const makeScriptedNarrator = (): ScriptedNarrator => {
     warms: 0,
     async warm() {
       narrator.warms += 1;
+      return host;
     },
     failNext(message) {
       failures.push(message);
@@ -64,6 +65,8 @@ export const makeScriptedNarrator = (): ScriptedNarrator => {
         synthesisSeconds: 0.5,
         audio: Buffer.from(`narration of ${request.lines.join(" | ")} in ${request.voice}`),
         trailingSegments: [segmentOf(request.lines.length, "the gap after")],
+        host,
+        fellBack: false,
       };
     },
   };

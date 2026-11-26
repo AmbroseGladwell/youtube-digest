@@ -79,6 +79,8 @@ test("hands back the decoded audio, the timings and the segments after the last 
     synthesisSeconds: 1.1,
     audio: Buffer.from("m4a bytes"),
     trailingSegments: [{ index: 2, durationSeconds: 1.024, audio: Buffer.from("segment 2") }],
+    host: "fly",
+    fellBack: false,
   });
 });
 
@@ -153,4 +155,15 @@ test("a warm-up asks the service's health with the request id, and a refusal is 
     { url: "http://tts.test/health", requestId: "warm-1" },
     { url: "http://tts.test/health", requestId: "warm-2" },
   ]);
+});
+
+test("a Modal narrator sends its token and says it is Modal", async () => {
+  const seen: Array<string | undefined> = [];
+  const fetchImpl = (async (_url: string, init: RequestInit) => {
+    seen.push((init.headers as Record<string, string>).authorization);
+    return new Response("{}", { status: 200 });
+  }) as unknown as typeof fetch;
+
+  assert.equal(await createHttpNarrator("http://modal.test", fetchImpl, { host: "modal", token: "t".repeat(40) }).warm("warm-1"), "modal");
+  assert.deepEqual(seen, [`Bearer ${"t".repeat(40)}`]);
 });

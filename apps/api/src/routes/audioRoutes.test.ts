@@ -595,3 +595,19 @@ test("deleting narration deletes its segments too", async () => {
   assert.equal(testApp.audioStore.segments.size, 0);
   await testApp.close();
 });
+
+test("a render on Modal is charged to the account that asked for it; one on the Fly pool is not", async () => {
+  const testApp = await createTestApp({}, { modalSpeech: { dollarsPerHour: 3.6 } });
+  const account = await makeAccount(testApp);
+  await ask(account, { lines: LINES });
+
+  await testApp.drainAudio();
+
+  assert.equal(testApp.modalNarrator.requests.length, 1);
+  assert.equal(testApp.narrator.requests.length, 0);
+  const costs = await testApp.sql.query<{ area: string; detail: string }>("select area, detail from account_costs where account_id = $1", [
+    account.accountId,
+  ]);
+  assert.deepEqual(costs, [{ area: "speech", detail: "narration-modal" }]);
+  await testApp.close();
+});
