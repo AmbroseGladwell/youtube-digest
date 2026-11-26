@@ -419,7 +419,9 @@ of the repository, is `docs/conventions/secrets.md`:
 | `CLIENT_IP_HEADER` | unset | the header a trusted proxy puts the caller's address in, which the rate limits count by: `fly-client-ip` on Fly. Unset counts by the socket's address. Set it only behind a proxy that overwrites the header, or any client can name itself |
 | `STATIC_ROOT` | unset | the built web app to serve outside `/api`; unset serves the API alone and says so at startup (`docs/architecture/deploy.md`) |
 | `TTS_URL` | unset | the TTS service narration renders through; unset leaves `/api/audio` answering `unavailable`, and says so at startup |
-| `TTS_CONCURRENCY` | 5 | renders at once: the size of the TTS pool (`docs/architecture/deploy.md`, "The TTS service") |
+| `TTS_CONCURRENCY` | 5 | the size of the TTS pool, and so how many requests go to it at once (`docs/architecture/deploy.md`, "The TTS service") |
+| `TTS_LIVE_SLOTS` | 1 | how many of those are kept for reading chat answers aloud; narration renders the rest. Never the whole pool (`docs/features/chat-read-aloud.md`, "The live lane") |
+| `TTS_DOLLARS_PER_MACHINE_HOUR` | unset | a pool machine's hourly price, a secret since the repository is public; unset, read aloud spends no usage and records no cost (`docs/features/chat-read-aloud.md`, "What a play costs") |
 | `R2_BUCKET` | unset | the private R2 bucket narration is kept in; with it, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are required, and the last two are secrets |
 | `AUDIO_DIR` | | a directory to keep narration in instead, for working offline; `TTS_URL` needs this or R2 |
 | `TRANSCRIPT_SERVICE` | `off` | `on` lets the server fetch transcripts itself, as the ladder's last rung; `off` answers `unavailable`, and says so at startup (`docs/architecture/server-side-transcripts.md`) |

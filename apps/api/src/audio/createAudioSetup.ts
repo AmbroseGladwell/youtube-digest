@@ -9,6 +9,8 @@ export const createAudioSetup = (audio: NonNullable<AudioConfig>, runWorkers: bo
     narrator: createHttpNarrator(audio.ttsUrl),
     store: audio.store.kind === "r2" ? createR2AudioStore(audio.store) : createFileAudioStore(audio.store.dir),
     concurrency: audio.concurrency,
+    liveSlots: audio.liveSlots,
+    dollarsPerMachineHour: audio.dollarsPerMachineHour,
     runWorkers,
   };
 };

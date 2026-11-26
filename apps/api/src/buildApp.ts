@@ -26,6 +26,7 @@ import { CodedLogController } from "./logs/CodedLogController.js";
 import { currentLog, trackCurrentRequest } from "./logs/currentLog.js";
 import type { Mailer } from "./mail/Mailer.js";
 import { AccountCostsRepository } from "./costs/AccountCostsRepository.js";
+import { LiveSpeechLane } from "./speech/LiveSpeechLane.js";
 import { ClaimEmbeddingsRepository } from "./meaning/ClaimEmbeddingsRepository.js";
 import type { Embedder } from "./meaning/Embedder.js";
 import { EmbeddingQueue } from "./meaning/EmbeddingQueue.js";
@@ -86,6 +87,7 @@ import { projectRoutes } from "./routes/projectRoutes.js";
 import { suggestedQuestionRoutes } from "./routes/suggestedQuestionRoutes.js";
 import { captureRoutes } from "./routes/captureRoutes.js";
 import { chatRoutes } from "./routes/chatRoutes.js";
+import { chatSpeechRoutes } from "./routes/chatSpeechRoutes.js";
 import { transcriptRoutes } from "./routes/transcriptRoutes.js";
 import { sharePagePlugin } from "./shares/sharePagePlugin.js";
 import { SharesRepository } from "./shares/SharesRepository.js";
@@ -122,6 +124,8 @@ export interface AudioSetup {
   narrator: Narrator;
   store: AudioStore;
   concurrency: number;
+  liveSlots: number;
+  dollarsPerMachineHour: number | null;
   // Off in tests, which drain the queue themselves rather than race a background worker.
   runWorkers: boolean;
 }
@@ -234,7 +238,23 @@ export const buildApp = async ({
   const urls = oauthUrls(config.appUrl);
   const audioRenders = new AudioRendersRepository(sql);
   const shares = new SharesRepository(sql, clock);
-  const audioQueue = audio === null ? null : new AudioRenderQueue({ renders: audioRenders, clock, log: app.log, ...audio });
+  const audioQueue =
+    audio === null
+      ? null
+      : new AudioRenderQueue({
+          renders: audioRenders,
+          clock,
+          log: app.log,
+          ...audio,
+          concurrency: Math.max(1, audio.concurrency - audio.liveSlots),
+        });
+  const chatSpeech =
+    audio === null || audio.liveSlots === 0
+      ? null
+      : {
+          lane: new LiveSpeechLane({ narrator: audio.narrator, slots: audio.liveSlots, clock }),
+          dollarsPerMachineHour: audio.dollarsPerMachineHour,
+        };
   app.decorate("audioQueue", audioQueue);
   const claimEmbeddings = new ClaimEmbeddingsRepository(sql);
   const costs = new AccountCostsRepository(sql);
@@ -385,6 +405,7 @@ export const buildApp = async ({
         sql,
         clock,
       });
+      chatSpeechRoutes(api, { speech: chatSpeech, records, usage: chatUsage, costs, sql, clock });
       const generator = ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, costs, clock });
       generationRoutes(api, {
         generator,

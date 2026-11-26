@@ -22,7 +22,7 @@ export interface SpokenSentence {
 
 export interface SpeakableAnswer {
   text: string;
-  sections?: ChatAnswerSections;
+  sections?: ChatAnswerSections | undefined;
 }
 
 export const CODE_ON_SCREEN = "There's a code example on screen.";

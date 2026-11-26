@@ -137,3 +137,20 @@ test("audio rendered at another version, or timed for the wrong number of lines,
     /1 lines of 2/,
   );
 });
+
+test("a warm-up asks the service's health with the request id, and a refusal is an error", async () => {
+  const calls: { url: string; requestId: string | undefined }[] = [];
+  const answering = (status: number) =>
+    (async (url: string, init: RequestInit) => {
+      calls.push({ url, requestId: (init.headers as Record<string, string>)[REQUEST_ID_HEADER] });
+      return new Response("{}", { status });
+    }) as unknown as typeof fetch;
+
+  await createHttpNarrator("http://tts.test/", answering(200)).warm("warm-1");
+  await assert.rejects(createHttpNarrator("http://tts.test", answering(503)).warm("warm-2"), /503/);
+
+  assert.deepEqual(calls, [
+    { url: "http://tts.test/health", requestId: "warm-1" },
+    { url: "http://tts.test/health", requestId: "warm-2" },
+  ]);
+});

@@ -155,10 +155,20 @@ const R2 = {
   R2_SECRET_ACCESS_KEY: "secret-key",
 };
 
+test("one machine of the pool is kept for reading chat aloud, never all of it, and a play is priced only when told the hourly price", () => {
+  const audio = (env: Record<string, string>) => loadConfig({ DATABASE_URL, TTS_URL: "http://localhost:8000", ...R2, ...env }).audio!;
+  assert.equal(audio({ TTS_LIVE_SLOTS: "2" }).liveSlots, 2);
+  assert.equal(audio({ TTS_CONCURRENCY: "1" }).liveSlots, 0);
+  assert.equal(audio({ TTS_DOLLARS_PER_MACHINE_HOUR: "0.5" }).dollarsPerMachineHour, 0.5);
+  assert.throws(() => audio({ TTS_DOLLARS_PER_MACHINE_HOUR: "free" }), ConfigError);
+});
+
 test("narrates through the TTS service it is given into R2, five renders at a time unless told otherwise", () => {
   assert.deepEqual(loadConfig({ DATABASE_URL, TTS_URL: "http://localhost:8000", ...R2 }).audio, {
     ttsUrl: "http://localhost:8000",
     concurrency: 5,
+    liveSlots: 1,
+    dollarsPerMachineHour: null,
     store: {
       kind: "r2",
       accountId: R2.R2_ACCOUNT_ID,

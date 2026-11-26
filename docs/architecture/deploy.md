@@ -327,7 +327,8 @@ the model baked in and hash-checked) and its own Fly app, `the-overview-tts`
 - **A pool, not a machine.** Every machine is identical and stopped until needed. The proxy
   gives each one request at a time (`hard_limit = 1`) and starts another stopped one when all
   running ones are busy, so the pool's size is the number of renders that can run at once:
-  the API's `TTS_CONCURRENCY` (5), which is how many it sends at once. A stopped machine costs
+  the API's `TTS_CONCURRENCY` (5), which is how many it sends at once: narration's renders and
+  the live lane's chat read-alouds together (`TTS_LIVE_SLOTS`, 1). A stopped machine costs
   only its image storage.
 - **It stops itself.** The process exits `IDLE_EXIT_SECONDS` (15) after its last render, and
   Fly's default restart policy leaves a clean exit stopped. The grace starts once the model

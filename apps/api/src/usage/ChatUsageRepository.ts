@@ -17,6 +17,12 @@ export type ChatReservation =
   | { reserved: true; day: string; used: number; limit: number }
   | { reserved: false; quota: "month" | "month-library" | "day" | "our-key-daily"; used: number; limit: number };
 
+export interface SpeechRefusal {
+  quota: "month" | "day";
+  used: number;
+  limit: number;
+}
+
 // Reserved before asking under the account's row lock, limited in usage: docs/architecture/tiers.md, "Chat usage".
 export class ChatUsageRepository {
   #sql: SqlClient;
@@ -86,6 +92,33 @@ export class ChatUsageRepository {
       );
       await tx.query("update our_key_usage set chat_units = chat_units + $2 where day = $1::date", [day, units]);
     });
+  }
+
+  // Read aloud spends usage but asks no question: docs/features/chat-read-aloud.md, "What a play costs".
+  async speechRefusal(now: Date, accountId: AccountId, plan: Plan): Promise<SpeechRefusal | null> {
+    const [spent] = await this.#sql.query<{ month: number | string | null; today: number | string | null }>(
+      `select sum(units) as month, sum(units) filter (where day = $3::date) as today
+       from chat_usage where account_id = $1 and day >= $2::date`,
+      [accountId, usageMonth(now), usageDay(now)],
+    );
+    const month = Number(spent?.month ?? 0);
+    const limit = chatUsageAllowances[plan];
+    if (month >= limit) {
+      return { quota: "month", used: month, limit };
+    }
+    const today = Number(spent?.today ?? 0);
+    return today >= CHAT_UNITS_PER_ACCOUNT_DAILY ? { quota: "day", used: today, limit: CHAT_UNITS_PER_ACCOUNT_DAILY } : null;
+  }
+
+  async spendOnSpeech(now: Date, accountId: AccountId, units: number): Promise<void> {
+    if (units <= 0) {
+      return;
+    }
+    await this.#sql.query(
+      `insert into chat_usage (day, account_id, units) values ($1::date, $2, $3)
+       on conflict (account_id, day) do update set units = chat_usage.units + excluded.units`,
+      [usageDay(now), accountId, units],
+    );
   }
 
   async usage(now: Date, accountId: AccountId, plan: Plan): Promise<ChatUsage> {

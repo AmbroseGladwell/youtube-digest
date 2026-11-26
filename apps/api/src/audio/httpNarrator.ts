@@ -3,6 +3,7 @@ import { REQUEST_ID_HEADER } from "@overview/domain";
 import type { NarrationSegment, Narrator } from "./Narrator.js";
 
 const RENDER_TIMEOUT_MS = 10 * 60 * 1000;
+const WARM_TIMEOUT_MS = 30 * 1000;
 
 const Segment = z.object({
   index: z.number().int().nonnegative(),
@@ -54,9 +55,19 @@ const ndjsonLines = async function* (body: ReadableStream<Uint8Array>): AsyncGen
 
 // The service streams one event a line: docs/features/tts-pre-rendered-speech.md, "Streaming".
 export const createHttpNarrator = (baseUrl: string, fetchImpl: typeof fetch = fetch): Narrator => {
+  const root = baseUrl.replace(/\/+$/, "");
   return {
+    async warm(requestId) {
+      const response = await fetchImpl(`${root}/health`, {
+        headers: { [REQUEST_ID_HEADER]: requestId },
+        signal: AbortSignal.timeout(WARM_TIMEOUT_MS),
+      });
+      if (!response.ok) {
+        throw new Error(`TTS answered ${response.status} to a warm-up`);
+      }
+    },
     async narrate(request, requestId, onLine) {
-      const response = await fetchImpl(`${baseUrl.replace(/\/+$/, "")}/render/stream`, {
+      const response = await fetchImpl(`${root}/render/stream`, {
         method: "POST",
         headers: { "content-type": "application/json", [REQUEST_ID_HEADER]: requestId },
         body: JSON.stringify(request),

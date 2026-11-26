@@ -35,6 +35,8 @@ const ConfigEnv = z
       .optional(),
     TTS_URL: z.url().optional(),
     TTS_CONCURRENCY: z.coerce.number().int().positive().default(5),
+    TTS_LIVE_SLOTS: z.coerce.number().int().nonnegative().default(1),
+    TTS_DOLLARS_PER_MACHINE_HOUR: z.coerce.number().positive().optional(),
     AUDIO_DIR: z.string().min(1).optional(),
     R2_ACCOUNT_ID: z
       .string()
@@ -140,7 +142,13 @@ export type OurKeyConfig = {
   dailyChatMessages: number;
 } | null;
 
-export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
+export type AudioConfig = {
+  ttsUrl: string;
+  concurrency: number;
+  liveSlots: number;
+  dollarsPerMachineHour: number | null;
+  store: AudioStoreConfig;
+} | null;
 
 export type SpeechToTextConfig = { url: string; token: string; concurrency: number } | null;
 
@@ -216,6 +224,8 @@ export const loadConfig = (env: Record<string, string | undefined> = process.env
         : {
             ttsUrl: data.TTS_URL,
             concurrency: data.TTS_CONCURRENCY,
+            liveSlots: Math.min(data.TTS_LIVE_SLOTS, data.TTS_CONCURRENCY - 1),
+            dollarsPerMachineHour: data.TTS_DOLLARS_PER_MACHINE_HOUR ?? null,
             store:
               data.R2_BUCKET === undefined
                 ? { kind: "file", dir: data.AUDIO_DIR! }

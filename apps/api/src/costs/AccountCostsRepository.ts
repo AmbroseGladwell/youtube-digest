@@ -3,7 +3,7 @@ import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 
-export type CostArea = "generation" | "embeddings" | "transcripts" | "chat" | "questions";
+export type CostArea = "generation" | "embeddings" | "transcripts" | "chat" | "questions" | "speech";
 
 export type CostPayer = { accountId: AccountId } | "signed-out";
 

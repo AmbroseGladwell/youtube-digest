@@ -556,6 +556,10 @@ for questions about long-form content.
 - **Refusals** keep their shape: `chat-month` (with `scope: "library"` when only a library
   question won't fit), `chat-day`, `chat-our-key-daily`. `GET /api/chat-usage` adds `share` and
   `libraryFits`; `used` and `limit` still count questions for older clients.
+- **Read aloud spends usage too** (OV-418): each play of an answer, replays included, adds
+  what it cost in machine time to `chat_usage.units`, on every plan, without counting a
+  question, and is refused with `chat-month` or `chat-day` once those are spent
+  (`chat-read-aloud.md`, "What a play costs").
 - **What readers see** (designs 376a–376j, `chats.md`): a percentage and the reset date, never a
   count, a unit or a cost. Plans say "about N typical questions a month".
 

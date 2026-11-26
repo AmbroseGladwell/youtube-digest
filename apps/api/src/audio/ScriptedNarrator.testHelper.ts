@@ -3,6 +3,7 @@ import type { LineNarrated, Narration, NarrationRequest, Narrator } from "./Narr
 
 export interface ScriptedNarrator extends Narrator {
   requests: NarrationRequest[];
+  warms: number;
   failNext(message: string): void;
   failAfterLine(lineIndex: number, message: string): void;
   pauseAfterLine(lineIndex: number): { resume: () => void; reached: Promise<void> };
@@ -16,8 +17,12 @@ export const makeScriptedNarrator = (): ScriptedNarrator => {
   const requests: NarrationRequest[] = [];
   const lineFailures = new Map<number, string>();
   const pauses = new Map<number, { wait: Promise<void>; reached: () => void }>();
-  return {
+  const narrator: ScriptedNarrator = {
     requests,
+    warms: 0,
+    async warm() {
+      narrator.warms += 1;
+    },
     failNext(message) {
       failures.push(message);
     },
@@ -62,6 +67,7 @@ export const makeScriptedNarrator = (): ScriptedNarrator => {
       };
     },
   };
+  return narrator;
 };
 
 export interface MemoryAudioStore extends AudioStore {

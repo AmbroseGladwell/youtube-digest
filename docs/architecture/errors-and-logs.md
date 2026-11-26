@@ -679,6 +679,13 @@ service's lines by `ttsRequestId` ("The TTS service"). A failure's
 message goes through `redactErrorMessage`, because the TTS service's error can quote a
 spoken line.
 
+Reading a chat answer aloud (OV-418, `docs/features/chat-read-aloud.md`) runs inside its
+request, so its lines carry `reqId` and the account: `chat answer read aloud` (plan, voice,
+sentences and chunks, how many were spoken, skipped or dropped, `stopped`, `cold`,
+`queueWaitSeconds`, `firstAudioSeconds`, `machineSeconds`, `usageUnits`, `priced`),
+`speech warmed`, `speech allowance spent` and `speech charge failed` (`error`). None carries
+the answer's words.
+
 ### Sign-in and mail
 
 | Line | Level | Fields |
