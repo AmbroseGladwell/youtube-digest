@@ -395,7 +395,7 @@ Three departures from what a reader would see, recorded here because a store scr
 misleads is a rejection:
 
 - **The answer in `2-ask` is written for the shot**, since a real one needs a model. Each line
-  restates its sample's own note, and the three it cites are the three it draws on, so it
+  restates its sample's own note, and the five it cites are the five it draws on, so it
   claims nothing the library doesn't hold (`storeAnswer`).
 - **The conversation in `5-assistant` is drawn**, in onboarding's own bubble styling
   (`OnboardingSlide.module.scss`). It names two notes by title, and those titles are read out
