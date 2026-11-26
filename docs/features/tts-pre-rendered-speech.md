@@ -231,7 +231,8 @@ lists again.
   capability, and the file is immutable and cached for a year.
 - **The queue is a table.** `audio_renders` holds each job's lines, voice, priority, attempts
   and a `not_before`. Workers claim the most urgent, oldest job with `for update skip locked`,
-  up to `TTS_CONCURRENCY` at once, one per machine the pool can start. Someone pressing play
+  up to `TTS_CONCURRENCY - TTS_LIVE_SLOTS` at once (4), one per machine the pool can start;
+  the other slot reads chat answers aloud (`chat-read-aloud.md`). Someone pressing play
   is `interactive` and goes ahead of every `background` render, and asking for a waiting
   background render interactively promotes it.
 - **Failures wait, then give up.** A failed attempt is retried after 30 s, then 2 minutes;

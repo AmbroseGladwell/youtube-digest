@@ -28,4 +28,5 @@ export interface Narration {
 // The request id goes as X-Request-Id, so the service's lines carry the id the API logged the render under.
 export interface Narrator {
   narrate(request: NarrationRequest, requestId: string, onLine: (line: LineNarrated) => Promise<void>): Promise<Narration>;
+  warm(requestId: string): Promise<void>;
 }

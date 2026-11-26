@@ -54,6 +54,7 @@ export interface TestAppOptions {
   tiktokReader?: BuildAppOptions["tiktokReader"];
   socialReader?: BuildAppOptions["socialReader"];
   narration?: boolean;
+  dollarsPerMachineHour?: number | null;
   logger?: FastifyBaseLogger;
   slowQueryMs?: number;
   transcriptService?: TranscriptServiceSetup;
@@ -72,6 +73,7 @@ export const createTestApp = async (
   config: Partial<AppConfig> = {},
   {
     narration = true,
+    dollarsPerMachineHour = null,
     logger,
     slowQueryMs,
     transcriptService,
@@ -118,7 +120,7 @@ export const createTestApp = async (
     },
     sql,
     mailer,
-    audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,
+    audio: narration ? { narrator, store: audioStore, concurrency: 2, liveSlots: 1, dollarsPerMachineHour, runWorkers: false } : null,
     transcriptService: transcriptService ?? null,
     ourKey: ourKey ?? null,
     speechToText:

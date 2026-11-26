@@ -137,6 +137,20 @@ export const apiLogLines = coded("api", {
       "Streamed segments kept for first plays were deleted once SEGMENTS_KEPT_MS had passed.",
     ),
   },
+  speech: {
+    played: line(
+      "info",
+      "chat answer read aloud",
+      "A chat answer went through the live lane: plan, voice, how many sentences and chunks, how many chunks were spoken, skipped after a failure or dropped when the reader stopped (`stopped`), whether the machine was started cold, the wait for the first slot, seconds to the first audio, machine seconds charged, the usage it spent (`usageUnits`) and whether a price was set (`priced`). Never the text.",
+    ),
+    warmed: line(
+      "info",
+      "speech warmed",
+      "A reader showed they might listen: whether a machine was started (`warmed`), the machine seconds charged and the usage it spent.",
+    ),
+    allowanceSpent: line("info", "speech allowance spent", "Read aloud was refused because the month's or day's chat usage was spent."),
+    chargeFailed: line("error", "speech charge failed", "A finished play's usage or cost couldn't be written."),
+  },
   auth: {
     magicLinkSent: line("info", "magic link sent", "A sign-in link went out. Never the address, the link or its token."),
     magicLinkHeldBack: line("warn", "magic link held back", "A second link asked for inside the cooldown, answered as if sent."),

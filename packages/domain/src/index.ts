@@ -133,6 +133,7 @@ export * from "./SpokenScript.js";
 export * from "./speakable.js";
 export * from "./sentenceSpans.js";
 export * from "./spokenAnswer.js";
+export * from "./ChatSpeechEvent.js";
 export * from "./spokenMeasures.js";
 export * from "./spokenDuration.js";
 export * from "./spokenOpening.js";
