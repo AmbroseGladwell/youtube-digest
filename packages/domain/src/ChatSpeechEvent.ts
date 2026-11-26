@@ -19,6 +19,8 @@ const SentenceOnScreen = z.object({
 
 const SentenceRange = z.object({ first: z.number().int().nonnegative(), count: z.number().int().positive() });
 
+export const SPEECH_WARM_PATH = "/speech/warm";
+
 // One NDJSON line each: docs/features/chat-read-aloud.md, "The live lane".
 export const ChatSpeechEvent = z.discriminatedUnion("type", [
   z.object({ type: z.literal("sentences"), sentences: z.array(SentenceOnScreen) }),

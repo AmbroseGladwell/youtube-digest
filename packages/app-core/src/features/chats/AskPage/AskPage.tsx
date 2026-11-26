@@ -16,6 +16,9 @@ import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { AskAnswer } from "../components/AskAnswer/AskAnswer.js";
 import { AskDrawer } from "../components/AskDrawer/AskDrawer.js";
 import { AskPickingWait } from "../components/AskPickingWait/AskPickingWait.js";
+import { ReadAloudBack } from "../components/ReadAloudBack/ReadAloudBack.js";
+import { useAnswerReadAloud } from "../readAloud/useAnswerReadAloud.js";
+import { useFollowReading } from "../readAloud/useFollowReading.js";
 import { ChatAnswerActions } from "../components/ChatAnswerActions/ChatAnswerActions.js";
 import { ChatAnswerSectionsView } from "../components/ChatAnswer/ChatAnswer.js";
 import { ChatComposer } from "../components/ChatComposer/ChatComposer.js";
@@ -161,6 +164,20 @@ export const AskPage = () => {
   useChatMeterShown(chatMeterStateOf(wait?.kind ?? null, meter), (state) =>
     analytics.ask.chat.meterShown({ scope, state, plan: usage?.plan ?? "free" }),
   );
+  const readAloudOf = useAnswerReadAloud({
+    chatId: page.chat?.id ?? null,
+    about: {
+      scope: project === null ? "library" : "project",
+      title: "Chat answer",
+      artist: project === null ? "Your library" : project.name,
+      artworkUrl: null,
+    },
+    monthWaitShown: wait !== null,
+    offerPlans: (usage?.plan ?? "free") !== "plus",
+    onPlansFollowed: () => analytics.ask.chat.plansFollowed({ scope }),
+  });
+  const conversationArea = useRef<HTMLElement | null>(null);
+  const following = useFollowReading(conversationArea);
   const empty = messages.length === 0 && pending === null;
   const latestAnswerAt = messages.map((message) => message.from).lastIndexOf("answer");
   const starters = empty ? askStarters({ overviews: entries, projects, members, topics }, project) : [];
@@ -325,6 +342,7 @@ export const AskPage = () => {
   );
   const composer = (
     <>
+      {following.lost && <ReadAloudBack onBack={following.back} />}
       {field}
       {wait === null && meter !== null && (
         <ChatMeterLine meter={meter} onPlansFollowed={() => analytics.ask.chat.plansFollowed({ scope })} />
@@ -334,6 +352,8 @@ export const AskPage = () => {
 
   const answerOf = (message: Extract<ChatMessage, { from: "answer" }>, index: number) => (
     <AskAnswer
+      spoken={readAloudOf(index).spoken}
+      top={readAloudOf(index).top}
       text={message.text}
       sections={message.sections}
       citations={message.citations}
@@ -347,17 +367,18 @@ export const AskPage = () => {
       actions={(sources) => (
         <ChatAnswerActions
           answer={message.text}
-          latest={index === latestAnswerAt && pending === null}
           onSaid={say}
           onCopied={() => analytics.ask.chat.answerCopied({ scope })}
+          readAloud={readAloudOf(index).control}
           sources={sources}
+          below={readAloudOf(index).below}
         />
       )}
     />
   );
 
   return (
-    <main className={styles.root} data-testid={askPageTestIds.root}>
+    <main className={styles.root} ref={conversationArea} data-testid={askPageTestIds.root}>
       {(isPhone || drawerOpen || drawerLeaving) && (
         <AskDrawer
           open={drawerOpen}

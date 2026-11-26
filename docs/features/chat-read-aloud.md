@@ -10,7 +10,8 @@ Three PRs on the one card:
 1. **The speech version** of an answer (built).
 2. **The live lane** in the API: an in-memory queue beside `AudioRenderQueue` with one pool
    slot reserved for it, and the endpoint that streams each sentence's audio (built).
-3. **The player and the controls**, after a design round.
+3. **The player and the controls**, built to the design round's hand-off
+   (`design_handoff_ov418_read_aloud/`, pages 418a to 418t).
 
 ## Decided (owner, 25 Nov 2026)
 
@@ -24,13 +25,12 @@ Three PRs on the one card:
   holds for readers who listen.
 - **Warm the voice only on intent**: when the reader focuses or hovers a Read aloud control,
   never on opening a chat, because an unused warm-up still spends usage.
-- **The controls** (PR 3, design round): a small play and pause control at the top and the
-  bottom of each answer, since a frequent listener starts from the beginning. The round
-  explores where exactly. The copy says, lightly, that listening uses some of the chat
-  allowance, and the meter moves after a play.
-- **When PR 3 ships**, /terms (the chat usage paragraph) and /privacy (the read aloud
-  paragraph: an answer's words go to our own text-to-speech service and nothing is kept) change
-  with it. PR 2 isn't reachable from any client, so it changes neither.
+- **The controls**: a play control at the top and the bottom of each answer, since a
+  frequent listener starts from the beginning. The design round settled where (26 Nov, "The
+  controls" below).
+- **The chat allowance is never mentioned in the conversation** (design 418m-2): Settings'
+  chat row says "Listening to an answer uses some too", and the meter moves after a play.
+- **/terms and /privacy changed with PR 3** (legal-pages.md, 26 Nov).
 
 ## The speech version
 
@@ -126,3 +126,53 @@ and record no cost, and the `played` line says `priced: false`.
 Before speaking, the endpoint refuses with the chat refusals, `chat-month` or `chat-day`, when
 the month's or day's usage is spent; the last play may go a little over, as the last answer
 can.
+
+## The controls (design round, 26 Nov 2026)
+
+- **Bottom, on every answer:** a play icon in the action row, between Copy and Sources. The
+  row now shows under every answer, not only the latest.
+- **Top, on long answers only:** the same control above the answer, when the answer is taller
+  than the chat's visible area at the current width and zoom (`useTallerThanView`). Top and
+  bottom are one control in two places and always show the same state.
+- **States:** idle (play, "Read response aloud"); starting (pressed at once, a spinner only
+  after 400 ms, "Starting to read. Press to cancel"); playing (pause, "Pause reading");
+  paused (play on the fill, "Resume reading", with ↺ "Start again from the beginning"). Pause
+  is the stop: another answer, narration, signing out or leaving the page drops the place.
+- **The highlight:** the stone tint behind the sentence being read, moving instantly, so
+  reduced motion changes nothing. A code block or table, spoken as one line, is marked whole
+  with a ring. Each place in an answer passes its `SpokenAnswerPlace` down, and
+  `placedMarks` keeps each marked piece's place in the text, so a sentence's offsets cut the
+  rendered words without parsing the Markdown again.
+- **Scrolling:** the chat follows the sentence until the reader scrolls (wheel, touch or a
+  scrolling key); then "Back to where it's reading" floats above the field.
+- **Going wrong:** a skipped sentence shows nothing. Nothing read: "Couldn't read this aloud.
+  Try again". A refused play: when the field already shows the month spent, "Listening is
+  back on {date}, with your chat."; otherwise a card, "Not enough chat left to read this
+  aloud" / "More on {date}.", with See plans on any plan but Plus. A server without a voice
+  (the warm-up answers 503) shows no control.
+
+## The player
+
+`ReadAloudEngine` (app-core, `features/chats/readAloud/`) is one player for every chat,
+mounted by `ReadAloudRuntime` inside the narration player, so one answer plays at a time
+app-wide.
+
+- **Starting** happens inside the tap: the element plays a silent clip first, which mobile
+  browsers need, then each chunk's m4a clip as it arrives. The sentence comes from the clip's
+  `sentenceStartsSeconds` at the element's time.
+- **A chunk still on its way** is waited for; the answer finishes once the stream is done and
+  its last clip has played.
+- **The device's copy:** a finished answer's clips stay in memory (the last five answers), so
+  replaying one asks the server for nothing.
+- **Narration:** starting an answer pauses an overview's narration, and the mini player says
+  "Paused for the chat answer"; an answer that plays to its end gives the narration back.
+  Narration starting stops the answer.
+- **Lock screen:** while it reads, the answer owns the media session (`overrideMediaSession`
+  with `own`): title "Chat answer", the overview's title, the project's name or "Your
+  library" as artist, the overview's image as artwork; play, pause, and previous and next
+  track step a sentence. No scrubber.
+- **Warming:** hovering or focusing a control warms the voice, at most every 20 seconds.
+- **The meter** is fetched again after a play ends, so it moves as it does after a question.
+- **Analytics:** `chat.readAloud.started`, `.paused`, `.resumed`, `.completed`, `.stopped`,
+  `.failed` and `.refused`, each with plan, scope and (but `refused`) voice and sentences;
+  `started` adds the control and whether it replayed the device's copy. Never the words.

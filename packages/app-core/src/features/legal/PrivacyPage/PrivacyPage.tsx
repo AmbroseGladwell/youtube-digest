@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-25";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-26";
 
 const UNITED_STATES = "United States";
 
@@ -409,6 +409,12 @@ const sections: readonly LegalSection[] = [
           overview uses it, which for a file two readers share means while either does. So that narration can start playing before it is
           finished, it is also stored in short pieces as it is made, fetched the same way; the pieces are deleted an hour after the file is
           finished.
+        </p>
+        <p>
+          An answer in chat can be read aloud too. Our server sends the words of the answer, as stored with your conversation, to the same
+          text-to-speech service and passes the audio straight back to your device; nothing of it is stored on our servers, and your device
+          keeps it only while the app is open, so a replay doesn't need it again. We record how much machine time each one took, against
+          your account, to count it in your chat usage.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you.

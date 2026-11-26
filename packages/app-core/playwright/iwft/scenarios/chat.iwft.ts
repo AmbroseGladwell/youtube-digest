@@ -375,7 +375,10 @@ test.describe("The chat header's ⋯", () => {
     await reader.chat.verifyWriting();
   });
 
-  test("the latest answer shows its Copy; an earlier one's shows on hover", async ({ launcher, backendSimulator }) => {
+  test("every answer shows its row, not only the latest, since the play control lives there (418a)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
     backendSimulator.overviews.seedSynced(creatine());
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -383,11 +386,88 @@ test.describe("The chat header's ⋯", () => {
     await reader.chat.verifyAnswersRead([ANSWER]);
     await reader.chat.ask("And the dose?");
     await reader.chat.verifyAnswersRead([ANSWER, ANSWER]);
+
     await reader.chat.verifyCopyIsShown(1, true);
-    await reader.chat.verifyCopyIsShown(0, false);
-
-    await reader.chat.hoverAnswer(0);
-
     await reader.chat.verifyCopyIsShown(0, true);
+    await reader.chat.verifyReadAloudOffered(0, "bottom", true);
+    await reader.chat.verifyReadAloudOffered(1, "bottom", true);
+  });
+});
+
+test.describe("Reading an answer aloud", () => {
+  test("play reads the stored answer, marks the sentence being read, and pauses to Resume and Start again", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    await reader.chat.verifyAnswersRead([ANSWER]);
+    await reader.chat.verifyReadAloudIs(0, "idle", "Read response aloud");
+
+    await reader.chat.pressReadAloud(0);
+
+    await reader.chat.verifyReadAloudIs(0, "playing", "Pause reading");
+    await reader.chat.verifySpokenSentence(ANSWER);
+    expect(backendSimulator.speech.asked()).toHaveLength(1);
+    expect(backendSimulator.speech.asked()[0]?.message).toBe(1);
+
+    await reader.chat.pressReadAloud(0);
+
+    await reader.chat.verifyReadAloudIs(0, "paused", "Resume reading");
+    await reader.chat.verifyStartAgainOffered(0, true);
+  });
+
+  test("a short answer has no play control at its top", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    await reader.chat.verifyAnswersRead([ANSWER]);
+
+    await reader.chat.verifyReadAloudOffered(0, "top", false);
+    await reader.chat.verifyReadAloudOffered(0, "bottom", true);
+  });
+
+  test("nothing read says so under the row, with Try again", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.speech.failWith();
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    await reader.chat.verifyAnswersRead([ANSWER]);
+
+    await reader.chat.pressReadAloud(0);
+
+    await reader.chat.verifyReadAloudProblem(0, "Couldn’t read this aloud. Try again");
+    await reader.chat.verifyReadAloudIs(0, "idle", "Read response aloud");
+  });
+
+  test("a spent month the meter didn't yet show offers the card, with the reset date", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.speech.refuseWith(429, { code: "too_many_requests", details: { quota: "chat-month", resetsOn: "2026-12-01" } });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    await reader.chat.verifyAnswersRead([ANSWER]);
+
+    await reader.chat.pressReadAloud(0);
+
+    await reader.chat.verifyReadAloudProblem(0, "Not enough chat left to read this aloudMore on 1 December. See plans");
+  });
+
+  test("a server without a voice offers no play control once it says so", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.speech.withoutVoice();
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    await reader.chat.verifyAnswersRead([ANSWER]);
+
+    await reader.chat.verifyReadAloudOffered(0, "bottom", true);
+    await reader.chat.hoverReadAloud(0);
+
+    await reader.chat.verifyReadAloudOffered(0, "bottom", false);
   });
 });

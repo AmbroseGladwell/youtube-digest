@@ -115,7 +115,7 @@ const chatRow = (share: number): Row => {
     label: "Chat, on us",
     count: `${percent}% used`,
     usedPercent: percent,
-    ...(percent >= NEARLY_USED_UP ? { aside: "Nearly used up" } : {}),
+    aside: percent >= NEARLY_USED_UP ? "Nearly used up. Listening to an answer uses some too." : "Listening to an answer uses some too.",
   };
 };
 

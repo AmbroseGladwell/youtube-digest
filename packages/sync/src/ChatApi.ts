@@ -1,5 +1,6 @@
 import type {
   ChatQuestionInput,
+  ChatSpeechEvent,
   ChatStreamEvent,
   ChatUsage,
   ProjectId,
@@ -30,5 +31,9 @@ export interface ChatApi {
     onProgress?: (event: ChatProgress) => void,
   ): Promise<ChatOutcome>;
   usage(): Promise<ChatUsage>;
+  // Read aloud: docs/features/chat-read-aloud.md, "The live lane". Refusals throw the API's error.
+  speak(chatId: string, message: number, onEvent: (event: ChatSpeechEvent) => void, signal?: AbortSignal): Promise<void>;
+  // False when this server has no voice, so the controls can hide.
+  warmSpeech(): Promise<boolean>;
   refreshSuggestedQuestions(scope: SuggestedQuestionScope): Promise<SuggestedQuestionRefreshStatus>;
 }

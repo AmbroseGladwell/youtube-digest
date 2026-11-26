@@ -1,0 +1,97 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+}
+
+.button {
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--chat-raised, var(--surface));
+    color: var(--ink);
+  }
+
+  @media (pointer: coarse) {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+.on {
+  background: var(--chat-raised, var(--surface));
+  color: var(--ink);
+}
+
+.spinner {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid currentcolor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+.line {
+  margin: 0.375rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.card {
+  margin-top: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.625rem;
+  background: var(--chat-raised, var(--surface));
+  font-size: 0.8125rem;
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.cardText {
+  margin: 0.125rem 0 0;
+  color: var(--muted);
+}
+
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

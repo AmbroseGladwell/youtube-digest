@@ -5,6 +5,8 @@ export interface MediaSessionOverride {
   onPause: () => void;
   onNext: () => void;
   onPrevious: () => void;
+  // A chat answer read aloud owns the lock screen with no narration loaded (OV-418).
+  own?: { state: "playing" | "paused"; artworkUrl: string | null };
 }
 
 let current: MediaSessionOverride | null = null;

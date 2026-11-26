@@ -132,7 +132,7 @@ test.describe("Chat's waits and its usage meter", () => {
 
     await reader.chat.verifyMeterReads("60% of chat used · Resets 1 December");
     const settings = await (await launcher.appShell.openSettings()).openSection("usage");
-    await settings.verifyPlanUsageCellReads("chat", ["67% used"]);
+    await settings.verifyPlanUsageCellReads("chat", ["67% used", "Listening to an answer uses some too."]);
   });
 
   test("from 90% the line warns once, and offers the plans that give more (376c)", async ({ launcher, backendSimulator }) => {
@@ -149,7 +149,7 @@ test.describe("Chat's waits and its usage meter", () => {
       .toEqual([{ name: "reader.chat.meterShown", props: expect.objectContaining({ state: "warning", plan: "free" }) }]);
     await reader.chat.followMeterPlans();
     await launcher.settingsPage.openSection("usage");
-    await launcher.settingsPage.verifyPlanUsageCellReads("chat", ["92% used", "Nearly used up"]);
+    await launcher.settingsPage.verifyPlanUsageCellReads("chat", ["92% used", "Nearly used up. Listening to an answer uses some too."]);
   });
 
   test("on the Ask page, too little left for a library question says overview questions still work (376h)", async ({

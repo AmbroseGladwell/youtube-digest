@@ -8,6 +8,7 @@ import { AppearanceRuntime } from "../features/appearance/AppearanceRuntime.js";
 import { ErrorReportingRuntime } from "../features/errors/ErrorReportingRuntime.js";
 import { CookingTimersRuntime } from "../features/cookingTimers/CookingTimersRuntime.js";
 import { PlayerRuntime } from "../features/player/PlayerRuntime.js";
+import { ReadAloudRuntime } from "../features/chats/readAloud/ReadAloudRuntime.js";
 import { ShareRuntime } from "../features/shares/ShareRuntime.js";
 import { FeedbackRuntime } from "../features/feedback/FeedbackRuntime.js";
 import { SyncRuntime } from "../features/sync/SyncRuntime.js";
@@ -102,13 +103,15 @@ export const App = ({
                                               <LibraryMoveRuntime>
                                                 <OnboardingRunRuntime>
                                                   <PlayerRuntime>
-                                                    <CookingTimersRuntime scope="reader">
-                                                      <ShareRuntime>
-                                                        <FeedbackRuntime>
-                                                          <RouterProvider router={router} />
-                                                        </FeedbackRuntime>
-                                                      </ShareRuntime>
-                                                    </CookingTimersRuntime>
+                                                    <ReadAloudRuntime>
+                                                      <CookingTimersRuntime scope="reader">
+                                                        <ShareRuntime>
+                                                          <FeedbackRuntime>
+                                                            <RouterProvider router={router} />
+                                                          </FeedbackRuntime>
+                                                        </ShareRuntime>
+                                                      </CookingTimersRuntime>
+                                                    </ReadAloudRuntime>
                                                   </PlayerRuntime>
                                                 </OnboardingRunRuntime>
                                               </LibraryMoveRuntime>

@@ -152,3 +152,67 @@ test("asking for suggested questions posts the scope and reads back what the ser
     { url: "https://o.example/api/suggested-questions/refresh", body: { scope: { kind: "project", projectId: PROJECT } } },
   ]);
 });
+
+const ndjsonCut = (lines: unknown[], cuts = 5) => {
+  const sent: Array<{ url: string; init: RequestInit }> = [];
+  const text = lines.map((line) => `${JSON.stringify(line)}\n`).join("");
+  const fetch = async (input: string | URL | Request, init: RequestInit = {}): Promise<Response> => {
+    sent.push({ url: String(input), init });
+    const encoder = new TextEncoder();
+    return new Response(
+      new ReadableStream({
+        start(controller) {
+          for (let start = 0; start < text.length; start += cuts) {
+            controller.enqueue(encoder.encode(text.slice(start, start + cuts)));
+          }
+          controller.close();
+        },
+      }),
+      { status: 200, headers: { "content-type": "application/x-ndjson" } },
+    );
+  };
+  return { sent, fetch };
+};
+
+test("an answer read aloud arrives line by line, cut anywhere, and each line is one event", async () => {
+  const events = [
+    { type: "sentences", sentences: [{ place: { part: "text" }, block: 0, start: 0, end: 12 }] },
+    { type: "audio", first: 0, count: 1, sentenceStartsSeconds: [0], durationSeconds: 1.5, audioBase64: "bTRh" },
+    { type: "done" },
+  ];
+  const { sent, fetch } = ndjsonCut(events);
+  const heard: unknown[] = [];
+
+  await createFetchChatApi({ baseUrl: "https://overview.example", fetch }).speak(`${OVERVIEW}:${QUESTION.conversationId}`, 1, (event) =>
+    heard.push(event),
+  );
+
+  assert.deepEqual(heard, events);
+  assert.equal(sent[0]?.url, `https://overview.example/api/chat-records/${OVERVIEW}%3A${QUESTION.conversationId}/messages/1/speech`);
+  assert.equal(sent[0]?.init.method, "POST");
+});
+
+test("a refused read aloud throws the API's own error with its quota", async () => {
+  const fetch = async () =>
+    new Response(
+      JSON.stringify({ error: { code: "too_many_requests", message: "You've used this month's chat.", details: { quota: "chat-month" } } }),
+      {
+        status: 429,
+        headers: { "content-type": "application/json" },
+      },
+    );
+
+  await assert.rejects(
+    createFetchChatApi({ baseUrl: "https://overview.example", fetch }).speak("x", 1, () => undefined),
+    (error: unknown) => error instanceof SyncRequestError && error.details?.quota === "chat-month",
+  );
+});
+
+test("a warm-up refused for a spent allowance still has a voice, a server without one says so, and any other failure is an error", async () => {
+  const answering = (status: number) => async () => new Response(null, { status });
+
+  assert.equal(await createFetchChatApi({ baseUrl: "https://overview.example", fetch: answering(204) }).warmSpeech(), true);
+  assert.equal(await createFetchChatApi({ baseUrl: "https://overview.example", fetch: answering(429) }).warmSpeech(), true);
+  assert.equal(await createFetchChatApi({ baseUrl: "https://overview.example", fetch: answering(503) }).warmSpeech(), false);
+  await assert.rejects(createFetchChatApi({ baseUrl: "https://overview.example", fetch: answering(500) }).warmSpeech(), SyncTransportError);
+});

@@ -103,6 +103,8 @@ const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink",
 const ChatAbout = z.enum(["video", "episode", "article", "recipe"]);
 const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation", "otherOverview"]);
 const AskScope = z.enum(["library", "project"]);
+const ReadAloudScope = z.enum(["overview", "library", "project"]);
+const READ_ALOUD_PROPS = { plan: Plan, voice: NarrationVoice, scope: ReadAloudScope, sentences: z.number().int().nonnegative() };
 // OV-376: what the chat meter showed: the quiet line, the warning, the month spent, or too little left for a library question.
 const ChatMeterState = z.enum(["half", "warning", "month", "library"]);
 // What a conversation in the Ask drawer is over: the drawer lists overviews' too (OV-363).
@@ -119,7 +121,16 @@ const PlayerMainButton = z.enum(["play", "pause", "cancel", "starting", "bufferi
 export const PlayerState = z.enum(["ready", "preparing", "playing", "paused", "buffering", "ended", "failed", "busy"]);
 export type PlayerState = z.infer<typeof PlayerState>;
 // Where a listen was started from, for the wait that press led to.
-export const PlaybackFrom = z.enum(["playerBar", "masthead", "miniPlayer", "libraryRow", "mediaSession", "cooking", "readAloud"]);
+export const PlaybackFrom = z.enum([
+  "playerBar",
+  "masthead",
+  "miniPlayer",
+  "libraryRow",
+  "mediaSession",
+  "cooking",
+  "readAloud",
+  "chatAnswer",
+]);
 export type PlaybackFrom = z.infer<typeof PlaybackFrom>;
 // app-core's PlayerSource, which PlayerEngine keeps this in step with.
 export const PlaybackSource = z.enum(["audio", "pacer"]);
@@ -1731,6 +1742,31 @@ export const analyticsEvents = {
     },
   },
   // docs/features/feedback.md, "Slice 2: the screens". Never the text.
+  chat: {
+    readAloud: {
+      started: event(
+        "The reader starts an answer read aloud: which control, how many sentences, and whether it replayed the device's copy (OV-418)",
+        {
+          ...READ_ALOUD_PROPS,
+          control: z.enum(["top", "bottom"]),
+          replay: z.boolean(),
+        },
+      ),
+      paused: event("The reader pauses an answer being read aloud", READ_ALOUD_PROPS),
+      resumed: event("The reader resumes a paused answer", READ_ALOUD_PROPS),
+      completed: event("An answer read aloud played to its end", READ_ALOUD_PROPS),
+      stopped: event("An answer read aloud was dropped before its end: another answer, narration, or leaving", READ_ALOUD_PROPS),
+      failed: event("Nothing of an answer could be read aloud, or the voice couldn't be reached", {
+        ...READ_ALOUD_PROPS,
+        reason: z.enum(["nothing", "transport"]),
+      }),
+      refused: event("Reading an answer aloud was refused because the month's or day's chat was spent", {
+        plan: Plan,
+        scope: ReadAloudScope,
+        quota: z.enum(["month", "day"]),
+      }),
+    },
+  },
   feedback: {
     box: {
       opened: event("The reader opens the feedback box, from the account menu or an overview's menu", {

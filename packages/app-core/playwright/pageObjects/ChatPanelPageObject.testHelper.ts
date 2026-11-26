@@ -11,6 +11,7 @@ import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChip
 import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewOn/ChatDrewOnTestIds.js";
 import { chatSourceChipTestIds } from "../../src/features/chats/components/ChatSourceChip/ChatSourceChipTestIds.js";
 import { floatingTipTestIds } from "../../src/components/shared/FloatingTip/FloatingTipTestIds.js";
+import { readAloudControlTestIds } from "../../src/features/chats/components/ReadAloudControl/ReadAloudControlTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
 import { conversationSearchTestIds } from "../../src/features/chats/components/ConversationSearch/ConversationSearchTestIds.js";
@@ -266,6 +267,38 @@ export class ChatPanelPageObject extends PageObject {
     );
 
   hoverAnswer = (index: number) => this.step(`hoverAnswer ${index}`, () => this.answers().nth(index).hover());
+
+  private readAloud = (index: number, control: "top" | "bottom") =>
+    this.answers().nth(index).locator(`[data-testid="${readAloudControlTestIds.play}"][data-control="${control}"]`);
+
+  pressReadAloud = (index: number, control: "top" | "bottom" = "bottom") =>
+    this.step(`pressReadAloud ${index} ${control}`, () => this.readAloud(index, control).click());
+
+  hoverReadAloud = (index: number) => this.step(`hoverReadAloud ${index}`, () => this.readAloud(index, "bottom").hover());
+
+  verifyReadAloudIs = (index: number, status: "idle" | "starting" | "playing" | "paused", name: string) =>
+    this.step(`verifyReadAloudIs ${index} ${status}`, async () => {
+      await expect(this.readAloud(index, "bottom")).toHaveAttribute("data-status", status);
+      await expect(this.readAloud(index, "bottom")).toHaveAccessibleName(name);
+    });
+
+  verifyReadAloudOffered = (index: number, control: "top" | "bottom", offered: boolean) =>
+    this.step(`verifyReadAloudOffered ${index} ${control} ${offered}`, () =>
+      expect(this.readAloud(index, control)).toHaveCount(offered ? 1 : 0),
+    );
+
+  verifySpokenSentence = (text: string) =>
+    this.step(`verifySpokenSentence ${text}`, () => expect(this.panel().locator("[data-spoken]")).toHaveText(text));
+
+  verifyStartAgainOffered = (index: number, offered: boolean) =>
+    this.step(`verifyStartAgainOffered ${index} ${offered}`, () =>
+      expect(this.answers().nth(index).getByTestId(readAloudControlTestIds.again)).toHaveCount(offered ? 1 : 0),
+    );
+
+  verifyReadAloudProblem = (index: number, text: string) =>
+    this.step(`verifyReadAloudProblem ${index} ${text}`, () =>
+      expect(this.answers().nth(index).getByTestId(readAloudControlTestIds.problem)).toHaveText(text),
+    );
 
   verifyMenuIsOffered = (offered: boolean) =>
     this.step(`verifyMenuIsOffered ${offered}`, () =>

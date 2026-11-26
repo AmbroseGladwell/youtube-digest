@@ -5,6 +5,7 @@ import {
   CURRENT_SCHEMA_VERSIONS,
   type FeedbackRequest,
   chatRecordId,
+  spokenAnswer,
   type Chat,
   type ChatCitation,
   type ChatAnswerSections,
@@ -199,16 +200,21 @@ interface SimulatedResponse {
   status: number;
   body?: unknown;
   stream?: unknown[];
+  lines?: unknown[];
 }
 
-const fulfil = (route: Route, { status, body, stream }: SimulatedResponse): Promise<void> =>
-  stream === undefined
+const fulfil = (route: Route, { status, body, stream, lines }: SimulatedResponse): Promise<void> => {
+  if (lines !== undefined) {
+    return route.fulfill({ status, contentType: "application/x-ndjson", body: lines.map((line) => `${JSON.stringify(line)}\n`).join("") });
+  }
+  return stream === undefined
     ? route.fulfill({ status, contentType: "application/json", body: status === 204 ? "" : JSON.stringify(body) })
     : route.fulfill({
         status,
         contentType: "text/event-stream",
         body: stream.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(""),
       });
+};
 
 export interface ChatAnswerReply {
   text: string;
@@ -282,6 +288,9 @@ export class BackendSimulator {
   #chatReplies: ChatReply[] = [];
   #chatQuestions: ChatQuestionSent[] = [];
   #chatRecords = new Map<string, Chat & { rev: number }>();
+  #speechReplies: Array<{ status: number; error?: Record<string, unknown> }> = [];
+  #speechAsked: Array<{ chatId: string; message: number }> = [];
+  #hasVoice = true;
   #lastMonthOursSpent = false;
   #chatUsage: ChatUsage = { plan: "free", resetsOn: "2026-10-01", used: 0, limit: 100, share: 0, libraryFits: true };
   #generatedOutputOverrides: Record<string, unknown> = {};
@@ -1306,6 +1315,24 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route(/\/api\/chat-records\/[^/]+\/messages\/\d+\/speech$/, (route) =>
+      this.#respond(route, EndpointKey.CHAT_SPEECH, {
+        onDefault: () => {
+          const parts = new URL(route.request().url()).pathname.split("/");
+          return this.#speak(decodeURIComponent(parts.at(-4) ?? ""), Number(parts.at(-2)));
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no voice" } } }),
+      }),
+    );
+
+    await this.#page.route("**/api/speech/warm", (route) =>
+      this.#respond(route, EndpointKey.SPEECH_WARM, {
+        onDefault: () =>
+          this.#hasVoice ? { status: 204 } : { status: 503, body: { error: { code: "unavailable", message: "Simulated: no voice" } } },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no voice" } } }),
+      }),
+    );
+
     await this.#page.route("**/api/chat-usage", (route) =>
       this.#respond(route, EndpointKey.CHAT_USAGE, {
         onDefault: () => ({ status: 200, body: this.#chatUsage }),
@@ -1631,6 +1658,40 @@ export class BackendSimulator {
     getState: (id: OverviewId) => this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId), id),
     failStateWritesFor: (id: OverviewId) =>
       this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.failStateWritesFor(overviewId), id),
+  };
+
+  speech = {
+    refuseWith: (status: number, error: Record<string, unknown>): void => {
+      this.#speechReplies.push({ status, error });
+    },
+    failWith: (): void => {
+      this.#speechReplies.push({ status: 500, error: { code: "internal_error", message: "Simulated" } });
+    },
+    withoutVoice: (): void => {
+      this.#hasVoice = false;
+    },
+    asked: () => this.#speechAsked,
+  };
+
+  // Audio that won't decode, so a read stays on its first sentence for the test to look at.
+  #speak = (chatId: string, message: number): SimulatedResponse => {
+    this.#speechAsked.push({ chatId, message });
+    const refusal = this.#speechReplies.shift();
+    if (refusal !== undefined) {
+      return { status: refusal.status, body: { error: { message: "Simulated", ...refusal.error } } };
+    }
+    const answer = this.#chatRecords.get(chatId)?.messages[message];
+    const sentences = answer?.from === "answer" ? spokenAnswer(answer) : [];
+    return {
+      status: 200,
+      lines: [
+        { type: "sentences", sentences: sentences.map(({ place, block, start, end }) => ({ place, block, start, end })) },
+        ...(sentences.length === 0
+          ? []
+          : [{ type: "audio", first: 0, count: 1, sentenceStartsSeconds: [0], durationSeconds: 1, audioBase64: "AAAA" }]),
+        { type: "done" },
+      ],
+    };
   };
 
   chats = {

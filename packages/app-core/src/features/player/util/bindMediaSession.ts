@@ -30,6 +30,18 @@ export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
   const update = () => {
     const { track, status, source } = engine.getSnapshot();
     const override = currentMediaSessionOverride();
+    if (override?.own !== undefined) {
+      const { state, artworkUrl } = override.own;
+      session.metadata = new MediaMetadata({
+        title: override.title,
+        artist: override.artist,
+        album: "The Overview",
+        artwork: artworkUrl === null ? [] : [{ src: artworkUrl }],
+      });
+      session.playbackState = state;
+      lastTrack = null;
+      return;
+    }
     if (override !== null && track !== null) {
       session.metadata = new MediaMetadata({ title: override.title, artist: override.artist, album: "The Overview" });
       session.playbackState = status === "playing" || status === "buffering" ? "playing" : "paused";
@@ -97,6 +109,11 @@ export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
     const override = currentMediaSessionOverride();
     setHandler("nexttrack", override === null ? null : () => override.onNext());
     setHandler("previoustrack", override === null ? null : () => override.onPrevious());
+    const owned = override?.own !== undefined;
+    for (const [action, handler] of handlers.filter(([name]) => name === "seekbackward" || name === "seekforward" || name === "seekto")) {
+      setHandler(action, owned ? null : handler);
+    }
+    seekToOffered = !owned;
     update();
   };
   const stopOverride = onMediaSessionOverride(applyOverride);

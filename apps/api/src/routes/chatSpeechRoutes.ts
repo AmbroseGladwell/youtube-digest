@@ -6,6 +6,7 @@ import {
   chatConversationId,
   chatOwnerOfId,
   redactErrorMessage,
+  SPEECH_WARM_PATH,
   spokenAnswer,
   type ChatSpeechEvent,
   type Plan,
@@ -89,7 +90,7 @@ export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage,
 
   const payerOf = async (accountId: AccountId): Promise<Payer> => ({ accountId, plan: await accountPlan(sql, accountId) });
 
-  app.post("/speech/warm", async (request, reply) => {
+  app.post(SPEECH_WARM_PATH, async (request, reply) => {
     if (speech === null) {
       throw new ApiError("unavailable", NO_VOICE);
     }

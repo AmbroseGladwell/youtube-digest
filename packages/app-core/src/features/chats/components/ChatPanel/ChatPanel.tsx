@@ -35,6 +35,9 @@ import { ChatAnswerActions } from "../ChatAnswerActions/ChatAnswerActions.js";
 import { ChatConversationList } from "../ChatConversationList/ChatConversationList.js";
 import { ChatConversationMenu } from "../ChatConversationMenu/ChatConversationMenu.js";
 import { ChatComposer } from "../ChatComposer/ChatComposer.js";
+import { ReadAloudBack } from "../ReadAloudBack/ReadAloudBack.js";
+import { useAnswerReadAloud } from "../../readAloud/useAnswerReadAloud.js";
+import { useFollowReading } from "../../readAloud/useFollowReading.js";
 import { ChatDrewOn } from "../ChatDrewOn/ChatDrewOn.js";
 import { ChatStreamedText } from "../ChatStreamedText/ChatStreamedText.js";
 import { ChatMonthLimit } from "../ChatMonthLimit/ChatMonthLimit.js";
@@ -164,6 +167,14 @@ export const ChatPanel = ({
   useChatMeterShown(chatMeterStateOf(wait?.kind ?? null, meter), (state) =>
     analytics.reader.chat.meterShown({ overviewId: overview.id, state, plan: usage?.plan ?? "free" }),
   );
+  const readAloudOf = useAnswerReadAloud({
+    chatId: chat === null ? null : chat.id,
+    about: { scope: "overview", title: "Chat answer", artist: overview.source.title, artworkUrl: sourceImage(overview.source) },
+    monthWaitShown: wait !== null,
+    offerPlans: (usage?.plan ?? "free") !== "plus",
+    onPlansFollowed: () => analytics.reader.chat.plansFollowed({ overviewId: overview.id }),
+  });
+  const following = useFollowReading(body);
   const others = chats.filter((each) => each !== chat).length;
   const questions = overview.followUpQuestions ?? [];
   const sets = Math.ceil(questions.length / FOLLOW_UP_QUESTIONS_SHOWN);
@@ -347,6 +358,8 @@ export const ChatPanel = ({
                 onClick={() => setRevealed(index)}
               >
                 <ChatAnswer
+                  spoken={readAloudOf(index).spoken}
+                  top={readAloudOf(index).top}
                   text={message.text}
                   inSource={message.inSource}
                   citations={message.citations}
@@ -376,10 +389,11 @@ export const ChatPanel = ({
                   actions={(sources) => (
                     <ChatAnswerActions
                       answer={message.text}
-                      latest={index === latestAnswerAt && pending === null}
                       onSaid={say}
                       onCopied={() => analytics.reader.chat.answerCopied({ overviewId: overview.id })}
+                      readAloud={readAloudOf(index).control}
                       sources={sources}
+                      below={readAloudOf(index).below}
                     />
                   )}
                 />
@@ -523,6 +537,7 @@ export const ChatPanel = ({
       {view === "conversation" && (
         <div className={styles.foot}>
           {toast !== null && <div className={styles.toastSpot}>{toast}</div>}
+          {following.lost && <ReadAloudBack onBack={following.back} />}
           {suggestions.length > 0 && (
             <div className={styles.suggestions} data-testid={chatPanelTestIds.suggestions}>
               <div className={styles.suggestionsHead}>
