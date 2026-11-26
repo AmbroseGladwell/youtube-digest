@@ -66,12 +66,39 @@ export interface SuggestedQuestionRefresherOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
+export type DropReason = "badPair" | "textLimits" | "notOneSentence" | "samePair" | "noRoom";
+
+export interface RefreshFunnel {
+  candidates: number;
+  labelsReal: number;
+  labelsStretch: number;
+  labelsNotConnected: number;
+  labelsFailed: number;
+  pairsToWriter: number;
+  writerReturned: number;
+  dropped: Record<DropReason, number>;
+  skippedOnWrite: number;
+}
+
 export interface RefreshResult {
   outcome: RefreshOutcome;
   scopes: string[];
   pairsLabelled: number;
   questionsWritten: number;
+  funnel: RefreshFunnel;
 }
+
+const emptyFunnel = (): RefreshFunnel => ({
+  candidates: 0,
+  labelsReal: 0,
+  labelsStretch: 0,
+  labelsNotConnected: 0,
+  labelsFailed: 0,
+  pairsToWriter: 0,
+  writerReturned: 0,
+  dropped: { badPair: 0, textLimits: 0, notOneSentence: 0, samePair: 0, noRoom: 0 },
+  skippedOnWrite: 0,
+});
 
 export interface RefreshStart {
   status: SuggestedQuestionRefreshStatus;
@@ -109,6 +136,18 @@ const NEW_SENTENCE = /[.?!]\s+\S/;
 export const isOneSentence = (text: string): boolean => !NEW_SENTENCE.test(text.trim());
 
 const projectLine = (project: Project) => `- ${project.name}${project.purpose === null ? "" : `: ${project.purpose}`}`;
+
+const countLabel = (funnel: RefreshFunnel, label: PairLabel | null) => {
+  if (label === null) {
+    funnel.labelsFailed += 1;
+  } else if (label.verdict === "real") {
+    funnel.labelsReal += 1;
+  } else if (label.verdict === "stretch") {
+    funnel.labelsStretch += 1;
+  } else {
+    funnel.labelsNotConnected += 1;
+  }
+};
 
 const withTensionsFirst = (pairs: readonly LabelledPair[]): LabelledPair[] =>
   [...pairs].sort((x, y) => Number(TENSIONS.has(y.label.relation)) - Number(TENSIONS.has(x.label.relation)));
@@ -162,7 +201,7 @@ export class SuggestedQuestionRefresher {
   }
 
   async #run(accountId: AccountId, refreshId: string, plan: Plan, log: FastifyBaseLogger): Promise<RefreshResult | null> {
-    const progress: RefreshResult = { outcome: "failed", scopes: [], pairsLabelled: 0, questionsWritten: 0 };
+    const progress: RefreshResult = { outcome: "failed", scopes: [], pairsLabelled: 0, questionsWritten: 0, funnel: emptyFunnel() };
     try {
       Object.assign(progress, await this.#fill(accountId, progress, log));
       await this.#refreshes.finish(refreshId, this.#options.clock(), progress);
@@ -175,6 +214,7 @@ export class SuggestedQuestionRefresher {
           projects: progress.scopes.filter((key) => key !== "library").length,
           pairsLabelled: progress.pairsLabelled,
           questionsWritten: progress.questionsWritten,
+          ...progress.funnel,
         }),
       );
       return progress;
@@ -183,6 +223,7 @@ export class SuggestedQuestionRefresher {
         apiLogLines.questions.refreshFailed({
           reason: error instanceof Error ? error.constructor.name : "unknown",
           pairsLabelled: progress.pairsLabelled,
+          ...progress.funnel,
         }),
       );
       await this.#refreshes.finish(refreshId, this.#options.clock(), { ...progress, outcome: "failed" }).catch(() => undefined);
@@ -192,6 +233,7 @@ export class SuggestedQuestionRefresher {
 
   async #fill(accountId: AccountId, progress: RefreshResult, log: FastifyBaseLogger): Promise<RefreshResult> {
     const { records, clock } = this.#options;
+    const { funnel } = progress;
     const now = clock();
     const questions = readAll(
       await records.listLive(accountId, "suggestedQuestion", "%"),
@@ -218,6 +260,7 @@ export class SuggestedQuestionRefresher {
         project === undefined ? await libraryCandidates(sources, accountId) : await projectCandidates(sources, accountId, project.members);
       const limit = project === undefined ? LIBRARY_PAIRS_LABELLED : PROJECT_PAIRS_LABELLED;
       const fresh = candidates.filter((candidate) => !asked.has(askedPairKey(slots.scopeKey, [candidate.first, candidate.second])));
+      funnel.candidates += fresh.length;
       toLabel.push(...fresh.slice(0, limit).map((candidate) => ({ slots, candidate })));
     }
     if (toLabel.length === 0) {
@@ -259,6 +302,7 @@ export class SuggestedQuestionRefresher {
           { model: QUESTION_LABEL_MODEL, shape: PAIR_LABEL_SHAPE, schema: PairLabel, detail: "label" },
           log,
         ).catch(() => null);
+        countLabel(funnel, label);
         return label === null ? [] : [{ slots, candidate, label }];
       }),
     );
@@ -268,6 +312,7 @@ export class SuggestedQuestionRefresher {
         slots.slots + SPARE_PAIRS_PER_SCOPE,
       ),
     );
+    funnel.pairsToWriter = kept.length;
     if (kept.length === 0) {
       return { ...progress, outcome: "no-pairs" };
     }
@@ -304,8 +349,13 @@ export class SuggestedQuestionRefresher {
       log,
     );
 
-    const outcomes = await writeSuggestedQuestions(records, accountId, keptQuestions(written, kept), clock());
-    return { ...progress, outcome: "written", questionsWritten: outcomes.filter((outcome) => outcome !== null).length };
+    funnel.writerReturned = written.questions.length;
+    const { questions: toWrite, dropped } = keptQuestions(written, kept);
+    funnel.dropped = dropped;
+    const outcomes = await writeSuggestedQuestions(records, accountId, toWrite, clock());
+    const questionsWritten = outcomes.filter((outcome) => outcome !== null).length;
+    funnel.skippedOnWrite = toWrite.length - questionsWritten;
+    return { ...progress, outcome: "written", questionsWritten };
   }
 
   async #eligibleProjects(accountId: AccountId): Promise<EligibleProject[]> {
@@ -373,29 +423,46 @@ export class SuggestedQuestionRefresher {
 }
 
 // Code keeps only what the record and the round allow: docs/features/suggested-questions.md, "Writing".
-export const keptQuestions = (written: WrittenQuestions, kept: readonly LabelledPair[]): NewSuggestedQuestion[] => {
+export interface KeptQuestions {
+  questions: NewSuggestedQuestion[];
+  dropped: Record<DropReason, number>;
+}
+
+export const keptQuestions = (written: WrittenQuestions, kept: readonly LabelledPair[]): KeptQuestions => {
   const taken = new Map<ScopeSlots, number>();
   const usedPairs = new Set<string>();
   const out: NewSuggestedQuestion[] = [];
+  const dropped = emptyFunnel().dropped;
+  const reasonToDrop = (row: LabelledPair, text: string): DropReason | null => {
+    if (!SuggestedQuestionText.safeParse(text).success) {
+      return "textLimits";
+    }
+    if (!isOneSentence(text)) {
+      return "notOneSentence";
+    }
+    if (usedPairs.has(`${row.slots.scopeKey}|${pairKeyOf(row.candidate)}`)) {
+      return "samePair";
+    }
+    if (out.length >= NEW_QUESTIONS_PER_REFRESH || (taken.get(row.slots) ?? 0) >= row.slots.slots) {
+      return "noRoom";
+    }
+    return null;
+  };
   for (const { pair, question } of written.questions) {
     const row = Number.isInteger(pair) ? kept[pair - 1] : undefined;
     const text = question.trim();
-    if (
-      row === undefined ||
-      out.length >= NEW_QUESTIONS_PER_REFRESH ||
-      !SuggestedQuestionText.safeParse(text).success ||
-      !isOneSentence(text)
-    ) {
+    if (row === undefined) {
+      dropped.badPair += 1;
       continue;
     }
-    const pairKey = `${row.slots.scopeKey}|${pairKeyOf(row.candidate)}`;
-    const count = taken.get(row.slots) ?? 0;
-    if (usedPairs.has(pairKey) || count >= row.slots.slots) {
+    const reason = reasonToDrop(row, text);
+    if (reason !== null) {
+      dropped[reason] += 1;
       continue;
     }
-    usedPairs.add(pairKey);
-    taken.set(row.slots, count + 1);
+    usedPairs.add(`${row.slots.scopeKey}|${pairKeyOf(row.candidate)}`);
+    taken.set(row.slots, (taken.get(row.slots) ?? 0) + 1);
     out.push({ scope: row.slots.scope, overviewIds: [row.candidate.first, row.candidate.second], text });
   }
-  return out;
+  return { questions: out, dropped };
 };

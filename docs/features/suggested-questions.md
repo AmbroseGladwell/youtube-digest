@@ -242,6 +242,22 @@ the chat allowance.
 started refresh ends, with its `outcome`, whether it filled the library, how many projects, the
 pairs labelled and the questions written. Never a question, a title, an id or a cost.
 
+The ending line also carries the funnel (`RefreshFunnel`, OV-424), so a refresh that fills fewer
+slots than it had says where the rest went:
+
+- `candidates`: fresh pairs found across the scopes filled, before each scope's labelling limit.
+- `labelsReal`, `labelsStretch`, `labelsNotConnected`, and `labelsFailed` for a label call that
+  threw.
+- `pairsToWriter`: the real pairs sent to the writer, up to each scope's slots plus its spare.
+- `writerReturned`: the questions in the writer's reply.
+- `dropped`, by the first rule each failed in `keptQuestions`: `badPair` (no such pair),
+  `textLimits`, `notOneSentence`, `samePair` (a second question on a pair), `noRoom` (the scope
+  or the refresh was full).
+- `skippedOnWrite`: kept but skipped by `writeSuggestedQuestions`, because an overview or a
+  membership went meanwhile.
+
+A failed refresh logs what it counted before it threw on `api.questions.refreshFailed`.
+
 ## Slice 3: on the Ask page
 
 Everything the Ask page needs, as app-core code with no components or styles:

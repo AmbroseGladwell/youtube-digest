@@ -275,6 +275,29 @@ test("a refresh labels fresh pairs, writes what passes the record's rules, and c
     { plan: done.plan, status: done.status, library: done.library, projects: done.projects, written: done.questionsWritten },
     { plan: "plus", status: "started", library: true, projects: 0, written: 2 },
   );
+  assert.ok(Number(done.candidates) >= labelledPairs.length);
+  assert.deepEqual(
+    {
+      real: done.labelsReal,
+      stretch: done.labelsStretch,
+      notConnected: done.labelsNotConnected,
+      failed: done.labelsFailed,
+      toWriter: done.pairsToWriter,
+      returned: done.writerReturned,
+      dropped: done.dropped,
+      skippedOnWrite: done.skippedOnWrite,
+    },
+    {
+      real: labelledPairs.length,
+      stretch: 0,
+      notConnected: 0,
+      failed: 0,
+      toWriter: Math.min(labelledPairs.length, 4),
+      returned: 6,
+      dropped: { badPair: 1, textLimits: 1, notOneSentence: 1, samePair: 1, noRoom: 0 },
+      skippedOnWrite: 0,
+    },
+  );
   const logged = JSON.stringify(refreshLines);
   for (const forbidden of ["Focus", "bedtime", library.newest, library.linked]) {
     assert.ok(!logged.includes(forbidden), `the log line carries ${forbidden}`);
