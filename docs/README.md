@@ -200,6 +200,10 @@ Five folders, five different questions.
   telling a private one from a missing one, the preview and its estimate counted in code,
   followed playlists synced and what each device has seen kept on it, checking on opening,
   Settings › YouTube playlists, unfollowing, and the From line an overview keeps.
+- `followed-feeds.md` — following a podcast, a blog or a YouTube channel by its feed (OV-219):
+  the decisions taken with the owner, reading RSS and Atom with each entry's own kind, when
+  reading may stop early, the feed's label, finding a site's feed, and what 22 real feeds
+  showed.
 - `projects.md` — what the reader is working on, built for their assistant to use: a name, a
   purpose line and a set of overviews; membership as one synced record per project and
   overview with a dated removal and a merge that commutes; deleting a project or an overview

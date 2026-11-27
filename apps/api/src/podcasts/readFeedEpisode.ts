@@ -1,6 +1,7 @@
 import type { PodcastTranscriptLink } from "@overview/domain";
 import { Parser } from "htmlparser2";
 import { htmlToText } from "@overview/transcripts";
+import { FEED_TEXT_TAGS, feedDate, feedDurationSeconds, webUrl } from "../feeds/feedValues.js";
 
 export interface FeedItem {
   guid: string | null;
@@ -29,36 +30,6 @@ export interface FeedEpisode {
 }
 
 const NEIGHBOURS = 10;
-
-const webUrl = (value: string | undefined): string | null => {
-  if (value === undefined) {
-    return null;
-  }
-  try {
-    const url = new URL(value.trim());
-    return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
-  } catch {
-    return null;
-  }
-};
-
-export const feedDurationSeconds = (value: string): number | null => {
-  const text = value.trim();
-  if (/^\d+(\.\d+)?$/.test(text)) {
-    const seconds = Math.round(Number(text));
-    return seconds > 0 ? seconds : null;
-  }
-  if (!/^\d+(:\d{1,2}){1,2}$/.test(text)) {
-    return null;
-  }
-  const seconds = text.split(":").reduce((total, part) => total * 60 + Number(part), 0);
-  return seconds > 0 ? seconds : null;
-};
-
-const feedDate = (value: string): string | null => {
-  const time = Date.parse(value.trim());
-  return Number.isNaN(time) ? null : new Date(time).toISOString();
-};
 
 const emptyItem = (): FeedItem => ({
   guid: null,
@@ -172,10 +143,10 @@ export const readFeedEpisode = async (chunks: AsyncIterable<string>, isWanted: (
           if (name === "link") {
             item.pageUrl = webUrl(value);
           }
-          if ((name === "content:encoded" || (name === "description" && notesHtml === "")) && value !== "") {
+          if ((name === FEED_TEXT_TAGS.contentEncoded || (name === FEED_TEXT_TAGS.description && notesHtml === "")) && value !== "") {
             notesHtml = value;
           }
-          if (name === "itunes:summary" && notesHtml === "" && value !== "") {
+          if (name === FEED_TEXT_TAGS.itunesSummary && notesHtml === "" && value !== "") {
             notesHtml = value;
           }
         }

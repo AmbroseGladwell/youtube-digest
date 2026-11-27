@@ -1,4 +1,5 @@
 import { Parser } from "htmlparser2";
+import { ATOM_TYPE, RSS_TYPE } from "../feeds/feedValues.js";
 
 export interface PageMeta {
   meta: ReadonlyMap<string, string>;
@@ -7,7 +8,7 @@ export interface PageMeta {
   title: string | null;
 }
 
-const FEED_TYPES = new Set(["application/rss+xml", "application/atom+xml", "application/xml", "text/xml"]);
+const FEED_TYPES = new Set([RSS_TYPE, ATOM_TYPE, "application/xml", "text/xml"]);
 
 const absolute = (href: string | undefined, base: string): string | null => {
   if (href === undefined || href.trim() === "") {
