@@ -77,6 +77,7 @@ const fakeServer = ({ generate, reserve }: { generate?: Error; reserve?: Error }
     status: async () => ({ available: true }),
     profilePass: async () => ({ items: [] }),
     topics: async () => ({ names: [] }),
+    kindCheck: async () => ({ noteKind: "default" }),
     topicSuggestions: async () => ({ starter: [], newTopic: null }),
     usage: async () => {
       throw new Error("not asked");

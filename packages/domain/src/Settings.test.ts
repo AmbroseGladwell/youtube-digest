@@ -41,6 +41,14 @@ test("settings saved before chat read with questions answered here, and keep a r
   assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, questionsAnsweredHere: "yes" }).questionsAnsweredHere, true);
 });
 
+test("settings saved before About you was asked again read as not yet asked", () => {
+  const { aboutYouAskedAfterOnboarding: _, ...saved } = DEFAULT_SETTINGS;
+
+  assert.equal(Settings.parse(saved).aboutYouAskedAfterOnboarding, false);
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, aboutYouAskedAfterOnboarding: true }).aboutYouAskedAfterOnboarding, true);
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, aboutYouAskedAfterOnboarding: "yes" }).aboutYouAskedAfterOnboarding, false);
+});
+
 test("settings saved before the resources switch read with resources shown", () => {
   const { resources: _, ...before } = DEFAULT_SECTIONS_ENABLED;
   const read = Settings.parse({ ...DEFAULT_SETTINGS, sectionsEnabled: { ...before, selling: false } });

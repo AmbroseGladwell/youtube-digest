@@ -3,11 +3,14 @@ import type { FastifyInstance } from "fastify";
 import {
   type TrialToken,
   apiLogLines,
+  KIND_CHECK_PATH,
+  KindCheckInput,
   OurKeyGenerationRequest,
   ProfilePassInput,
   TRIAL_TOKEN_HEADER,
   TopicMatchInput,
   TopicSuggestionInput,
+  type KindCheckResult,
   type TopicMatchResult,
   type TopicSuggestionResult,
   type OurKeyGenerationStatus,
@@ -93,6 +96,14 @@ export const generationRoutes = (app: FastifyInstance, { generator, trials, sql,
   app.post("/generations/topics", { preHandler: smallPassLimit }, async (request) => {
     const input = parseOrThrow(TopicMatchInput, request.body, "The topic pass");
     const result: TopicMatchResult = { names: await smallPass((passes) => passes.topics(payerOf(request), input, request.log)) };
+    return result;
+  });
+
+  app.post(KIND_CHECK_PATH, { preHandler: smallPassLimit }, async (request) => {
+    const { spoken = false, ...sample } = parseOrThrow(KindCheckInput, request.body, "The kind check");
+    const result: KindCheckResult = {
+      noteKind: await smallPass((passes) => passes.kindCheck(payerOf(request), { ...sample, spoken }, request.log)),
+    };
     return result;
   });
 
