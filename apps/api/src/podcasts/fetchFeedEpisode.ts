@@ -7,7 +7,7 @@ export type FeedRead = { status: "feed"; feed: FeedEpisode } | { status: "failed
 const FEED = "application/rss+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.1";
 export const MOST_FEED_BYTES = 50 * 1024 * 1024;
 
-const decodedChunks = async function* (body: ReadableStream<Uint8Array>, mostBytes: number): AsyncGenerator<string> {
+export const decodedChunks = async function* (body: ReadableStream<Uint8Array>, mostBytes: number): AsyncGenerator<string> {
   const reader = body.getReader();
   const decoder = new TextDecoder("utf-8");
   let bytes = 0;

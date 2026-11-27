@@ -52,6 +52,7 @@ export interface TestAppOptions {
   fetchArticlePage?: BuildAppOptions["fetchArticlePage"];
   readPodcastEpisode?: BuildAppOptions["readPodcastEpisode"];
   podcastWeb?: BuildAppOptions["podcastWeb"];
+  feedWeb?: BuildAppOptions["feedWeb"];
   tiktokReader?: BuildAppOptions["tiktokReader"];
   socialReader?: BuildAppOptions["socialReader"];
   narration?: boolean;
@@ -89,6 +90,7 @@ export const createTestApp = async (
     fetchArticlePage,
     readPodcastEpisode,
     podcastWeb,
+    feedWeb,
     tiktokReader,
     socialReader,
   }: TestAppOptions = {},
@@ -146,6 +148,7 @@ export const createTestApp = async (
     ...(fetchArticlePage === undefined ? {} : { fetchArticlePage }),
     ...(readPodcastEpisode === undefined ? {} : { readPodcastEpisode }),
     ...(podcastWeb === undefined ? {} : { podcastWeb }),
+    ...(feedWeb === undefined ? {} : { feedWeb }),
     ...(tiktokReader === undefined ? {} : { tiktokReader }),
     ...(socialReader === undefined ? {} : { socialReader }),
     playlistReader: playlistReader ?? null,

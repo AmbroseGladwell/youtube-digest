@@ -572,6 +572,23 @@ export const apiLogLines = coded("api", {
   logs: {
     recordsDropped: line("warn", "log records dropped", "The log exporter's own buffer overflowed or a batch was refused."),
   },
+  feeds: {
+    read: line(
+      "info",
+      "feed read",
+      "A followed or previewed feed was asked for; `outcome` is stored (the copy was fresh), fetched, notModified, failing (waiting to try again), gone, busy (over our fetch limits) or failed, `reason` why it failed, `kind` the feed's label, `newEntries` how many entries were new, and `ms` how long it took. Never the feed or its entries.",
+    ),
+    lookedUp: line(
+      "info",
+      "feed looked up",
+      "A pasted link was turned into a feed to preview; `via` is how (feed, page, channel), `outcome` found or why not, and `ms` how long it took. Never the link.",
+    ),
+    forgotten: line(
+      "info",
+      "unchecked feeds forgotten",
+      "Stored feeds no follower had checked in 90 days were deleted; `count` is how many.",
+    ),
+  },
 });
 
 export const API_LOG_LINES: readonly LogLine[] = Object.values(apiLogLines).flatMap((area) => Object.values(area));

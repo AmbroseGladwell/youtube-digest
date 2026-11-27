@@ -33,6 +33,8 @@ export const rateLimits = {
   socialReadPerAddress: { name: "socialReadAddress", limit: 120, windowMs: HOUR_MS },
   trialPerAddress: { name: "trialAddress", limit: 10, windowMs: HOUR_MS },
   playlistPerAddress: { name: "playlistAddress", limit: 120, windowMs: HOUR_MS },
+  feedLookupPerAccount: { name: "feedLookupAccount", limit: 60, windowMs: HOUR_MS },
+  feedCheckPerAccount: { name: "feedCheckAccount", limit: 30, windowMs: HOUR_MS },
   eventsPerAccount: { name: "eventsAccount", limit: 60, windowMs: MINUTE_MS },
   anonymousEventsPerAddress: { name: "anonymousEventsAddress", limit: 60, windowMs: MINUTE_MS },
   sharedPageEventsPerAddress: { name: "sharedPageEventsAddress", limit: 60, windowMs: MINUTE_MS },

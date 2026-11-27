@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { feedKindOf, youTubeChannelIdOfFeed } from "./feedKindOf.js";
-import type { FeedEntry, FeedEntryKind } from "./readFeedItems.js";
+import type { FeedEntry, FeedEntryKind } from "@overview/domain";
 
 const entriesOf = (...kinds: FeedEntryKind[]): FeedEntry[] =>
   kinds.map((kind, index) => ({
