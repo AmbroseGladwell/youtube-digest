@@ -165,7 +165,7 @@ afterwards (`modal app stop overview-tts-spike`).
 `services/tts/modal_app.py` runs the same service (`create_app`, `/render/stream`, `/health`) on a Modal GPU:
 
 - **GPUs, in order:** T4, then an A10, then an L4, so a slow L4 never holds a reader up.
-- **Containers:** one render per container (`@modal.concurrent(max_inputs=1)`), staying up 5 s after its last request (20 s at first: the first real plays, 27 Nov, paid more for that idle than for speaking).
+- **Containers:** two renders share one container (`max_inputs` and `renders_at_once` 2), at most 5 containers at once, each staying up 5 s after its last request (20 s at first: the first real plays, 27 Nov, paid more for that idle than for speaking).
 - **Kokoro on the GPU:** `KokoroSynthesiser(providers=["CUDAExecutionProvider", …])`. A container where Kokoro didn't land on the GPU refuses to start rather than render slowly.
 - **Token:** every request needs `Authorization: Bearer <TTS_TOKEN>`, the Modal secret named after the app.
 - **Apps:** `overview-tts` for dev and `overview-tts-prod` for production, each deployed by `task deploy:tts:modal [ENV=prod]`. That puts the Bitwarden project's `TTS_TOKEN` into the secret, deploys, and checks that a call without the token gets 401.
@@ -199,6 +199,26 @@ With `TTS_MODAL_URL` set, both the live lane and the render queue ask Modal firs
   - Renders on Fly stay part of its fixed bill.
   - Modal's machine time is the request plus its 5 s scale-down, with no boot charge, since the container answers only once loaded.
   - Each render's `done` event names the card it ran on (`gpu`, from `nvidia-smi`), so an A10 or L4 standing in for a T4 is priced at its own list price (`gpuDollarsPerHour`); `TTS_MODAL_DOLLARS_PER_HOUR` is only for a render that names none.
+
+### Several readers at once (OV-431)
+
+Load test, 27 Nov 2026 (`services/tts/modal_load_test.py`, T4). Each reader played a chat answer chunk by chunk, as the app does: 1 sentence, then 2, 4 and 6. A gap means a chunk wasn't ready when the one before it finished playing.
+
+| Renders per container | 5 readers | 10 readers | 20 readers | Containers (5/10/20) |
+|---|---|---|---|---|
+| 1 | no gaps | no gaps | 1 gap, 0.3 s | 5 / 6 / 6 |
+| **2** | **no gaps** | **no gaps** | **no gaps** | **3 / 4 / 4** |
+| 4 | no gaps | 2 gaps, up to 0.75 s | all 20 gapped, up to 1.9 s | 2 / 4 / 7 |
+| 8 | no gaps | 1 near-gap | 6 gaps, up to 2.4 s | 1 / 2 / 3 |
+
+- **Two renders per container** is the only setting with no gaps at every load, and it needs fewer containers than one, so it's also cheaper. Above two, the GPU or the Python around it gets contended and chunks fall behind playback.
+- **First audio** was 1.5–3.9 s with a container running. Cold starts are unchanged.
+- **Modal starts a container only when the running ones are full**, and the 5 s scale-down drops it again. No spare containers are kept warm.
+
+**The API matches it:**
+- While Modal is in front, the live lane takes `TTS_MODAL_LIVE_SLOTS` (6) chat requests at once and the render queue `TTS_MODAL_RENDER_SLOTS` (4). Together that's the 10 renders of 5 containers.
+- Whatever falls back to Fly still waits for the pool's own limits: 1 for chat and 4 for renders (a `Slots` per lane in `speechNarrators`). A fallback never sends Fly more than one request per machine.
+- 5 containers leave room under the Starter plan's 10 GPUs at once for speech-to-text.
 
 ## The spoken script
 

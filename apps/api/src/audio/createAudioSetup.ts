@@ -18,6 +18,8 @@ export const createAudioSetup = (audio: NonNullable<AudioConfig>, runWorkers: bo
             narrator: createHttpNarrator(audio.modal.url, fetch, { host: "modal", token: audio.modal.token }),
             dollarsPerHour: audio.modal.dollarsPerHour,
             monthlyDollars: audio.modal.monthlyDollars,
+            liveSlots: audio.modal.liveSlots,
+            renderSlots: audio.modal.renderSlots,
           },
     runWorkers,
   };

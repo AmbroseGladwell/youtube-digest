@@ -139,6 +139,8 @@ export interface ModalSpeechSetup {
   narrator: Narrator;
   dollarsPerHour: number | null;
   monthlyDollars: number | null;
+  liveSlots?: number;
+  renderSlots?: number;
 }
 
 export interface TranscriptServiceSetup {
@@ -263,13 +265,13 @@ export const buildApp = async ({
           narrator: speechHosts.renders,
           costs: new AccountCostsRepository(sql),
           modalDollarsPerHour: audio.modal?.dollarsPerHour ?? null,
-          concurrency: Math.max(1, audio.concurrency - audio.liveSlots),
+          concurrency: audio.modal?.renderSlots ?? Math.max(1, audio.concurrency - audio.liveSlots),
         });
   const chatSpeech =
     audio === null || speechHosts === null || audio.liveSlots === 0
       ? null
       : {
-          lane: new LiveSpeechLane({ narrator: speechHosts.chat, slots: audio.liveSlots, clock }),
+          lane: new LiveSpeechLane({ narrator: speechHosts.chat, slots: audio.modal?.liveSlots ?? audio.liveSlots, clock }),
           prices: { fly: audio.dollarsPerMachineHour, modal: audio.modal?.dollarsPerHour ?? null },
         };
   app.decorate("audioQueue", audioQueue);

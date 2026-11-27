@@ -488,6 +488,7 @@ export const analyticsEvents = {
           pinnedTopics: z.number().int().nonnegative().optional(),
           setAside: z.number().int().nonnegative().optional(),
           searchLibrary: z.boolean().optional(),
+          plan: Plan.optional(),
         },
       ),
       sourcesAdded: event(
@@ -499,6 +500,7 @@ export const analyticsEvents = {
       ),
       sourcePinned: event('The reader pins an overview, a project or a topic with "@" for the next question', {
         kind: z.enum(["overview", "project", "topic"]),
+        plan: Plan.optional(),
       }),
       sourceRemoved: event("The reader removes a source from the next question, or clears them all", { all: z.boolean() }),
       searchLibrarySwitched: event("The reader turns Search my library on or off for the conversation", { on: z.boolean() }),
@@ -1636,6 +1638,7 @@ export const analyticsEvents = {
           pinnedProjects: z.number().int().nonnegative(),
           pinnedTopics: z.number().int().nonnegative().optional(),
           setAside: z.number().int().nonnegative(),
+          plan: Plan.optional(),
         },
       ),
       picked: event("An Ask question chose what to read, with how many overviews and how many it looked across, counted by code", {
@@ -1660,6 +1663,7 @@ export const analyticsEvents = {
       sourcePinned: event('The reader pins an overview, a project or a topic with "@" on the Ask page', {
         scope: AskScope,
         kind: z.enum(["overview", "project", "topic"]),
+        plan: Plan.optional(),
       }),
       sourceRemoved: event("The reader removes a source from the next Ask question, or clears them all", {
         scope: AskScope,
