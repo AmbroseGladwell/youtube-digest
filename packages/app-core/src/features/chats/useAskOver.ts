@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { chatRecordId, type Chat, type ChatAnswerSection, type ChatSource, type OverviewId } from "@overview/domain";
 import { createFetchChatApi, type AskOwner, type ChatApi } from "@overview/sync";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
+import { usePlan } from "../plus/usePlan.js";
 import { useSync } from "../sync/SyncContext.js";
 import { libraryAccountIdOf } from "../sync/types/SyncConnection.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
@@ -47,6 +48,7 @@ export const useAskOver = (owner: AskOwner, api?: ChatApi) => {
   const { connection } = useSyncConnection();
   const { syncNow } = useSync();
   const analytics = useAnalytics();
+  const { plan } = usePlan();
   const queryClient = useQueryClient();
   const [state, setState] = useState<AskOverState>(IDLE);
   const inFlight = useRef<AbortController | null>(null);
@@ -75,6 +77,7 @@ export const useAskOver = (owner: AskOwner, api?: ChatApi) => {
         pinnedProjects: extras.pins.projects.length,
         pinnedTopics: extras.pins.topics.length,
         setAside: extras.setAside.length,
+        plan,
       });
       setState({ status: "answering", conversationId, question, picking: null, picked: [], text: "", sources: null, sections: [] });
       try {
@@ -151,7 +154,7 @@ export const useAskOver = (owner: AskOwner, api?: ChatApi) => {
         }
       }
     },
-    [api, apiUrl, connection.token, ownerId, scope, queryClient, analytics, accountId, syncNow],
+    [api, apiUrl, connection.token, ownerId, scope, queryClient, analytics, plan, accountId, syncNow],
   );
 
   const stop = useCallback(() => inFlight.current?.abort(), []);

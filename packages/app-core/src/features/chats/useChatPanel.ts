@@ -9,6 +9,7 @@ import {
   type TopicId,
 } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
+import { usePlan } from "../plus/usePlan.js";
 import { chatKeys } from "./chatKeys.js";
 import { useDeleteChatMutation } from "./mutations/useDeleteChatMutation.js";
 import { useChatsQuery } from "./queries/chatsQuery.js";
@@ -58,6 +59,7 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
   const asking = useAskQuestion(overviewId, about);
   const deleteChat = useDeleteChatMutation();
   const analytics = useAnalytics();
+  const { plan } = usePlan();
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<ChatView>("conversation");
   const [conversationId, setConversationId] = useState<string>(newConversationId);
@@ -93,7 +95,7 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
       return;
     }
     setPinned((current) => [...current, item]);
-    analytics.reader.chat.sourcePinned({ overviewId, kind: item.kind });
+    analytics.reader.chat.sourcePinned({ overviewId, kind: item.kind, plan });
     setRemoved((current) => current.filter((id) => id !== item.id));
   };
   const unpin = (id: string) => {

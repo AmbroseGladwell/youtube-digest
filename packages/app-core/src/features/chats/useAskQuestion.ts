@@ -12,6 +12,7 @@ import {
 } from "@overview/domain";
 import { createFetchChatApi, type ChatApi } from "@overview/sync";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
+import { usePlan } from "../plus/usePlan.js";
 import { useSync } from "../sync/SyncContext.js";
 import { libraryAccountIdOf } from "../sync/types/SyncConnection.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
@@ -52,6 +53,7 @@ export const useAskQuestion = (overviewId: OverviewId, about: ChatSourceKind, ap
   const { connection } = useSyncConnection();
   const { syncNow } = useSync();
   const analytics = useAnalytics();
+  const { plan } = usePlan();
   const queryClient = useQueryClient();
   const [state, setState] = useState<AskState>(IDLE);
   const inFlight = useRef<AbortController | null>(null);
@@ -78,6 +80,7 @@ export const useAskQuestion = (overviewId: OverviewId, about: ChatSourceKind, ap
         pinnedTopics: extras.pins.topics.length,
         setAside: extras.setAside.length,
         searchLibrary: extras.searchLibrary,
+        plan,
       });
       setState({ status: "answering", conversationId, question, text: "", sources: null, sections: [] });
       try {
@@ -148,7 +151,7 @@ export const useAskQuestion = (overviewId: OverviewId, about: ChatSourceKind, ap
         }
       }
     },
-    [api, apiUrl, connection.token, overviewId, about, queryClient, analytics, accountId, syncNow],
+    [api, apiUrl, connection.token, overviewId, about, queryClient, analytics, plan, accountId, syncNow],
   );
 
   const stop = useCallback(() => inFlight.current?.abort(), []);
