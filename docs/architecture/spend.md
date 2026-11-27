@@ -20,7 +20,7 @@ estimated, and no model works anything out (`docs/prototype/constraints.md`).
 | Gemini | evals | generation | entered by hand: Gemini's cost needs a Google Cloud billing export to BigQuery |
 | Decodo | prod | transcripts | cost entered by hand: the plan's fee. Usage from the traffic statistics API: proxy traffic in GB and requests, each day |
 | Fly.io | prod | servers (the API app), narration (the TTS app) | entered by hand: Fly.io has no cost API |
-| Modal | unsplit | transcripts (speech-to-text) | entered by hand: one workspace runs dev's and prod's apps, and its cost isn't read yet. Inside the monthly credit, entered as `waived` |
+| Modal | unsplit | transcripts (speech-to-text), narration (Kokoro for narration and chat read aloud, since OV-423) | entered by hand from Modal's cost per app (`overview-stt*`, `overview-tts*`): one workspace runs dev's and prod's apps, and its cost isn't read yet. Inside the monthly credit, entered as `waived`. The API also meters both into `account_costs` and switches speech to the Fly pool once their month reaches `TTS_MODAL_MONTHLY_DOLLARS` (`tts-pre-rendered-speech.md`, "The API on Modal first") |
 | Cloudflare | unsplit (cost), prod and dev (usage) | storage, and any other service under its own name | cost from the billable usage API (alpha, FOCUS); usage from R2's analytics: storage in GB and requests per bucket, each day |
 
 A provider entered by hand shows as not tracked, with a reason saying what to enter, until
