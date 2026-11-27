@@ -15,7 +15,7 @@ const sameEntries = (a: readonly string[], b: readonly string[]) => a.length ===
 
 export interface AboutYouEditorProps {
   aboutYou: AboutYou;
-  size: "hero" | "card";
+  size: "hero" | "card" | "ask";
   topicNames: readonly string[];
   onChange: (section: AboutYouSection, entries: string[]) => void;
 }

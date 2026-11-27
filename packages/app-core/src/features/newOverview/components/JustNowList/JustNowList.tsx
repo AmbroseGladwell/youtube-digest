@@ -173,7 +173,16 @@ export const JustNowList = ({
         aria-label={row.title}
       >
         <Head run={run} row={row} />
-        {inProgress && (
+        {inProgress && run.aboutYou === "waiting" && (
+          <div className={styles.foot}>
+            <span className={styles.chip} data-testid={justNowListTestIds.waitingForYou}>
+              <StrokeIcon name="user" size={12} />
+              Waiting for you
+            </span>
+            <span data-testid={justNowListTestIds.status}>{row.finished}</span>
+          </div>
+        )}
+        {inProgress && run.aboutYou !== "waiting" && (
           <>
             <p className={styles.status} data-testid={justNowListTestIds.status}>
               <b>{row.label}</b>
@@ -182,6 +191,12 @@ export const JustNowList = ({
                 {row.detail === "" ? "" : ` · ${row.detail}`}
               </span>
             </p>
+            {run.aboutYou === "filled" && (
+              <span className={styles.personalised} data-testid={justNowListTestIds.personalised}>
+                <StrokeIcon name="sparkle" size={12} />
+                Personalised
+              </span>
+            )}
             <span className={styles.bar} aria-hidden="true">
               <i />
             </span>

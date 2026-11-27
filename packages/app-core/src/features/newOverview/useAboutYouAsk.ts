@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { aboutYouPatch, type AboutYou, type CaptureEntry, type Settings } from "@overview/domain";
+import { aboutYouIsEmpty, aboutYouPatch, type AboutYou, type AboutYouSkip, type CaptureEntry, type Settings } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { usePlan } from "../plus/usePlan.js";
 import { useUpdateSettingsMutation } from "../settings/mutations/useUpdateSettingsMutation.js";
@@ -7,6 +7,8 @@ import { typedEntryCount } from "../settings/util/aboutYouCopy.js";
 import { useStores } from "../../stores/StoresContext.js";
 import type { AboutToWrite } from "./api/generationPipeline.js";
 import { aboutYouAskDue, asksAboutYouBefore } from "./util/asksAboutYouBefore.js";
+
+export type AboutYouAskState = "waiting" | "filled" | "skipped";
 
 export interface AboutYouAsking {
   from: CaptureEntry;
@@ -17,13 +19,17 @@ export interface AboutYouAsk {
   asking: AboutYouAsking | null;
   saving: boolean;
   continueWith: (answer: AboutYou, topicNames: readonly string[]) => Promise<void>;
-  skip: (how: "skip" | "closed") => Promise<void>;
+  skip: (how: AboutYouSkip) => Promise<void>;
   // A surface able to show the ask holds it while mounted; with none, no run waits on it.
   host: () => () => void;
 }
 
 export interface AboutYouAskGate {
-  beforeWriting: (from: CaptureEntry, canAsk: () => boolean) => (about: AboutToWrite) => Promise<boolean>;
+  beforeWriting: (
+    from: CaptureEntry,
+    canAsk: () => boolean,
+    onState: (state: AboutYouAskState) => void,
+  ) => (about: AboutToWrite) => Promise<boolean>;
   // The run stopped while asked: it goes on, unanswered, and is asked again at the next save.
   letGo: () => void;
 }
@@ -36,40 +42,44 @@ export const useAboutYouAsk = (): AboutYouAsk & AboutYouAskGate => {
   const { plan } = usePlan();
   const [asking, setAsking] = useState<AboutYouAsking | null>(null);
   const [saving, setSaving] = useState(false);
-  const answeredRef = useRef<(() => void) | null>(null);
+  const answeredRef = useRef<((state: AboutYouAskState | null) => void) | null>(null);
   const hostsRef = useRef(0);
 
-  const letGo = useCallback(() => {
-    answeredRef.current?.();
+  const letGo = useCallback((state: AboutYouAskState | null = null) => {
+    answeredRef.current?.(state);
     answeredRef.current = null;
     setAsking(null);
   }, []);
 
   const beforeWriting = useCallback(
-    (from: CaptureEntry, canAsk: () => boolean) =>
+    (from: CaptureEntry, canAsk: () => boolean, onState: (state: AboutYouAskState) => void) =>
       async (about: AboutToWrite): Promise<boolean> => {
         const able = () => canAsk() && hostsRef.current > 0 && answeredRef.current === null;
         if (!able() || !aboutYouAskDue(await settingsStore.get()) || !(await asksAboutYouBefore(about)) || !able()) {
           return false;
         }
         analytics.capture.aboutYouAsk.shown({ plan, from, sourceKind: about.kind });
-        await new Promise<void>((resolve) => {
+        onState("waiting");
+        const state = await new Promise<AboutYouAskState | null>((resolve) => {
           answeredRef.current = resolve;
           setAsking({ from, sourceKind: about.kind });
         });
+        if (state !== null) {
+          onState(state);
+        }
         return true;
       },
     [settingsStore, analytics, plan],
   );
 
   const answer = useCallback(
-    async (patch: Partial<Settings>) => {
+    async (patch: Partial<Settings>, state: AboutYouAskState) => {
       setSaving(true);
       try {
         await updateSettings.mutateAsync({ ...patch, aboutYouAskedAfterOnboarding: true });
       } finally {
         setSaving(false);
-        letGo();
+        letGo(state);
       }
     },
     [updateSettings, letGo],
@@ -88,18 +98,18 @@ export const useAboutYouAsk = (): AboutYouAsk & AboutYouAskGate => {
         focus: aboutYou.focus.length,
         typed: typedEntryCount(aboutYou, topicNames),
       });
-      await answer(aboutYouPatch(aboutYou));
+      await answer(aboutYouPatch(aboutYou), aboutYouIsEmpty(aboutYou) ? "skipped" : "filled");
     },
     [asking, analytics, plan, answer],
   );
 
   const skip = useCallback(
-    async (how: "skip" | "closed") => {
+    async (how: AboutYouSkip) => {
       if (asking === null) {
         return;
       }
       analytics.capture.aboutYouAsk.skipped({ plan, ...asking, how });
-      await answer({});
+      await answer({}, "skipped");
     },
     [asking, analytics, plan, answer],
   );

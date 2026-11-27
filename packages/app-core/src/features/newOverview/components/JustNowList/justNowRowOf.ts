@@ -13,6 +13,8 @@ export interface JustNowRow {
   // The step running now, or one past the last once it's done.
   step: number;
   steps: number;
+  // What the last finished step said, beside "Waiting for you" (design 356f-2).
+  finished: string;
 }
 
 const kickerOf = (run: NewOverviewRun): string => {
@@ -72,5 +74,6 @@ export const justNowRowOf = (run: NewOverviewRun, now: number = Date.now()): Jus
     detail: current.detail,
     step: runningIndex === -1 ? doneCount + 1 : runningIndex + 1,
     steps: steps.length,
+    finished: steps.filter((step) => step.state === "done").at(-1)?.detail ?? "",
   };
 };

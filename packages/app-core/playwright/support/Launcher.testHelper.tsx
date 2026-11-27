@@ -65,6 +65,7 @@ import { createAccountThroughSample } from "../pageObjects/createAccountThroughS
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
 import { HowToApplyLinePageObject } from "../pageObjects/HowToApplyLinePageObject.testHelper.js";
 import { LearnedNoticePageObject } from "../pageObjects/LearnedNoticePageObject.testHelper.js";
+import { AboutYouAskPageObject } from "../pageObjects/AboutYouAskPageObject.testHelper.js";
 import { OnboardingNextStepsPageObject } from "../pageObjects/OnboardingNextStepsPageObject.testHelper.js";
 import { FirstOverviewMilestonePageObject } from "../pageObjects/FirstOverviewMilestonePageObject.testHelper.js";
 import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.testHelper.js";
@@ -104,6 +105,8 @@ export interface LaunchOptions {
   accentMirror?: boolean;
   onlyMyKey?: boolean;
   aboutYou?: AboutYou;
+  // True unless a scenario asks for it: only aboutYouAsk.iwft.ts meets the ask at a save (OV-356).
+  aboutYouAskedAfterOnboarding?: boolean;
   learned?: LearnedItems;
   keepLearning?: boolean;
   shareProfileWithAssistants?: boolean;
@@ -188,6 +191,7 @@ export class Launcher {
           ...(options.headImageSize === undefined ? {} : { headImageSize: options.headImageSize }),
           ...(options.onlyMyKey === undefined ? {} : { onlyMyKey: options.onlyMyKey }),
           ...(options.aboutYou === undefined ? {} : aboutYouPatch(options.aboutYou)),
+          aboutYouAskedAfterOnboarding: options.aboutYouAskedAfterOnboarding ?? true,
           ...(options.learned === undefined ? {} : { learned: options.learned }),
           ...(options.keepLearning === undefined ? {} : { keepLearning: options.keepLearning }),
           ...(options.shareProfileWithAssistants === undefined ? {} : { shareProfileWithAssistants: options.shareProfileWithAssistants }),
@@ -331,6 +335,10 @@ export class Launcher {
 
   get learnedNotice(): LearnedNoticePageObject {
     return new LearnedNoticePageObject(this.testContext);
+  }
+
+  get aboutYouAsk(): AboutYouAskPageObject {
+    return new AboutYouAskPageObject(this.testContext);
   }
 
   get onboardingNextSteps(): OnboardingNextStepsPageObject {

@@ -2,6 +2,7 @@ import type { Overview, PodcastPlatform, SocialPost, VideoSource, SavedCapture }
 import type { EpisodeTranscription } from "../../podcasts/types/EpisodeTranscription.js";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
 import type { RunError } from "./RunError.js";
+import type { AboutYouAskState } from "../useAboutYouAsk.js";
 
 export interface ArticleRun {
   title: string;
@@ -62,6 +63,8 @@ export interface NewOverviewRun {
   kept?: boolean;
   // Out of transcribing at the month's limit: kept, and transcribed and made after the reset (docs/features/kept-links.md).
   keptUntilReset?: boolean;
+  // Asked before writing (OV-356): waiting on the reader, then whether it was filled in.
+  aboutYou?: AboutYouAskState;
   error: RunError | null;
   // Kept on the run, not the form: docs/features/capture-reason.md, "Where it is written".
   captureReason: string;

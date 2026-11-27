@@ -25,6 +25,8 @@ import { FeedbackKind } from "./FeedbackKind.js";
 // What onboarding's link turned out to be, on every event after Start (327s).
 const OnboardingKind = z.enum(["video", "article", "recipe", "podcast"]);
 const AboutYouAskKind = z.enum(["video", "article", "podcast"]);
+export const AboutYouSkip = z.enum(["skip", "close", "escape", "scrim", "drag"]);
+export type AboutYouSkip = z.infer<typeof AboutYouSkip>;
 import { OVERVIEW_PARTS } from "./overviewParts.js";
 
 // docs/architecture/analytics.md, "What an event may carry" and "Adding a property".
@@ -1045,12 +1047,15 @@ export const analyticsEvents = {
         focus: z.number().int().nonnegative(),
         typed: z.number().int().nonnegative(),
       }),
-      skipped: event("The reader leaves the About you ask with Skip, or closes it, and it isn't asked again", {
-        plan: Plan,
-        from: CaptureEntry,
-        sourceKind: AboutYouAskKind,
-        how: z.enum(["skip", "closed"]),
-      }),
+      skipped: event(
+        "The reader leaves the About you ask with Skip, or closes it by ×, Escape, the scrim or a drag, and it isn't asked again",
+        {
+          plan: Plan,
+          from: CaptureEntry,
+          sourceKind: AboutYouAskKind,
+          how: AboutYouSkip,
+        },
+      ),
     },
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),

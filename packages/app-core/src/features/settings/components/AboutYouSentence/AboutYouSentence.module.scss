@@ -28,6 +28,16 @@
   line-height: 1.75;
 }
 
+// Design 356a: a size smaller than onboarding's, asked again at a save.
+.ask {
+  font-size: 1.125rem;
+  line-height: 1.75;
+
+  @media (min-width: 48rem) {
+    font-size: 1.25rem;
+  }
+}
+
 .section {
   @include controls.control-motion;
   display: inline-block;

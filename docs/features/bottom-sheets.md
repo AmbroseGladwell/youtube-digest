@@ -48,6 +48,9 @@ each one: a centred dialog, a popover, a side panel, or a sheet still. The share
   menu's long lists).
 - `onEscape`: Escape steps back a level (out of a rename or a merge in Manage tags) while ×
   still closes the whole sheet.
+- `onDismissed(how)`: told how it was closed (`close`, `escape`, `scrim` or `drag`) just before
+  `onClose`, for a sheet whose closing means something (About you asked at a save, OV-356, where
+  closing is Skip and counted by how). `describedBy` names the element that describes it.
 - `returnFocusTo`: where focus goes when what opened the sheet has gone by the time it closes
   (the account menu's item for Feedback, the selection bar for Add to topic: focus goes to
   Select).

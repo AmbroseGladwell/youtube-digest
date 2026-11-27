@@ -336,6 +336,7 @@ export class BackendSimulator {
   #ourKeyFilesInto: string[] = [];
   #topicMatches: string[] = [];
   #topicPasses: TopicMatchInput[] = [];
+  #kindChecks = 0;
   #topicSuggestion: TopicSuggestionResult | null = null;
   #topicSuggestionsHeld = false;
   #topicSuggestionsAsked: Array<{ input: TopicSuggestionInput; trialToken: string | null }> = [];
@@ -1252,6 +1253,16 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/generations/kind-check", (route) =>
+      this.#respond(route, EndpointKey.KIND_CHECK, {
+        onDefault: () => {
+          this.#kindChecks += 1;
+          return { status: 200, body: { noteKind: this.#generatedOutputOverrides.recipe ? "recipe" : "default" } };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no check" } } }),
+      }),
+    );
+
     await this.#page.route("**/api/generations/topics", (route) =>
       this.#respond(route, EndpointKey.TOPIC_MATCH, {
         onDefault: () => {
@@ -2065,6 +2076,7 @@ export class BackendSimulator {
       this.#topicMatches = names;
     },
     topicPasses: (): TopicMatchInput[] => [...this.#topicPasses],
+    kindChecks: (): number => this.#kindChecks,
     // Left unset, the suggestion pass fails.
     suggestsTopics: (result: TopicSuggestionResult): void => {
       this.#topicSuggestion = result;

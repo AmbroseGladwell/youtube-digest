@@ -5,10 +5,15 @@ import { StrokeIcon } from "../StrokeIcon/StrokeIcon.js";
 import styles from "./BottomSheet.module.scss";
 import { bottomSheetTestIds } from "./BottomSheetTestIds.js";
 
+export type SheetDismissal = "close" | "escape" | "scrim" | "drag";
+
 export interface BottomSheetProps {
   open: boolean;
   title: string;
   onClose: () => void;
+  // Told how, just before onClose, for a sheet whose closing means something (OV-356).
+  onDismissed?: (how: SheetDismissal) => void;
+  describedBy?: string;
   closeLabel?: string;
   onBack?: () => void;
   // Replaces the title's heading with the sheet's own; the title still names the dialog. Null leaves the head to the body.
@@ -53,6 +58,8 @@ export const BottomSheet = ({
   open,
   title,
   onClose,
+  onDismissed,
+  describedBy,
   closeLabel = "Close",
   onBack,
   head,
@@ -163,6 +170,7 @@ export const BottomSheet = ({
     const speed = moved / Math.max(1, event.timeStamp - started.startedAt);
     setOffset(0);
     if (moved > started.height / 2 || speed > FLICK) {
+      onDismissed?.("drag");
       onClose();
     } else if (moved < -GROW) {
       setFull(true);
@@ -180,14 +188,19 @@ export const BottomSheet = ({
       role={role === "alertdialog" ? "alertdialog" : undefined}
       aria-labelledby={labelledBy ?? (head === undefined ? titleId : undefined)}
       aria-label={labelledBy === undefined && head !== undefined ? title : undefined}
+      aria-describedby={describedBy}
       onCancel={(event) => {
         event.preventDefault();
         if (dismissible) {
+          if (onEscape === undefined) {
+            onDismissed?.("escape");
+          }
           (onEscape ?? onClose)();
         }
       }}
       onClick={(event) => {
         if (event.target === dialog.current && dismissible) {
+          onDismissed?.("scrim");
           onClose();
         }
       }}
@@ -237,7 +250,10 @@ export const BottomSheet = ({
               <button
                 type="button"
                 className={styles.round}
-                onClick={onClose}
+                onClick={() => {
+                  onDismissed?.("close");
+                  onClose();
+                }}
                 aria-label={closeLabel}
                 data-testid={bottomSheetTestIds.close}
               >

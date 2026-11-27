@@ -11,4 +11,6 @@ export const justNowListTestIds = {
   keepNotice: "JustNowList.keepNotice",
   keepIt: "JustNowList.keepIt",
   kept: "JustNowList.kept",
+  waitingForYou: "JustNowList.waitingForYou",
+  personalised: "JustNowList.personalised",
 };

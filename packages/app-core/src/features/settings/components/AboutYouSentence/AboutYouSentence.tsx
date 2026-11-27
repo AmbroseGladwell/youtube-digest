@@ -6,7 +6,7 @@ import { aboutYouSentenceTestIds } from "./AboutYouSentenceTestIds.js";
 
 export interface AboutYouSentenceProps {
   aboutYou: AboutYou;
-  size: "hero" | "panel" | "card";
+  size: "hero" | "panel" | "card" | "ask";
   openSection: AboutYouSection | null;
   settling: AboutYouSection | null;
   rising: boolean;
