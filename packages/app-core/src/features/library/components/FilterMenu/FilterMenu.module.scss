@@ -77,11 +77,13 @@
   gap: 0.5rem;
 }
 
+// New topic at the left under Show all, Manage topics at the right (owner, 27 Nov 2026).
 .foldActions {
   display: flex;
+  flex-basis: 100%;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 0.5rem 1rem;
-  margin-left: auto;
 }
 
 .search {

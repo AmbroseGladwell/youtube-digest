@@ -193,8 +193,8 @@ and the sheet scrolls as a whole, and the description field grows with its text
   own: the frames draw the menu (10h-2) but not where it leads, and the merge step needs the
   topics to merge, which the reader then picks.
 - **The filter menu's Topic group already has New topic.** The design's foot holds only Show all
-  and Manage topics; with three links in the menu's width, New topic and Manage topics sit
-  together at the right, on the line under Show all when they don't fit.
+  and Manage topics. On the line under Show all, New topic sits at the far left and Manage
+  topics at the far right (owner, 27 Nov 2026).
 - **The dark-mode Merge and Save are the app's action colour**, as Ask and New are, not the
   frame's fixed orange.
 - **Escape out of a rename clears the pick**, as Cancel does, so a second pick starts fresh.
