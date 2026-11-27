@@ -330,6 +330,8 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `topicSuggestionTrial` | 5 | day, per trial token | `POST /api/generations/topic-suggestions` signed out: onboarding asks once per link, so five covers a few links tried (`tiers.md`) |
 | `topicSuggestionAddress` | 20 | day, per address | the same, across every token from one address, so a private window doesn't reset it |
 | `playlistAddress` | 120 | hour, per address | `GET /api/playlists/:id`: each read spends YouTube Data API quota shared by every reader (`docs/features/playlists.md`) |
+| `feedLookupAccount` | 60 | hour, per account | `POST /api/feeds/lookup`, a pasted link turned into a feed to preview; behind it, one stored copy per feed and our own fetch limits (`docs/features/followed-feeds.md`) |
+| `feedCheckAccount` | 30 | hour, per account | `POST /api/feeds/check`, up to 50 followed feeds at a time, asked on opening the app; a check inside a feed's 30 minutes fetches nothing (`docs/features/followed-feeds.md`) |
 | `sharePageAddress` | 600 | hour, per address | `GET /s/:token` and its card and audio |
 | `eventsAccount` | 60 | minute, per account | `POST /api/events`: a batch per two seconds at the most the app sends, with room for a second tab (`docs/architecture/analytics.md`) |
 | `anonymousEventsAddress` | 60 | minute, per address | `POST /api/events` without a session, and `POST /api/events/declined`: per address, because a reader without an account has no account to count against (`docs/features/analytics-consent.md`) |

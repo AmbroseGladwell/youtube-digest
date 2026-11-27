@@ -63,6 +63,7 @@ test("the tables the migrations create are there to be used", async () => {
       "connections",
       "email_changes",
       "feedback",
+      "feeds",
       "link_codes",
       "magic_links",
       "narration_render_usage",

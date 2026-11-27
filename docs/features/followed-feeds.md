@@ -8,8 +8,9 @@ as with a YouTube playlist (`playlists.md`, "Pasting a link"). New items arrive 
 (`capture-queue.md`, "Waiting on a pace"). Nothing is fetched, transcribed or written until
 the reader chooses one, and then it's made like any other link of its kind and counts once.
 
-**Built so far:** reading a feed (slice 1). The shared feed store, the follow record, the
-check and the screens follow in later slices of the same card.
+**Built so far:** reading a feed (slice 1), and the stored copy, the limits and the two
+routes (slice 2). The follow record, the check that fills the queue, and the screens follow
+in later slices of the same card.
 
 ## Decisions
 
@@ -71,6 +72,69 @@ post.
 (`youtube.com/feeds/videos.xml?channel_id=…`) is a YouTube channel; a feed that is at least
 half episodes is a Podcast; anything else is a Blog. A newsletter that mixes episodes and
 posts still makes each entry as its own kind.
+
+## The stored copy
+
+`feeds` (V0052) holds one row per feed address: its label, title, site and image, its newest
+50 entries, the `ETag` and `Last-Modified` it last sent, when it was last fetched and last
+checked, and how it has been failing. **It has no column for an account, a session or a
+reader, and must never have one**: a test holds that. Who follows a feed is the follower's
+own synced record, in a later slice.
+
+`createFeedReader` answers for a feed address (`apps/api/src/feeds/`):
+
+| The row | Answer (`freshness`) | Fetches |
+|---|---|---|
+| fetched under 30 minutes ago | `stored` | nothing |
+| gone | `gone` | nothing, ever again |
+| failing, before its next try | `failing`, the last good copy | nothing |
+| none, or older, and within our limits | `read` | the feed, asking only for what changed |
+| older, and over our limits | `stored`, the last good copy | nothing |
+| none, and over our limits | failed, `busy` | nothing |
+
+Every answer marks the row checked. A fetch that comes back `304` keeps the entries and moves
+the fetched time on. A fetch with entries puts the new ones on top of the stored ones,
+newest first, held to 50, and labels the feed again from them (`feedKindOf`).
+
+**Failing.** Each failure waits twice as long as the last before the next try, from 30
+minutes up to a day, or longer if the publisher's `Retry-After` asks for it (up to a day). A
+`410 Gone`, or seven days of failing, marks the feed gone, and it is never fetched again.
+The answer carries the last good copy, so a follower still sees what was there.
+
+**Forgetting.** At most once an hour, a read deletes the rows no follower has checked for 90
+days, logged as `api.feeds.forgotten` with the count.
+
+## Load and spend
+
+Feeds are read only when a follower asks, never on a schedule, so a feed none of its
+followers opens costs nothing. Beyond the 30-minute stored copy, `FEED_LIMITS` holds:
+
+- **One fetch per feed at a time.** Followers asking for the same feed while it is being
+  fetched share that one fetch.
+- **At most 16 fetches at once, and 4 to one host**, waiting up to 10 seconds for a slot.
+  YouTube is one host, so a reader following 20 channels has them read four at a time.
+- **At most 3,000 fetches an hour** on each machine. Past it, the stored copy answers.
+- **At most 20MB of a feed and 2MB of a page** are read.
+- Our own User-Agent, `FEED_USER_AGENT`, says it is a feed reader and where it's from.
+
+The limits are in memory on each machine, like the rate limits (`api.md`, "Rate limits"),
+so two machines during a deploy can briefly fetch twice as much.
+
+## The routes
+
+Both are signed in only, and never log the link, the feed or an entry (`api.feeds.read`,
+`api.feeds.lookedUp`).
+
+- `POST /api/feeds/lookup` `{ url }`: a pasted link to preview. A YouTube channel's
+  `/channel/UC…` link reads its own feed straight away. Any other link is read as a feed, and
+  if it isn't one, as a page whose feed link is read instead (`noFeedOnPage` if it names
+  none). Answers a `FeedRead`. 60 an hour per account.
+- `POST /api/feeds/check` `{ feedUrls }`: up to 50 followed feeds, each answered once, in the
+  order asked, four at a time. 30 an hour per account.
+
+Not yet looked up from a link: an Apple or Spotify show link (OV-106's directories find its
+feed, in the slice that recognises links on paste), and a YouTube `@handle` link, which is
+read as a page; whether YouTube serves that page to our server is still to check.
 
 ## Finding a site's feed
 

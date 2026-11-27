@@ -1,22 +1,9 @@
 import { Parser } from "htmlparser2";
+import type { FeedEntry, FeedEntryKind } from "@overview/domain";
 import { htmlToText } from "@overview/transcripts";
 import { FEED_TEXT_TAGS, feedDate, feedDurationSeconds, webUrl } from "./feedValues.js";
 
 export type FeedFormat = "rss" | "atom";
-export type FeedEntryKind = "episode" | "video" | "article";
-
-export interface FeedEntry {
-  id: string;
-  kind: FeedEntryKind;
-  title: string | null;
-  pageUrl: string | null;
-  publishedAt: string | null;
-  durationSeconds: number | null;
-  audioUrl: string | null;
-  youTubeVideoId: string | null;
-  imageUrl: string | null;
-  description: string;
-}
 
 export interface FeedListing {
   format: FeedFormat;
@@ -128,7 +115,7 @@ const entryOf = (draft: EntryDraft): FeedEntry | null => {
   };
 };
 
-const newestFirst = (entries: FeedEntry[]): FeedEntry[] =>
+export const newestFirst = (entries: FeedEntry[]): FeedEntry[] =>
   entries
     .map((entry, index) => ({ entry, index }))
     .sort((a, b) => (b.entry.publishedAt ?? "").localeCompare(a.entry.publishedAt ?? "") || a.index - b.index)

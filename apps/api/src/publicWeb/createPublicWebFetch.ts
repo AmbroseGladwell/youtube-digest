@@ -5,12 +5,18 @@ import { isPublicAddress } from "./isPublicAddress.js";
 
 export type PublicWebAnswer =
   | { status: "answered"; url: string; response: Response }
-  | { status: "failed"; reason: "closed" | "blocked" | "missing" | "no-answer" };
+  | { status: "failed"; reason: "closed" | "blocked" | "missing" | "no-answer"; httpStatus?: number; retryAfterSeconds?: number };
 
 export interface PublicWebFetchOptions {
   isAllowedAddress?: (address: string) => boolean;
   allowedPorts?: readonly string[];
   timeoutMs?: number;
+  userAgent?: string;
+}
+
+export interface PublicWebRequest {
+  accept: string;
+  headers?: Record<string, string>;
 }
 
 const TIMEOUT_MS = 20_000;
@@ -19,8 +25,39 @@ const WEB_PORTS: readonly string[] = ["", "80", "443"];
 const REFUSED_STATUSES = new Set([401, 402, 403, 407, 429, 451]);
 const MISSING_STATUSES = new Set([404, 410]);
 export const PUBLIC_WEB_USER_AGENT = "TheOverview/1.0 (fetches a link a reader pasted; +https://theoverview.app)";
+export const FEED_USER_AGENT = "TheOverview/1.0 (feed reader for people who follow this feed; +https://theoverview.app)";
+const NOT_MODIFIED = 304;
+
+export const retryAfterSecondsOf = (value: string | null, now: number): number | undefined => {
+  if (value === null || value.trim() === "") {
+    return undefined;
+  }
+  if (/^\d+$/.test(value.trim())) {
+    return Number(value.trim());
+  }
+  const at = Date.parse(value);
+  return Number.isNaN(at) ? undefined : Math.max(0, Math.ceil((at - now) / 1000));
+};
 
 class ClosedAddressError extends Error {}
+
+const reasonOf = (httpStatus: number): "blocked" | "missing" | "no-answer" => {
+  if (REFUSED_STATUSES.has(httpStatus)) {
+    return "blocked";
+  }
+  return MISSING_STATUSES.has(httpStatus) ? "missing" : "no-answer";
+};
+
+const failureOf = (response: Response): PublicWebAnswer => {
+  const httpStatus = response.status;
+  const retryAfterSeconds = retryAfterSecondsOf(response.headers.get("retry-after"), Date.now());
+  return {
+    status: "failed",
+    reason: reasonOf(httpStatus),
+    httpStatus,
+    ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
+  };
+};
 
 // Checked on connecting, because a name checked first can answer differently the second time.
 const guardedLookup =
@@ -75,6 +112,7 @@ export const createPublicWebFetch = ({
   isAllowedAddress = isPublicAddress,
   allowedPorts = WEB_PORTS,
   timeoutMs = TIMEOUT_MS,
+  userAgent = PUBLIC_WEB_USER_AGENT,
 }: PublicWebFetchOptions = {}) => {
   const dispatcher: Dispatcher = new Agent({ connect: { lookup: guardedLookup(isAllowedAddress) } });
 
@@ -89,7 +127,7 @@ export const createPublicWebFetch = ({
     return isIP(host) === 0 || isAllowedAddress(host);
   };
 
-  return async function fetchPublicWeb(link: string, { accept }: { accept: string }): Promise<PublicWebAnswer> {
+  return async function fetchPublicWeb(link: string, { accept, headers = {} }: PublicWebRequest): Promise<PublicWebAnswer> {
     const signal = AbortSignal.timeout(timeoutMs);
     try {
       let url = new URL(link);
@@ -101,7 +139,7 @@ export const createPublicWebFetch = ({
           dispatcher,
           signal,
           redirect: "manual",
-          headers: { accept, "user-agent": PUBLIC_WEB_USER_AGENT },
+          headers: { ...headers, accept, "user-agent": userAgent },
         });
         const location = response.headers.get("location");
         if (response.status >= 300 && response.status < 400 && location !== null) {
@@ -109,17 +147,13 @@ export const createPublicWebFetch = ({
           url = new URL(location, url);
           continue;
         }
+        if (response.status === NOT_MODIFIED) {
+          await response.body?.cancel();
+          return { status: "answered", url: url.href, response };
+        }
         if (!response.ok) {
           await response.body?.cancel();
-        }
-        if (REFUSED_STATUSES.has(response.status)) {
-          return { status: "failed", reason: "blocked" };
-        }
-        if (MISSING_STATUSES.has(response.status)) {
-          return { status: "failed", reason: "missing" };
-        }
-        if (!response.ok) {
-          return { status: "failed", reason: "no-answer" };
+          return failureOf(response);
         }
         return { status: "answered", url: url.href, response };
       }

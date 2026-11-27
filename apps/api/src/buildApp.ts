@@ -59,6 +59,9 @@ import { articleRoutes } from "./routes/articleRoutes.js";
 import { videoRoutes } from "./routes/videoRoutes.js";
 import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
 import { podcastRoutes } from "./routes/podcastRoutes.js";
+import { feedRoutes } from "./routes/feedRoutes.js";
+import { createFeedReader } from "./feeds/createFeedReader.js";
+import { FeedsRepository } from "./feeds/FeedsRepository.js";
 import { socialRoutes } from "./routes/socialRoutes.js";
 import { tiktokRoutes } from "./routes/tiktokRoutes.js";
 import { accountPlan } from "./auth/accountPlan.js";
@@ -74,7 +77,7 @@ import { createPodcastTranscriptions } from "./podcasts/createPodcastTranscripti
 import { PodcastTranscriptionsRepository } from "./podcasts/PodcastTranscriptionsRepository.js";
 import { TranscriptionQueue } from "./podcasts/TranscriptionQueue.js";
 import type { Transcriber } from "./podcasts/Transcriber.js";
-import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
+import { createPublicWebFetch, FEED_USER_AGENT } from "./publicWeb/createPublicWebFetch.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
 import type { VideoReader } from "./videos/youTubeDataApiVideoReader.js";
@@ -176,6 +179,7 @@ export interface BuildAppOptions {
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
   readPodcastEpisode?: ((link: string) => Promise<PodcastRead>) | undefined;
   podcastWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
+  feedWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
   podcastIndex?: ShowDirectory | null;
   // Reads TikTok links and their captions through the vendor; absent, /api/tiktok says it is unavailable.
   tiktokReader?: TikTokReader | null;
@@ -225,6 +229,7 @@ export const buildApp = async ({
   slowQueryMs = SLOW_QUERY_MS,
   fetchArticlePage = createArticlePageFetcher(),
   podcastWeb = createPublicWebFetch(),
+  feedWeb = createPublicWebFetch({ userAgent: FEED_USER_AGENT }),
   podcastIndex = null,
   youTubeEpisodes = null,
   readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb, appleBudget: APPLE_BUDGET, podcastIndex }),
@@ -371,6 +376,7 @@ export const buildApp = async ({
       suggestedQuestionRoutes(api, records, questionRefresher);
       captureRoutes(api, { records, transcripts, saves: captureSaves, claims: captureClaims, sql, clock });
       playlistRoutes(api, { reader: playlistReader, clock });
+      feedRoutes(api, { reader: createFeedReader({ feeds: new FeedsRepository(sql), fetchPublicWeb: feedWeb, clock }), clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
       const transcriptions =

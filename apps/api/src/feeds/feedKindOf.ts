@@ -1,6 +1,4 @@
-import type { FeedEntry } from "./readFeedItems.js";
-
-export type FeedKind = "podcast" | "youTubeChannel" | "blog";
+import type { FeedEntry, FeedKind } from "@overview/domain";
 
 export const youTubeChannelIdOfFeed = (feedUrl: string): string | null => {
   const url = new URL(feedUrl);
