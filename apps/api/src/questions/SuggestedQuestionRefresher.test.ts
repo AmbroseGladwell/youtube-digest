@@ -190,7 +190,8 @@ test("with every slot taken nothing calls a model, and the refresh doesn't count
   const library = await saveSmallLibrary(setting);
   const ids = [library.newest, library.sameTopic, library.otherTopic, library.linked, library.founders];
   for (let index = 0; index < 6; index += 1) {
-    await seedQuestion(setting, LIBRARY, [ids[index % 5]!, ids[(index + 2) % 5]!], `Question ${index}?`);
+    const id = await seedQuestion(setting, LIBRARY, [ids[index % 5]!, ids[(index + 2) % 5]!], `Question ${index}?`);
+    await markQuestion(setting, id, { shownAt: setting.testApp.clock.now.toISOString() });
   }
 
   assert.equal(await refreshed(setting), "started");
@@ -416,4 +417,57 @@ test("past twelve banked library questions the oldest are tombstoned, and asked 
   const left = new Set((await records.listLive(setting.account.accountId, "suggestedQuestion", "%")).map((row) => row.id));
   assert.equal(left.has(seeded[0]!), false);
   assert.ok([1, 12, 13, 14].every((index) => left.has(seeded[index]!)));
+});
+
+test("three questions the reader hasn't seen yet in the scope hold the refresh back", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setting = await setUpRefresh(t, { logger });
+  const library = await saveSmallLibrary(setting);
+  const seeded = [
+    await seedQuestion(setting, LIBRARY, [library.newest, library.founders], "First?"),
+    await seedQuestion(setting, LIBRARY, [library.sameTopic, library.founders], "Second?"),
+    await seedQuestion(setting, LIBRARY, [library.otherTopic, library.founders], "Third?"),
+  ];
+
+  assert.equal(await refreshed(setting), "not-due");
+  assert.equal(setting.labeller.requests.length, 0);
+  assert.equal(lines.find((line) => line.logCode === "api.questions.refreshed")!.unseenWaiting, 3);
+
+  await markQuestion(setting, seeded[0]!, { shownAt: setting.testApp.clock.now.toISOString() });
+  assert.equal(await refreshed(setting), "started");
+});
+
+test("after two refreshes the reader did nothing with, the gap doubles, and any mark puts it back", async (t) => {
+  const setting = await setUpRefresh(t, {
+    writerReply: { questions: [{ pair: 1, question: "Could a slow proving schedule say anything about fixing a bedtime?", rating: 5 }] },
+  });
+  await saveSmallLibrary(setting);
+  const saveAndWait = async (day: number, days: number) => {
+    setting.advanceDays(days);
+    await setting.save(`Note ${day}`, "Rest and routine both matter", ["A nap helps"], { savedAt: `2026-10-${10 + day}T09:00:00.000Z` });
+  };
+  const showAll = async () => {
+    for (const change of (await setting.account.changes()).changes) {
+      if (change.kind === "suggestedQuestion" && change.body !== undefined && !change.deleted && change.body.shownAt === null) {
+        await markQuestion(setting, change.id, { shownAt: setting.testApp.clock.now.toISOString() });
+      }
+    }
+  };
+
+  assert.equal(await refreshed(setting), "started");
+  await showAll();
+  await saveAndWait(1, 2);
+  assert.equal(await refreshed(setting), "started");
+  await showAll();
+  await saveAndWait(2, 2.5);
+  assert.equal(await refreshed(setting), "not-due", "two idle refreshes make the gap four days");
+  await saveAndWait(3, 1.6);
+  assert.equal(await refreshed(setting), "started");
+  await showAll();
+
+  await saveAndWait(4, 2.1);
+  assert.equal(await refreshed(setting), "not-due", "three idle refreshes make it eight");
+  const [latest] = (await setting.account.changes()).changes.filter((change) => change.kind === "suggestedQuestion" && !change.deleted);
+  await markQuestion(setting, latest!.id, { dismissedAt: setting.testApp.clock.now.toISOString() });
+  assert.equal(await refreshed(setting), "started", "hiding one counts as engaging");
 });

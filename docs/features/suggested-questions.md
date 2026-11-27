@@ -149,7 +149,10 @@ marked `failed`.
 | `SUGGESTED_QUESTION_PLANS` (`@overview/domain`) | BYO Plus, Plus | anything else is `free`, and nothing is recorded                           |
 | `QUESTIONS_MONTHLY_CAP_DOLLARS`                 | $0.40          | this calendar month's (UTC) `questions` costs at or over it stop a refresh |
 | `REFRESHES_PER_WINDOW` in `REFRESH_WINDOW_DAYS` | 3 in 7 days    | rolling                                                                    |
-| `REFRESH_GAP_DAYS`                              | 2              | since the last counted refresh started                                     |
+| `REFRESH_GAP_DAYS`                              | 2              | since the last counted refresh started, unless backing off                 |
+| `UNSEEN_QUESTIONS_WAITING`                      | 3              | that many unseen in the scope asked from stop a refresh                    |
+| `IDLE_REFRESHES_BEFORE_BACKOFF`                 | 2              | refreshes that wrote questions since the reader last engaged               |
+| `BACKOFF_GAP_MAX_DAYS`                          | 14             | the longest the gap grows                                                  |
 | `REFRESH_STALE_MINUTES`                         | 15             | a refresh still `running` after this no longer holds the lock              |
 
 - **Something new.** A refresh starts only when an overview was saved or changed (its record
@@ -159,6 +162,16 @@ marked `failed`.
   doesn't count against the next.
 - **One at a time.** The account's row is locked while the rules are checked, and a fresh
   `running` row is the lock. The cap is a design limit, not a spend figure (`cost-model.md`).
+- **Unseen questions waiting** (OV-424). A question is unseen while it is live, unasked and has
+  no `shownAt`, so the reader hasn't paged to it. With `UNSEEN_QUESTIONS_WAITING` (3), a page's
+  worth, unseen in the scope the refresh was asked from, it stops as `not-due` before anything
+  is checked or spent, and the log line carries `unseenWaiting`.
+- **Backing off** (OV-424). The reader engaged when they last asked a question, marked one Good
+  question or Not useful, or hid one (`lastEngagedAt`). Hide and Not useful count: a reader
+  sorting their questions is validating them and gets fresh ones (owner, 26 Nov 2026). Once
+  `IDLE_REFRESHES_BEFORE_BACKOFF` (2) refreshes have written questions since then, the gap
+  doubles for each (`refreshGapDays`): 4 days, then 8, up to `BACKOFF_GAP_MAX_DAYS` (14). Any
+  engagement puts it back to 2. A refusal while backing off logs `gapDays` and `idleRefreshes`.
 - **Opened scopes.** A paid reader's refresh records the scope it was asked from in
   `question_scopes_opened`, with the time. A project takes part only once its chat has been
   opened, most recently opened first.
