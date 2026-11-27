@@ -79,10 +79,14 @@ def error_response(status: int, code: str, message: str) -> JSONResponse:
 
 
 def create_app(
-    synthesiser: Synthesiser, idle_exit: IdleExit, report_exception: ExceptionReporter | None = None
+    synthesiser: Synthesiser,
+    idle_exit: IdleExit,
+    report_exception: ExceptionReporter | None = None,
+    renders_at_once: int = 1,
 ) -> FastAPI:
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
-    one_render_at_a_time = threading.Lock()
+    # One on a Fly CPU machine; a GPU can share between several (OV-431).
+    one_render_at_a_time = threading.BoundedSemaphore(renders_at_once)
 
     @app.middleware("http")
     async def under_request_id(request: Request, call_next):

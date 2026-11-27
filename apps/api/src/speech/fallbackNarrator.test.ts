@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { Narration, NarrationRequest, Narrator, SpeechHost } from "../audio/Narrator.js";
 import { createFallbackNarrator, type FallbackReason } from "./fallbackNarrator.js";
+import { Slots } from "./Slots.js";
 
 const REQUEST: NarrationRequest = { lines: ["One.", "Two."], voice: "af_heart", language: "en-us", renderVersion: 1 };
 
@@ -118,4 +119,39 @@ test("a reader who stops is not sent to Fly", async () => {
 
   await assert.rejects(pending);
   assert.deepEqual(fallback.asked, []);
+});
+
+test("only as many plays fall back to Fly at once as its pool takes; the rest wait their turn", async () => {
+  const fly: Array<() => void> = [];
+  const asked: string[] = [];
+  const holding: Narrator = {
+    async warm() {
+      return "fly";
+    },
+    narrate: (request) =>
+      new Promise<Narration>((resolve) => {
+        asked.push(request.lines[0]!);
+        fly.push(() => resolve(narration("fly")));
+      }),
+  };
+  const narrator = createFallbackNarrator({
+    primary: hostOf("modal", "fails").narrator,
+    fallback: holding,
+    firstLineMs: 8000,
+    primaryOpen: () => true,
+    onFallback: () => {},
+    fallbackSlots: new Slots(1),
+  });
+
+  const first = narrator.narrate({ ...REQUEST, lines: ["A."] }, "a", async () => {});
+  const second = narrator.narrate({ ...REQUEST, lines: ["B."] }, "b", async () => {});
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(asked, ["A."]);
+
+  fly.shift()!();
+  await first;
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(asked, ["A.", "B."]);
+  fly.shift()!();
+  await second;
 });
