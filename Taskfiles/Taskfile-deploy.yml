@@ -45,6 +45,18 @@ tasks:
     cmds:
       - BWS_PROJECT={{.PROD_PROJECT}} scripts/secrets.sh run sh services/stt/deploy_prod.sh
 
+  deploy:tts:modal:
+    desc: Deploy Kokoro on a Modal GPU (OV-423), dev by default or ENV=prod, with that project's TTS_TOKEN as its secret, printing no value
+    preconditions:
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+      - sh: test -x services/tts/.venv/bin/modal
+        msg: 'The Modal CLI is missing. Run: cd services/tts && uv sync --group benchmark'
+    vars:
+      ENV: '{{.ENV | default "dev"}}'
+    cmds:
+      - BWS_PROJECT={{if eq .ENV "prod"}}{{.PROD_PROJECT}}{{else}}overview-dev{{end}} OVERVIEW_TTS_APP={{if eq .ENV "prod"}}overview-tts-prod{{else}}overview-tts{{end}} scripts/secrets.sh run sh services/tts/deploy_modal.sh
+
   deploy:image:
     desc: Build the production image locally with Docker, as CI does, without deploying it
     preconditions:

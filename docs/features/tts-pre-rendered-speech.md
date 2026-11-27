@@ -123,6 +123,29 @@ python3 blind_listen.py --name <listen> --pair kokoro/af_heart:ming/US_Emma [--p
 Renders, results and picks go to `.local/tts-benchmark/`. Start Modal runs one at a time: starting six at once got a
 429 from the secrets fetch. Keep the Mac awake, too, because Modal stops an app whose client stops sending heartbeats.
 
+## On Modal (OV-423)
+
+`services/tts/modal_app.py` runs the same service (`create_app`, `/render/stream`, `/health`) on a Modal GPU:
+
+- **GPUs, in order:** T4, then an A10, then an L4, so a slow L4 never holds a reader up.
+- **Containers:** one render per container (`@modal.concurrent(max_inputs=1)`), staying up 20 s after its last request.
+- **Kokoro on the GPU:** `KokoroSynthesiser(providers=["CUDAExecutionProvider", …])`. A container where Kokoro didn't land on the GPU refuses to start rather than render slowly.
+- **Token:** every request needs `Authorization: Bearer <TTS_TOKEN>`, the Modal secret named after the app.
+- **Apps:** `overview-tts` for dev and `overview-tts-prod` for production, each deployed by `task deploy:tts:modal [ENV=prod]`. That puts the Bitwarden project's `TTS_TOKEN` into the secret, deploys, and checks that a call without the token gets 401.
+
+Measured through its HTTPS endpoint from London, 26 Nov 2026 (dev app):
+
+| | First line | Whole response |
+|---|---|---|
+| A sentence (4.9 s of audio), warm | 1.29 s | 1.38 s |
+| A sentence, cold | 6.56 s | 6.65 s |
+| A full note (274.5 s of audio), streamed | 1.05 s | 26.7 s (10x playback) |
+| 5 three-sentence chunks at once, warm | 0.7 s, 1.9 s, 3.1 s, 4.1 s, 5.3 s | |
+
+- **The endpoint adds about 0.7 s** to a warm sentence over calling the function directly (0.55 s). That's the trip from London to Modal's US region and its web routing.
+- **A whole note streams through without a cut.**
+- **Five readers at once queued on one warm container** instead of starting four more. Modal's autoscaler waits before adding containers, and the service renders one request at a time. Rendering several at once on one GPU, or keeping a spare container while busy (`buffer_containers`), is for when concurrency is real.
+
 ## The spoken script
 
 What gets narrated is `spokenScript(overview)` in `@overview/domain`: one entry for every `NoteLine` the reader shows, in order, headings included. Each entry is the line's `spoken` text when it has one and its `text` otherwise, passed through `speakable`. Five decisions are packed into that:
