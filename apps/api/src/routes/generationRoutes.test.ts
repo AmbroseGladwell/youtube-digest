@@ -515,6 +515,32 @@ test("signed out, onboarding has topics suggested on its trial", async () => {
   await testApp.close();
 });
 
+test("a kind check before writing answers an account on our key, costed to it, and refuses signed out", async () => {
+  const openAi = makeFakeOpenAi();
+  openAi.kindCheckAnswer = "recipe";
+  const testApp = await ourKeyApp(openAi);
+  const account = await makeAccount(testApp);
+  const sample = { title: "Lasagne", by: "A cook", description: "", opening: "Today we make lasagne.", spoken: true };
+
+  const signedIn = await account.inject({ method: "POST", url: "/api/generations/kind-check", body: sample });
+  const signedOut = await testApp.app.inject({
+    method: "POST",
+    url: "/api/generations/kind-check",
+    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
+    payload: sample,
+  });
+  const costs = await new AccountCostsRepository(testApp.sql).of({ accountId: account.accountId });
+
+  assert.equal(signedIn.statusCode, 200);
+  assert.deepEqual(signedIn.json(), { noteKind: "recipe" });
+  assert.equal(signedOut.statusCode, 401);
+  assert.deepEqual(
+    costs.map(({ detail, calls }) => [detail, calls]),
+    [["kindCheck", 1]],
+  );
+  await testApp.close();
+});
+
 test("topic suggestions need a trial the server issued, or an account", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await ourKeyApp(makeFakeOpenAi(suggestionAnswer), { logger });

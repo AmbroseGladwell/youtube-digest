@@ -54,6 +54,7 @@ import {
   type GenerationPipelineDeps,
   type GenerationProgress,
   type TikTokWords,
+  type AboutToWrite,
 } from "./generationPipeline.js";
 
 const VIDEO = makeOverview().source;
@@ -300,6 +301,120 @@ describe("regenerating", () => {
     await runOverviewGeneration(VIDEO.url, deps, { overviewId: previous.id, captureReason: () => "" });
 
     expect(saved[0]!.captureReason).toBeNull();
+  });
+});
+
+describe("asking before writing", () => {
+  it("writes with an answer saved while it waited, and times the wait as its own step", async () => {
+    const { deps, inputs, timings, tick, setAboutYou } = makeDeps();
+    const asked: AboutToWrite["kind"][] = [];
+
+    await runOverviewGeneration(VIDEO.url, deps, {
+      beforeWriting: async (about) => {
+        asked.push(about.kind);
+        tick(9_000);
+        setAboutYou({ who: ["nurse"], time: [], focus: [] });
+        return true;
+      },
+    });
+
+    expect(asked).toEqual(["video"]);
+    expect(inputs[0]!.readerContext).toBe("I'm a nurse.");
+    expect(timings[0]!.steps).toContainEqual({ step: "aboutYou", outcome: "answered", ms: 9_000 });
+  });
+
+  it("checks a video's kind only when asked to, once, and writes with that kind so the writer doesn't check again", async () => {
+    const { deps, inputs, timings } = makeDeps();
+    const samples: unknown[] = [];
+    const checkKind = async (sample: unknown) => {
+      samples.push(sample);
+      return "recipe" as const;
+    };
+
+    await runOverviewGeneration(VIDEO.url, { ...deps, checkKind }, { beforeWriting: async () => false });
+    await runOverviewGeneration(
+      VIDEO.url,
+      { ...deps, checkKind },
+      {
+        beforeWriting: async (about) => {
+          if (about.kind === "video") {
+            await about.noteKind();
+            await about.noteKind();
+          }
+          return false;
+        },
+      },
+    );
+
+    expect(samples).toEqual([expect.objectContaining({ title: VIDEO.title, opening: "Three cuts cover most of a week." })]);
+    expect(inputs[0]).not.toHaveProperty("noteKind");
+    expect(inputs[1]).toHaveProperty("noteKind", "recipe");
+    expect(timings.flatMap(({ steps }) => steps.map(({ step }) => step))).not.toContain("aboutYou");
+  });
+
+  it("answers a kind already known without checking, and a failed check as unknown, leaving the writer to check", async () => {
+    const { deps, inputs } = makeDeps();
+    const kinds: (string | null)[] = [];
+    const beforeWriting = async (about: AboutToWrite) => {
+      kinds.push(about.kind === "video" ? await about.noteKind() : about.kind);
+      return false;
+    };
+    const failing = async (): Promise<never> => {
+      throw new Error("Simulated: the provider is down");
+    };
+
+    await runOverviewGeneration(VIDEO.url, { ...deps, checkKind: failing }, { noteKind: "process", beforeWriting });
+    await runOverviewGeneration(VIDEO.url, { ...deps, checkKind: failing }, { beforeWriting });
+
+    expect(kinds).toEqual(["process", null]);
+    expect(inputs[1]).not.toHaveProperty("noteKind");
+  });
+
+  it("writes nothing when the run is stopped while it waits", async () => {
+    const { deps, inputs } = makeDeps();
+    let cancelled = false;
+
+    const run = runOverviewGeneration(VIDEO.url, deps, {
+      isCancelled: () => cancelled,
+      beforeWriting: async () => {
+        cancelled = true;
+        return true;
+      },
+    });
+
+    await expect(run).rejects.toBeInstanceOf(GenerationCancelledError);
+    expect(inputs).toEqual([]);
+  });
+
+  it("says whether an article is a recipe, from its read", async () => {
+    const asked: AboutToWrite[] = [];
+    const deps = {
+      overviewStore: {
+        listTopics: async () => [],
+        listClaims: async () => [],
+        listOverviews: async () => [],
+        listUnreadable: async () => [],
+        getOverview: async () => null,
+        saveOverview: async () => {},
+      } as unknown as OverviewStore,
+      settingsStore: { get: async () => DEFAULT_SETTINGS },
+      makeOverview: (async (_input, { id }) => makeArticleOverview({ id })) satisfies GenerationPipelineDeps["makeOverview"],
+    };
+    const beforeWriting = async (about: AboutToWrite) => {
+      asked.push(about);
+      return false;
+    };
+    await runArticleOverviewGeneration(async () => READ, deps, { beforeWriting });
+    await runArticleOverviewGeneration(
+      async () => ({ ...READ, article: { ...READ.article, url: `${ARTICLE_URL}-recipe`, recipe: {} as never } }) as ArticleRead,
+      deps,
+      { beforeWriting },
+    );
+
+    expect(asked).toEqual([
+      { kind: "article", recipe: false },
+      { kind: "article", recipe: true },
+    ]);
   });
 });
 

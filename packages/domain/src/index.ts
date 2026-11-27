@@ -15,6 +15,7 @@ export * from "./canonicalArticleUrl.js";
 export * from "./ExtractedArticle.js";
 export * from "./Recipe.js";
 export * from "./RecipeNote.js";
+export * from "./KindCheck.js";
 export * from "./NoteKind.js";
 export * from "./recipeActions.js";
 export * from "./recipeFacts.js";

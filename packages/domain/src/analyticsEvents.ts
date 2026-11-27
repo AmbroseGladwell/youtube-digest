@@ -24,6 +24,7 @@ import { FeedbackKind } from "./FeedbackKind.js";
 
 // What onboarding's link turned out to be, on every event after Start (327s).
 const OnboardingKind = z.enum(["video", "article", "recipe", "podcast"]);
+const AboutYouAskKind = z.enum(["video", "article", "podcast"]);
 import { OVERVIEW_PARTS } from "./overviewParts.js";
 
 // docs/architecture/analytics.md, "What an event may carry" and "Adding a property".
@@ -1026,6 +1027,29 @@ export const analyticsEvents = {
         from: CaptureEntry,
         reason: TranscriptionStop,
         source: TranscribedSource.optional(),
+      }),
+    },
+    // Asked once at a save after onboarding skipped it (OV-356); never what the sentence says.
+    aboutYouAsk: {
+      shown: event("About you is asked before this overview is written, because the reader's About you is empty", {
+        plan: Plan,
+        from: CaptureEntry,
+        sourceKind: AboutYouAskKind,
+      }),
+      continued: event("The reader leaves the About you ask with Continue, and how many entries each part holds", {
+        plan: Plan,
+        from: CaptureEntry,
+        sourceKind: AboutYouAskKind,
+        who: z.number().int().nonnegative(),
+        time: z.number().int().nonnegative(),
+        focus: z.number().int().nonnegative(),
+        typed: z.number().int().nonnegative(),
+      }),
+      skipped: event("The reader leaves the About you ask with Skip, or closes it, and it isn't asked again", {
+        plan: Plan,
+        from: CaptureEntry,
+        sourceKind: AboutYouAskKind,
+        how: z.enum(["skip", "closed"]),
       }),
     },
     newOverview: {
