@@ -1789,6 +1789,10 @@ export const analyticsEvents = {
         ...READ_ALOUD_PROPS,
         reason: z.enum(["nothing", "transport"]),
       }),
+      sentenceChosen: event(
+        "The reader taps a sentence of the answer being read to move the audio there, whether its audio had arrived, and whether playback was paused (OV-428)",
+        { plan: Plan, scope: ReadAloudScope, arrived: z.boolean(), paused: z.boolean() },
+      ),
       refused: event("Reading an answer aloud was refused because the month's or day's chat was spent", {
         plan: Plan,
         scope: ReadAloudScope,

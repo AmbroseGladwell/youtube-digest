@@ -2,7 +2,9 @@ import { Fragment, type ReactNode } from "react";
 import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { inlineMarks, placedMarks, type MarkedPiece } from "../../util/inlineMarks.js";
-import { spokenPieces, type SpokenRange } from "../../util/spokenPieces.js";
+import type { BlockReading } from "../../readAloud/SpokenSentenceContext.js";
+import { groupBySentence, sentencePieces } from "../../util/sentencePieces.js";
+import { ChatSentence } from "../ChatSentence/ChatSentence.js";
 import { chatAnswerTestIds } from "../ChatAnswer/ChatAnswerTestIds.js";
 import styles from "./ChatMarkedText.module.scss";
 import { chatMarkedTextTestIds } from "./ChatMarkedTextTestIds.js";
@@ -52,11 +54,11 @@ export const MarkedPieceView = ({ piece, className }: MarkedPieceViewProps) => {
 
 export interface ChatMarkedTextProps {
   text: string;
-  spoken?: SpokenRange | null;
+  reading?: BlockReading | null;
 }
 
-export const ChatMarkedText = ({ text, spoken = null }: ChatMarkedTextProps) => {
-  if (spoken === null) {
+export const ChatMarkedText = ({ text, reading = null }: ChatMarkedTextProps) => {
+  if (reading === null) {
     return (
       <>
         {inlineMarks(text).map((piece, index) => (
@@ -67,15 +69,16 @@ export const ChatMarkedText = ({ text, spoken = null }: ChatMarkedTextProps) => 
   }
   return (
     <>
-      {spokenPieces(placedMarks(text), spoken).map(({ piece, spoken: read }, index) =>
-        read ? (
-          <mark key={index} className={styles.spoken} data-spoken="">
-            <MarkedPieceView piece={piece} />
-          </mark>
+      {groupBySentence(sentencePieces(placedMarks(text), reading.ranges)).map(({ sentence, pieces }, index) => {
+        const shown = pieces.map((piece, at) => <MarkedPieceView key={at} piece={piece} />);
+        return sentence === null ? (
+          <Fragment key={index}>{shown}</Fragment>
         ) : (
-          <MarkedPieceView key={index} piece={piece} />
-        ),
-      )}
+          <ChatSentence key={index} index={sentence} current={sentence === reading.current} choose={reading.choose}>
+            {shown}
+          </ChatSentence>
+        );
+      })}
     </>
   );
 };

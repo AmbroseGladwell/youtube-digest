@@ -1,0 +1,29 @@
+// The overview's line hover (ReadAlongNote), and the stone mark on the sentence being read (design 418j).
+.root {
+  border-radius: 5px;
+  cursor: pointer;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+
+  &:hover:not(.current) {
+    background: var(--surface);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.current {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.whole {
+  display: block;
+
+  &.current {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--on-stone-tint) 35%, transparent);
+  }
+}

@@ -1,7 +1,8 @@
 import { CONNECTED_CHAT_INSTRUCTION, chatRecordId, type Connection, type FollowUpQuestion, type Overview } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
+import type { Launcher } from "../../support/Launcher.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const SIGNED_IN = {
@@ -469,5 +470,53 @@ test.describe("Reading an answer aloud", () => {
     await reader.chat.hoverReadAloud(0);
 
     await reader.chat.verifyReadAloudOffered(0, "bottom", false);
+  });
+});
+
+test.describe("Moving around an answer being read aloud (OV-428)", () => {
+  const TWO = "Creatine helps most when you train hard. Read [the docs](https://example.com/creatine) for the dose.";
+
+  const reading = async (launcher: Launcher, backendSimulator: BackendSimulator) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.chats.answerWith({ text: TWO });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    return reader;
+  };
+
+  test("only the answer being read has tap targets, and tapping one moves the audio there", async ({ launcher, backendSimulator }) => {
+    const reader = await reading(launcher, backendSimulator);
+    await reader.chat.verifySentencesTappable(0, 0);
+
+    await reader.chat.pressReadAloud(0);
+    await reader.chat.verifySpokenSentence("Creatine helps most when you train hard.");
+    await reader.chat.verifySentencesTappable(0, 2);
+    await reader.chat.tapSentence(0, "for the dose");
+
+    await reader.chat.verifySpokenSentence("Read the docs (opens in a new tab) for the dose.");
+    await reader.chat.verifyReadAloudIs(0, "playing", "Pause reading");
+  });
+
+  test("tapping a sentence while paused moves the place but stays paused", async ({ launcher, backendSimulator }) => {
+    const reader = await reading(launcher, backendSimulator);
+    await reader.chat.pressReadAloud(0);
+    await reader.chat.pressReadAloud(0);
+    await reader.chat.verifyReadAloudIs(0, "paused", "Resume reading");
+
+    await reader.chat.tapSentence(0, "for the dose");
+
+    await reader.chat.verifySpokenSentence("Read the docs (opens in a new tab) for the dose.");
+    await reader.chat.verifyReadAloudIs(0, "paused", "Resume reading");
+  });
+
+  test("a link inside a sentence still opens, and doesn't move the audio", async ({ launcher, backendSimulator }) => {
+    const reader = await reading(launcher, backendSimulator);
+    await reader.chat.pressReadAloud(0);
+    await reader.chat.verifySpokenSentence("Creatine helps most when you train hard.");
+
+    await reader.chat.tapLinkInAnswer(0, "the docs");
+
+    await reader.chat.verifySpokenSentence("Creatine helps most when you train hard.");
   });
 });

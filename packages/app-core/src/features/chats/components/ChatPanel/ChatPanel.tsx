@@ -358,7 +358,7 @@ export const ChatPanel = ({
                 onClick={() => setRevealed(index)}
               >
                 <ChatAnswer
-                  spoken={readAloudOf(index).spoken}
+                  reading={readAloudOf(index).reading}
                   top={readAloudOf(index).top}
                   text={message.text}
                   inSource={message.inSource}

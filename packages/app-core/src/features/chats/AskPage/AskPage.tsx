@@ -352,7 +352,7 @@ export const AskPage = () => {
 
   const answerOf = (message: Extract<ChatMessage, { from: "answer" }>, index: number) => (
     <AskAnswer
-      spoken={readAloudOf(index).spoken}
+      reading={readAloudOf(index).reading}
       top={readAloudOf(index).top}
       text={message.text}
       sections={message.sections}

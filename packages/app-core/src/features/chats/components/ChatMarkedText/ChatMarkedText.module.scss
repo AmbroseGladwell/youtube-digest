@@ -31,13 +31,3 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-
-// The sentence being read (design 418j): the recipe's mark, moving instantly.
-.spoken {
-  border-radius: 5px;
-  padding: 1px 0;
-  background: var(--stone-tint);
-  color: var(--on-stone-tint);
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}

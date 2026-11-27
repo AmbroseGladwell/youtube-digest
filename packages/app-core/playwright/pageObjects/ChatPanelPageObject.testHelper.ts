@@ -11,6 +11,7 @@ import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChip
 import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewOn/ChatDrewOnTestIds.js";
 import { chatSourceChipTestIds } from "../../src/features/chats/components/ChatSourceChip/ChatSourceChipTestIds.js";
 import { floatingTipTestIds } from "../../src/components/shared/FloatingTip/FloatingTipTestIds.js";
+import { chatSentenceTestIds } from "../../src/features/chats/components/ChatSentence/ChatSentenceTestIds.js";
 import { readAloudControlTestIds } from "../../src/features/chats/components/ReadAloudControl/ReadAloudControlTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
@@ -289,6 +290,22 @@ export class ChatPanelPageObject extends PageObject {
 
   verifySpokenSentence = (text: string) =>
     this.step(`verifySpokenSentence ${text}`, () => expect(this.panel().locator("[data-spoken]")).toHaveText(text));
+
+  private sentences = (index: number) => this.answers().nth(index).getByTestId(chatSentenceTestIds.root);
+
+  verifySentencesTappable = (index: number, count: number) =>
+    this.step(`verifySentencesTappable ${index} ${count}`, () => expect(this.sentences(index)).toHaveCount(count));
+
+  tapSentence = (index: number, text: string) =>
+    this.step(`tapSentence ${index} ${text}`, () => this.sentences(index).filter({ hasText: text }).click());
+
+  tapLinkInAnswer = (index: number, name: string) =>
+    this.step(`tapLinkInAnswer ${index} ${name}`, () =>
+      this.answers()
+        .nth(index)
+        .getByRole("link", { name: new RegExp(name) })
+        .click(),
+    );
 
   verifyStartAgainOffered = (index: number, offered: boolean) =>
     this.step(`verifyStartAgainOffered ${index} ${offered}`, () =>

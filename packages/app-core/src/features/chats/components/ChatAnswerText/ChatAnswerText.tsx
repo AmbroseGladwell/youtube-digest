@@ -1,8 +1,8 @@
 import { answerBlocks, type SpokenAnswerPlace } from "@overview/domain";
-import { useSpokenRange } from "../../readAloud/SpokenSentenceContext.js";
+import { useBlockReading } from "../../readAloud/SpokenSentenceContext.js";
 import { ChatCodeBlock } from "../ChatCodeBlock/ChatCodeBlock.js";
 import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
-import styles from "./ChatAnswerText.module.scss";
+import { ChatSentence } from "../ChatSentence/ChatSentence.js";
 
 const TABLE_ROW = /^\|.*\|$/;
 
@@ -27,29 +27,32 @@ interface AnswerBlockProps {
   place: SpokenAnswerPlace | undefined;
 }
 
-// A code block or table is spoken as one line, so it is marked whole (design 418l).
+// A code block or table is spoken as one line, so it is one tap target, marked whole (design 418l).
 const AnswerBlock = ({ block, index, place }: AnswerBlockProps) => {
-  const spoken = useSpokenRange(place, index);
+  const reading = useBlockReading(place, index);
+  const whole = reading?.ranges[0];
   if (block.kind === "code") {
     const code = <ChatCodeBlock language={block.language} code={block.code} />;
-    return spoken === null ? (
+    return reading === null || whole === undefined ? (
       code
     ) : (
-      <div className={styles.spokenWhole} data-spoken="">
+      <ChatSentence index={whole.index} current={whole.index === reading.current} choose={reading.choose} whole>
         {code}
-      </div>
+      </ChatSentence>
     );
   }
-  if (spoken !== null && TABLE_ROW.test(block.text)) {
+  if (reading !== null && whole !== undefined && TABLE_ROW.test(block.text)) {
     return (
-      <p className={styles.spokenWhole} data-spoken="">
-        <ChatMarkedText text={block.text} />
-      </p>
+      <ChatSentence index={whole.index} current={whole.index === reading.current} choose={reading.choose} whole>
+        <p>
+          <ChatMarkedText text={block.text} />
+        </p>
+      </ChatSentence>
     );
   }
   return (
     <p>
-      <ChatMarkedText text={block.text} spoken={spoken} />
+      <ChatMarkedText text={block.text} reading={reading} />
     </p>
   );
 };

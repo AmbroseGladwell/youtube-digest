@@ -29,16 +29,18 @@ const nameOf = (status: string): string => {
 export const ReadAloudControl = ({ answer, about, control }: ReadAloudControlProps) => {
   const engine = useReadAloud();
   const snapshot = useReadAloudSnapshot();
-  const status = snapshot !== null && sameAnswer(snapshot.answer, answer) ? snapshot.status : "idle";
+  const mine = snapshot !== null && sameAnswer(snapshot.answer, answer);
+  const status = mine ? snapshot.status : "idle";
+  const waiting = status === "starting" || (mine && snapshot.seeking);
   const [slow, setSlow] = useState(false);
   useEffect(() => {
-    if (status !== "starting") {
+    if (!waiting) {
       setSlow(false);
       return;
     }
     const timer = setTimeout(() => setSlow(true), SPINNER_AFTER_MS);
     return () => clearTimeout(timer);
-  }, [status]);
+  }, [waiting]);
 
   if (engine === null || snapshot === null || snapshot.voiceless) {
     return null;
@@ -59,7 +61,7 @@ export const ReadAloudControl = ({ answer, about, control }: ReadAloudControlPro
         data-control={control}
         data-status={status}
       >
-        {status === "starting" && slow ? (
+        {waiting && slow ? (
           <span className={styles.spinner} aria-hidden="true" data-testid={readAloudControlTestIds.spinner} />
         ) : (
           <StrokeIcon name={status === "playing" ? "pause" : "play"} size={14} />

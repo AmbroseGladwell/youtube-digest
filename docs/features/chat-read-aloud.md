@@ -163,6 +163,21 @@ can.
   aloud" / "More on {date}.", with See plans on any plan but Plus. A server without a voice
   (the warm-up answers 503) shows no control.
 
+## Moving around an answer (OV-428)
+
+The same as the overview's read-along, where a tapped line moves the narration (`ReadAlongNote`), per sentence:
+
+- **Only the answer being read, only during playback.** While that answer is starting, playing or paused, each spoken sentence is a `ChatSentence`: a `role="button"` with the overview's hover tint, reachable with Tab and Enter or Space. Every other answer, and this one when idle, stays plain text.
+- **A tap moves the audio there** (`ReadAloudEngine.chooseSentence`):
+  - If the sentence's audio has arrived, the audio jumps to its start.
+  - If it hasn't arrived yet, the highlight moves to the sentence at once, the play/pause control spins (`seeking`), and the audio plays from there when it arrives.
+  - If that chunk was skipped, the audio carries on from the next sentence that arrived.
+  - Lock-screen previous, next and Start again go through the same seek.
+- **Paused stays paused (owner, 27 Nov 2026):** a tap while paused moves the place, and Resume plays from it.
+- **Links and citations keep working.** A tap on a link or button inside a sentence follows it rather than seeking. Source chips sit outside the sentence text. A code block or table is one tap target, and its Copy button still works.
+- **How it renders:** the spoken-sentence context carries the answer's sentences, the current one and `choose`. `sentencePieces` cuts each block's marked text at every sentence's edges (`placedMarks` offsets), so the spans line up with what's read.
+- **Analytics:** `chat.readAloud.sentenceChosen`, with plan, scope, whether the sentence had `arrived` and whether playback was `paused`.
+
 ## The player
 
 `ReadAloudEngine` (app-core, `features/chats/readAloud/`) is one player for every chat,

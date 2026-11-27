@@ -2,8 +2,7 @@ import { useRef, type ReactNode } from "react";
 import type { ChatAnswerSections, ChatCitation, ChatScopeStats, OtherOverviewCitation } from "@overview/domain";
 import { askStatsLine } from "../../util/askStatsLine.js";
 import { citationKey } from "../../util/chatSourceGroups.js";
-import type { SentenceOnScreen } from "../../readAloud/ReadAloudEngine.js";
-import { SpokenSentenceProvider } from "../../readAloud/SpokenSentenceContext.js";
+import { SpokenSentenceProvider, type ReadingAnswer } from "../../readAloud/SpokenSentenceContext.js";
 import { useTallerThanView } from "../../readAloud/useTallerThanView.js";
 import { ChatAnswerSectionsView, ChatSourcesMenu, otherOverviewChipLabel, type ChatChip } from "../ChatAnswer/ChatAnswer.js";
 import { ChatAnswerText } from "../ChatAnswerText/ChatAnswerText.js";
@@ -28,7 +27,7 @@ export interface AskAnswerProps {
   onFollowed: (citation: OtherOverviewCitation) => void;
   onSourcesOpened: (count: number) => void;
   actions: (sources: ReactNode) => ReactNode;
-  spoken?: SentenceOnScreen | null;
+  reading?: ReadingAnswer | null;
   top?: ReactNode;
 }
 
@@ -46,7 +45,7 @@ export const AskAnswer = ({
   onFollowed,
   onSourcesOpened,
   actions,
-  spoken = null,
+  reading = null,
   top,
 }: AskAnswerProps) => {
   const root = useRef<HTMLDivElement | null>(null);
@@ -78,7 +77,7 @@ export const AskAnswer = ({
       </ChatSourcesMenu>
     );
   return (
-    <SpokenSentenceProvider value={spoken}>
+    <SpokenSentenceProvider value={reading}>
       <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} ref={root} data-testid={askAnswerTestIds.root}>
         {taller && top !== undefined && <div className={styles.top}>{top}</div>}
         <div className={styles.text}>

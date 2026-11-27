@@ -23,6 +23,8 @@ export interface ReadAloudSnapshot {
   problem: { answer: AnswerRef; problem: ReadAloudProblem } | null;
   heldNarration: boolean;
   voiceless: boolean;
+  // A sentence was chosen ahead of the audio that has arrived, so the control spins until it does.
+  seeking: boolean;
 }
 
 export type ReadAloudScope = "overview" | "library" | "project";
@@ -59,7 +61,8 @@ export type ReadAloudReport =
   | { event: "started"; control: ReadAloudControl; sentences: number; replay: boolean }
   | { event: "paused" | "resumed" | "stopped" | "completed"; sentences: number }
   | { event: "failed"; sentences: number; reason: "nothing" | "transport" }
-  | { event: "refused"; quota: "month" | "day" };
+  | { event: "refused"; quota: "month" | "day" }
+  | { event: "sentenceChosen"; arrived: boolean; paused: boolean };
 
 export interface ReadAloudEngineOptions {
   api: () => ChatApi | null;
@@ -92,6 +95,7 @@ interface Play {
   arrived: boolean;
   waiting: boolean;
   waitingFor: number;
+  seekTo: number | null;
   stop: AbortController;
 }
 
@@ -106,6 +110,7 @@ const IDLE: ReadAloudSnapshot = {
   problem: null,
   heldNarration: false,
   voiceless: false,
+  seeking: false,
 };
 
 export const sameAnswer = (a: AnswerRef | null, b: AnswerRef | null): boolean =>
@@ -213,15 +218,57 @@ export class ReadAloudEngine {
   }
 
   startAgain(): void {
-    this.#goToSentence(0);
+    this.seekToSentence(0);
   }
 
   nextSentence(): void {
-    this.#goToSentence((this.#snapshot.sentence ?? -1) + 1);
+    this.seekToSentence((this.#snapshot.sentence ?? -1) + 1);
   }
 
   previousSentence(): void {
-    this.#goToSentence(Math.max(0, (this.#snapshot.sentence ?? 0) - 1));
+    this.seekToSentence(Math.max(0, (this.#snapshot.sentence ?? 0) - 1));
+  }
+
+  // A tap on a sentence of the answer being read (OV-428): paused stays paused.
+  chooseSentence(sentence: number): void {
+    const play = this.#play;
+    if (play === null) {
+      return;
+    }
+    const arrived = play.clips.some((clip) => clip.first <= sentence && sentence < clip.first + clip.starts.length);
+    this.#options.report({ event: "sentenceChosen", arrived, paused: this.#snapshot.status === "paused" }, play.meta);
+    this.seekToSentence(sentence);
+  }
+
+  seekToSentence(sentence: number): void {
+    const play = this.#play;
+    if (play === null || sentence < 0 || (play.sentences.length > 0 && sentence >= play.sentences.length)) {
+      return;
+    }
+    const covering = play.clips.findIndex((clip) => clip.first <= sentence && sentence < clip.first + clip.starts.length);
+    if (covering !== -1) {
+      this.#playAt(play, covering, sentence);
+      return;
+    }
+    const later = play.clips.findIndex((clip) => clip.first > sentence);
+    if (later !== -1) {
+      this.#playAt(play, later, play.clips[later]!.first);
+      return;
+    }
+    if (play.arrived) {
+      return;
+    }
+    play.seekTo = sentence;
+    play.waiting = true;
+    this.#media?.pause();
+    this.#set({ sentence, seeking: true });
+  }
+
+  #playAt(play: Play, index: number, sentence: number): void {
+    const clip = play.clips[index]!;
+    play.seekTo = null;
+    this.#set({ seeking: false });
+    this.#playClip(play, index, clip.starts[Math.min(sentence - clip.first, clip.starts.length - 1)] ?? 0);
   }
 
   stop(): void {
@@ -259,6 +306,7 @@ export class ReadAloudEngine {
       arrived: kept !== undefined,
       waiting: true,
       waitingFor: 0,
+      seekTo: null,
       stop: new AbortController(),
     };
     this.#play = play;
@@ -303,6 +351,10 @@ export class ReadAloudEngine {
       return;
     }
     this.#keep(play);
+    if (play.seekTo !== null) {
+      play.seekTo = null;
+      this.#set({ seeking: false });
+    }
     if (play.waiting && this.#snapshot.status === "playing") {
       this.#continue(play);
     }
@@ -332,6 +384,12 @@ export class ReadAloudEngine {
       return;
     }
     play.clips.push({ first: event.first, starts: event.sentenceStartsSeconds, url: this.#options.audioUrl(event.audioBase64) });
+    if (play.seekTo !== null) {
+      if (event.first + event.count > play.seekTo) {
+        this.#playAt(play, play.clips.length - 1, Math.max(play.seekTo, event.first));
+      }
+      return;
+    }
     if (play.waiting && this.#snapshot.status !== "paused") {
       this.#continue(play);
     }
@@ -359,20 +417,6 @@ export class ReadAloudEngine {
     }
   }
 
-  #goToSentence(sentence: number): void {
-    const play = this.#play;
-    if (play === null) {
-      return;
-    }
-    const index = play.clips.reduce((found, clip, at) => (clip.first <= sentence ? at : found), -1);
-    const clip = play.clips[index];
-    if (clip === undefined) {
-      return;
-    }
-    const within = Math.min(sentence - clip.first, clip.starts.length - 1);
-    this.#playClip(play, index, clip.starts[within] ?? 0);
-  }
-
   #ensureMedia(): ReadAloudMedia {
     if (this.#media !== null) {
       return this.#media;
@@ -391,7 +435,7 @@ export class ReadAloudEngine {
     });
     media.addEventListener("ended", () => {
       const play = this.#play;
-      if (play === null || play.waiting) {
+      if (play === null || play.waiting || play.seekTo !== null) {
         return;
       }
       play.waiting = true;
@@ -468,7 +512,7 @@ export class ReadAloudEngine {
   }
 
   #set(change: Partial<ReadAloudSnapshot>): void {
-    this.#snapshot = { ...this.#snapshot, ...change };
+    this.#snapshot = { ...this.#snapshot, ...change, ...(change.answer === null ? { seeking: false } : {}) };
     this.#listeners.forEach((listener) => listener());
   }
 }

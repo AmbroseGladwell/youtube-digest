@@ -44,6 +44,10 @@ export const ReadAloudRuntime = ({ children }: { children: ReactNode }) => {
         void queries.invalidateQueries({ queryKey: [...chatKeys.all, "usage"] });
       }
       const common = { plan: current, scope: meta.scope };
+      if (report.event === "sentenceChosen") {
+        events.chat.readAloud.sentenceChosen({ ...common, arrived: report.arrived, paused: report.paused });
+        return;
+      }
       if (report.event === "refused") {
         events.chat.readAloud.refused({ ...common, quota: report.quota });
         return;
