@@ -50,6 +50,8 @@ export const Settings = z.object({
   // Written beside aboutYou for older clients: docs/features/personalisation.md, "The old line".
   readerContext: z.string().nullable(),
   aboutYou: AboutYou.catch(EMPTY_ABOUT_YOU),
+  // Asked once at a save after onboarding, on any device: docs/features/personalisation.md, "Asked once more".
+  aboutYouAskedAfterOnboarding: z.boolean().catch(false),
   // Items merge one by one: docs/features/personalisation.md, "A profile that learns".
   learned: LearnedItems.catch({}),
   keepLearning: z.boolean().catch(true),
@@ -102,6 +104,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   readerContext: null,
   aboutYou: EMPTY_ABOUT_YOU,
+  aboutYouAskedAfterOnboarding: false,
   learned: {},
   keepLearning: true,
   shareProfileWithAssistants: true,

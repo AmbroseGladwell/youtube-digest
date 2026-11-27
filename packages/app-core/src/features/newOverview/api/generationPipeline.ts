@@ -38,7 +38,9 @@ import {
 import {
   clipAsVideo,
   episodeAsVideo,
+  kindSampleOfVideo,
   postAsArticle,
+  type KindSample,
   postAsVideo,
   type GenerationInput,
   type SocialGenerationInput,
@@ -88,7 +90,15 @@ export interface GenerationPipelineDeps {
   projectStore?: Pick<ProjectStore, "listProjects" | "fileIntoProject"> | undefined;
   // Only for a save without an overview: docs/features/kept-links.md, "Saving at the limit".
   captureStore?: Pick<CaptureStore, "saveCapture"> | undefined;
+  // On the key the overview would be written with, and only when beforeWriting asks for it.
+  checkKind?: ((sample: KindSample) => Promise<NoteKind>) | undefined;
 }
+
+// What is about to be written: docs/features/personalisation.md, "Asked once more".
+export type AboutToWrite =
+  | { kind: "article"; recipe: boolean }
+  | { kind: "podcast" }
+  | { kind: "video"; noteKind: () => Promise<NoteKind | null> };
 
 export interface TaggingCounts {
   reused: number;
@@ -121,6 +131,8 @@ export interface RunOverviewGenerationOptions {
   saveInstead?: CaptureSurface | undefined;
   // Written under its saved capture's id, but filed as a new overview is.
   madeFromSaved?: boolean | undefined;
+  // Resolves true once the reader was asked something, so the wait is timed apart from the run.
+  beforeWriting?: ((about: AboutToWrite) => Promise<boolean>) | undefined;
 }
 
 export const runOverviewGeneration = async (
@@ -165,7 +177,7 @@ export const runOverviewGeneration = async (
 // Nothing is reserved until the page is read, so a page that can't be read costs the reader nothing.
 export const runArticleOverviewGeneration = async (
   read: () => Promise<ArticleRead>,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore" | "captureStore">,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore" | "captureStore" | "checkKind">,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
   const result = await read();
@@ -197,7 +209,7 @@ export const runPodcastOverviewGeneration = async (
   findWords: (episode: PodcastEpisode, options: RunOverviewGenerationOptions) => Promise<Pick<PodcastTranscript, "transcript">>,
   deps: Pick<
     GenerationPipelineDeps,
-    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore"
+    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore" | "checkKind"
   >,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
@@ -236,7 +248,7 @@ export const runTikTokOverviewGeneration = async (
   findWords: (video: TikTokVideo) => Promise<TikTokWords>,
   deps: Pick<
     GenerationPipelineDeps,
-    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore"
+    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore" | "checkKind"
   >,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
@@ -284,7 +296,7 @@ export const runSocialOverviewGeneration = async (
   findWords: (post: SocialPost) => Promise<SocialWords>,
   deps: Pick<
     GenerationPipelineDeps,
-    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore"
+    "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "captureStore" | "checkKind"
   >,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
@@ -325,7 +337,7 @@ export const runSocialOverviewGeneration = async (
 // Its overview from what was kept: docs/features/kept-links.md, "Opening one".
 export const runSavedOverviewGeneration = async (
   capture: SavedCapture,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore" | "checkKind">,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> => {
   const what = await savedWhatToWrite(capture, deps.transcriptStore);
@@ -395,12 +407,40 @@ type WhatToWrite =
   | Pick<WrittenPostGenerationInput, "social" | "article">
   | { article: ExtractedArticle };
 
-const writeOverview = async (
+interface AskedBeforeWriting {
+  what: WhatToWrite;
+  asked: boolean;
+}
+
+const askBeforeWriting = async (
   what: WhatToWrite,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore" | "captureStore">,
+  beforeWriting: NonNullable<RunOverviewGenerationOptions["beforeWriting"]>,
+  checkKind: GenerationPipelineDeps["checkKind"],
+): Promise<AskedBeforeWriting> => {
+  if ("article" in what) {
+    return { what, asked: await beforeWriting({ kind: "article", recipe: what.article.recipe !== null }) };
+  }
+  if ("podcast" in what) {
+    return { what, asked: await beforeWriting({ kind: "podcast" }) };
+  }
+  let checked: NoteKind | null | undefined = what.noteKind;
+  const noteKind = async (): Promise<NoteKind | null> => {
+    if (checked === undefined) {
+      checked = checkKind === undefined ? null : await checkKind(kindSampleOfVideo(what)).catch(() => null);
+    }
+    return checked;
+  };
+  const asked = await beforeWriting({ kind: "video", noteKind });
+  return { what: checked === undefined || checked === null ? what : { ...what, noteKind: checked }, asked };
+};
+
+const writeOverview = async (
+  given: WhatToWrite,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore" | "captureStore" | "checkKind">,
   options: RunOverviewGenerationOptions,
   stopwatch: CaptureStopwatch | null = null,
 ): Promise<Overview> => {
+  let what = given;
   if (options.saveInstead !== undefined && deps.captureStore !== undefined) {
     const capture = await savedCaptureOf(what, {
       id: options.overviewId,
@@ -410,6 +450,15 @@ const writeOverview = async (
     });
     await deps.captureStore.saveCapture(capture);
     throw new SavedWithoutOverview(capture);
+  }
+  if (options.beforeWriting !== undefined) {
+    const waited = stopwatch?.begin("aboutYou");
+    const answer = await askBeforeWriting(what, options.beforeWriting, deps.checkKind);
+    what = answer.what;
+    if (answer.asked) {
+      waited?.("answered");
+    }
+    stopIfCancelled(options);
   }
   options.onWriting?.();
   const [existingTopics, claims, library, settings, previous, projects] = await Promise.all([

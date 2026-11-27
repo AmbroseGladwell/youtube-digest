@@ -1,4 +1,6 @@
 import {
+  KIND_CHECK_PATH,
+  KindCheckResult,
   OurKeyGenerationResult,
   OurKeyGenerationStatus,
   OverviewUsage,
@@ -19,6 +21,7 @@ export const createFetchGenerationApi = (options: ApiRequesterOptions): Generati
     topics: (body) => answered(request("POST", "/generations/topics", TopicMatchResult, { body })),
     topicSuggestions: (body) => answered(request("POST", "/generations/topic-suggestions", TopicSuggestionResult, { body })),
     profilePass: (body) => answered(request("POST", "/generations/profile", ProfilePassResult, { body })),
+    kindCheck: (body) => answered(request("POST", KIND_CHECK_PATH, KindCheckResult, { body })),
     reserve: (overviewId, shareToken) =>
       answered(
         request("POST", "/overview-reservations", OverviewUsage, {

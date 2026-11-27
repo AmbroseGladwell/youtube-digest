@@ -7,12 +7,15 @@ import { captureKeys } from "../captures/captureKeys.js";
 import { captureSurfaceOf } from "../captures/util/captureSurfaceOf.js";
 import { madeLaterOf } from "../captures/util/madeLaterOf.js";
 import { usePlan } from "../plus/usePlan.js";
+import { Routes } from "../../app/Routes.js";
+import { useAboutYouAsk, type AboutYouAsk } from "./useAboutYouAsk.js";
 import { SavedWithoutOverview } from "./api/SavedWithoutOverview.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
 import { TranscriptionRefusedError } from "../podcasts/api/TranscriptionRefusedError.js";
 import { nextUsageMonth } from "../captures/util/nextUsageMonth.js";
 import { SavedSourceNeedsReadingError } from "./api/SavedSourceNeedsReadingError.js";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router";
 import {
   heldOverviewOf,
   OverviewId,
@@ -120,7 +123,15 @@ export interface NewOverviewRunController {
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
+  aboutYouAsk: AboutYouAsk;
 }
+
+// A new save the reader started, never a regeneration or onboarding's own: docs/features/personalisation.md, "Asked once more".
+const mayAskAboutYou = (options: StartOverviewRunOptions): boolean =>
+  options.from !== "regenerate" &&
+  options.from !== "onboarding" &&
+  options.saveInstead !== true &&
+  (options.overviewId === undefined || options.savedCapture !== undefined);
 
 type LastTranscribable =
   | { podcast: PodcastRunRequest & StartOverviewRunOptions }
@@ -165,6 +176,10 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   const draftRef = useRef("");
   const latestRun = useRef<NewOverviewRun | null>(null);
   latestRun.current = run;
+  const { beforeWriting, letGo, ...aboutYouAsk } = useAboutYouAsk();
+  const { pathname } = useLocation();
+  const readingRef = useRef(false);
+  readingRef.current = pathname.startsWith(Routes.overview(""));
 
   const commitDraftOnto = useCallback(
     (overview: Overview): Overview => {
@@ -287,7 +302,8 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       let attempt: GenerationAttempt | null = null;
       // A video's duration is the timing's own, so the two agree; an article isn't timed.
       let timing: ClientTimingReport | null = null;
-      const durationMs = () => timing?.totalMs ?? Date.now() - startedAt;
+      const askedMs = () => timing?.steps.find(({ step }) => step === "aboutYou")?.ms ?? 0;
+      const durationMs = () => (timing === null ? Date.now() - startedAt : timing.totalMs - askedMs());
       let writingAt: number | null = null;
       analytics.capture.newOverview.started({ from });
       const updateArticle = (change: Partial<ArticleRun>) => {
@@ -449,6 +465,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
             }
           },
           isCancelled: () => !isCurrent(),
+          beforeWriting: mayAskAboutYou(options) ? beforeWriting(from, () => isCurrent() && !readingRef.current) : undefined,
           onTagged: (counted) => {
             tagging = counted;
           },
@@ -592,7 +609,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         },
       );
     },
-    [mutate, commitDraftOnto, analytics, plan, reporter, surface, queryClient, keepUntilReset],
+    [mutate, commitDraftOnto, analytics, plan, reporter, surface, queryClient, keepUntilReset, beforeWriting],
   );
 
   // One at a time from Create; the rest wait their turn: docs/features/kept-links.md, "Several in a row".
@@ -816,13 +833,14 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   }, []);
   const dismiss = useCallback(() => {
     runIdRef.current += 1;
+    letGo();
     busyRef.current = false;
     setWaiting([]);
     setJustNow([]);
     setRun(null);
     setHeld(null);
     setDialogOpen(false);
-  }, []);
+  }, [letGo]);
 
   return {
     run,
@@ -848,5 +866,6 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     dismiss,
     setCaptureReason,
     commitCaptureReason,
+    aboutYouAsk,
   };
 };

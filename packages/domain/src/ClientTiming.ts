@@ -4,7 +4,7 @@ export const MAX_CLIENT_TIMING_BATCH = 10;
 export const MAX_CAPTURE_STEPS = 6;
 
 // In the order a capture meets them (docs/features/transcript-retrieval.md).
-export const CaptureStep = z.enum(["stored", "shared-cache", "extension", "service", "model", "save"]);
+export const CaptureStep = z.enum(["stored", "shared-cache", "extension", "service", "aboutYou", "model", "save"]);
 export type CaptureStep = z.infer<typeof CaptureStep>;
 
 export const CaptureStepOutcome = z.enum(["answered", "no-answer", "unavailable", "failed"]);

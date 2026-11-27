@@ -1,4 +1,6 @@
 import type {
+  KindCheckInput,
+  KindCheckResult,
   OurKeyGenerationRequest,
   OurKeyGenerationResult,
   OurKeyGenerationStatus,
@@ -19,6 +21,8 @@ export interface GenerationApi {
   // Never counted against the plan (docs/features/personalisation.md).
   profilePass(input: ProfilePassInput): Promise<ProfilePassResult>;
   topics(input: TopicMatchInput): Promise<TopicMatchResult>;
+  // Only where About you is asked before writing (docs/features/personalisation.md).
+  kindCheck(input: KindCheckInput): Promise<KindCheckResult>;
   // Signed out, onboarding's topics screen, on the device's trial (docs/features/onboarding.md).
   topicSuggestions(input: TopicSuggestionInput): Promise<TopicSuggestionResult>;
   // A slot on the own-key month before the device generates, or a saved share let in.

@@ -14,7 +14,7 @@ import {
   type SavedCapture,
   type VideoSource,
 } from "@overview/domain";
-import type { OverviewInput } from "@overview/generation";
+import type { KindSample, OverviewInput } from "@overview/generation";
 import { createFetchGenerationApi, createFetchPodcastApi, createFetchSocialApi, createFetchTikTokApi } from "@overview/sync";
 import { podcastTranscript } from "../podcasts/api/podcastTranscript.js";
 import type { TranscriptionProgress } from "../podcasts/api/transcribeAudio.js";
@@ -46,6 +46,7 @@ import {
   type PodcastRunRequest,
   type RunOverviewGenerationOptions,
 } from "./api/generationPipeline.js";
+import { checkKindOnKeys } from "./api/checkKindOnKeys.js";
 import { makeOverviewOnKeys, type OverviewMeta } from "./api/makeOverviewOnKeys.js";
 import { useOurKeyStatusQuery } from "./queries/ourKeyStatusQuery.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
@@ -64,7 +65,7 @@ type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptSto
 
 // Nothing is made signed out where there are accounts: docs/architecture/tiers.md, "Signed out".
 export const useRunOverviewGeneration = (apiKeys: ApiKeys) => {
-  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const { makeWith, checkKindWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
@@ -81,6 +82,7 @@ export const useRunOverviewGeneration = (apiKeys: ApiKeys) => {
             service: knownApiUrl === null ? null : { apiUrl: knownApiUrl, token: connection.token },
           }),
           makeOverview: makeWith(),
+          checkKind: checkKindWith(),
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
@@ -93,12 +95,12 @@ export const useRunOverviewGeneration = (apiKeys: ApiKeys) => {
       )
         .then((overview) => learnFrom(overview, stores))
         .finally(settled),
-    [makeWith, learnFrom, settled, knownApiUrl, youTubeFetch, connection.token, shown, reporter],
+    [makeWith, checkKindWith, learnFrom, settled, knownApiUrl, youTubeFetch, connection.token, shown, reporter],
   );
 };
 
 export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
-  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const { makeWith, checkKindWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
 
   return useCallback(
@@ -107,6 +109,7 @@ export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
         read,
         {
           makeOverview: makeWith(),
+          checkKind: checkKindWith(),
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           projectStore: stores.projectStore,
@@ -116,7 +119,7 @@ export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
       )
         .then((overview) => learnFrom(overview, stores))
         .finally(settled),
-    [makeWith, learnFrom, settled, shown],
+    [makeWith, checkKindWith, learnFrom, settled, shown],
   );
 };
 
@@ -171,7 +174,7 @@ const trackedTranscription = async (
 
 // Words that came with the read are written at once; a TikTok with none is transcribed first, when the reader chose it.
 export const useRunTikTokGeneration = (apiKeys: ApiKeys) => {
-  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const { makeWith, checkKindWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const analytics = useAnalytics();
   const shown = useStores();
   const knownApiUrl = useKnownApiUrl();
@@ -205,6 +208,7 @@ export const useRunTikTokGeneration = (apiKeys: ApiKeys) => {
         findWords,
         {
           makeOverview: makeWith(),
+          checkKind: checkKindWith(),
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
@@ -216,13 +220,13 @@ export const useRunTikTokGeneration = (apiKeys: ApiKeys) => {
         .then((overview) => learnFrom(overview, stores))
         .finally(settled);
     },
-    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, analytics],
+    [makeWith, checkKindWith, learnFrom, settled, shown, knownApiUrl, connection.token, analytics],
   );
 };
 
 // A photo or text post is written from its description; a video from its words, transcribed first when chosen.
 export const useRunSocialGeneration = (apiKeys: ApiKeys) => {
-  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const { makeWith, checkKindWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const analytics = useAnalytics();
   const shown = useStores();
   const knownApiUrl = useKnownApiUrl();
@@ -256,6 +260,7 @@ export const useRunSocialGeneration = (apiKeys: ApiKeys) => {
         findWords,
         {
           makeOverview: makeWith(),
+          checkKind: checkKindWith(),
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
@@ -267,13 +272,13 @@ export const useRunSocialGeneration = (apiKeys: ApiKeys) => {
         .then((overview) => learnFrom(overview, stores))
         .finally(settled);
     },
-    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, analytics],
+    [makeWith, checkKindWith, learnFrom, settled, shown, knownApiUrl, connection.token, analytics],
   );
 };
 
 // A transcription's events are measured here, wherever the run was started.
 export const useRunPodcastGeneration = (apiKeys: ApiKeys) => {
-  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const { makeWith, checkKindWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const analytics = useAnalytics();
   const shown = useStores();
   const youTubeFetch = useYouTubeFetch();
@@ -309,6 +314,7 @@ export const useRunPodcastGeneration = (apiKeys: ApiKeys) => {
               }),
         {
           makeOverview: makeWith(),
+          checkKind: checkKindWith(),
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
@@ -320,7 +326,7 @@ export const useRunPodcastGeneration = (apiKeys: ApiKeys) => {
         .then((overview) => learnFrom(overview, stores))
         .finally(settled);
     },
-    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, analytics],
+    [makeWith, checkKindWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, analytics],
   );
 };
 
@@ -373,6 +379,11 @@ const useOverviewMaker = (apiKeys: ApiKeys) => {
     return (input: OverviewInput, meta: OverviewMeta) => makeOverviewOnKeys(keys, input, meta);
   }, [keysNow]);
 
+  const checkKindWith = useCallback(() => {
+    const keys = keysNow();
+    return (sample: KindSample) => checkKindOnKeys(keys, sample);
+  }, [keysNow]);
+
   const learnFrom = useCallback(
     (overview: Overview, { overviewStore, settingsStore }: Pick<Stores, "overviewStore" | "settingsStore">): Overview => {
       const keys = keysNow();
@@ -395,11 +406,11 @@ const useOverviewMaker = (apiKeys: ApiKeys) => {
 
   const settled = useCallback(() => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }), [queryClient]);
 
-  return { makeWith, learnFrom, settled };
+  return { makeWith, checkKindWith, learnFrom, settled };
 };
 
 export const useRunSavedGeneration = (apiKeys: ApiKeys) => {
-  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const { makeWith, checkKindWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
 
   return useCallback(
@@ -408,6 +419,7 @@ export const useRunSavedGeneration = (apiKeys: ApiKeys) => {
         capture,
         {
           makeOverview: makeWith(),
+          checkKind: checkKindWith(),
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
@@ -417,7 +429,7 @@ export const useRunSavedGeneration = (apiKeys: ApiKeys) => {
       )
         .then((overview) => learnFrom(overview, stores))
         .finally(settled),
-    [makeWith, learnFrom, settled, shown],
+    [makeWith, checkKindWith, learnFrom, settled, shown],
   );
 };
 

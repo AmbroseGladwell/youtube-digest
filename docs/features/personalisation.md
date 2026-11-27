@@ -46,6 +46,33 @@ in instead. The sentence is repeated in a hidden polite status line.
 
 Both places say that it goes through our server to OpenAI with each overview made on us, and with each question asked about one (OV-343).
 
+### Asked once more
+
+Onboarding's About you can be skipped. A reader whose sentence is still empty is asked once
+more (OV-356), at the next save they start themselves of a video, article or podcast, because
+that is where the answer changes what they get. The ask sits between the read and the write
+(`beforeWriting` in `generationPipeline.ts`), and the write reads the settings after it, so an
+answer is written into that overview.
+
+- **When.** Only while `Settings.aboutYou` is empty and `aboutYouAskedAfterOnboarding` is false
+  (`aboutYouAskDue`). Continue or Skip sets the flag, which syncs, so it is asked once on every
+  device. Never on a regeneration, onboarding's own overview, a save at the limit, or a
+  background run (the capture queue, kept links): those never wait, and the next save asks. Not
+  while an overview is open to be read: that save goes on, and the next one asks.
+- **Never on a recipe.** A page knows after its free read. A video doesn't until writing, so
+  where the ask is due its kind is checked first (`checkKindOnKeys`), on the key that will write
+  it: the reader's own key on the device, or ours through `POST /generations/kind-check`
+  (costed as `kindCheck`, like the writer's own check). The answer goes into the write as
+  `noteKind`, so the writer doesn't check again. A check that fails asks anyway and leaves the
+  writer to check. A podcast is never a recipe.
+- **Only where it can be shown.** A surface able to show the ask holds it while mounted
+  (`host`); with none, nothing waits and nothing is checked. Closing the run while asked lets
+  the write go on, unanswered, without setting the flag.
+- **Timing.** The wait is its own `aboutYou` step in the capture timing, and
+  `newOverview.finished`'s `durationMs` leaves it out.
+
+The sheet itself waits on its Claude Design round.
+
 ### A profile that learns
 
 After onboarding the profile updates itself, like ChatGPT's memory. Every three overviews
@@ -166,7 +193,9 @@ The Personalisation row's value is about sections and About you, and doesn't men
 `settings.personalisation.aboutYouSaved` with whether it is now set, and
 `settings.personalisation.profileSharingSwitched` with whether assistants may now read it,
 `settings.personalisation.projectFilingSwitched` with whether filing into projects is now on. Onboarding counts the
-entries in each section and how many were typed. The text is never logged.
+entries in each section and how many were typed. The ask at a save sends `capture.aboutYouAsk.shown`, `.continued`
+(the same counts) and `.skipped` (Skip, or closed), each with `plan`, where it was asked from and the kind of source.
+The text is never logged.
 
 ### Is How to apply any good?
 
