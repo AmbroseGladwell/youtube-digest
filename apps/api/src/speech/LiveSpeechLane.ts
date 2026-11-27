@@ -16,6 +16,7 @@ export type HostSeconds = Record<SpeechHost, number>;
 export interface LiveSpeechOutcome {
   machineSeconds: HostSeconds;
   fellBack: boolean;
+  modalGpu: string | null;
   cold: boolean;
   spoken: number;
   skipped: number;
@@ -66,6 +67,7 @@ export class LiveSpeechLane {
         outcome: {
           machineSeconds: { fly: 0, modal: 0 },
           fellBack: false,
+          modalGpu: null,
           cold: false,
           spoken: 0,
           skipped: 0,
@@ -162,6 +164,9 @@ export class LiveSpeechLane {
       waiting.outcome.machineSeconds[narration.host] += charge.seconds;
       waiting.outcome.cold ||= index === 0 && charge.cold;
       waiting.outcome.fellBack ||= narration.fellBack;
+      if (narration.host === "modal" && narration.gpu !== null) {
+        waiting.outcome.modalGpu = narration.gpu;
+      }
     }
     if (narration === null) {
       waiting.outcome.skipped += 1;

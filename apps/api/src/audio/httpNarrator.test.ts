@@ -81,6 +81,7 @@ test("hands back the decoded audio, the timings and the segments after the last 
     trailingSegments: [{ index: 2, durationSeconds: 1.024, audio: Buffer.from("segment 2") }],
     host: "fly",
     fellBack: false,
+    gpu: null,
   });
 });
 

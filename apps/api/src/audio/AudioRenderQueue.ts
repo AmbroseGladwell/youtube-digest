@@ -4,7 +4,7 @@ import type { AudioRendersRepository } from "./AudioRendersRepository.js";
 import type { AudioStore } from "./AudioStore.js";
 import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { MachineTime, MODAL_CONTAINER } from "../speech/MachineTime.js";
-import { speechDetail, speechDollars } from "../speech/speechCost.js";
+import { hostPrice, speechDetail, speechDollars } from "../speech/speechCost.js";
 import type { NarrationSegment, Narrator, SpeechHost } from "./Narrator.js";
 import type { AccountId } from "../auth/AccountId.js";
 
@@ -80,9 +80,10 @@ export class AudioRenderQueue {
   }
 
   // Renders on Fly are its fixed bill (docs/architecture/spend.md); a render on Modal costs the account that asked.
-  async #recordCost(requestedBy: AccountId | null, host: SpeechHost, startedAt: Date, readyAt: Date): Promise<void> {
-    const { costs, modalDollarsPerHour, log } = this.#options;
-    if (host !== "modal" || costs === undefined || costs === null || modalDollarsPerHour === undefined || modalDollarsPerHour === null) {
+  async #recordCost(requestedBy: AccountId | null, host: SpeechHost, gpu: string | null, startedAt: Date, readyAt: Date): Promise<void> {
+    const { costs, modalDollarsPerHour = null, log } = this.#options;
+    const price = hostPrice({ fly: null, modal: modalDollarsPerHour }, host, gpu);
+    if (host !== "modal" || costs === undefined || costs === null || price === null) {
       return;
     }
     const seconds = this.#modalTime.charge(startedAt, readyAt).seconds;
@@ -90,7 +91,7 @@ export class AudioRenderQueue {
     await costs.recordOrLog(
       readyAt,
       payer,
-      { area: "speech", detail: speechDetail("narration", host), quantity: seconds, dollars: speechDollars(seconds, modalDollarsPerHour) },
+      { area: "speech", detail: speechDetail("narration", host), quantity: seconds, dollars: speechDollars(seconds, price) },
       log,
     );
   }
@@ -139,7 +140,7 @@ export class AudioRenderQueue {
       await store.put(job.key, narration.audio);
       const readyAt = clock();
       await renders.markReady(job.key, narration.lineStartsSeconds, narration.durationSeconds, segmentSeconds, readyAt);
-      await this.#recordCost(job.requestedBy, narration.host, startedAt, readyAt);
+      await this.#recordCost(job.requestedBy, narration.host, narration.gpu, startedAt, readyAt);
       log.info(
         apiLogLines.audio.rendered({
           ...entry,

@@ -1,3 +1,4 @@
+import { gpuDollarsPerHour } from "../costs/gpuDollarsPerHour.js";
 import { apiLogLines, redactErrorMessage, type StoredTranscript, type TranscriptionFailure, VideoId } from "@overview/domain";
 import { AccountId } from "../auth/AccountId.js";
 import type { AccountCostsRepository, CostPayer } from "../costs/AccountCostsRepository.js";
@@ -12,15 +13,6 @@ const POLL_MS = 2000;
 const LEASE_MS = 60 * 1000;
 const HOST_ERRORS_TOLERATED = 5;
 const KEEP_FINISHED_MS = 24 * 60 * 60 * 1000;
-
-// Modal's list prices, 15 Nov 2026; an unlisted card costs the dearest, so a cost is never under-recorded.
-export const GPU_DOLLARS_PER_HOUR: Record<string, number> = {
-  "Tesla T4": 0.59,
-  "NVIDIA L4": 0.8,
-  "NVIDIA A10": 1.1,
-  "NVIDIA L40S": 1.95,
-};
-const DEAREST_GPU = Math.max(...Object.values(GPU_DOLLARS_PER_HOUR));
 
 const HOST_FAILURES: Record<string, TranscriptionFailure> = {
   audio_too_long: "too-long",
@@ -164,7 +156,7 @@ export class TranscriptionQueue {
       return this.#fail(job, "failed", fault);
     }
     await jobs.markReady(job, transcript, result.audioSeconds, now);
-    const dollars = (result.workerSeconds / 3600) * (GPU_DOLLARS_PER_HOUR[result.gpu] ?? DEAREST_GPU);
+    const dollars = (result.workerSeconds / 3600) * gpuDollarsPerHour(result.gpu);
     await costs.recordOrLog(
       now,
       payerOf(job.caller),

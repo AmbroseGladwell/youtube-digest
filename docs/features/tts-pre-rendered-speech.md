@@ -161,6 +161,7 @@ With `TTS_MODAL_URL` set, both the live lane and the render queue ask Modal firs
   - A render on Modal is charged to the account that asked for it as `narration-modal`, for the dashboards only, with no allowance.
   - Renders on Fly stay part of its fixed bill.
   - Modal's machine time is the request plus its 20 s scale-down, with no boot charge, since the container answers only once loaded.
+  - Each render's `done` event names the card it ran on (`gpu`, from `nvidia-smi`), so an A10 or L4 standing in for a T4 is priced at its own list price (`gpuDollarsPerHour`); `TTS_MODAL_DOLLARS_PER_HOUR` is only for a render that names none.
 
 ## The spoken script
 

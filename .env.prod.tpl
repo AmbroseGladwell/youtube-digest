@@ -32,3 +32,7 @@ ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
 STT_TOKEN="${STT_TOKEN}"
 # A TTS pool machine's hourly price; unset, chat read aloud spends no usage (docs/features/chat-read-aloud.md).
 TTS_DOLLARS_PER_MACHINE_HOUR="${TTS_DOLLARS_PER_MACHINE_HOUR}"
+# Kokoro on Modal (OV-423): the bearer its app checks, its fallback price, and the month's cap before Fly takes over.
+TTS_MODAL_TOKEN="${TTS_TOKEN}"
+TTS_MODAL_DOLLARS_PER_HOUR="${TTS_MODAL_DOLLARS_PER_HOUR}"
+TTS_MODAL_MONTHLY_DOLLARS="${TTS_MODAL_MONTHLY_DOLLARS}"

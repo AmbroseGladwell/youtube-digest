@@ -26,6 +26,7 @@ const StreamEvent = z.discriminatedUnion("type", [
     synthesisSeconds: z.number().nonnegative(),
     audioBase64: z.string().min(1),
     segments: z.array(Segment),
+    gpu: z.string().min(1).nullable().optional(),
   }),
   z.object({ type: z.literal("error"), error: z.object({ code: z.string(), message: z.string() }) }),
 ]);
@@ -121,6 +122,7 @@ export const createHttpNarrator = (
           trailingSegments: decoded(event.segments),
           host,
           fellBack: false,
+          gpu: event.gpu ?? null,
         };
       }
       throw new Error("TTS stopped before the render finished");

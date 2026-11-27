@@ -28,6 +28,8 @@ export interface Narration {
   trailingSegments: NarrationSegment[];
   host: SpeechHost;
   fellBack: boolean;
+  // The card a Modal render ran on, as nvidia-smi names it; null on Fly.
+  gpu: string | null;
 }
 
 // The request id goes as X-Request-Id, so the service's lines carry the id the API logged the render under.

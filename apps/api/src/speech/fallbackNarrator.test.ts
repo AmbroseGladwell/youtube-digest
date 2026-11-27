@@ -13,6 +13,7 @@ const narration = (host: SpeechHost): Narration => ({
   trailingSegments: [],
   host,
   fellBack: false,
+  gpu: null,
 });
 
 type Behaviour = "speaks" | "silent" | "fails" | "failsAfterALine";

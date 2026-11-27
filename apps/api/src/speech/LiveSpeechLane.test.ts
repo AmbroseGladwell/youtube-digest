@@ -33,6 +33,7 @@ const heldNarrator = () => {
                   trailingSegments: [],
                   host: "fly",
                   fellBack: false,
+                  gpu: null,
                 }),
         });
       });
