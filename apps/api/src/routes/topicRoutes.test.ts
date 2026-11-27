@@ -166,11 +166,54 @@ test("merging files every overview under the kept topic once, and a late filing 
   const response = await account.inject({ method: "POST", url: `/api/topics/${from}/merge`, body: { into, updatedAt: UPDATED_AT } });
   await account.inject({ method: "PUT", url: `/api/overviews/${late}/topics`, body: { topicIds: [from], updatedAt: UPDATED_AT } });
 
-  assert.equal(response.statusCode, 204);
+  assert.equal(response.statusCode, 200);
   assert.deepEqual(await liveTopicIds(account), [into]);
   assert.deepEqual(await topicIdsOf(account, both), [into]);
   assert.deepEqual(await topicIdsOf(account, onlyFrom), [into]);
   assert.deepEqual(await topicIdsOf(account, late), [into]);
+  await testApp.close();
+});
+
+test("the merge says which overviews it re-filed and which it added the kept topic to, so it can be undone", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const from = await seedTopic(account, { name: "Fatherhood" });
+  const into = await seedTopic(account, { name: "Parenting" });
+  const both = await seedFiled(account, [into, from]);
+  const onlyFrom = await seedFiled(account, [from]);
+
+  const response = await account.inject({ method: "POST", url: `/api/topics/${from}/merge`, body: { into, updatedAt: UPDATED_AT } });
+
+  assert.deepEqual(response.json(), { refiled: [both, onlyFrom], added: [onlyFrom] });
+  await testApp.close();
+});
+
+test("undoing a merge brings the topic back on its overviews and takes the kept topic off where the merge added it", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const createdAt = "2026-11-01T08:00:00.000Z";
+  const from = await seedTopic(account, { name: "Fatherhood", description: "Being a dad.", createdAt });
+  const into = await seedTopic(account, { name: "Parenting" });
+  const both = await seedFiled(account, [into, from]);
+  const onlyFrom = await seedFiled(account, [from]);
+  const merged = (await account.inject({ method: "POST", url: `/api/topics/${from}/merge`, body: { into, updatedAt: UPDATED_AT } })).json<{
+    refiled: string[];
+    added: string[];
+  }>();
+
+  const response = await account.inject({
+    method: "POST",
+    url: `/api/topics/${from}/restore`,
+    body: { name: "Fatherhood", description: "Being a dad.", createdAt, into, ...merged, updatedAt: UPDATED_AT },
+  });
+  await account.inject({ method: "PUT", url: `/api/overviews/${onlyFrom}/topics`, body: { topicIds: [from], updatedAt: UPDATED_AT } });
+
+  assert.equal(response.statusCode, 204);
+  assert.deepEqual((await liveTopicIds(account)).sort(), [from, into].sort());
+  assert.equal((await account.change("topic", from)).body!.description, "Being a dad.");
+  assert.deepEqual(await topicIdsOf(account, both), [into, from]);
+  assert.deepEqual(await topicIdsOf(account, onlyFrom), [from]);
+  assert.deepEqual((await account.change("settings", "settings")).body!.topicAliases, {});
   await testApp.close();
 });
 

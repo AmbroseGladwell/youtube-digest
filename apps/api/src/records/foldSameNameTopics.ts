@@ -67,7 +67,8 @@ export const foldSameNameTopics = async (
     }
     let refiled = 0;
     for (const loser of losers) {
-      refiled += await foldTopicInto(records, accountId, { from: loser.record.id as TopicId, into: keptId, updatedAt, client });
+      refiled += (await foldTopicInto(records, accountId, { from: loser.record.id as TopicId, into: keptId, updatedAt, client })).refiled
+        .length;
     }
     folds.push({ kept: keptId, folded: losers.map((loser) => loser.record.id as TopicId), refiled });
   }

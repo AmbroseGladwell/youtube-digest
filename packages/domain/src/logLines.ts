@@ -125,6 +125,7 @@ export const apiLogLines = coded("api", {
   topics: {
     renamed: line("info", "topic renamed", "The reader renamed a topic; ids only, never the name."),
     merged: line("info", "topic merged", "The reader merged a topic into another, with how many overviews were re-filed."),
+    restored: line("info", "topic restored", "The reader undid a merge, so the topic came back on the overviews it had."),
     deleted: line("info", "topic deleted", "The reader deleted a topic, with how many overviews were unfiled from it."),
     folded: line(
       "info",

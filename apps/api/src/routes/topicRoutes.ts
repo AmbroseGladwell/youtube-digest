@@ -1,6 +1,6 @@
 import type { FastifyBaseLogger, FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, TopicId, TopicPatch } from "@overview/domain";
+import { apiLogLines, OverviewId, Topic, TopicId, TopicPatch } from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { StoredRecordBody } from "../http/StoredRecordBody.js";
@@ -9,6 +9,7 @@ import { decideMerge } from "../records/decideMerge.js";
 import { decideReplace } from "../records/decideReplace.js";
 import { foldSameNameTopics, type TopicNameFold } from "../records/foldSameNameTopics.js";
 import { foldTopicInto } from "../records/foldTopicInto.js";
+import { restoreTopic } from "../records/restoreTopic.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 
 const TOPIC_ID = "The topic's id";
@@ -16,6 +17,8 @@ const TOPIC_PATH = "/topics/:id";
 const Params = z.object({ id: TopicId });
 const Patch = TopicPatch.extend({ updatedAt: UpdatedAt });
 const Merge = z.object({ into: TopicId, updatedAt: UpdatedAt }).strict();
+const OverviewIds = z.array(OverviewId).max(5000);
+const Restore = Topic.omit({ id: true }).extend({ into: TopicId, refiled: OverviewIds, added: OverviewIds, updatedAt: UpdatedAt }).strict();
 const Delete = z.object({ updatedAt: UpdatedAt.optional() }).strict();
 
 // Rename, merge and delete: docs/features/topic-filing.md, "Managing topics".
@@ -65,16 +68,36 @@ export const topicRoutes = (app: FastifyInstance, records: RecordsRepository): v
     if (target === null || target.deleted) {
       throw new ApiError("not_found", "No such topic to merge into");
     }
-    const refiled = await foldTopicInto(records, accountId, { from: id, into, updatedAt, client: request.client! });
-    request.log.info(apiLogLines.topics.merged({ topicId: id, into, refiled }));
+    const folded = await foldTopicInto(records, accountId, { from: id, into, updatedAt, client: request.client! });
+    request.log.info(apiLogLines.topics.merged({ topicId: id, into, refiled: folded.refiled.length }));
+    return reply.status(200).send(folded);
+  });
+
+  app.post("/topics/:id/restore", async (request, reply) => {
+    const { id } = parseOrThrow(Params, request.params, TOPIC_ID);
+    const { into, refiled, added, updatedAt, ...topic } = parseOrThrow(Restore, request.body, "The topic restore");
+    await restoreTopic(records, request.session!.accountId, {
+      topic: { id, ...topic },
+      into,
+      refiled,
+      added,
+      updatedAt,
+      client: request.client!,
+    });
+    request.log.info(apiLogLines.topics.restored({ topicId: id, refiled: refiled.length }));
     return reply.status(204).send();
   });
 
   app.delete(TOPIC_PATH, async (request, reply) => {
     const { id } = parseOrThrow(Params, request.params, TOPIC_ID);
     const { updatedAt = new Date().toISOString() } = parseOrThrow(Delete, request.body ?? {}, "The topic delete");
-    const unfiled = await foldTopicInto(records, request.session!.accountId, { from: id, into: null, updatedAt, client: request.client! });
-    request.log.info(apiLogLines.topics.deleted({ topicId: id, unfiled }));
+    const { refiled } = await foldTopicInto(records, request.session!.accountId, {
+      from: id,
+      into: null,
+      updatedAt,
+      client: request.client!,
+    });
+    request.log.info(apiLogLines.topics.deleted({ topicId: id, unfiled: refiled.length }));
     return reply.status(204).send();
   });
 };

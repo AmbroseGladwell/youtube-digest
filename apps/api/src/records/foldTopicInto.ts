@@ -50,15 +50,28 @@ const aliased = (current: StoredRecord | null, { from, into, updatedAt, client }
     client,
   );
 
+export interface FoldedTopic {
+  refiled: string[];
+  added: string[];
+}
+
 // Why the alias outlives the topic: docs/features/topic-filing.md, "Aliases".
-export const foldTopicInto = async (records: RecordsRepository, accountId: AccountId, fold: TopicFold): Promise<number> => {
+export const foldTopicInto = async (records: RecordsRepository, accountId: AccountId, fold: TopicFold): Promise<FoldedTopic> => {
   const topic = await records.read(accountId, "topic", fold.from);
   if (topic === null || topic.deleted) {
-    return 0;
+    return { refiled: [], added: [] };
   }
   const filed = await records.liveOverviewIdsFiledUnder(accountId, fold.from);
+  const added: string[] = [];
+  const decideRefiled = (id: string) => (current: StoredRecord | null) => {
+    const decision = refiled(current, fold);
+    if (decision.action !== "nothing" && fold.into !== null && !strings(current?.body?.topicIds).includes(fold.into)) {
+      added.push(id);
+    }
+    return decision;
+  };
   const operations: WriteOperation[] = [
-    ...filed.map((id): WriteOperation => ({ kind: "overview", id, decide: (current) => refiled(current, fold) })),
+    ...filed.map((id): WriteOperation => ({ kind: "overview", id, decide: decideRefiled(id) })),
     { kind: "settings", id: SETTINGS_RECORD_ID, decide: (current) => aliased(current, fold) },
     {
       kind: "topic",
@@ -67,5 +80,6 @@ export const foldTopicInto = async (records: RecordsRepository, accountId: Accou
     },
   ];
   const outcomes = await records.write(accountId, operations);
-  return outcomes.slice(0, filed.length).filter((outcome) => outcome !== null).length;
+  const refiledIds = filed.filter((_id, index) => outcomes[index] !== null);
+  return { refiled: refiledIds, added: added.filter((id) => refiledIds.includes(id)) };
 };

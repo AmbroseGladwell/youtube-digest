@@ -124,12 +124,18 @@ one write from the device, and every overview it touches is re-filed in the same
 | Route | What it does |
 |---|---|
 | `PUT /topics/:id { name?, description?, updatedAt }` | Renames. A blank name is refused. A name another live topic has is then folded, as below, so renaming onto a name in use is a merge into the earlier topic. |
-| `POST /topics/:id/merge { into, updatedAt }` | Files every overview under `:id` under `into` instead, once, records the alias, and tombstones `:id`. `into` must be live. |
+| `POST /topics/:id/merge { into, updatedAt }` | Files every overview under `:id` under `into` instead, once, records the alias, and tombstones `:id`. `into` must be live. Answers `{ refiled, added }`: the overviews it changed, and those it gave `into` to (the rest already had it). |
+| `POST /topics/:id/restore { name, description, createdAt, into, refiled, added, updatedAt }` | Undoes a merge: see "Undoing a merge". |
 | `DELETE /topics/:id` | Unfiles it from every overview (one with no other topic becomes Unsorted), aliases it to nothing, and tombstones it. A second delete is a 204. |
 
 All three are `foldTopicInto` underneath: re-file, alias, tombstone. A device that has not
 pulled yet sees the topic go and its overviews change as ordinary changes; nothing new is
 needed on the client to receive them.
+
+**Delete confirms first; merge doesn't, and offers Undo** (owner, 27 Nov 2026). A delete
+says how many overviews the topic holds before it goes. A merge happens at once and shows an
+Undo toast, as Manage tags does. No validation dashboard: the owner counts this as polish
+(`CLAUDE.md`, habit 6), so it sends events but has none of its own.
 
 The screens are not built yet. The owner chose logic first and a Claude Design round after
 (27 Nov 2026), mirroring Manage tags (`tag-reuse.md`, 84j–84n). Until then, these routes have
@@ -156,10 +162,20 @@ pushes them afterwards. `PUT /overviews/:id/topics` and `POST /overviews` resolv
 through the aliases first (`resolveTopicIds`), so the filing lands on the kept topic, or is
 dropped for a deleted one, instead of pointing at a tombstone.
 
-Unlike `tagAliases` it merges one level deep, like `milestones`: a topic id never comes back
-into use, so there is nothing an undo would have to take away, and a whole-map write from a
-stale device must not drop an alias the server just added. It is one step deep
+Unlike `tagAliases` it merges one level deep, like `milestones`, so a whole-map write from a
+stale device can't drop an alias the server just added. The one removal, an Undo, is the
+server's own write and replaces the map rather than merging into it. It is one step deep
 (`withTopicAlias`): merging the kept topic later repoints everything that pointed at it.
+
+## Undoing a merge
+
+The merge answers which overviews it re-filed and which it gave the kept topic to, and the
+client keeps the topic it merged away. Undo sends them back to `POST /topics/:id/restore`, which
+in one transaction makes the topic again under its own id, removes its alias, puts it back on
+every re-filed overview, and takes the kept topic off the ones the merge added it to. An
+overview deleted in the meantime is left alone. The topic comes back under the name and
+description the client sends, so undoing a rename onto a taken name brings back the old name,
+not a same-name pair.
 
 **Not covered:** a `POST /topics` resent after its topic was deleted (an acknowledgement lost
 in between) makes it again, since a tombstone is replaced like an absent record. That needs a
