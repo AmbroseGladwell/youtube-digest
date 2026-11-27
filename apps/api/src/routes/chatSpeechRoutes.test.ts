@@ -129,13 +129,15 @@ test("a chunk that fails is skipped for the reader and the rest still plays", as
   );
 });
 
-test("a warm-up starts the voice once while it is still running", async (t) => {
+test("a warm-up starts the voice once while it is still running, and is our cost, not the reader's usage", async (t) => {
   const { testApp, account } = await setUp(t);
 
   assert.equal((await account.inject({ method: "POST", url: "/api/speech/warm" })).statusCode, 204);
   assert.equal((await account.inject({ method: "POST", url: "/api/speech/warm" })).statusCode, 204);
 
   assert.equal(testApp.narrator.warms, 1);
+  const usage = (await account.inject({ method: "GET", url: "/api/chat-usage" })).json() as { share: number };
+  assert.equal(usage.share, 0);
   const costs = await testApp.sql.query<{ detail: string }>("select detail from account_costs");
   assert.deepEqual(costs, [{ detail: "chat-warm" }]);
 });
@@ -157,7 +159,7 @@ test("with Modal in front, a play runs there and is charged at Modal's price und
     "select detail, quantity::text, round(dollars::numeric, 3)::text as dollars from account_costs where account_id = $1",
     [account.accountId],
   );
-  assert.deepEqual(costs, [{ detail: "chat-modal", quantity: "20", dollars: "0.040" }]);
+  assert.deepEqual(costs, [{ detail: "chat-modal", quantity: "5", dollars: "0.010" }]);
 });
 
 test("when Modal fails before a line, the play falls back to the Fly pool and is charged there", async (t) => {

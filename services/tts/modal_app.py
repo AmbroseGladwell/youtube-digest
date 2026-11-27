@@ -9,7 +9,7 @@ import modal
 NAME = os.environ.get("OVERVIEW_TTS_APP", "overview-tts")
 MODEL_DIR = "/models"
 GPUS = ["T4", "A10", "L4"]
-SCALEDOWN_SECONDS = 20
+SCALEDOWN_SECONDS = 5
 
 image = (
     modal.Image.from_registry("nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04", add_python="3.12")
