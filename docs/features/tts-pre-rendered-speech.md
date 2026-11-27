@@ -146,6 +146,22 @@ Measured through its HTTPS endpoint from London, 26 Nov 2026 (dev app):
 - **A whole note streams through without a cut.**
 - **Five readers at once queued on one warm container** instead of starting four more. Modal's autoscaler waits before adding containers, and the service renders one request at a time. Rendering several at once on one GPU, or keeping a spare container while busy (`buffer_containers`), is for when concurrency is real.
 
+### The API on Modal first
+
+With `TTS_MODAL_URL` set, both the live lane and the render queue ask Modal first (`speechNarrators`, `createFallbackNarrator`):
+
+- **Fly takes over when Modal is too slow:** no first line from Modal within 10 s for a chat chunk, or 30 s for a render. That's usually no GPU yet; a cold T4 answers in 6–9 s.
+- **Fly also takes over when Modal fails before its first line.** A failure after a line is a failure: the chunk is skipped, or the render is retried as before.
+- **A reader who stops is never sent to Fly.**
+- **Near the usage limit, Modal is skipped:** once Modal's metered spend this month reaches `TTS_MODAL_MONTHLY_DOLLARS` (`ModalSpendGuard`, rechecked every minute), everything goes to Fly until the month turns. That spend is speech (`-modal` details) and speech-to-text together.
+- **Warm-ups go to whichever host is in front.**
+- **Logging:** each fallback logs `speech fell back to fly` with the lane and the reason. `audio rendered` carries the `host` and whether it `fellBack`.
+- **Costs per host:**
+  - Chat plays are charged per host at that host's price: Fly keeps the `chat` and `chat-warm` details, and Modal's are `chat-modal` and `chat-warm-modal`.
+  - A render on Modal is charged to the account that asked for it as `narration-modal`, for the dashboards only, with no allowance.
+  - Renders on Fly stay part of its fixed bill.
+  - Modal's machine time is the request plus its 20 s scale-down, with no boot charge, since the container answers only once loaded.
+
 ## The spoken script
 
 What gets narrated is `spokenScript(overview)` in `@overview/domain`: one entry for every `NoteLine` the reader shows, in order, headings included. Each entry is the line's `spoken` text when it has one and its `text` otherwise, passed through `speakable`. Five decisions are packed into that:

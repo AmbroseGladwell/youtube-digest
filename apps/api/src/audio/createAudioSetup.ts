@@ -11,6 +11,14 @@ export const createAudioSetup = (audio: NonNullable<AudioConfig>, runWorkers: bo
     concurrency: audio.concurrency,
     liveSlots: audio.liveSlots,
     dollarsPerMachineHour: audio.dollarsPerMachineHour,
+    modal:
+      audio.modal === null
+        ? null
+        : {
+            narrator: createHttpNarrator(audio.modal.url, fetch, { host: "modal", token: audio.modal.token }),
+            dollarsPerHour: audio.modal.dollarsPerHour,
+            monthlyDollars: audio.modal.monthlyDollars,
+          },
     runWorkers,
   };
 };

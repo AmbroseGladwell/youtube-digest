@@ -126,7 +126,11 @@ export const apiLogLines = coded("api", {
     requested: line("info", "audio requested", "A reader asked for narration, and what was already stored for that key."),
     queued: line("info", "audio queued", "Nothing was stored, so a render went on the queue."),
     dailyCapSpent: line("warn", "audio daily cap spent", "An account asked for a new render past its daily cap; nothing was queued."),
-    rendered: line("info", "audio rendered", "A render came back from the TTS service and was stored."),
+    rendered: line(
+      "info",
+      "audio rendered",
+      "A render came back from the TTS service and was stored, with the `host` it ran on and whether it `fellBack` to Fly.",
+    ),
     renderFailed: line("warn", "audio render failed", "A render failed with attempts left; it will be tried again."),
     renderGaveUp: line("error", "audio render gave up", "A render failed past MAX_RENDER_ATTEMPTS and will not be retried."),
     workerStopped: line("error", "audio worker stopped", "A queue worker threw and stopped taking jobs."),
@@ -150,6 +154,16 @@ export const apiLogLines = coded("api", {
     ),
     allowanceSpent: line("info", "speech allowance spent", "Read aloud was refused because the month's or day's chat usage was spent."),
     chargeFailed: line("error", "speech charge failed", "A finished play's usage or cost couldn't be written."),
+    fellBack: line(
+      "warn",
+      "speech fell back to fly",
+      "A chat chunk or a narration render (`lane`) went to the Fly pool instead of Modal: `closed` (Modal switched off near its usage limit), `slow` (no first line in time, usually no GPU yet) or `failed` before a line (OV-423).",
+    ),
+    modalClosed: line(
+      "warn",
+      "speech modal closed",
+      "Modal's metered spend this month reached TTS_MODAL_MONTHLY_DOLLARS, so speech goes to Fly until the month turns.",
+    ),
   },
   auth: {
     magicLinkSent: line("info", "magic link sent", "A sign-in link went out. Never the address, the link or its token."),

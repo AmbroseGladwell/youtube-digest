@@ -21,7 +21,8 @@ import { parseOrThrow } from "../http/parseOrThrow.js";
 import { readChat } from "../mcp/readChats.js";
 import { readSettings } from "../records/readSettings.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
-import type { LiveSpeechLane, LiveSpeechOutcome } from "../speech/LiveSpeechLane.js";
+import type { HostSeconds, LiveSpeechLane, LiveSpeechOutcome, LiveSpeechWarmUp } from "../speech/LiveSpeechLane.js";
+import { speechDetail, speechDollars, type HostPrices } from "../speech/speechCost.js";
 import { NdjsonChannel } from "../speech/NdjsonChannel.js";
 import { DEFAULT_CHUNK_SIZING, speechChunks, type ChunkSizing } from "../speech/speechChunks.js";
 import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
@@ -34,12 +35,11 @@ const SpeechParams = z.object({
 });
 
 const UNITS_PER_DOLLAR = 1_000_000;
-const SECONDS_PER_HOUR = 3600;
 const NO_VOICE = "This server has no voice";
 
 export interface ChatSpeech {
   lane: LiveSpeechLane;
-  dollarsPerMachineHour: number | null;
+  prices: HostPrices;
   sizing?: ChunkSizing;
 }
 
@@ -59,14 +59,27 @@ interface Payer {
 
 // How a play becomes usage and cost: docs/features/chat-read-aloud.md, "What a play costs".
 export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage, costs, sql, clock }: ChatSpeechRoutesOptions): void => {
-  const charge = async ({ accountId }: Payer, machineSeconds: number, detail: string, log: FastifyBaseLogger): Promise<number> => {
-    if (speech === null || speech.dollarsPerMachineHour === null || machineSeconds <= 0) {
+  const charge = async ({ accountId }: Payer, machineSeconds: HostSeconds, detail: string, log: FastifyBaseLogger): Promise<number> => {
+    if (speech === null) {
       return 0;
     }
-    const dollars = (machineSeconds * speech.dollarsPerMachineHour) / SECONDS_PER_HOUR;
-    const units = Math.round(dollars * UNITS_PER_DOLLAR);
+    let units = 0;
+    for (const host of ["modal", "fly"] as const) {
+      const price = speech.prices[host];
+      const seconds = machineSeconds[host];
+      if (price === null || seconds <= 0) {
+        continue;
+      }
+      const dollars = speechDollars(seconds, price);
+      units += Math.round(dollars * UNITS_PER_DOLLAR);
+      await costs.recordOrLog(
+        clock(),
+        { accountId },
+        { area: "speech", detail: speechDetail(detail, host), quantity: seconds, dollars },
+        log,
+      );
+    }
     await usage.spendOnSpeech(clock(), accountId, units);
-    await costs.recordOrLog(clock(), { accountId }, { area: "speech", detail, quantity: machineSeconds, dollars }, log);
     return units;
   };
 
@@ -97,9 +110,11 @@ export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage,
     }
     const payer = await payerOf(request.session!.accountId);
     await refuseWhenSpent(payer, request.log);
-    const { machineSeconds, warmed } = await speech.lane.warm().catch(() => ({ machineSeconds: 0, warmed: false }));
-    const usageUnits = await charge(payer, machineSeconds, "chat-warm", request.log);
-    request.log.info(apiLogLines.speech.warmed({ plan: payer.plan, warmed, machineSeconds, usageUnits }));
+    const { machineSeconds, warmed, host } = await speech.lane
+      .warm()
+      .catch((): LiveSpeechWarmUp => ({ machineSeconds: 0, warmed: false, host: null }));
+    const usageUnits = host === null ? 0 : await charge(payer, { fly: 0, modal: 0, [host]: machineSeconds }, "chat-warm", request.log);
+    request.log.info(apiLogLines.speech.warmed({ plan: payer.plan, warmed, host, machineSeconds, usageUnits }));
     return reply.status(204).send();
   });
 
@@ -168,7 +183,7 @@ export const chatSpeechRoutes = (app: FastifyInstance, { speech, records, usage,
             stopped: stop.signal.aborted,
             firstAudioSeconds,
             usageUnits,
-            priced: speech.dollarsPerMachineHour !== null,
+            priced: speech.prices.fly !== null || speech.prices.modal !== null,
           }),
         );
       })

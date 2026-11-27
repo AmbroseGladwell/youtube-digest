@@ -38,6 +38,7 @@ export interface TestApp {
   errorSink: RecordingErrorSink;
   personEraser: RecordingPersonEraser;
   narrator: ScriptedNarrator;
+  modalNarrator: ScriptedNarrator;
   audioStore: MemoryAudioStore;
   drainAudio(): Promise<void>;
   drainEmbeddings(): Promise<void>;
@@ -55,6 +56,7 @@ export interface TestAppOptions {
   socialReader?: BuildAppOptions["socialReader"];
   narration?: boolean;
   dollarsPerMachineHour?: number | null;
+  modalSpeech?: { dollarsPerHour: number | null; monthlyDollars?: number | null };
   logger?: FastifyBaseLogger;
   slowQueryMs?: number;
   transcriptService?: TranscriptServiceSetup;
@@ -74,6 +76,7 @@ export const createTestApp = async (
   {
     narration = true,
     dollarsPerMachineHour = null,
+    modalSpeech,
     logger,
     slowQueryMs,
     transcriptService,
@@ -102,6 +105,7 @@ export const createTestApp = async (
   };
   const mailer = makeRecordingMailer();
   const narrator = makeScriptedNarrator();
+  const modalNarrator = makeScriptedNarrator("modal");
   const audioStore = makeMemoryAudioStore();
   const eventSink = makeRecordingEventSink();
   const errorSink = makeRecordingErrorSink();
@@ -120,7 +124,20 @@ export const createTestApp = async (
     },
     sql,
     mailer,
-    audio: narration ? { narrator, store: audioStore, concurrency: 2, liveSlots: 1, dollarsPerMachineHour, runWorkers: false } : null,
+    audio: narration
+      ? {
+          narrator,
+          store: audioStore,
+          concurrency: 2,
+          liveSlots: 1,
+          dollarsPerMachineHour,
+          modal:
+            modalSpeech === undefined
+              ? null
+              : { narrator: modalNarrator, dollarsPerHour: modalSpeech.dollarsPerHour, monthlyDollars: modalSpeech.monthlyDollars ?? null },
+          runWorkers: false,
+        }
+      : null,
     transcriptService: transcriptService ?? null,
     ourKey: ourKey ?? null,
     speechToText:
@@ -150,6 +167,7 @@ export const createTestApp = async (
     errorSink,
     personEraser,
     narrator,
+    modalNarrator,
     audioStore,
     drainAudio: async () => {
       await app.audioQueue?.drain();

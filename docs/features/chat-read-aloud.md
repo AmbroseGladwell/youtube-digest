@@ -125,7 +125,9 @@ boot when it had stopped. Each call pays what it adds to that timeline:
 - a call while the machine idles pays only how much later the machine now stops;
 - a warm-up pays the boot, `MODEL_LOAD_SECONDS` (5) of loading and the idle.
 
-So two plays back to back don't both pay the idle, and an answer's later chunks pay only their
+On Modal (OV-423) the same timeline has no boot (the container answers only once Kokoro has loaded) and a 20 s
+idle, its scale-down window, priced at `TTS_MODAL_DOLLARS_PER_HOUR`; a play that falls back pays each host for its own
+part. So two plays back to back don't both pay the idle, and an answer's later chunks pay only their
 own speaking time. Seconds become dollars at `TTS_DOLLARS_PER_MACHINE_HOUR`, a Fly secret
 because the repository is public, and dollars become chat usage at the usual unit, a
 millionth of a dollar. Each play or warm-up adds its units to that day's `chat_usage.units`

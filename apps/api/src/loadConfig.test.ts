@@ -163,12 +163,29 @@ test("one machine of the pool is kept for reading chat aloud, never all of it, a
   assert.throws(() => audio({ TTS_DOLLARS_PER_MACHINE_HOUR: "free" }), ConfigError);
 });
 
+test("Modal speaks first only with its token and the Fly pool to fall back on, and its price and monthly cap are optional", () => {
+  const env = { DATABASE_URL, TTS_URL: "http://localhost:8000", ...R2 };
+  const token = "m".repeat(40);
+  assert.deepEqual(
+    loadConfig({ ...env, TTS_MODAL_URL: "https://modal.example", TTS_MODAL_TOKEN: token, TTS_MODAL_MONTHLY_DOLLARS: "20" }).audio!.modal,
+    {
+      url: "https://modal.example",
+      token,
+      dollarsPerHour: null,
+      monthlyDollars: 20,
+    },
+  );
+  assert.throws(() => loadConfig({ ...env, TTS_MODAL_URL: "https://modal.example" }), ConfigError);
+  assert.throws(() => loadConfig({ DATABASE_URL, TTS_MODAL_URL: "https://modal.example", TTS_MODAL_TOKEN: token }), ConfigError);
+});
+
 test("narrates through the TTS service it is given into R2, five renders at a time unless told otherwise", () => {
   assert.deepEqual(loadConfig({ DATABASE_URL, TTS_URL: "http://localhost:8000", ...R2 }).audio, {
     ttsUrl: "http://localhost:8000",
     concurrency: 5,
     liveSlots: 1,
     dollarsPerMachineHour: null,
+    modal: null,
     store: {
       kind: "r2",
       accountId: R2.R2_ACCOUNT_ID,
