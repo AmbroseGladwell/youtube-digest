@@ -26,8 +26,8 @@ import {
 import { ChatOverviewCitation, type ChatOverviewCitationProps } from "../ChatOverviewCitation/ChatOverviewCitation.js";
 import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
-import type { SentenceOnScreen } from "../../readAloud/ReadAloudEngine.js";
-import { SpokenSentenceProvider, useSpokenRange } from "../../readAloud/SpokenSentenceContext.js";
+import { SpokenSentenceProvider, useBlockReading, type ReadingAnswer } from "../../readAloud/SpokenSentenceContext.js";
+import { ChatSentence } from "../ChatSentence/ChatSentence.js";
 import { useTallerThanView } from "../../readAloud/useTallerThanView.js";
 import { chatWords } from "../../util/chatWords.js";
 import { byRelation, citationKey } from "../../util/chatSourceGroups.js";
@@ -65,7 +65,7 @@ export interface ChatAnswerProps {
   imageOf?: ((overviewId: string) => OverviewImage) | undefined;
   onSourcesOpened?: ((count: number) => void) | undefined;
   actions?: ((sources: ReactNode) => ReactNode) | undefined;
-  spoken?: SentenceOnScreen | null | undefined;
+  reading?: ReadingAnswer | null | undefined;
   top?: ReactNode;
 }
 
@@ -115,7 +115,7 @@ export const ChatAnswer = ({
   imageOf,
   onSourcesOpened,
   actions,
-  spoken = null,
+  reading = null,
   top,
 }: ChatAnswerProps) => {
   const root = useRef<HTMLDivElement | null>(null);
@@ -179,7 +179,7 @@ export const ChatAnswer = ({
       </ChatSourcesMenu>
     );
   return (
-    <SpokenSentenceProvider value={spoken}>
+    <SpokenSentenceProvider value={reading}>
       <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} ref={root} data-testid={chatAnswerTestIds.root}>
         {taller && top !== undefined && <div className={styles.top}>{top}</div>}
         {notCovered && (
@@ -274,18 +274,15 @@ interface SpokenHeadingProps {
 }
 
 const SpokenHeading = ({ text, place }: SpokenHeadingProps) => {
-  const spoken = useSpokenRange(place, 0);
-  if (spoken === null) {
+  const reading = useBlockReading(place, 0);
+  const heading = reading?.ranges[0];
+  if (reading === null || heading === undefined) {
     return <>{text}</>;
   }
   return (
-    <>
-      {text.slice(0, spoken.start)}
-      <mark className={styles.spoken} data-spoken="">
-        {text.slice(spoken.start, spoken.end)}
-      </mark>
-      {text.slice(spoken.end)}
-    </>
+    <ChatSentence index={heading.index} current={heading.index === reading.current} choose={reading.choose}>
+      {text}
+    </ChatSentence>
   );
 };
 
@@ -295,9 +292,9 @@ interface ChatItemTextProps {
 }
 
 const ChatItemText = ({ text, place }: ChatItemTextProps) => {
-  const spoken = useSpokenRange(place, 0);
+  const reading = useBlockReading(place, 0);
   if (!holdsCodeBlock(text)) {
-    return <ChatMarkedText text={text} spoken={spoken} />;
+    return <ChatMarkedText text={text} reading={reading} />;
   }
   return (
     <div className={styles.itemBlocks} data-testid={chatAnswerTestIds.itemBlocks}>

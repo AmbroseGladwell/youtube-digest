@@ -294,3 +294,80 @@ describe("ReadAloudEngine", () => {
     expect(warms()).toBe(2);
   });
 });
+
+describe("ReadAloudEngine choosing a sentence (OV-428)", () => {
+  it("moves the audio to a chosen sentence that has arrived, within its chunk", () => {
+    const { engine, media, speaking, reports } = setUp();
+    engine.press(ANSWER, META);
+    speaking[0]!.send(sentencesEvent(4));
+    speaking[0]!.send(audioEvent(0, 1));
+    speaking[0]!.send(audioEvent(1, 3));
+
+    engine.chooseSentence(3);
+
+    expect(media.src).toBe("blob:clip-1");
+    expect(media.currentTime).toBe(4);
+    expect(engine.getSnapshot()).toMatchObject({ sentence: 3, seeking: false, status: "playing" });
+    expect(reports.at(-1)).toEqual({ event: "sentenceChosen", arrived: true, paused: false });
+  });
+
+  it("waits with the highlight already there for a sentence whose audio hasn't arrived, then plays from it", () => {
+    const { engine, media, speaking, reports } = setUp();
+    engine.press(ANSWER, META);
+    speaking[0]!.send(sentencesEvent(7));
+    speaking[0]!.send(audioEvent(0, 1));
+
+    engine.chooseSentence(5);
+    expect(engine.getSnapshot()).toMatchObject({ sentence: 5, seeking: true });
+    expect(media.paused).toBe(true);
+    expect(reports.at(-1)).toMatchObject({ arrived: false });
+
+    speaking[0]!.send(audioEvent(1, 3));
+    expect(engine.getSnapshot().seeking).toBe(true);
+    speaking[0]!.send(audioEvent(4, 3));
+
+    expect(engine.getSnapshot()).toMatchObject({ sentence: 5, seeking: false, status: "playing" });
+    expect(media.src).toBe("blob:clip-4");
+    expect(media.currentTime).toBe(2);
+    expect(media.paused).toBe(false);
+  });
+
+  it("keeps a paused answer paused when a sentence is chosen, and resumes from there", () => {
+    const { engine, media, speaking } = setUp();
+    engine.press(ANSWER, META);
+    speaking[0]!.send(sentencesEvent(4));
+    speaking[0]!.send(audioEvent(0, 1));
+    speaking[0]!.send(audioEvent(1, 3));
+    engine.pause();
+
+    engine.chooseSentence(2);
+    expect(engine.getSnapshot()).toMatchObject({ status: "paused", sentence: 2 });
+    expect(media.paused).toBe(true);
+
+    engine.resume();
+    expect(media.src).toBe("blob:clip-1");
+    expect(media.currentTime).toBe(2);
+    expect(media.paused).toBe(false);
+  });
+
+  it("carries on from the next sentence that arrived when the chosen one was skipped", () => {
+    const { engine, media, speaking } = setUp();
+    engine.press(ANSWER, META);
+    speaking[0]!.send(sentencesEvent(5));
+    speaking[0]!.send(audioEvent(0, 1));
+    speaking[0]!.send(audioEvent(4, 1));
+
+    engine.chooseSentence(2);
+
+    expect(media.src).toBe("blob:clip-4");
+    expect(engine.getSnapshot()).toMatchObject({ sentence: 4, seeking: false });
+  });
+
+  it("does nothing when no answer is being read", () => {
+    const { engine, reports } = setUp();
+
+    engine.chooseSentence(1);
+
+    expect(reports).toEqual([]);
+  });
+});

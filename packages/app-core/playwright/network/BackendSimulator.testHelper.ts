@@ -1699,7 +1699,16 @@ export class BackendSimulator {
         { type: "sentences", sentences: sentences.map(({ place, block, start, end }) => ({ place, block, start, end })) },
         ...(sentences.length === 0
           ? []
-          : [{ type: "audio", first: 0, count: 1, sentenceStartsSeconds: [0], durationSeconds: 1, audioBase64: "AAAA" }]),
+          : [
+              {
+                type: "audio",
+                first: 0,
+                count: sentences.length,
+                sentenceStartsSeconds: sentences.map((_, index) => index),
+                durationSeconds: sentences.length,
+                audioBase64: "AAAA",
+              },
+            ]),
         { type: "done" },
       ],
     };
