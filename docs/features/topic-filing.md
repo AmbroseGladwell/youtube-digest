@@ -228,7 +228,9 @@ onboarding's starter topics carry one and a reader-made duplicate does not.
 
 Topics made before this existed are folded once, by migration step 51 (`foldDuplicateTopics`),
 which logs `api.startup.duplicateTopicsFolded` with the ids kept and folded and how many
-overviews were re-filed. Never the names.
+overviews were re-filed. Never the names. In production it runs in the release command
+(`seedVoiceSamples`, `deploy.md`), which applies migrations before the machines start, so the
+line is in that deploy's release output (`fly logs`), not in the app's shipped logs.
 
 ## Aliases
 
