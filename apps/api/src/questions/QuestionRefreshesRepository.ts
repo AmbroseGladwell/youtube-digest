@@ -104,6 +104,15 @@ export class QuestionRefreshesRepository {
     });
   }
 
+  async writtenSince(accountId: AccountId, since: string | null): Promise<number> {
+    const [row] = await this.#sql.query<{ count: number | string }>(
+      `select count(*) as count from question_refreshes
+        where account_id = $1 and questions_written > 0 and ($2::timestamptz is null or started_at > $2::timestamptz)`,
+      [accountId, since],
+    );
+    return Number(row?.count ?? 0);
+  }
+
   async finish(id: string, now: Date, { scopes, pairsLabelled, questionsWritten, outcome }: RefreshFinish): Promise<void> {
     await this.#sql.query(
       `update question_refreshes set finished_at = $2::timestamptz, scopes = $3::text[], pairs_labelled = $4, questions_written = $5, outcome = $6

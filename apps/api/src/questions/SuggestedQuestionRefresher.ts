@@ -40,14 +40,15 @@ import { askedPairKey, QuestionRefreshesRepository, type RefreshOutcome } from "
 import { MIN_QUESTION_RATING, questionWriterPrompt, WRITTEN_QUESTIONS_SHAPE, WrittenQuestions } from "./questionWriterPrompt.js";
 import { recordQuestionCost } from "./recordQuestionCost.js";
 import { spreadAcrossTopics } from "./spreadAcrossTopics.js";
+import { lastEngagedAt, REFRESH_GAP_DAYS, refreshGapDays } from "./refreshGapDays.js";
 import { trimQuestionBank } from "./trimQuestionBank.js";
+import { UNSEEN_QUESTIONS_WAITING, unseenQuestionsWaiting } from "./unseenQuestionsWaiting.js";
 import { writeSuggestedQuestions, type NewSuggestedQuestion } from "./writeSuggestedQuestions.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const REFRESHES_PER_WINDOW = 3;
 export const REFRESH_WINDOW_DAYS = 7;
-export const REFRESH_GAP_DAYS = 2;
 export const REFRESH_STALE_MINUTES = 15;
 export const QUESTIONS_MONTHLY_CAP_DOLLARS = 0.4;
 export const LIBRARY_PAIRS_LABELLED = 16;
@@ -178,8 +179,8 @@ export class SuggestedQuestionRefresher {
   async refresh(accountId: AccountId, scope: SuggestedQuestionScope, log: FastifyBaseLogger): Promise<RefreshStart> {
     const { planOf, costs, clock } = this.#options;
     const plan = await planOf(accountId);
-    const stopped = (status: SuggestedQuestionRefreshStatus): RefreshStart => {
-      log.info(apiLogLines.questions.refreshed({ plan, status }));
+    const stopped = (status: SuggestedQuestionRefreshStatus, why: object = {}): RefreshStart => {
+      log.info(apiLogLines.questions.refreshed({ plan, status, ...why }));
       return { status, finished: Promise.resolve(null) };
     };
     if (!SUGGESTED_QUESTION_PLANS.has(plan)) {
@@ -190,15 +191,26 @@ export class SuggestedQuestionRefresher {
     if ((await costs.monthDollars(accountId, "questions", now)) >= QUESTIONS_MONTHLY_CAP_DOLLARS) {
       return stopped("capped");
     }
+    const questions = readAll(
+      await this.#options.records.listLive(accountId, "suggestedQuestion", "%"),
+      SuggestedQuestion,
+      SUGGESTED_QUESTION_MIGRATIONS,
+    );
+    const unseen = unseenQuestionsWaiting(questions, scopeKeyOf(scope));
+    if (unseen >= UNSEEN_QUESTIONS_WAITING) {
+      return stopped("not-due", { unseenWaiting: unseen });
+    }
+    const idleRefreshes = await this.#refreshes.writtenSince(accountId, lastEngagedAt(questions));
+    const gapDays = refreshGapDays(idleRefreshes);
     const begun = await this.#refreshes.begin(accountId, {
       now,
       windowStart: new Date(now.getTime() - REFRESH_WINDOW_DAYS * DAY_MS),
       perWindow: REFRESHES_PER_WINDOW,
-      latestAllowed: new Date(now.getTime() - REFRESH_GAP_DAYS * DAY_MS),
+      latestAllowed: new Date(now.getTime() - gapDays * DAY_MS),
       staleBefore: new Date(now.getTime() - REFRESH_STALE_MINUTES * 60 * 1000),
     });
     if ("refused" in begun) {
-      return stopped(begun.refused);
+      return stopped(begun.refused, gapDays > REFRESH_GAP_DAYS ? { gapDays, idleRefreshes } : {});
     }
     const finished = this.#run(accountId, begun.id, plan, log);
     this.#running.add(finished);
