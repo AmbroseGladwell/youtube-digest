@@ -163,7 +163,7 @@ test("one machine of the pool is kept for reading chat aloud, never all of it, a
   assert.throws(() => audio({ TTS_DOLLARS_PER_MACHINE_HOUR: "free" }), ConfigError);
 });
 
-test("Modal speaks first only with its token and the Fly pool to fall back on, and its price and monthly cap are optional", () => {
+test("Modal speaks first only with its token and the Fly pool to fall back on; its price and cap are optional, and it takes 6 chat and 4 render requests at once unless told otherwise", () => {
   const env = { DATABASE_URL, TTS_URL: "http://localhost:8000", ...R2 };
   const token = "m".repeat(40);
   assert.deepEqual(
@@ -173,6 +173,8 @@ test("Modal speaks first only with its token and the Fly pool to fall back on, a
       token,
       dollarsPerHour: null,
       monthlyDollars: 20,
+      liveSlots: 6,
+      renderSlots: 4,
     },
   );
   assert.throws(() => loadConfig({ ...env, TTS_MODAL_URL: "https://modal.example" }), ConfigError);

@@ -5,6 +5,7 @@ import type { AudioSetup } from "../buildApp.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { createFallbackNarrator } from "./fallbackNarrator.js";
 import { ModalSpendGuard } from "./ModalSpendGuard.js";
+import { Slots } from "./Slots.js";
 
 // A cold T4 answers in 6–9 s (OV-421), so chat waits that long; a render is in no hurry.
 export const CHAT_FIRST_LINE_MS = 10_000;
@@ -34,8 +35,10 @@ export const speechNarrators = ({ audio, sql, clock, log }: SpeechNarratorsOptio
     clock,
     onClosed: () => log.warn(apiLogLines.speech.modalClosed({ limitSet: true })),
   });
+  const flySlots = { chat: new Slots(audio.liveSlots), renders: new Slots(audio.concurrency - audio.liveSlots) };
   const behind = (lane: "chat" | "renders", firstLineMs: number) =>
     createFallbackNarrator({
+      fallbackSlots: flySlots[lane],
       primary: modal.narrator,
       fallback: audio.narrator,
       firstLineMs,

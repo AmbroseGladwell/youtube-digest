@@ -424,6 +424,8 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TTS_MODAL_URL` | unset | Kokoro on a Modal GPU (`services/tts/modal_app.py`), tried first for chat and narration, with the Fly pool at `TTS_URL` behind it; needs `TTS_MODAL_TOKEN` and `TTS_URL` (`docs/features/tts-pre-rendered-speech.md`, "On Modal (OV-423)") |
 | `TTS_MODAL_TOKEN` | unset | the bearer the Modal app checks, the Bitwarden project's `TTS_TOKEN`; a secret |
 | `TTS_MODAL_DOLLARS_PER_HOUR` | unset | the Modal GPU's hourly price, a secret like the Fly one; unset, plays and renders on Modal record no cost |
+| `TTS_MODAL_LIVE_SLOTS` | 6 | chat requests at once to Modal while it is in front; fallbacks to Fly still take `TTS_LIVE_SLOTS` (OV-431) |
+| `TTS_MODAL_RENDER_SLOTS` | 4 | narration renders at once to Modal; with the chat slots, 2 per container across Modal's 5 |
 | `TTS_MODAL_MONTHLY_DOLLARS` | unset | stop sending speech to Modal once its metered spend this month, speech and speech-to-text together, reaches this; unset, no cap |
 | `TTS_DOLLARS_PER_MACHINE_HOUR` | unset | a pool machine's hourly price, a secret since the repository is public; unset, read aloud spends no usage and records no cost (`docs/features/chat-read-aloud.md`, "What a play costs") |
 | `R2_BUCKET` | unset | the private R2 bucket narration is kept in; with it, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are required, and the last two are secrets |

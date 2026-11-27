@@ -10,6 +10,9 @@ NAME = os.environ.get("OVERVIEW_TTS_APP", "overview-tts")
 MODEL_DIR = "/models"
 GPUS = ["T4", "A10", "L4"]
 SCALEDOWN_SECONDS = 5
+# Two renders share a T4 with no gaps up to 20 readers; four fall behind (OV-431's load test).
+RENDERS_PER_CONTAINER = 2
+MOST_CONTAINERS = 5
 
 image = (
     modal.Image.from_registry("nvidia/cuda:12.8.1-cudnn-runtime-ubuntu24.04", add_python="3.12")
@@ -27,8 +30,8 @@ app = modal.App(NAME, image=image)
 secret = modal.Secret.from_name(NAME)
 
 
-@app.cls(gpu=GPUS, secrets=[secret], scaledown_window=SCALEDOWN_SECONDS, timeout=600)
-@modal.concurrent(max_inputs=1)
+@app.cls(gpu=GPUS, secrets=[secret], scaledown_window=SCALEDOWN_SECONDS, timeout=600, max_containers=MOST_CONTAINERS)
+@modal.concurrent(max_inputs=RENDERS_PER_CONTAINER)
 class Speaker:
     @modal.enter()
     def load(self) -> None:
@@ -55,7 +58,7 @@ class Speaker:
         from overview_tts.create_app import create_app
         from overview_tts.idle_exit import IdleExit
 
-        served = create_app(self.synthesiser, IdleExit(float("inf"), lambda: None))
+        served = create_app(self.synthesiser, IdleExit(float("inf"), lambda: None), renders_at_once=RENDERS_PER_CONTAINER)
         expected = f"Bearer {os.environ['TTS_TOKEN']}"
 
         @served.middleware("http")

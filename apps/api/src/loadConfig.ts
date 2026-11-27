@@ -41,6 +41,8 @@ const ConfigEnv = z
     TTS_MODAL_TOKEN: z.string().min(32).optional(),
     TTS_MODAL_DOLLARS_PER_HOUR: z.coerce.number().positive().optional(),
     TTS_MODAL_MONTHLY_DOLLARS: z.coerce.number().positive().optional(),
+    TTS_MODAL_LIVE_SLOTS: z.coerce.number().int().positive().default(6),
+    TTS_MODAL_RENDER_SLOTS: z.coerce.number().int().positive().default(4),
     AUDIO_DIR: z.string().min(1).optional(),
     R2_ACCOUNT_ID: z
       .string()
@@ -155,6 +157,8 @@ export interface ModalSpeechConfig {
   token: string;
   dollarsPerHour: number | null;
   monthlyDollars: number | null;
+  liveSlots: number;
+  renderSlots: number;
 }
 
 export type AudioConfig = {
@@ -250,6 +254,8 @@ export const loadConfig = (env: Record<string, string | undefined> = process.env
                     token: data.TTS_MODAL_TOKEN!,
                     dollarsPerHour: data.TTS_MODAL_DOLLARS_PER_HOUR ?? null,
                     monthlyDollars: data.TTS_MODAL_MONTHLY_DOLLARS ?? null,
+                    liveSlots: data.TTS_MODAL_LIVE_SLOTS,
+                    renderSlots: data.TTS_MODAL_RENDER_SLOTS,
                   },
             store:
               data.R2_BUCKET === undefined

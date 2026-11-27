@@ -1,4 +1,5 @@
 import type { LineNarrated, Narration, NarrationRequest, Narrator, SpeechHost } from "../audio/Narrator.js";
+import type { Slots } from "./Slots.js";
 
 export interface FallbackReason {
   requestId: string;
@@ -12,6 +13,8 @@ export interface FallbackNarratorOptions {
   firstLineMs: number;
   primaryOpen: () => boolean;
   onFallback: (reason: FallbackReason) => void;
+  // How many may be on the fallback at once, since the Fly pool takes one request per machine (OV-431).
+  fallbackSlots?: Slots | null;
   schedule?: (action: () => void, ms: number) => () => void;
 }
 
@@ -29,6 +32,7 @@ export const createFallbackNarrator = ({
   firstLineMs,
   primaryOpen,
   onFallback,
+  fallbackSlots = null,
   schedule = timer,
 }: FallbackNarratorOptions): Narrator => {
   const onFallbackHost = async (
@@ -36,7 +40,14 @@ export const createFallbackNarrator = ({
     requestId: string,
     onLine: (line: LineNarrated) => Promise<void>,
     signal: AbortSignal | undefined,
-  ): Promise<Narration> => ({ ...(await fallback.narrate(request, requestId, onLine, signal)), fellBack: true });
+  ): Promise<Narration> => {
+    const release = fallbackSlots === null ? () => {} : await fallbackSlots.take();
+    try {
+      return { ...(await fallback.narrate(request, requestId, onLine, signal)), fellBack: true };
+    } finally {
+      release();
+    }
+  };
 
   return {
     async warm(requestId): Promise<SpeechHost> {
