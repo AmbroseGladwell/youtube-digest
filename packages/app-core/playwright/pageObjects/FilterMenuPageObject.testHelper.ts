@@ -3,6 +3,7 @@ import { filterMenuTestIds } from "../../src/features/library/components/FilterM
 import { bottomSheetTestIds } from "../../src/components/shared/BottomSheet/BottomSheetTestIds.js";
 import { libraryPageTestIds } from "../../src/features/library/LibraryPage/LibraryPageTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ManageTopicsDialogPageObject } from "./ManageTopicsDialogPageObject.testHelper.js";
 import { ManageTagsDialogPageObject } from "./ManageTagsDialogPageObject.testHelper.js";
 
 type Fold = "source" | "topic" | "tags" | "verdict";
@@ -135,6 +136,19 @@ export class FilterMenuPageObject extends PageObject {
       await this.openFold("tags");
       await this.click(this.page.getByTestId(filterMenuTestIds.manageTags));
       return new ManageTagsDialogPageObject(this.testContext).verifyIsShown();
+    });
+
+  openManageTopics = (): Promise<ManageTopicsDialogPageObject> =>
+    this.step("openManageTopics", async () => {
+      await this.openFold("topic");
+      await this.click(this.page.getByTestId(filterMenuTestIds.manageTopics));
+      return new ManageTopicsDialogPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyOffersNoManageTopics = () =>
+    this.step("verifyOffersNoManageTopics", async () => {
+      await this.openFold("topic");
+      await expect(this.page.getByTestId(filterMenuTestIds.manageTopics)).toHaveCount(0);
     });
 
   verifyOffersNoManageTags = () =>

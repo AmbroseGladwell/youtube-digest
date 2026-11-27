@@ -104,6 +104,7 @@ const ChatAbout = z.enum(["video", "episode", "article", "recipe"]);
 const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation", "otherOverview"]);
 const AskScope = z.enum(["library", "project"]);
 const ReadAloudScope = z.enum(["overview", "library", "project"]);
+const ManageTopicsFrom = z.enum(["sidebar", "filterMenu", "topicPage"]);
 const READ_ALOUD_PROPS = { plan: Plan, voice: NarrationVoice, scope: ReadAloudScope, sentences: z.number().int().nonnegative() };
 // OV-376: what the chat meter showed: the quiet line, the warning, the month spent, or too little left for a library question.
 const ChatMeterState = z.enum(["half", "warning", "month", "library"]);
@@ -1348,6 +1349,42 @@ export const analyticsEvents = {
         overviews: z.number().int().nonnegative(),
       }),
       undone: event("The reader undoes the last change in Manage tags"),
+    },
+    // Counts only: never a topic's name or description (docs/features/topic-filing.md, "Managing topics").
+    manageTopics: {
+      opened: event("The reader opens Manage topics, and from where", { from: ManageTopicsFrom, plan: Plan }),
+      closed: event("The reader closes Manage topics", { plan: Plan }),
+      renamed: event("The reader saves a topic's name or description, and what happened to the description", {
+        nameChanged: z.boolean(),
+        description: z.enum(["changed", "cleared", "left"]),
+        plan: Plan,
+      }),
+      merged: event(
+        "The reader merges topics into one, with how many topics and overviews, and whether the kept name or description was edited",
+        {
+          topics: z.number().int().positive(),
+          overviews: z.number().int().nonnegative(),
+          newName: z.boolean(),
+          descriptionEdited: z.boolean(),
+          plan: Plan,
+        },
+      ),
+      undone: event("The reader undoes a merge, from the dialog's notice or the toast after it closed", {
+        from: z.enum(["notice", "toast"]),
+        plan: Plan,
+      }),
+      deleteAsked: event("The reader asks to delete topics, before confirming", {
+        topics: z.number().int().positive(),
+        overviews: z.number().int().nonnegative(),
+        plan: Plan,
+      }),
+      deleted: event("The reader confirms deleting topics, with how many overviews they were on and how many have no topic now", {
+        topics: z.number().int().positive(),
+        overviews: z.number().int().nonnegative(),
+        unsorted: z.number().int().nonnegative(),
+        plan: Plan,
+      }),
+      deleteKept: event("The reader keeps the topics after asking to delete them", { topics: z.number().int().positive(), plan: Plan }),
     },
     // Counts only: never which overviews (OV-168, "OV-168 5" 168az).
     selection: {

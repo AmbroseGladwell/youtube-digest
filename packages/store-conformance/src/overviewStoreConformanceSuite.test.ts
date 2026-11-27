@@ -12,7 +12,9 @@ import {
   type UnreadableRecord,
   type Refiling,
   type TopicMerge,
+  type TopicPatch,
   addedOnMerge,
+  editedTopic,
   refiledOnMerge,
   refiledOnRestore,
 } from "@overview/domain";
@@ -96,10 +98,10 @@ class InMemoryOverviewStore implements OverviewStore {
     return topic;
   }
 
-  async renameTopic(id: TopicId, name: string) {
+  async editTopic(id: TopicId, patch: TopicPatch) {
     const topic = this.#topics.get(id);
     if (topic) {
-      this.#topics.set(id, { ...topic, name });
+      this.#topics.set(id, editedTopic(topic, patch));
     }
   }
 

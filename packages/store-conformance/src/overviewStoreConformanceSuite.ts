@@ -181,11 +181,21 @@ export const defineOverviewStoreConformanceSuite = (
     assert.deepEqual(await store.listTopics(), [topic]);
   });
 
-  test(behaviour("renameTopic changes the name and keeps the id"), async () => {
+  test(behaviour("editTopic changes the name and keeps the id and description"), async () => {
     const store = await createStore();
-    const topic = await store.createTopic({ name: "Fatherhod" });
-    await store.renameTopic(topic.id, "Fatherhood");
-    assert.deepEqual(await store.listTopics(), [{ ...topic, name: "Fatherhood" }]);
+    const topic = await store.createTopic({ name: "Film", description: "Films, including TV." });
+    await store.editTopic(topic.id, { name: "Documentaries" });
+    assert.deepEqual(await store.listTopics(), [{ ...topic, name: "Documentaries" }]);
+  });
+
+  test(behaviour("editTopic changes or clears the description alone"), async () => {
+    const store = await createStore();
+    const widened = "Films and documentaries.";
+    const topic = await store.createTopic({ name: "Cinema", description: "Films, on the big screen." });
+    await store.editTopic(topic.id, { description: widened });
+    assert.equal((await store.listTopics())[0]?.description, widened);
+    await store.editTopic(topic.id, { description: null });
+    assert.deepEqual(await store.listTopics(), [{ ...topic, description: null }]);
   });
 
   test(behaviour("mergeTopic files every overview under the kept topic once and says what it changed"), async () => {

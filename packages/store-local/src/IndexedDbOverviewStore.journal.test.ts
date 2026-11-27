@@ -133,19 +133,19 @@ test("the journal entry lands in the same transaction as the write, so the two c
   assert.ok(entries[0]!.key < entries[1]!.key);
 });
 
-test("renaming a topic journals the name as a patch", async () => {
+test("editing a topic journals the patch as given", async () => {
   const db = await openEnrolledDatabase();
   const store = new IndexedDbOverviewStore(db);
   const topic = await store.createTopic({ name: "Fatherhod" });
 
-  await store.renameTopic(topic.id, "Fatherhood");
+  await store.editTopic(topic.id, { name: "Fatherhood", description: null });
 
   const entries = await readRecordOutbox(db);
   assert.deepEqual(
     entries.map(({ kind, id, change }) => ({ kind, id, change })),
     [
       { kind: "topic", id: topic.id, change: entries[0]!.change },
-      { kind: "topic", id: topic.id, change: { op: "topic", patch: { name: "Fatherhood" } } },
+      { kind: "topic", id: topic.id, change: { op: "topic", patch: { name: "Fatherhood", description: null } } },
     ],
   );
 });

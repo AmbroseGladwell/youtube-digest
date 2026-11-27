@@ -22,6 +22,8 @@ import { libraryListTestIds } from "../../src/features/library/components/Librar
 import { MilestoneStackPageObject } from "./MilestoneStackPageObject.testHelper.js";
 import { TimeSavedSheetPageObject } from "./TimeSavedSheetPageObject.testHelper.js";
 import { AppSidebarPageObject } from "./AppSidebarPageObject.testHelper.js";
+import { ManageTopicsDialogPageObject } from "./ManageTopicsDialogPageObject.testHelper.js";
+import { topicActionsMenuTestIds } from "../../src/features/topics/components/TopicActionsMenu/TopicActionsMenuTestIds.js";
 import { SourceHeadPageObject } from "./SourceHeadPageObject.testHelper.js";
 import { appSidebarTestIds } from "../../src/shell/AppSidebar/AppSidebarTestIds.js";
 import { queueLineTestIds } from "../../src/features/captureQueue/components/QueueLine/QueueLineTestIds.js";
@@ -211,6 +213,16 @@ export class LibraryPageObject extends PageObject {
   get selectionBar(): SelectionBarPageObject {
     return new SelectionBarPageObject(this.testContext);
   }
+
+  openTopicAction = (action: "rename" | "merge" | "delete"): Promise<ManageTopicsDialogPageObject> =>
+    this.step(`openTopicAction ${action}`, async () => {
+      await this.click(topicActionsMenuTestIds.trigger);
+      await this.click(topicActionsMenuTestIds[`${action}Item`]);
+      return new ManageTopicsDialogPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyOffersTopicActions = (offers: boolean) =>
+    this.step(`verifyOffersTopicActions ${offers}`, () => this.expectToHaveCount(topicActionsMenuTestIds.trigger, offers ? 1 : 0));
 
   get toast(): ToastPageObject {
     return new ToastPageObject(this.testContext);

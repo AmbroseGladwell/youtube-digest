@@ -813,7 +813,7 @@ test("a topic renamed, merged, undone and deleted on one device reads the same o
   await laptop.sync();
   await phone.sync();
 
-  await laptop.overviews.renameTopic(from.id, "Fatherhood");
+  await laptop.overviews.editTopic(from.id, { name: "Fatherhood", description: "Being a dad." });
   const merge = await laptop.overviews.mergeTopic(from.id, into.id);
   await laptop.sync();
   await phone.sync();
@@ -833,10 +833,12 @@ test("a topic renamed, merged, undone and deleted on one device reads the same o
 
   assert.deepEqual(mergedOnPhone, { topics: [into], topicIds: [into.id] });
   assert.deepEqual(
-    restoredOnPhone.map(({ id, name }) => ({ id, name })).sort((left, right) => left.name.localeCompare(right.name)),
+    restoredOnPhone
+      .map(({ id, name, description }) => ({ id, name, description }))
+      .sort((left, right) => left.name.localeCompare(right.name)),
     [
-      { id: from.id, name: "Fatherhood" },
-      { id: into.id, name: "Parenting" },
+      { id: from.id, name: "Fatherhood", description: "Being a dad." },
+      { id: into.id, name: "Parenting", description: null },
     ],
   );
   assert.deepEqual(await phone.overviews.listTopics(), [into]);

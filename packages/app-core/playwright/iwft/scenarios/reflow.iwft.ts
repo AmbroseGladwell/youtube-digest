@@ -6,6 +6,7 @@ import type { AxeAllowance, PageObject } from "../../pageObjects/PageObject.test
 import { libraryPageTestIds } from "../../../src/features/library/LibraryPage/LibraryPageTestIds.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
+import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { savedCaptureFrom } from "../../../src/features/captures/types/SavedCaptureFactory.testHelper.js";
 import { applyReflowCondition, reflowConditions } from "../../support/reflowConditions.testHelper.js";
@@ -93,6 +94,38 @@ const screens: Screen[] = [
       return library;
     },
     verify: (library) => library.verifyFilterControlsCanBeReached(),
+  }),
+  screen({
+    name: "Manage topics, renaming a topic",
+    open: async (launcher, backendSimulator) => {
+      const film = makeTopic({ name: "Film", description: "Films, including TV." });
+      backendSimulator.overviews.seedTopic(film);
+      backendSimulator.overviews.seedTopic(makeTopic({ name: "Parenting" }));
+      backendSimulator.overviews.seed(makeOverview({ topicIds: [film.id] }));
+      const library = await openLibrary(launcher, backendSimulator);
+      const dialog = await library.filterMenu.openManageTopics();
+      await dialog.select("Film");
+      await dialog.startRename();
+      await dialog.typeName("Documentaries");
+      return dialog;
+    },
+    verify: (dialog) => dialog.verifyDialogCanBeUsed(),
+  }),
+  screen({
+    name: "Manage topics, merging two topics",
+    open: async (launcher, backendSimulator) => {
+      const health = makeTopic({ name: "Health", description: "Wellbeing, illness and medical care." });
+      const fitness = makeTopic({ name: "Fitness", description: "Exercise, training and sport." });
+      backendSimulator.overviews.seedTopic(health);
+      backendSimulator.overviews.seedTopic(fitness);
+      backendSimulator.overviews.seed(makeOverview({ topicIds: [health.id, fitness.id] }));
+      const library = await openLibrary(launcher, backendSimulator);
+      const dialog = await library.filterMenu.openManageTopics();
+      await dialog.select("Health", "Fitness");
+      await dialog.openMerge();
+      return dialog;
+    },
+    verify: (dialog) => dialog.verifyDialogCanBeUsed(),
   }),
   screen({
     name: "the account menu",

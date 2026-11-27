@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import type { OverviewStore, OverviewQuery, ClaimSummary } from "./OverviewStore.js";
 import type { Overview } from "./Overview.js";
-import type { Topic } from "./Topic.js";
+import { editedTopic, type Topic, type TopicPatch } from "./Topic.js";
 import { DEFAULT_OVERVIEW_STATE, type OverviewState } from "./OverviewState.js";
 import { OverviewId, TopicId, VideoId } from "./Brands.js";
 import { addedOnMerge, refiledOnMerge, refiledOnRestore, type Refiling, type TopicMerge } from "./TopicMerge.js";
@@ -85,10 +85,10 @@ class InMemoryOverviewStore implements OverviewStore {
     return topic;
   }
 
-  async renameTopic(id: TopicId, name: string) {
+  async editTopic(id: TopicId, patch: TopicPatch) {
     const topic = this.#topics.get(id);
     if (topic) {
-      this.#topics.set(id, { ...topic, name });
+      this.#topics.set(id, editedTopic(topic, patch));
     }
   }
 

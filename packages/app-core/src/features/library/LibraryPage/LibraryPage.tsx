@@ -21,6 +21,9 @@ import { FilterMenu } from "../components/FilterMenu/FilterMenu.js";
 import { AppliedFilters } from "../components/AppliedFilters/AppliedFilters.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageTagsDialog.js";
+import { ManageTopicsDialog } from "../../topics/components/ManageTopicsDialog/ManageTopicsDialog.js";
+import { TopicActionsMenu } from "../../topics/components/TopicActionsMenu/TopicActionsMenu.js";
+import { useManageTopics } from "../../topics/useManageTopics.js";
 import { SortMenu } from "../components/SortMenu/SortMenu.js";
 import { LibraryList, type LibraryListHeading } from "../components/LibraryList/LibraryList.js";
 import { libraryGroups, localeWeekStart } from "../util/libraryGroups.js";
@@ -204,6 +207,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const moreChipsButton = useRef<HTMLButtonElement | null>(null);
   const [newTopicOpen, setNewTopicOpen] = useState(false);
   const [manageTagsOpen, setManageTagsOpen] = useState(false);
+  const manageTopics = useManageTopics((text, undo) => toast.show(text, true, undo));
   const [timeSavedOpen, setTimeSavedOpen] = useState(false);
   const analytics = useAnalytics();
   const viewLink = useLibraryViewLink();
@@ -282,10 +286,13 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   }
 
   const { sort } = view;
-  const filters = { ...view.filters, query };
   const topics = topicsQuery.data ?? [];
-  const counts = libraryFilterCounts(entries);
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
+  // A filter on a topic deleted or merged away, here or elsewhere, clears (docs/features/topic-filing.md).
+  const topicGone =
+    topicsQuery.isSuccess && view.filters.topicId !== "all" && view.filters.topicId !== "none" && !topicNameById.has(view.filters.topicId);
+  const filters = { ...view.filters, query, ...(topicGone ? { topicId: "all" as const } : {}) };
+  const counts = libraryFilterCounts(entries);
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1], from: FilterControl | null = null) => {
     if (from !== null) {
       recordLibraryFilterChange(analytics.library.filters, filters, patch, from, counts.bySource);
@@ -623,9 +630,18 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
               <div className={styles.listHead}>
                 <div className={styles.titleBlock}>
                   <div className={styles.titleRow}>
-                    <h1 className={styles.title} data-testid={libraryPageTestIds.title}>
-                      {topicTitle?.name ?? "Overviews"}
-                    </h1>
+                    <span className={styles.titleWithMenu}>
+                      <h1 className={styles.title} data-testid={libraryPageTestIds.title}>
+                        {topicTitle?.name ?? "Overviews"}
+                      </h1>
+                      {topicTitle !== undefined && (
+                        <TopicActionsMenu
+                          name={topicTitle.name}
+                          canMerge={topics.length > 1}
+                          onChoose={(step) => manageTopics.open("topicPage", { step, topicId: topicTitle.id })}
+                        />
+                      )}
+                    </span>
                     {!sidebarShown && <span className={styles.timeSavedSlot}>{timeSavedButton}</span>}
                   </div>
                   <p className={`${styles.listCount} ${selection.selecting ? styles.listCountSelecting : ""}`} aria-live="polite">
@@ -843,6 +859,10 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           setFiltersOpen(false);
           setManageTagsOpen(true);
         }}
+        onManageTopics={() => {
+          setFiltersOpen(false);
+          manageTopics.open("filterMenu");
+        }}
         extra={
           counts.unreadable > 0 && <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>
         }
@@ -873,6 +893,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       />
 
       <ManageTagsDialog open={manageTagsOpen} entries={readableEntries(allEntries)} onClose={() => setManageTagsOpen(false)} />
+      <ManageTopicsDialog {...manageTopics.dialog} entries={readableEntries(allEntries)} />
 
       <NewTopicDialog
         open={newTopicOpen}

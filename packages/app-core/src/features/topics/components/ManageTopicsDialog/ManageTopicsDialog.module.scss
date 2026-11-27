@@ -1,0 +1,595 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/dialog.scss" as dialog;
+@use "../../../../theme/shortScreens.scss";
+
+// Design 10c–10h, after Manage tags (84j–84n): the list scrolls between a fixed head and a fixed action bar.
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  height: min(38rem, calc(85dvh - 5rem));
+  padding: 0 0.25rem 1rem;
+
+  // Too short for a list that scrolls inside a sheet: the sheet scrolls as a whole (§4.5).
+  @include shortScreens.short-screen {
+    height: auto;
+
+    .list,
+    .stepBody {
+      flex: none;
+      overflow: visible;
+    }
+  }
+}
+.contentFits {
+  height: auto;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.heading {
+  @include dialog.dialog-heading;
+
+  font-size: 1.75rem;
+}
+
+.subhead {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.84375rem;
+}
+
+.noticeText {
+  flex: 1;
+}
+
+.undo {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search {
+  @include controls.field-pill;
+
+  flex: 1;
+  min-width: 12rem;
+  height: 2.625rem;
+  padding: 0 0.5rem 0 1rem;
+  background: var(--surface);
+}
+
+.searchIcon {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.searchInput {
+  @include controls.field-input;
+
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+    display: none;
+  }
+}
+
+.sort {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-badge);
+  background: var(--surface);
+  flex: none;
+}
+
+.sortOption {
+  @include controls.ghost-pill;
+
+  padding: 0.4375rem 0.75rem;
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.sortOptionOn,
+.sortOptionOn:hover {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0 -0.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row,
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-badge);
+  cursor: pointer;
+}
+
+.row {
+  padding: 0.625rem 0.75rem;
+
+  @media (max-width: 47.9375rem) {
+    min-height: 3rem;
+  }
+}
+
+.row:hover {
+  background: var(--surface);
+}
+
+.rowSelected,
+.rowSelected:hover {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.checkbox,
+.radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.box {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1.75px var(--muted);
+  color: transparent;
+}
+
+.checkbox:checked + .box {
+  background: var(--label);
+  box-shadow: none;
+  color: var(--ground);
+}
+
+.checkbox:focus-visible + .box,
+.radio:focus-visible + .dot {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.topicText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topicName {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.description {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.78125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.rowSelected .description {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.count {
+  font-size: 0.78125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rowSelected .count,
+.choiceOn .count {
+  color: inherit;
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.84375rem;
+  color: var(--muted);
+}
+
+.renameRow,
+.keptDescription {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 1.125rem;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.renameForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fieldLabel {
+  margin: 0.125rem 0.25rem -0.125rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.optional {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.nameInput {
+  @include controls.field-solo;
+
+  min-height: 2.75rem;
+  border-color: var(--label);
+  background: var(--dialog);
+  font-size: 0.90625rem;
+
+  &:focus,
+  &:focus-visible {
+    border-color: var(--label);
+  }
+}
+
+.nameInputBad,
+.nameInputBad:focus {
+  border-color: var(--alert);
+}
+
+.area {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  min-height: 4rem;
+  padding: 0.625rem 1rem;
+  border-radius: 1.125rem;
+  background: var(--dialog);
+  box-shadow: inset 0 0 0 1.5px var(--muted);
+
+  &:focus-within {
+    box-shadow: inset 0 0 0 2px var(--label);
+  }
+}
+
+.areaLook,
+.areaLook:focus-within {
+  box-shadow: inset 0 0 0 2px var(--brand);
+}
+
+.areaInput {
+  @include controls.field-input;
+
+  field-sizing: content;
+  min-height: 2lh;
+  resize: none;
+  line-height: 1.45;
+  font-size: 0.875rem;
+}
+
+.clearDescription {
+  @include controls.quiet-control;
+
+  flex: none;
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 0.125rem 0;
+  font-family: var(--font-body);
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.look {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4375rem;
+  margin: -0.125rem 0.25rem 0;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+
+  svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--brand);
+  }
+}
+
+.help {
+  margin: -0.125rem 0.25rem 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.renameStatus {
+  margin: 0 0.25rem;
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--on-stone-tint);
+}
+
+.renameStatusBad {
+  color: var(--alert);
+}
+
+.renameActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.375rem;
+}
+
+.borrow {
+  margin: 0 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--divider);
+}
+
+.barHint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.selectedCount {
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.barActions,
+.stepActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.primary {
+  @include controls.action-pill;
+  @include controls.pill-sm;
+
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+}
+
+.secondary {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+}
+
+.quiet {
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.step {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.stepBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.back {
+  @include controls.quiet-control;
+
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 0;
+  background: transparent;
+  padding: 0.25rem 0;
+  font-family: var(--font-body);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.choices {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.legend {
+  padding: 0 0 0.5rem;
+
+  @include controls.section-label;
+}
+
+.choice {
+  padding: 0.6875rem 0.875rem;
+}
+
+.choiceOn {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  box-shadow: inset 0 0 0 1.5px var(--label);
+}
+
+.dot {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.75px var(--muted);
+}
+
+.radio:checked + .dot {
+  box-shadow: inset 0 0 0 5.5px var(--label);
+}
+
+.newNameLabel {
+  font-size: 0.90625rem;
+  color: var(--muted);
+}
+
+.newNameInput {
+  @include controls.field-input;
+
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 10rem;
+  field-sizing: content;
+  min-height: 2.125rem;
+  padding: 0 0.875rem;
+  border-radius: var(--radius-btn);
+  background: var(--dialog);
+  box-shadow: inset 0 0 0 2px var(--label);
+  font-size: 0.90625rem;
+}
+
+.stepFoot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.primaryLarge {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+.secondaryLarge {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}
+
+.primaryLarge[aria-disabled="true"],
+.primary[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dangerLarge {
+  @include controls.pill-shape;
+  @include controls.control-motion;
+  @include controls.pill-md;
+
+  background: var(--alert);
+  color: var(--ground);
+  cursor: pointer;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.confirmHeading {
+  @include dialog.dialog-heading;
+
+  font-size: 1.625rem;
+  line-height: 1.15;
+}
+
+.confirmNames {
+  margin: -0.375rem 0 0;
+  font-size: 0.84375rem;
+  color: var(--muted);
+}
+
+.confirmBody {
+  margin: 0;
+  font-size: 0.90625rem;
+  line-height: 1.5;
+}

@@ -77,6 +77,13 @@
   gap: 0.5rem;
 }
 
+.foldActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-left: auto;
+}
+
 .search {
   display: flex;
   align-items: center;
