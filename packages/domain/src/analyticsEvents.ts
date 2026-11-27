@@ -250,6 +250,7 @@ export const AccountMenuItem = z.enum([
   "plan",
   "sendFeedback",
   "connectExtension",
+  "openWebApp",
   "signInAgain",
   "signOut",
   "enterCode",

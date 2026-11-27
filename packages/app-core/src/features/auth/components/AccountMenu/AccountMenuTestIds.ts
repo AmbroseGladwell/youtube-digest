@@ -10,6 +10,7 @@ export const accountMenuTestIds = {
   createAccountItem: "AccountMenu.createAccountItem",
   enterCodeItem: "AccountMenu.enterCodeItem",
   connectExtensionItem: "AccountMenu.connectExtensionItem",
+  openWebAppItem: "AccountMenu.openWebAppItem",
   settingsItem: "AccountMenu.settingsItem",
   planItem: "AccountMenu.planItem",
   sendFeedbackItem: "AccountMenu.sendFeedbackItem",

@@ -12,6 +12,7 @@ export type AccountMenuItem =
   | "Create account"
   | "Enter code"
   | "Connect the extension"
+  | "Open the web app"
   | "Settings"
   | "Plan"
   | `Get Overview Plus ${string}`
@@ -112,6 +113,21 @@ export class AccountMenuPageObject extends PageObject {
     this.step("chooseConnectExtension", async () => {
       await this.click(accountMenuTestIds.connectExtensionItem);
       return new SignInPageObject(this.testContext);
+    });
+
+  verifyOpensWebAppAt = (url: string) =>
+    this.step(`verifyOpensWebAppAt ${url}`, async () => {
+      const link = this.get(accountMenuTestIds.openWebAppItem);
+      await expect(link).toHaveAttribute("href", url);
+      await expect(link).toHaveAttribute("target", "_blank");
+    });
+
+  chooseOpenWebApp = () =>
+    this.step("chooseOpenWebApp", async () => {
+      const opened = this.page.context().waitForEvent("page");
+      await this.click(accountMenuTestIds.openWebAppItem);
+      await opened;
+      await this.expectToHaveCount(accountMenuTestIds.menu, 0);
     });
 
   chooseSettings = (): Promise<SettingsPageObject> =>
