@@ -185,6 +185,15 @@ A question is **used up** once asked, dismissed, marked obvious, or first shown 
 and has at least `PROJECT_MEMBERS_MIN` (2) live members, until six are allocated. Nothing to fill
 means no candidates are looked for and no model is called.
 
+### The bank
+
+The Ask page pages through every live question the reader hasn't asked, so questions they pass
+over build up into a bank for Different questions (OV-424). After a refresh writes,
+`trimQuestionBank` holds each scope it filled to `LIBRARY_QUESTION_BANK_MAX` (12) or
+`PROJECT_QUESTION_BANK_MAX` (8) of those, newest `madeAt` kept, and tombstones the rest, so every
+device drops the same ones. Asked, hidden and not-useful questions aren't in the bank and are never
+trimmed: the server still reads them. A trimmed pair is never asked again, as any tombstoned one.
+
 ### Candidates
 
 Found by code from the claim embeddings OV-229 stores (`search-by-meaning.md`), at each
@@ -268,6 +277,7 @@ slots than it had says where the rest went:
   worse-rated second question on a pair), `noRoom` (the scope or the refresh was full).
 - `skippedOnWrite`: kept but skipped by `writeSuggestedQuestions`, because an overview or a
   membership went meanwhile.
+- `trimmed`: the oldest banked questions tombstoned past the bank's max.
 
 A failed refresh logs what it counted before it threw on `api.questions.refreshFailed`.
 

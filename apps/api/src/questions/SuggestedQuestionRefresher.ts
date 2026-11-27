@@ -40,6 +40,7 @@ import { askedPairKey, QuestionRefreshesRepository, type RefreshOutcome } from "
 import { MIN_QUESTION_RATING, questionWriterPrompt, WRITTEN_QUESTIONS_SHAPE, WrittenQuestions } from "./questionWriterPrompt.js";
 import { recordQuestionCost } from "./recordQuestionCost.js";
 import { spreadAcrossTopics } from "./spreadAcrossTopics.js";
+import { trimQuestionBank } from "./trimQuestionBank.js";
 import { writeSuggestedQuestions, type NewSuggestedQuestion } from "./writeSuggestedQuestions.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -80,6 +81,7 @@ export interface RefreshFunnel {
   writerReturned: number;
   dropped: Record<DropReason, number>;
   skippedOnWrite: number;
+  trimmed: number;
 }
 
 export interface RefreshResult {
@@ -100,6 +102,7 @@ const emptyFunnel = (): RefreshFunnel => ({
   writerReturned: 0,
   dropped: { badPair: 0, textLimits: 0, notOneSentence: 0, lowRating: 0, samePair: 0, noRoom: 0 },
   skippedOnWrite: 0,
+  trimmed: 0,
 });
 
 export interface RefreshStart {
@@ -376,6 +379,8 @@ export class SuggestedQuestionRefresher {
     const outcomes = await writeSuggestedQuestions(records, accountId, toWrite, clock());
     const questionsWritten = outcomes.filter((outcome) => outcome !== null).length;
     funnel.skippedOnWrite = toWrite.length - questionsWritten;
+    const banked = readAll(await records.listLive(accountId, "suggestedQuestion", "%"), SuggestedQuestion, SUGGESTED_QUESTION_MIGRATIONS);
+    funnel.trimmed = await trimQuestionBank(records, accountId, banked, scopeKeys);
     return { ...progress, outcome: "written", questionsWritten };
   }
 

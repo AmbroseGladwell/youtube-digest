@@ -1,7 +1,13 @@
 import { QUESTION_WRITER_MODEL } from "./questionModels.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import type { SuggestedQuestionScope } from "@overview/domain";
+import {
+  readStoredRecord,
+  stampSchemaVersion,
+  SUGGESTED_QUESTION_MIGRATIONS,
+  SuggestedQuestion,
+  type SuggestedQuestionScope,
+} from "@overview/domain";
 import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
@@ -9,10 +15,16 @@ import { ClaimPairsRepository } from "./ClaimPairsRepository.js";
 import { libraryCandidates, pairKeyOf, projectCandidates } from "./questionCandidates.js";
 import { keptQuestions, type LabelledPair } from "./SuggestedQuestionRefresher.js";
 import { saveSmallLibrary, setUpRefresh, type RefreshSetting } from "./SuggestedQuestionRefresher.testHelper.js";
+import { trimQuestionBank } from "./trimQuestionBank.js";
 import { writeSuggestedQuestions } from "./writeSuggestedQuestions.js";
 
 const LIBRARY: SuggestedQuestionScope = { kind: "library" };
 const inProject = (projectId: string): SuggestedQuestionScope => ({ kind: "project", projectId: projectId as never });
+const readQuestions = (rows: readonly { body: unknown; schemaVersion: number }[]): SuggestedQuestion[] =>
+  rows.flatMap((row) => {
+    const read = readStoredRecord(stampSchemaVersion(row.body ?? {}, row.schemaVersion), SuggestedQuestion, SUGGESTED_QUESTION_MIGRATIONS);
+    return read.status === "read" ? [read.record] : [];
+  });
 const key = (first: string, second: string) => [first, second].sort().join("|");
 
 const sources = ({ testApp }: RefreshSetting) => ({
@@ -288,6 +300,7 @@ test("a refresh labels fresh pairs, writes what passes the record's rules, and c
       returned: done.writerReturned,
       dropped: done.dropped,
       skippedOnWrite: done.skippedOnWrite,
+      trimmed: done.trimmed,
     },
     {
       real: labelledPairs.length,
@@ -298,6 +311,7 @@ test("a refresh labels fresh pairs, writes what passes the record's rules, and c
       returned: 7,
       dropped: { badPair: 1, textLimits: 1, notOneSentence: 1, lowRating: 1, samePair: 1, noRoom: 0 },
       skippedOnWrite: 0,
+      trimmed: 0,
     },
   );
   const logged = JSON.stringify(refreshLines);
@@ -381,4 +395,25 @@ test("a topic already on show in the scope gives way to one that isn't", () => {
     questions.map((question) => question.overviewIds),
     [["c", "d"]],
   );
+});
+
+test("past twelve banked library questions the oldest are tombstoned, and asked or hidden ones don't count", async (t) => {
+  const setting = await setUpRefresh(t);
+  const library = await saveSmallLibrary(setting);
+  const ids = [library.newest, library.sameTopic, library.otherTopic, library.linked, library.founders];
+  const seeded: string[] = [];
+  for (let index = 0; index < 15; index += 1) {
+    seeded.push(await seedQuestion(setting, LIBRARY, [ids[index % 5]!, ids[(index + 1) % 5]!], `Question ${index}?`));
+    setting.advanceDays(0.01);
+  }
+  await markQuestion(setting, seeded[14]!, { askedAt: "2026-09-26T08:00:00.000Z" });
+  await markQuestion(setting, seeded[13]!, { dismissedAt: "2026-09-26T08:00:00.000Z" });
+  const records = new RecordsRepository(setting.testApp.sql, () => setting.testApp.clock.now);
+  const live = readQuestions(await records.listLive(setting.account.accountId, "suggestedQuestion", "%"));
+
+  assert.equal(await trimQuestionBank(records, setting.account.accountId, live, new Set(["library"])), 1);
+
+  const left = new Set((await records.listLive(setting.account.accountId, "suggestedQuestion", "%")).map((row) => row.id));
+  assert.equal(left.has(seeded[0]!), false);
+  assert.ok([1, 12, 13, 14].every((index) => left.has(seeded[index]!)));
 });
