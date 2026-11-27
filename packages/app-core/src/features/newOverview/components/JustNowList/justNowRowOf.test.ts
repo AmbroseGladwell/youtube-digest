@@ -23,6 +23,12 @@ describe("justNowRowOf", () => {
     expect(row.detail).toMatch(/^Overview written · \d+ min read$/);
   });
 
+  it("says what the last finished step said, for the row that waits on the reader", () => {
+    const { source } = makeOverview();
+    expect(justNowRowOf(makeNewOverviewRun({ video: source, transcriptWords: 4120 })).finished).toBe("Transcript fetched · 4,120 words");
+    expect(justNowRowOf(makeNewOverviewRun({ url: "https://www.youtube.com/watch?v=abc123def45" })).finished).toBe("");
+  });
+
   it("is failed whatever else it got through", () => {
     expect(justNowRowOf(makeNewOverviewRun({ error: { kind: "message", message: "No" }, finishedAt: 1 })).stage).toBe("failed");
   });

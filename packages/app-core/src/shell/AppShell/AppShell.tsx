@@ -19,6 +19,7 @@ import { useAccountNeeded } from "../../features/accountLibraries/useAccountNeed
 import { markAccountSeen } from "../../features/accountLibraries/accountSeenStorage.js";
 import { GenerationStatusStrip } from "../../features/newOverview/components/GenerationStatusStrip/GenerationStatusStrip.js";
 import { NewOverviewDialog } from "../../features/newOverview/components/NewOverviewDialog/NewOverviewDialog.js";
+import { AboutYouAskPanel } from "../../features/newOverview/components/AboutYouAskPanel/AboutYouAskPanel.js";
 import { NewOverviewRunProvider } from "../../features/newOverview/NewOverviewRunContext.js";
 import { useNewOverviewRun } from "../../features/newOverview/useNewOverviewRun.js";
 import { useArticleMenuRequest } from "../../features/newOverview/useArticleMenuRequest.js";
@@ -103,6 +104,12 @@ export const AppShell = () => {
 
   // Why the shell owns the run: docs/features/overview-redesign.md, "Generating in the background".
   const newOverview = useNewOverviewRun();
+  const hostAboutYouAsk = newOverview.aboutYouAsk.host;
+  useEffect(() => {
+    if (!accountNeeded) {
+      return hostAboutYouAsk();
+    }
+  }, [accountNeeded, hostAboutYouAsk]);
   const analytics = useAnalytics();
   const isPhone = useIsPhone();
   const askTip = useLongPressTip(isPhone);
@@ -213,9 +220,13 @@ export const AppShell = () => {
   const stripOrNotice = runStripOrNotice();
   const stripInPane = sidebar.available && stripOrNotice !== null;
 
+  const askingInPanel = isPanel && newOverview.aboutYouAsk.asking !== null;
   const paneContent = () => {
     if (belowWriteFloor) {
       return <WriteFloorWall generating={newOverview.run !== null} />;
+    }
+    if (askingInPanel) {
+      return <AboutYouAskPanel />;
     }
     return gated ? <SignedOutGate panel={isPanel} /> : <Outlet />;
   };
@@ -423,7 +434,7 @@ export const AppShell = () => {
                 {/* Unmounted in the panel when closed, or the run's progress would show twice. */}
                 {!accountNeeded && (!isPanel || newOverview.dialogOpen) && (
                   <NewOverviewDialog
-                    open={newOverview.dialogOpen}
+                    open={newOverview.dialogOpen && !askingInPanel}
                     prefill={newOverview.prefill}
                     run={newOverview.run}
                     held={newOverview.held}

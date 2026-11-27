@@ -71,7 +71,19 @@ answer is written into that overview.
 - **Timing.** The wait is its own `aboutYou` step in the capture timing, and
   `newOverview.finished`'s `durationMs` leaves it out.
 
-The sheet itself waits on its Claude Design round.
+**The screens** (designs 356a–356g, hand-off `design_handoff_ov356_about_you`). On the web the
++ New dialog becomes the ask (`NewOverviewDialog`, 36rem), opening itself if the save came from
+the home field, and goes back to + New after it; on a phone it is the same shared bottom sheet,
+its foot fixed; in the extension panel it takes the pane in place (`AboutYouAskPanel`) while the
+dialog stays shut. Top to bottom (`AboutYouAsk`): a card naming what waits ("For this video",
+article or episode, its title, "Written for you once you continue"), "About you", "Make it
+yours.", the line on why (the dialog's description), the sentence a size smaller than
+onboarding's (`AboutYouSentence` size `ask`: 20px wide, 18px on a phone and in the panel), the
+hint, and "Change it anytime in Settings. It's sent to our AI provider with each overview made on
+us." Continue saves and goes on, with a spinner and Skip dimmed while it saves. Closing without
+choosing is Skip: Escape, the scrim, × ("Close: skip this") and a drag, each counted by how
+(`BottomSheet`'s `onDismissed`). While it waits the run's row says "Waiting for you" beside the
+last finished step; once filled in it is marked Personalised as it writes.
 
 ### A profile that learns
 
@@ -194,7 +206,7 @@ The Personalisation row's value is about sections and About you, and doesn't men
 `settings.personalisation.profileSharingSwitched` with whether assistants may now read it,
 `settings.personalisation.projectFilingSwitched` with whether filing into projects is now on. Onboarding counts the
 entries in each section and how many were typed. The ask at a save sends `capture.aboutYouAsk.shown`, `.continued`
-(the same counts) and `.skipped` (Skip, or closed), each with `plan`, where it was asked from and the kind of source.
+(the same counts) and `.skipped` (with how: Skip, ×, Escape, the scrim or a drag), each with `plan`, where it was asked from and the kind of source.
 The text is never logged.
 
 ### Is How to apply any good?

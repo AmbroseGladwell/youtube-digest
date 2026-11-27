@@ -2,7 +2,16 @@ import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Overview, OverviewId } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
-import { BottomSheet } from "../../../../components/shared/BottomSheet/BottomSheet.js";
+import { BottomSheet, type SheetDismissal } from "../../../../components/shared/BottomSheet/BottomSheet.js";
+import { useAboutYouAnswer } from "../../useAboutYouAnswer.js";
+import {
+  ABOUT_YOU_ASK_TITLE_ID,
+  ABOUT_YOU_ASK_WHY_ID,
+  AboutYouAsk,
+  AboutYouAskFoot,
+  AboutYouAskWaiting,
+} from "../AboutYouAsk/AboutYouAsk.js";
+import { aboutYouAskTestIds } from "../AboutYouAsk/AboutYouAskTestIds.js";
 import type { AlreadyHeld } from "../../types/AlreadyHeld.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { GenerateOverviewForm, playlistTargetOf } from "../GenerateOverviewForm/GenerateOverviewForm.js";
@@ -83,7 +92,17 @@ export const NewOverviewDialog = ({
     [],
   );
 
-  const { waiting } = useNewOverviewRunController();
+  const { waiting, aboutYouAsk } = useNewOverviewRunController();
+  const asking = aboutYouAsk.asking;
+  const { answer, change, topicNames } = useAboutYouAnswer(asking);
+  const askTitle = useRef<HTMLHeadingElement | null>(null);
+  const dismissedBy = useRef<SheetDismissal>("close");
+
+  useEffect(() => {
+    if (asking !== null) {
+      askTitle.current?.focus();
+    }
+  }, [asking]);
   const inProgress = (run !== null && run.finishedAt === null) || waiting.length > 0;
 
   // docs/features/overview-redesign.md, "Generating in the background".
@@ -151,6 +170,46 @@ export const NewOverviewDialog = ({
       />
     );
   };
+
+  if (asking !== null) {
+    const foot = (
+      <AboutYouAskFoot
+        saving={aboutYouAsk.saving}
+        stacked={phone}
+        onContinue={() => void aboutYouAsk.continueWith(answer, topicNames)}
+        onSkip={() => void aboutYouAsk.skip("skip")}
+      />
+    );
+    return (
+      <BottomSheet
+        open={open}
+        title="About you"
+        head={<AboutYouAskWaiting run={run} sourceKind={asking.sourceKind} />}
+        labelledBy={ABOUT_YOU_ASK_TITLE_ID}
+        describedBy={ABOUT_YOU_ASK_WHY_ID}
+        closeLabel="Close: skip this"
+        dismissible={!aboutYouAsk.saving}
+        onDismissed={(how) => {
+          dismissedBy.current = how;
+        }}
+        onClose={() => {
+          const how = dismissedBy.current;
+          dismissedBy.current = "close";
+          void aboutYouAsk.skip(how);
+        }}
+        wide="dialog"
+        width="36rem"
+        initialFocus={askTitle}
+        foot={phone ? foot : undefined}
+        testId={aboutYouAskTestIds.sheet}
+      >
+        <div className={styles.content}>
+          <AboutYouAsk answer={answer} topicNames={topicNames} titleRef={askTitle} onChange={change} />
+          {!phone && foot}
+        </div>
+      </BottomSheet>
+    );
+  }
 
   return (
     <BottomSheet

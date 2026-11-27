@@ -16,6 +16,7 @@ import { nextUsageMonth } from "../captures/util/nextUsageMonth.js";
 import { SavedSourceNeedsReadingError } from "./api/SavedSourceNeedsReadingError.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
+import { useIsPanel } from "../../app/LayoutContext.js";
 import {
   heldOverviewOf,
   OverviewId,
@@ -180,6 +181,8 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   const { pathname } = useLocation();
   const readingRef = useRef(false);
   readingRef.current = pathname.startsWith(Routes.overview(""));
+  const isPanelRef = useRef(false);
+  isPanelRef.current = useIsPanel();
 
   const commitDraftOnto = useCallback(
     (overview: Overview): Overview => {
@@ -465,7 +468,20 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
             }
           },
           isCancelled: () => !isCurrent(),
-          beforeWriting: mayAskAboutYou(options) ? beforeWriting(from, () => isCurrent() && !readingRef.current) : undefined,
+          beforeWriting: mayAskAboutYou(options)
+            ? beforeWriting(
+                from,
+                () => isCurrent() && !readingRef.current,
+                (aboutYou) => {
+                  if (isCurrent()) {
+                    setRun((current) => (current === null ? null : { ...current, aboutYou }));
+                    if (aboutYou === "waiting" && !isPanelRef.current) {
+                      setDialogOpen(true);
+                    }
+                  }
+                },
+              )
+            : undefined,
           onTagged: (counted) => {
             tagging = counted;
           },
