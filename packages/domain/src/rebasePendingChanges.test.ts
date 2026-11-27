@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { OutboxEntry } from "./OutboxEntry.js";
-import { rebasePendingChanges } from "./rebasePendingChanges.js";
+import { outlivesTombstone, rebasePendingChanges } from "./rebasePendingChanges.js";
 
 const entry = (change: OutboxEntry["change"], updatedAt = "2026-09-26T10:00:00.000Z"): OutboxEntry => ({
   key: 1,
@@ -64,4 +64,19 @@ test("a pending edit of the reader's own dates the record's editedAt; the app's 
 
   const folded = rebasePendingChanges(remote, [entry({ op: "tags", tags: ["saas"] })]);
   assert.equal(folded?.editedAt, undefined);
+});
+
+test("a pulled topic with a rename waiting shows the new name, and with a merge waiting stays gone", () => {
+  const topic = { id: "t", name: "Fatherhod", description: null, createdAt: "2026-09-26T08:00:00.000Z", schemaVersion: 1 };
+
+  assert.equal(rebasePendingChanges(topic, [entry({ op: "topic", patch: { name: "Fatherhood" } })])?.name, "Fatherhood");
+  assert.equal(rebasePendingChanges(topic, [entry({ op: "mergeTopic", into: "k" })]), null);
+});
+
+test("only a topic with an undo still waiting outlives its tombstone", () => {
+  const restore = { name: "Fatherhood", description: null, createdAt: "2026-09-26T08:00:00.000Z", into: "k", refiled: [], added: [] };
+
+  assert.equal(outlivesTombstone([entry({ op: "restoreTopic", restore })]), true);
+  assert.equal(outlivesTombstone([entry({ op: "topic", patch: { name: "Fatherhood" } })]), false);
+  assert.equal(outlivesTombstone([]), false);
 });

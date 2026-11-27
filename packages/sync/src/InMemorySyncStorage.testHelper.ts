@@ -4,6 +4,7 @@ import {
   changedFields,
   foldFiling,
   foldOverviewState,
+  outlivesTombstone,
   rebasePendingChanges,
   type FoldableFiling,
   type FoldableState,
@@ -139,12 +140,14 @@ export class InMemorySyncStorage implements SyncStorage {
   async applyChanges(changes: RecordChange[], next: number) {
     for (const change of changes) {
       const key = recordKey(change.kind, change.id);
+      const pending = this.outbox.filter((entry) => entry.stuck === null && entry.kind === change.kind && entry.id === change.id);
       if (change.deleted || change.body === undefined) {
-        this.records.delete(key);
+        if (!outlivesTombstone(pending)) {
+          this.records.delete(key);
+        }
         this.revisions.delete(key);
         continue;
       }
-      const pending = this.outbox.filter((entry) => entry.stuck === null && entry.kind === change.kind && entry.id === change.id);
       const rebased = rebasePendingChanges({ ...change.body, schemaVersion: change.schemaVersion, updatedAt: change.updatedAt }, pending);
       if (rebased === null) {
         this.records.delete(key);

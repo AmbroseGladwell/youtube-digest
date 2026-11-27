@@ -17,6 +17,9 @@ export const rebasePendingChanges = (remote: Record<string, unknown>, pending: r
   return record;
 };
 
+// A merge's tombstone may arrive after Undo put the topic back here: docs/features/topic-filing.md, "On the device".
+export const outlivesTombstone = (pending: readonly OutboxEntry[]): boolean => pending.some(({ change }) => change.op === "restoreTopic");
+
 const editedAt = (change: { edited?: true }, entry: OutboxEntry): { editedAt?: string } =>
   change.edited ? { editedAt: entry.updatedAt } : {};
 
@@ -36,7 +39,12 @@ const apply = (record: Record<string, unknown>, entry: OutboxEntry): Record<stri
     case "settings":
       return mergeSettingsRecord(record, change.patch);
     case "project":
+    case "topic":
       return { ...record, ...change.patch };
+    case "mergeTopic":
+      return null;
+    case "restoreTopic":
+      return record;
     case "member":
       return mergeProjectMember(record, change.change);
     case "suggestedQuestion":

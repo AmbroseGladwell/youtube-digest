@@ -181,6 +181,82 @@ export const defineOverviewStoreConformanceSuite = (
     assert.deepEqual(await store.listTopics(), [topic]);
   });
 
+  test(behaviour("renameTopic changes the name and keeps the id"), async () => {
+    const store = await createStore();
+    const topic = await store.createTopic({ name: "Fatherhod" });
+    await store.renameTopic(topic.id, "Fatherhood");
+    assert.deepEqual(await store.listTopics(), [{ ...topic, name: "Fatherhood" }]);
+  });
+
+  test(behaviour("mergeTopic files every overview under the kept topic once and says what it changed"), async () => {
+    const store = await createStore();
+    const from = await store.createTopic({ name: "Fatherhood" });
+    const into = await store.createTopic({ name: "Parenting" });
+    const both = makeOverview({ topicIds: [into.id, from.id] });
+    const onlyFrom = makeOverview({ topicIds: [from.id] });
+    const neither = makeOverview({ topicIds: [] });
+    for (const overview of [both, onlyFrom, neither]) {
+      await store.saveOverview(overview);
+    }
+
+    const merge = await store.mergeTopic(from.id, into.id);
+
+    assert.deepEqual(await store.listTopics(), [into]);
+    assert.deepEqual((await store.getOverview(both.id))?.topicIds, [into.id]);
+    assert.deepEqual((await store.getOverview(onlyFrom.id))?.topicIds, [into.id]);
+    assert.deepEqual((await store.getOverview(neither.id))?.topicIds, []);
+    assert.deepEqual(
+      { ...merge, refiled: [...(merge?.refiled ?? [])].sort() },
+      { topic: from, into: into.id, refiled: [both.id, onlyFrom.id].sort(), added: [onlyFrom.id] },
+    );
+  });
+
+  test(behaviour("mergeTopic into a topic that doesn't exist changes nothing"), async () => {
+    const store = await createStore();
+    const from = await store.createTopic({ name: "Fatherhood" });
+    assert.equal(await store.mergeTopic(from.id, TopicId.parse(randomUUID())), null);
+    assert.deepEqual(await store.listTopics(), [from]);
+  });
+
+  test(behaviour("restoreTopic undoes a merge"), async () => {
+    const store = await createStore();
+    const from = await store.createTopic({ name: "Fatherhood", description: "Being a dad." });
+    const into = await store.createTopic({ name: "Parenting" });
+    const both = makeOverview({ topicIds: [into.id, from.id] });
+    const onlyFrom = makeOverview({ topicIds: [from.id] });
+    await store.saveOverview(both);
+    await store.saveOverview(onlyFrom);
+    const merge = await store.mergeTopic(from.id, into.id);
+
+    await store.restoreTopic(merge!);
+
+    assert.deepEqual(
+      (await store.listTopics()).sort((left, right) => left.name.localeCompare(right.name)),
+      [from, into],
+    );
+    assert.deepEqual((await store.getOverview(both.id))?.topicIds, [into.id, from.id]);
+    assert.deepEqual((await store.getOverview(onlyFrom.id))?.topicIds, [from.id]);
+  });
+
+  test(behaviour("deleteTopic unfiles it, leaving an overview with no other topic unsorted"), async () => {
+    const store = await createStore();
+    const kept = await store.createTopic({ name: "Health" });
+    const gone = await store.createTopic({ name: "Fatherhood" });
+    const both = makeOverview({ topicIds: [kept.id, gone.id] });
+    const onlyGone = makeOverview({ topicIds: [gone.id] });
+    await store.saveOverview(both);
+    await store.saveOverview(onlyGone);
+
+    await store.deleteTopic(gone.id);
+
+    assert.deepEqual(await store.listTopics(), [kept]);
+    assert.deepEqual((await store.getOverview(both.id))?.topicIds, [kept.id]);
+    assert.deepEqual(
+      (await store.listOverviews({ unsorted: true })).map(({ id }) => id),
+      [onlyGone.id],
+    );
+  });
+
   test(behaviour("listClaims returns a lightweight projection, not full overviews"), async () => {
     const store = await createStore();
     const overview = makeOverview();

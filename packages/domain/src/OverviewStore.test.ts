@@ -6,6 +6,7 @@ import type { Overview } from "./Overview.js";
 import type { Topic } from "./Topic.js";
 import { DEFAULT_OVERVIEW_STATE, type OverviewState } from "./OverviewState.js";
 import { OverviewId, TopicId, VideoId } from "./Brands.js";
+import { addedOnMerge, refiledOnMerge, refiledOnRestore, type Refiling, type TopicMerge } from "./TopicMerge.js";
 
 class InMemoryOverviewStore implements OverviewStore {
   #overviews = new Map<OverviewId, Overview>();
@@ -82,6 +83,45 @@ class InMemoryOverviewStore implements OverviewStore {
     };
     this.#topics.set(topic.id, topic);
     return topic;
+  }
+
+  async renameTopic(id: TopicId, name: string) {
+    const topic = this.#topics.get(id);
+    if (topic) {
+      this.#topics.set(id, { ...topic, name });
+    }
+  }
+
+  async mergeTopic(from: TopicId, into: TopicId): Promise<TopicMerge | null> {
+    const topic = this.#topics.get(from);
+    if (topic === undefined || from === into || !this.#topics.has(into)) {
+      return null;
+    }
+    const filed = [...this.#overviews.values()];
+    const refilings = refiledOnMerge(filed, from, into);
+    this.#refile(refilings);
+    this.#topics.delete(from);
+    return { topic, into, refiled: refilings.map(({ id }) => id), added: addedOnMerge(filed, from, into) };
+  }
+
+  async restoreTopic(merge: TopicMerge) {
+    this.#refile(refiledOnRestore([...this.#overviews.values()], merge));
+    this.#topics.set(merge.topic.id, merge.topic);
+  }
+
+  async deleteTopic(id: TopicId) {
+    if (this.#topics.delete(id)) {
+      this.#refile(refiledOnMerge([...this.#overviews.values()], id, null));
+    }
+  }
+
+  #refile(refilings: readonly Refiling[]): void {
+    for (const { id, topicIds } of refilings) {
+      const overview = this.#overviews.get(id);
+      if (overview) {
+        this.#overviews.set(id, { ...overview, topicIds });
+      }
+    }
   }
 
   async getOverviewState(overviewId: OverviewId) {

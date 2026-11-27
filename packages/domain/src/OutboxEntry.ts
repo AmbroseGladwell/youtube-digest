@@ -9,6 +9,9 @@ export type OutboxChange =
   | { op: "state"; patch: Record<string, unknown> }
   | { op: "settings"; patch: Record<string, unknown> }
   | { op: "project"; patch: Record<string, unknown> }
+  | { op: "topic"; patch: Record<string, unknown> }
+  | { op: "mergeTopic"; into: string }
+  | { op: "restoreTopic"; restore: Record<string, unknown> }
   | { op: "member"; change: Record<string, unknown> }
   | { op: "suggestedQuestion"; change: Record<string, unknown> }
   | { op: "delete" }

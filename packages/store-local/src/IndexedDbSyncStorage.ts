@@ -27,6 +27,7 @@ import {
   foldOverviewState,
   migrateStoredRecord,
   readStoredRecord,
+  outlivesTombstone,
   rebasePendingChanges,
   stampStoredRecord,
   storedUpdatedAt,
@@ -422,7 +423,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
       const key = change.kind === "settings" ? SETTINGS_KEY : change.id;
 
       if (change.deleted || change.body === undefined) {
-        store.delete(key);
+        if (!outlivesTombstone(pending.get(pendingKey(change.kind, change.id)) ?? [])) {
+          store.delete(key);
+        }
         if (change.kind === "overview") {
           transaction.objectStore(OVERVIEW_STATES_STORE).delete(change.id);
         }

@@ -99,6 +99,22 @@ export class ScriptedSyncApi implements SyncApi {
     return this.#answer("createTopic", [record], () => this.#written(String(record.id)));
   }
 
+  async updateTopic(id: string, patch: Record<string, unknown>, updatedAt: string) {
+    return this.#answer("updateTopic", [id, patch, updatedAt], () => this.#written(id));
+  }
+
+  async mergeTopic(id: string, into: string, updatedAt: string) {
+    return this.#answer("mergeTopic", [id, into, updatedAt], () => undefined);
+  }
+
+  async restoreTopic(id: string, restore: Record<string, unknown>, updatedAt: string) {
+    return this.#answer("restoreTopic", [id, restore, updatedAt], () => undefined);
+  }
+
+  async deleteTopic(id: string) {
+    return this.#answer("deleteTopic", [id], () => null);
+  }
+
   async updateSettings(patch: Record<string, unknown>, updatedAt: string) {
     return this.#answer("updateSettings", [patch, updatedAt], () => this.#written("settings"));
   }

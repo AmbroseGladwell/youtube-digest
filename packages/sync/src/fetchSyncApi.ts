@@ -31,6 +31,17 @@ export const createFetchSyncApi = (options: FetchSyncApiOptions): SyncApi => {
       written(request("PUT", `/overviews/${id}/state`, WrittenRecord, { body: { ...patch, updatedAt } })),
     deleteOverview: (id) => request("DELETE", `/overviews/${id}`, WrittenRecord),
     createTopic: (record) => written(request("POST", "/topics", WrittenRecord, { body: record })),
+    updateTopic: (id, patch, updatedAt) => written(request("PUT", `/topics/${id}`, WrittenRecord, { body: { ...patch, updatedAt } })),
+    mergeTopic: async (id, into, updatedAt) => {
+      await request("POST", `/topics/${id}/merge`, z.unknown(), { body: { into, updatedAt } });
+    },
+    restoreTopic: async (id, restore, updatedAt) => {
+      await request("POST", `/topics/${id}/restore`, z.unknown(), { body: { ...restore, updatedAt } });
+    },
+    deleteTopic: async (id) => {
+      await request("DELETE", `/topics/${id}`, z.unknown());
+      return null;
+    },
     updateSettings: (patch, updatedAt) => written(request("PUT", "/settings", WrittenRecord, { body: { ...patch, updatedAt } })),
     saveFollowedPlaylist: (record, ifMatch) => written(request("POST", "/followed-playlists", WrittenRecord, { body: record, ifMatch })),
     deleteFollowedPlaylist: (id) => request("DELETE", `/followed-playlists/${encodeURIComponent(id)}`, WrittenRecord),

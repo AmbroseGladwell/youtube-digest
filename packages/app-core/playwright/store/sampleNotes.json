@@ -1,13 +1,7 @@
 [
   {
     "id": "e511b5dd-ee36-40bc-9d76-82c2f459d8d4",
-    "tags": [
-      "claude-code",
-      "personal-knowledge-management",
-      "automation",
-      "self-hosting",
-      "ai-agents"
-    ],
+    "tags": ["claude-code", "personal-knowledge-management", "automation", "self-hosting", "ai-agents"],
     "thin": false,
     "source": {
       "id": "Zs3faMCDYNs",
@@ -167,11 +161,7 @@
   },
   {
     "id": "277aa6b8-d4c3-4c9e-90c5-89816985e021",
-    "tags": [
-      "sleep",
-      "evolution",
-      "neuroscience"
-    ],
+    "tags": ["sleep", "evolution", "neuroscience"],
     "thin": false,
     "source": {
       "id": "d2c07f9df12741a187f9c610667d5f88",
@@ -221,13 +211,7 @@
         "leftOut": "It leaves out Tobler's recollections of ridicule, the history of brain-wave recording and examples contrasting sleep duration across species.",
         "chapterIndexes": []
       },
-      "keyPointChapters": [
-        0,
-        1,
-        0,
-        2,
-        2
-      ]
+      "keyPointChapters": [0, 1, 0, 2, 2]
     },
     "savedAt": "2026-11-04T22:04:21.997Z",
     "selling": {
@@ -278,12 +262,7 @@
   },
   {
     "id": "7fb0cd11-cbc6-4ec8-a397-b56264fadc7c",
-    "tags": [
-      "caribbean-food",
-      "chicken",
-      "rice-and-peas",
-      "plantain"
-    ],
+    "tags": ["caribbean-food", "chicken", "rice-and-peas", "plantain"],
     "thin": true,
     "recipe": {
       "steps": [
@@ -387,12 +366,7 @@
   },
   {
     "id": "4a22a604-7460-49f7-b4c3-93e4c38aa293",
-    "tags": [
-      "urban-planning",
-      "disaster-recovery",
-      "climate-resilience",
-      "community-engagement"
-    ],
+    "tags": ["urban-planning", "disaster-recovery", "climate-resilience", "community-engagement"],
     "thin": false,
     "source": {
       "id": "efb330dcd9f6b6a99072292e0806ffdb",
@@ -469,14 +443,7 @@
         "leftOut": "It leaves out Imren’s escape and bereavement accounts, architectural renderings, the reporter’s park walk and further details of international rebuilding schemes.",
         "chapterIndexes": []
       },
-      "keyPointChapters": [
-        0,
-        null,
-        null,
-        null,
-        4,
-        null
-      ]
+      "keyPointChapters": [0, null, null, null, 4, null]
     },
     "savedAt": "2026-11-04T22:24:20.796Z",
     "selling": {
@@ -531,14 +498,7 @@
   },
   {
     "id": "abcf75bf-3894-4721-9845-153f4e16a2b4",
-    "tags": [
-      "compound-interest",
-      "investing",
-      "savings-rate",
-      "sequence-risk",
-      "retirement-planning",
-      "fees-and-tax"
-    ],
+    "tags": ["compound-interest", "investing", "savings-rate", "sequence-risk", "retirement-planning", "fees-and-tax"],
     "thin": false,
     "source": {
       "id": "Jab_QOxKEO4",
@@ -683,13 +643,7 @@
   },
   {
     "id": "8d6760f0-7abd-432a-a84f-92a6ff6fe4a6",
-    "tags": [
-      "ai-coding",
-      "ai-agents",
-      "ai-workflows",
-      "burnout",
-      "product-design"
-    ],
+    "tags": ["ai-coding", "ai-agents", "ai-workflows", "burnout", "product-design"],
     "thin": false,
     "source": {
       "id": "89c8baa8c00d43ec0a1e2adec670d77c",
@@ -773,19 +727,9 @@
         "answer": "partial",
         "reason": "The firsthand workflow and failure accounts are worth inspecting before changing your own review process. They show what the extra throughput actually costs, rather than treating it as free productivity.",
         "leftOut": "It leaves out the detailed project inventory, charts of pull request timing and review ratios, sample generated summaries, review screenshots and migration guardrail examples.",
-        "chapterIndexes": [
-          1,
-          2
-        ]
+        "chapterIndexes": [1, 2]
       },
-      "keyPointChapters": [
-        1,
-        null,
-        2,
-        null,
-        null,
-        6
-      ]
+      "keyPointChapters": [1, null, 2, null, null, 6]
     },
     "savedAt": "2026-11-04T21:58:35.505Z",
     "selling": {
@@ -844,13 +788,7 @@
   },
   {
     "id": "bd266f97-2489-466f-af4a-e2d6f636f50c",
-    "tags": [
-      "randomness",
-      "cryptography",
-      "quantum-physics",
-      "monte-carlo",
-      "minecraft"
-    ],
+    "tags": ["randomness", "cryptography", "quantum-physics", "monte-carlo", "minecraft"],
     "thin": false,
     "source": {
       "id": "uXuQF_PPg5U",
@@ -1040,12 +978,7 @@
   },
   {
     "id": "3be0656c-610a-48b6-9f8e-3b7fdafd5e2a",
-    "tags": [
-      "lasagne",
-      "chicken",
-      "butternut-squash",
-      "pesto"
-    ],
+    "tags": ["lasagne", "chicken", "butternut-squash", "pesto"],
     "thin": true,
     "recipe": {
       "steps": [
@@ -1110,13 +1043,7 @@
   },
   {
     "id": "afeea2b4-9a77-4ec1-95e5-4eded6932f59",
-    "tags": [
-      "neuroscience",
-      "attention",
-      "music-therapy",
-      "pain",
-      "memory"
-    ],
+    "tags": ["neuroscience", "attention", "music-therapy", "pain", "memory"],
     "thin": false,
     "source": {
       "id": "49d39401807f246eb5287a17eece27f1",
@@ -1271,13 +1198,7 @@
   },
   {
     "id": "bd7d502f-cb3b-4303-a040-0d5c73721c01",
-    "tags": [
-      "neuroscience",
-      "attention",
-      "meditation",
-      "creativity",
-      "digital-distraction"
-    ],
+    "tags": ["neuroscience", "attention", "meditation", "creativity", "digital-distraction"],
     "thin": false,
     "source": {
       "id": "dd4d37cb48be89d99f107d5275d4eb01",

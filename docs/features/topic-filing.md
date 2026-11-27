@@ -141,6 +141,27 @@ The screens are not built yet. The owner chose logic first and a Claude Design r
 (27 Nov 2026), mirroring Manage tags (`tag-reuse.md`, 84j–84n). Until then, these routes have
 no caller in the app.
 
+## On the device
+
+`OverviewStore` has `renameTopic`, `mergeTopic`, `restoreTopic` and `deleteTopic`. A merge,
+undo or delete re-files the device's overviews in the same transaction (`refiledOnMerge`,
+`refiledOnRestore` in `TopicMerge.ts`, shared by every store) but journals **one** topic write,
+not one per overview: the server re-files its own copies, so a per-overview entry would only
+send the same change twice. The device shows the result at once; the server's re-filed
+overviews come down on the next pull and agree with it.
+
+`mergeTopic` returns the `TopicMerge` Undo needs (the topic as it was, and which overviews it
+re-filed and gave the kept topic to), computed from this device's library. A merge pushed and
+then undone before the next pull is the one race: the merge's tombstone can arrive after Undo
+put the topic back. `outlivesTombstone` keeps a topic with a restore still in the outbox, so it
+doesn't flicker out; its overviews may show the merge for one pull, until the restore lands.
+
+A merge into a topic deleted on another device in the meantime is answered 404 and dropped like
+any field write on a gone record. The next pull brings the server's topics and filings back, so
+the merge simply didn't happen.
+
+Nothing calls these yet. The mutations come with the screens.
+
 ## Same-name topics fold on the server
 
 After `POST /topics` and after a rename, `foldSameNameTopics` looks for live topics in the
