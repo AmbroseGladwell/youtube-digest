@@ -4,6 +4,8 @@ import { MILESTONES, spokenTimeSaved, timeSavedSummary, type Topic } from "@over
 import { Routes } from "../../app/Routes.js";
 import { PageLink } from "../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
+import { Toast } from "../../components/shared/Toast/Toast.js";
+import { useToast } from "../../components/shared/Toast/useToast.js";
 import { useAnalytics } from "../../features/analytics/AnalyticsContext.js";
 import { useQueueCount } from "../../features/captureQueue/useQueueCount.js";
 import { NewTopicDialog } from "../../features/library/components/NewTopicDialog/NewTopicDialog.js";
@@ -22,6 +24,8 @@ import { activeSummaries, archivedSummaries } from "../../features/projects/util
 import { TimeSavedFigure } from "../../features/timeSaved/components/TimeSavedFigure/TimeSavedFigure.js";
 import { TimeSavedSheet } from "../../features/timeSaved/components/TimeSavedSheet/TimeSavedSheet.js";
 import { milestoneColourStyle } from "../../features/timeSaved/util/milestoneColourStyle.js";
+import { ManageTopicsDialog } from "../../features/topics/components/ManageTopicsDialog/ManageTopicsDialog.js";
+import { useManageTopics } from "../../features/topics/useManageTopics.js";
 import styles from "./AppSidebar.module.scss";
 import { appSidebarTestIds } from "./AppSidebarTestIds.js";
 
@@ -60,6 +64,8 @@ export const AppSidebar = ({ onHide }: AppSidebarProps) => {
   const [newTopicOpen, setNewTopicOpen] = useState(false);
   const [allTopicsShown, setAllTopicsShown] = useState(false);
   const [timeSavedOpen, setTimeSavedOpen] = useState(false);
+  const toast = useToast();
+  const manageTopics = useManageTopics((text, undo) => toast.show(text, true, undo));
 
   const onHome = pathname === Routes.home();
   const homeParams = new URLSearchParams(search);
@@ -200,16 +206,30 @@ export const AppSidebar = ({ onHide }: AppSidebarProps) => {
           })}
         </ul>
       )}
-      {lines.length > TOPICS_SHOWN && (
-        <button
-          type="button"
-          className={`${styles.item} ${styles.more}`}
-          aria-expanded={allTopicsShown}
-          onClick={() => setAllTopicsShown(!allTopicsShown)}
-          data-testid={appSidebarTestIds.allTopics}
-        >
-          {allTopicsShown ? "Show fewer" : `Show all ${lines.length} topics`}
-        </button>
+      {lines.length > 0 && (
+        <div className={styles.topicsFoot}>
+          {lines.length > TOPICS_SHOWN && (
+            <button
+              type="button"
+              className={`${styles.item} ${styles.more}`}
+              aria-expanded={allTopicsShown}
+              onClick={() => setAllTopicsShown(!allTopicsShown)}
+              data-testid={appSidebarTestIds.allTopics}
+            >
+              {allTopicsShown ? "Show fewer" : `Show all ${lines.length} topics`}
+            </button>
+          )}
+          <button
+            type="button"
+            className={`${styles.item} ${styles.more} ${styles.manage}`}
+            aria-haspopup="dialog"
+            onClick={() => manageTopics.open("sidebar")}
+            data-testid={appSidebarTestIds.manageTopics}
+          >
+            <StrokeIcon name="pencilLine" size={14} />
+            Manage
+          </button>
+        </div>
       )}
 
       <div className={styles.dock}>
@@ -262,6 +282,8 @@ export const AppSidebar = ({ onHide }: AppSidebarProps) => {
       </div>
 
       {newProject.dialog}
+      <ManageTopicsDialog {...manageTopics.dialog} entries={overviews} />
+      <Toast toast={toast.toast} onDismiss={toast.dismiss} />
       {newTopicOpen && (
         <NewTopicDialog
           open

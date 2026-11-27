@@ -29,6 +29,7 @@ export interface FilterGroupsProps {
   onChange: (patch: Partial<LibraryFilters>) => void;
   onNewTopic: () => void;
   onManageTags: () => void;
+  onManageTopics: () => void;
   topShown: number;
   onShowAll: ((list: LongList) => void) | null;
 }
@@ -139,7 +140,17 @@ export const ListSearch = ({ group, label, value, onChange }: ListSearchProps) =
 );
 
 // One set of groups for the popover and the phone sheet: design 399o.
-export const FilterGroups = ({ filters, topics, counts, onChange, onNewTopic, onManageTags, topShown, onShowAll }: FilterGroupsProps) => {
+export const FilterGroups = ({
+  filters,
+  topics,
+  counts,
+  onChange,
+  onNewTopic,
+  onManageTags,
+  onManageTopics,
+  topShown,
+  onShowAll,
+}: FilterGroupsProps) => {
   const [open, setOpen] = useState<FoldedGroup | null>(null);
   const [allTopics, setAllTopics] = useState(false);
   const [sourceQuery, setSourceQuery] = useState("");
@@ -324,10 +335,18 @@ export const FilterGroups = ({ filters, topics, counts, onChange, onNewTopic, on
               {allTopics ? SHOW_FEWER : `Show all ${topics.length} topics`}
             </button>
           )}
-          <button type="button" className={styles.link} onClick={onNewTopic} data-testid={filterMenuTestIds.newTopic}>
-            <StrokeIcon name="plus" size={14} />
-            New topic
-          </button>
+          <span className={styles.foldActions}>
+            <button type="button" className={styles.link} onClick={onNewTopic} data-testid={filterMenuTestIds.newTopic}>
+              <StrokeIcon name="plus" size={14} />
+              New topic
+            </button>
+            {topics.length > 0 && (
+              <button type="button" className={styles.link} onClick={onManageTopics} data-testid={filterMenuTestIds.manageTopics}>
+                Manage topics
+                <StrokeIcon name="arrowRight" size={14} />
+              </button>
+            )}
+          </span>
         </div>
       </Fold>
 

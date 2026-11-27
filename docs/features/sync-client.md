@@ -49,7 +49,7 @@ The ops and the routes they map onto:
 | `setOverviewState` | `state`, the patch as given | `PUT /overviews/:id/state` |
 | `deleteOverview` | `delete` | `DELETE /overviews/:id` |
 | `createTopic` | `replace`, the stored topic | `POST /topics` |
-| `renameTopic` | `topic`, the patch | `PUT /topics/:id` |
+| `editTopic` | `topic`, the name and/or description as given | `PUT /topics/:id` |
 | `mergeTopic` | `mergeTopic`, the kept id; no entry per overview (`topic-filing.md`, "On the device") | `POST /topics/:id/merge` |
 | `restoreTopic` | `restoreTopic`, what Undo puts back | `POST /topics/:id/restore` |
 | `deleteTopic` | `delete`; no entry per overview | `DELETE /topics/:id` |

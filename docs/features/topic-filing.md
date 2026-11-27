@@ -103,9 +103,15 @@ and every topic-keyed thing on the page reads that id back. It invalidates inste
 
 ## Descriptions, as hints
 
-A topic's description shows as a muted line under its name in the picker (46r), and only
-there. Onboarding's starter topics are the only ones that have one (`onboarding.md`); the
-rail's dialog and the picker's own create row make topics without.
+A topic's description shows as a muted line under its name in the picker (46r) and in Manage
+topics. Onboarding's starter topics are made with one (`onboarding.md`); the New topic dialog
+and the picker's own create row make topics without, and Manage topics edits or clears it.
+
+**A description steers filing.** `generateTopicMatches` gives the model every topic as
+`"Name": description`, so a rename that leaves the old description behind misfiles ("Film"
+renamed "Documentaries" still says "Films, including TV."). Code can't judge whether a
+description still fits a name, so the reader decides; the screens only make it impossible to
+miss (below).
 
 ## What this deliberately leaves out
 
@@ -137,13 +143,65 @@ says how many overviews the topic holds before it goes. A merge happens at once 
 Undo toast, as Manage tags does. No validation dashboard: the owner counts this as polish
 (`CLAUDE.md`, habit 6), so it sends events but has none of its own.
 
-The screens are not built yet. The owner chose logic first and a Claude Design round after
-(27 Nov 2026), mirroring Manage tags (`tag-reuse.md`, 84j–84n). Until then, these routes have
-no caller in the app.
+## Manage topics, the screens (design 10a–10i)
+
+`ManageTopicsDialog` mirrors Manage tags (84j–84n): the shared sheet, 35rem wide and centred on a
+desktop, a bottom sheet on a phone; Find a topic, Most used / A–Z; a row per topic with its
+description as one muted line and its count; a bar that hints until something is picked, then
+offers Rename (one) or Merge… (several), Delete and Clear. With one topic, only Rename and
+Delete. Each step's heading goes in the sheet's own head, so × sits beside it.
+
+**Three ways in, all hidden with no topics.** The sidebar's "Manage" on the Show all line; the
+filter menu's Topic group, "Manage topics" beside New topic; and a ⋯ beside a topic page's title
+(`TopicActionsMenu`) with "Rename or edit description", "Merge into another topic…" and "Delete
+topic", each opening that step. `useManageTopics` is the one host both the sidebar and the
+library page use: it sends `opened` with where from, and hands a merge's Undo to the host's toast.
+
+**Rename edits the name and the description together.** The row opens into Name and Description
+(optional), pre-filled, with Clear and the line about filing. A blank name is refused. When the
+name changes and the description was left as it was, the description takes the brand ring and
+asks "You changed the name. Does this still describe …?" (`descriptionNeedsLook`); Save stays
+on. A name another topic has turns Save into Merge… and opens the merge step with that topic
+kept.
+
+**Merge** keeps the most used topic by default, or a new name; the description it keeps is the
+kept topic's own, or the first merged one with one, editable, with the others' shown to borrow
+from (`mergeDefaults`, `borrowNote`). No confirm step. The notice says where the topic now is,
+with Undo; closed while the notice shows, the toast carries Undo for `UNDO_TOAST_MS`. A merge
+with a new name or an edited description is the merges, then one `editTopic`; Undo puts both
+back.
+
+**Delete** confirms in the dialog, naming the topic or topics and saying how many overviews will
+have no topic, with focus on Keep (the sheet's `initialFocus` when it opens straight onto the
+step). Afterwards a notice, no Undo.
+
+**A filter on a topic that's gone clears.** The library page treats a topic id it doesn't hold
+as "All topics", so a delete or merge from any host, another device, or a saved view never
+leaves an empty list behind a filter nobody can see.
+
+**All changes are painted at once** (`useTopicChangeMutation`), from the same functions the
+stores re-file with (`topicsAfter`, `topicIdsAfter`, over `refiledOnMerge`/`refiledOnRestore`).
+
+**Short screens.** Under `short-screen` the list and the merge step stop scrolling on their own
+and the sheet scrolls as a whole, and the description field grows with its text
+(`field-sizing: content`): at 200% text a list inside a sheet left too little to use.
+`reflow.iwft.ts` covers renaming and merging.
+
+### Where the build departs from the design
+
+- **"Merge into another topic…" opens the list with the topic picked**, rather than a step of its
+  own: the frames draw the menu (10h-2) but not where it leads, and the merge step needs the
+  topics to merge, which the reader then picks.
+- **The filter menu's Topic group already has New topic.** The design's foot holds only Show all
+  and Manage topics; with three links in the menu's width, New topic and Manage topics sit
+  together at the right, on the line under Show all when they don't fit.
+- **The dark-mode Merge and Save are the app's action colour**, as Ask and New are, not the
+  frame's fixed orange.
+- **Escape out of a rename clears the pick**, as Cancel does, so a second pick starts fresh.
 
 ## On the device
 
-`OverviewStore` has `renameTopic`, `mergeTopic`, `restoreTopic` and `deleteTopic`. A merge,
+`OverviewStore` has `editTopic` (name and/or description), `mergeTopic`, `restoreTopic` and `deleteTopic`. A merge,
 undo or delete re-files the device's overviews in the same transaction (`refiledOnMerge`,
 `refiledOnRestore` in `TopicMerge.ts`, shared by every store) but journals **one** topic write,
 not one per overview: the server re-files its own copies, so a per-overview entry would only
@@ -159,8 +217,6 @@ doesn't flicker out; its overviews may show the merge for one pull, until the re
 A merge into a topic deleted on another device in the meantime is answered 404 and dropped like
 any field write on a gone record. The next pull brings the server's topics and filings back, so
 the merge simply didn't happen.
-
-Nothing calls these yet. The mutations come with the screens.
 
 ## Same-name topics fold on the server
 

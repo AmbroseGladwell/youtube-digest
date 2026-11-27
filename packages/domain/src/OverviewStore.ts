@@ -1,5 +1,5 @@
 import type { Overview } from "./Overview.js";
-import type { Topic } from "./Topic.js";
+import type { Topic, TopicPatch } from "./Topic.js";
 import type { TopicMerge } from "./TopicMerge.js";
 import type { OverviewState } from "./OverviewState.js";
 import type { OverviewId, TopicId } from "./Brands.js";
@@ -40,7 +40,7 @@ export interface OverviewStore {
   listTopics(): Promise<Topic[]>;
   createTopic(input: CreateTopicOptions): Promise<Topic>;
   // Re-filed here unjournalled, since the server re-files too: docs/features/topic-filing.md, "On the device".
-  renameTopic(id: TopicId, name: string): Promise<void>;
+  editTopic(id: TopicId, patch: TopicPatch): Promise<void>;
   mergeTopic(from: TopicId, into: TopicId): Promise<TopicMerge | null>;
   restoreTopic(merge: TopicMerge): Promise<void>;
   deleteTopic(id: TopicId): Promise<void>;

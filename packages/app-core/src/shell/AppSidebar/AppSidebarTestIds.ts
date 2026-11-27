@@ -8,6 +8,7 @@ export const appSidebarTestIds = {
   topic: (name: string) => `AppSidebar.topic.${name}`,
   allTopics: "AppSidebar.allTopics",
   newTopic: "AppSidebar.newTopic",
+  manageTopics: "AppSidebar.manageTopics",
   timeSaved: "AppSidebar.timeSaved",
   hide: "AppSidebar.hide",
 };

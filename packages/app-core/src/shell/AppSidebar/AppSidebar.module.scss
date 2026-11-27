@@ -174,6 +174,24 @@
   font-weight: 600;
 }
 
+// Design 10a: Manage sits at the right of the line with Show all, or alone on it.
+.topicsFoot {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .item {
+    width: auto;
+    white-space: nowrap;
+  }
+}
+
+.manage {
+  margin-left: auto;
+  gap: 0.375rem;
+  color: var(--ink);
+}
+
 // How much of a topic is read: the stone at half strength on a surface track.
 .readBar {
   position: relative;

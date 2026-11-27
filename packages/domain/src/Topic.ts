@@ -16,3 +16,9 @@ export const TopicPatch = z
 export type TopicPatch = z.infer<typeof TopicPatch>;
 
 export const sameTopicName = (left: string, right: string): boolean => left.trim().toLocaleLowerCase() === right.trim().toLocaleLowerCase();
+
+export const editedTopic = (topic: Topic, { name, description }: TopicPatch): Topic => ({
+  ...topic,
+  ...(name === undefined ? {} : { name }),
+  ...(description === undefined ? {} : { description }),
+});

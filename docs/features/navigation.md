@@ -51,7 +51,9 @@ Top to bottom:
   place. Choosing a topic opens the list filtered to it, keeping the rest of the view (the
   current one on the list, the saved one from elsewhere), and saves that view; choosing it
   again clears it. The topic becomes the page's title, with "Topic · N overviews · N unread"
-  under it. Its chip stays in the chip line, so Reset and × still clear it.
+  under it. Its chip stays in the chip line, so Reset and × still clear it. "Manage" at the
+  right of the Show all line opens Manage topics, and a ⋯ beside the topic's title opens one
+  step of it for that topic (`topic-filing.md`, "Manage topics, the screens").
 - **Time saved** at the foot: the figure, a bar to the next milestone in that milestone's
   colour and "Next: 50 hours · 740 min to go". It opens the same Time saved dialog as before.
   Its name is its own text, with the figure's words hidden beside the rolling digits, so what

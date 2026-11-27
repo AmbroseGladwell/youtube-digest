@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import { appSidebarTestIds } from "../../src/shell/AppSidebar/AppSidebarTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { NewProjectDialogPageObject } from "./NewProjectDialogPageObject.testHelper.js";
+import { ManageTopicsDialogPageObject } from "./ManageTopicsDialogPageObject.testHelper.js";
 import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ProjectHeadPageObject } from "./ProjectHeadPageObject.testHelper.js";
@@ -103,6 +104,15 @@ export class AppSidebarPageObject extends PageObject {
         ? expect(this.get(appSidebarTestIds.topic(name))).toHaveAttribute("aria-current", "true")
         : expect(this.get(appSidebarTestIds.topic(name))).not.toHaveAttribute("aria-current"),
     );
+
+  openManageTopics = (): Promise<ManageTopicsDialogPageObject> =>
+    this.step("openManageTopics", async () => {
+      await this.click(appSidebarTestIds.manageTopics);
+      return new ManageTopicsDialogPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyOffersManageTopics = (offers: boolean) =>
+    this.step(`verifyOffersManageTopics ${offers}`, () => this.expectToHaveCount(appSidebarTestIds.manageTopics, offers ? 1 : 0));
 
   chooseTopic = (name: string) => this.step(`chooseTopic ${name}`, () => this.click(appSidebarTestIds.topic(name)));
 

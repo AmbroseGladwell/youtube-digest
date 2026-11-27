@@ -1,0 +1,60 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 10h-2, in the shape of the project's ⋯ (ProjectActionsMenu.module.scss).
+.root {
+  position: relative;
+  display: inline-flex;
+}
+
+.trigger {
+  @include controls.ghost-pill;
+  @include controls.circle(2.25rem);
+
+  color: var(--muted);
+}
+
+.triggerOpen {
+  background: var(--surface);
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 3;
+  min-width: 13.75rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  background: var(--dialog);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-menu);
+  padding: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  animation: topicMenuRise var(--motion-arrive) var(--motion-ease) backwards;
+}
+
+@keyframes topicMenuRise {
+  from {
+    opacity: 0;
+    transform: translateY(-0.375rem);
+  }
+}
+
+.item {
+  @include controls.ghost-pill;
+
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  border-radius: 10px;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+  white-space: normal;
+}
+
+.itemDanger {
+  color: var(--alert);
+}

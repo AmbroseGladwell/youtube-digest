@@ -7,6 +7,7 @@ export const filterMenuTestIds = {
   search: (group: string) => `FilterMenu.search.${group}`,
   showAll: (group: string) => `FilterMenu.showAll.${group}`,
   newTopic: "FilterMenu.newTopic",
+  manageTopics: "FilterMenu.manageTopics",
   manageTags: "FilterMenu.manageTags",
   reset: "FilterMenu.reset",
   count: "FilterMenu.count",

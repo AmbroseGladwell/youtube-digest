@@ -25,6 +25,7 @@ export interface FilterMenuProps {
   onClose: () => void;
   onNewTopic: () => void;
   onManageTags: () => void;
+  onManageTopics: () => void;
   extra?: ReactNode;
 }
 
@@ -46,6 +47,7 @@ export const FilterMenu = ({
   onClose,
   onNewTopic,
   onManageTags,
+  onManageTopics,
   extra,
 }: FilterMenuProps) => {
   const asSheet = useMediaQuery(SHEET_QUERY);
@@ -67,6 +69,7 @@ export const FilterMenu = ({
       onChange={onChange}
       onNewTopic={onNewTopic}
       onManageTags={onManageTags}
+      onManageTopics={onManageTopics}
       topShown={asSheet ? 4 : 5}
       onShowAll={
         asSheet

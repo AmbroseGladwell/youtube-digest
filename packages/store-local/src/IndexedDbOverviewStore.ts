@@ -24,8 +24,10 @@ import {
   type RecordMigration,
   type Refiling,
   type TopicMerge,
+  type TopicPatch,
   type TopicsFiled,
   addedOnMerge,
+  editedTopic,
   refiledOnMerge,
   refiledOnRestore,
   restoreRequestOf,
@@ -252,17 +254,24 @@ export class IndexedDbOverviewStore implements OverviewStore {
     return topic;
   }
 
-  async renameTopic(id: TopicId, name: string) {
+  async editTopic(id: TopicId, patch: TopicPatch) {
     const raw = await this.#read(TOPICS_STORE, id);
     const read = raw === undefined ? null : readStoredRecord(raw, Topic, TOPIC_MIGRATIONS);
-    if (read === null || read.status === "unreadable") {
+    if (read === null || read.status === "unreadable" || Object.keys(patch).length === 0) {
       return;
     }
     const now = new Date();
-    await this.#write(TOPICS_STORE, stampStoredRecord({ ...read.record, name }, CURRENT_TOPIC_SCHEMA_VERSION, now), "topic", id, now, {
-      op: "topic",
-      patch: { name },
-    });
+    await this.#write(
+      TOPICS_STORE,
+      stampStoredRecord(editedTopic(read.record, patch), CURRENT_TOPIC_SCHEMA_VERSION, now),
+      "topic",
+      id,
+      now,
+      {
+        op: "topic",
+        patch: { ...patch },
+      },
+    );
   }
 
   async mergeTopic(from: TopicId, into: TopicId) {

@@ -81,6 +81,13 @@
   }
 }
 
+.titleWithMenu {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
 .timeSavedSlot {
   flex: none;
   min-width: 13ch;
