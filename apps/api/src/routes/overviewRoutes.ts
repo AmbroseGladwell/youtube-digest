@@ -9,6 +9,7 @@ import {
   OverviewId,
   OverviewState,
   TopicId,
+  resolveTopicIds,
   storedSourceKey,
 } from "@overview/domain";
 import { parseOrThrow } from "../http/parseOrThrow.js";
@@ -25,6 +26,8 @@ import { tombstoneChats } from "../records/tombstoneChats.js";
 import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
 import { tombstoneSuggestedQuestions } from "../records/tombstoneSuggestedQuestions.js";
 import { ApiError } from "../http/ApiError.js";
+import { SETTINGS_RECORD_ID } from "../records/RecordKind.js";
+import { topicAliasesIn } from "../records/topicAliasesIn.js";
 
 const Params = z.object({ id: OverviewId });
 // Edited marks the reader's own change, so Updated moves: docs/features/library-sort.md, "Updated".
@@ -37,6 +40,20 @@ const editedAt = (edited: boolean | undefined, updatedAt: string): { editedAt?: 
 const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: true })
   .partial()
   .extend({ asked: AskedQuestions.optional(), updatedAt: UpdatedAt });
+
+const SETTINGS_REQUIRED = { kind: "settings", id: SETTINGS_RECORD_ID } as const;
+
+// A merged or deleted topic's id maps on: docs/features/topic-filing.md, "Aliases".
+const withTopicsResolved = (body: Record<string, unknown>, aliases: Record<string, string | null>): Record<string, unknown> =>
+  Array.isArray(body.topicIds) && Object.keys(aliases).length > 0
+    ? {
+        ...body,
+        topicIds: resolveTopicIds(
+          body.topicIds.filter((id): id is string => typeof id === "string"),
+          aliases,
+        ),
+      }
+    : body;
 
 export const overviewRoutes = (
   app: FastifyInstance,
@@ -63,7 +80,15 @@ export const overviewRoutes = (
         kind: "overview",
         id,
         sourceKey: storedSourceKey(body),
-        decide: (current, held) => decideReplace("overview", current, { body, schemaVersion, updatedAt, ifMatch }, request.client!, held),
+        requires: [SETTINGS_REQUIRED],
+        decide: (current, held, [settings]) =>
+          decideReplace(
+            "overview",
+            current,
+            { body: withTopicsResolved(body, topicAliasesIn(settings?.body)), schemaVersion, updatedAt, ifMatch },
+            request.client!,
+            held,
+          ),
       },
     ]);
     const superseded = await tombstoneCapturesOf(records, accountId, { id, sourceKey: storedSourceKey(body) });
@@ -81,11 +106,17 @@ export const overviewRoutes = (
       {
         kind: "overview",
         id,
-        decide: (current) =>
+        requires: [SETTINGS_REQUIRED],
+        decide: (current, _held, [settings]) =>
           decideMerge(
             "overview",
             current,
-            { patch: { topicIds, ...editedAt(edited, updatedAt) }, updatedAt, ifMatch, defaults: null },
+            {
+              patch: { topicIds: resolveTopicIds(topicIds, topicAliasesIn(settings?.body)), ...editedAt(edited, updatedAt) },
+              updatedAt,
+              ifMatch,
+              defaults: null,
+            },
             request.client!,
           ),
       },

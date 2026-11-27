@@ -78,6 +78,11 @@ export const apiLogLines = coded("api", {
     ),
     migrationsApplied: line("info", "migrations applied", "Which migrations ran as the server came up."),
     duplicateOverviewsFolded: line("info", "duplicate overviews folded", "A migration folded two overviews of one video together."),
+    duplicateTopicsFolded: line(
+      "info",
+      "duplicate topics folded",
+      "A migration folded same-name topics into the earliest, with how many overviews were re-filed.",
+    ),
     magicLinks: line("info", "magic links", "The mail transport sign-in links go through, and the app URL they open."),
     narration: line("info", "narration", "The TTS service and audio store in use, or why narration is unavailable."),
     transcriptService: line("info", "transcript service", "Whether the server fetches transcripts itself, and through which proxy."),
@@ -116,6 +121,16 @@ export const apiLogLines = coded("api", {
   process: {
     uncaughtException: line("fatal", "uncaught exception", "An exception nothing caught; the process stops after reporting it."),
     unhandledRejection: line("fatal", "unhandled rejection", "A rejected promise nothing caught; the process stops after reporting it."),
+  },
+  topics: {
+    renamed: line("info", "topic renamed", "The reader renamed a topic; ids only, never the name."),
+    merged: line("info", "topic merged", "The reader merged a topic into another, with how many overviews were re-filed."),
+    deleted: line("info", "topic deleted", "The reader deleted a topic, with how many overviews were unfiled from it."),
+    folded: line(
+      "info",
+      "same-name topics folded",
+      "A topic reached the server with a live topic's name, so the later one was folded into the earlier.",
+    ),
   },
   sync: {
     recordWritten: line("info", "record written", "A record reached the server, at which seq and from which session."),

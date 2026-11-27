@@ -136,6 +136,14 @@ export class RecordsRepository {
     return rows.map(storedRecordFromRow);
   }
 
+  async liveOverviewIdsFiledUnder(accountId: AccountId, topicId: string): Promise<string[]> {
+    const rows = await this.#sql.query<{ id: string }>(
+      `select id from records where account_id = $1 and kind = 'overview' and not deleted and body -> 'topicIds' ? $2 order by seq`,
+      [accountId, topicId],
+    );
+    return rows.map(({ id }) => id);
+  }
+
   async read(accountId: AccountId, kind: RecordKind, id: string): Promise<StoredRecord | null> {
     return this.#get(this.#sql, accountId, kind, id);
   }
