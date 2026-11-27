@@ -519,7 +519,7 @@ export const apiLogLines = coded("api", {
     refreshed: line(
       "info",
       "suggested questions refreshed",
-      "The Ask page asked for suggested questions: the plan, `status` (`started`, or what stopped it: `free`, `busy`, `not-due`, `capped`), and once a started refresh ends its `outcome` (`written`, `full`, `no-pairs`), whether it filled the library (`library`), how many projects (`projects`), how many pairs it labelled and how many questions it wrote, and the funnel between: fresh `candidates`, labels by verdict (`labelsReal`, `labelsStretch`, `labelsNotConnected`, `labelsFailed`), `pairsToWriter`, `writerReturned`, `dropped` by reason (`badPair`, `textLimits`, `notOneSentence`, `lowRating`, `samePair`, `noRoom`) and `skippedOnWrite`. Never a question, a title or an id.",
+      "The Ask page asked for suggested questions: the plan, `status` (`started`, or what stopped it: `free`, `busy`, `not-due`, `capped`), and once a started refresh ends its `outcome` (`written`, `full`, `no-pairs`), whether it filled the library (`library`), how many projects (`projects`), how many pairs it labelled and how many questions it wrote, and the funnel between: fresh `candidates`, labels by verdict (`labelsReal`, `labelsStretch`, `labelsNotConnected`, `labelsFailed`), `pairsToWriter`, `writerReturned`, `dropped` by reason (`badPair`, `textLimits`, `notOneSentence`, `lowRating`, `samePair`, `noRoom`) `skippedOnWrite`, and how many banked questions were `trimmed`. Never a question, a title or an id.",
     ),
     refreshFailed: line(
       "warn",
