@@ -22,7 +22,12 @@ try {
 }
 
 const sql = createPgSqlClient(new pg.Pool({ connectionString: config.databaseUrl }));
-const applied = await runMigrations(sql, { before: migrationSteps() });
+const applied = await runMigrations(sql, {
+  before: migrationSteps({
+    overviews: (folds) => folds.forEach((fold) => log(apiLogLines.startup.duplicateOverviewsFolded(fold))),
+    topics: (folds) => folds.forEach((fold) => log(apiLogLines.startup.duplicateTopicsFolded(fold))),
+  }),
+});
 log(apiLogLines.startup.migrationsApplied({ applied }));
 
 if (config.audio === null) {
