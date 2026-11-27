@@ -49,6 +49,10 @@ The ops and the routes they map onto:
 | `setOverviewState` | `state`, the patch as given | `PUT /overviews/:id/state` |
 | `deleteOverview` | `delete` | `DELETE /overviews/:id` |
 | `createTopic` | `replace`, the stored topic | `POST /topics` |
+| `renameTopic` | `topic`, the patch | `PUT /topics/:id` |
+| `mergeTopic` | `mergeTopic`, the kept id; no entry per overview (`topic-filing.md`, "On the device") | `POST /topics/:id/merge` |
+| `restoreTopic` | `restoreTopic`, what Undo puts back | `POST /topics/:id/restore` |
+| `deleteTopic` | `delete`; no entry per overview | `DELETE /topics/:id` |
 | `Settings.update` | `settings`, the patch as given | `PUT /settings` |
 | `saveOverview`, with a video id | also `transcript`, the video only, read at push time | `PUT /transcripts/:videoId` |
 

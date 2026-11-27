@@ -132,3 +132,59 @@ test("the journal entry lands in the same transaction as the write, so the two c
   assert.deepEqual(entries.map((entry) => entry.id).sort(), [first.id, second.id].sort());
   assert.ok(entries[0]!.key < entries[1]!.key);
 });
+
+test("renaming a topic journals the name as a patch", async () => {
+  const db = await openEnrolledDatabase();
+  const store = new IndexedDbOverviewStore(db);
+  const topic = await store.createTopic({ name: "Fatherhod" });
+
+  await store.renameTopic(topic.id, "Fatherhood");
+
+  const entries = await readRecordOutbox(db);
+  assert.deepEqual(
+    entries.map(({ kind, id, change }) => ({ kind, id, change })),
+    [
+      { kind: "topic", id: topic.id, change: entries[0]!.change },
+      { kind: "topic", id: topic.id, change: { op: "topic", patch: { name: "Fatherhood" } } },
+    ],
+  );
+});
+
+test("merging, undoing and deleting each journal one topic write, since the server re-files the overviews", async () => {
+  const db = await openEnrolledDatabase();
+  const store = new IndexedDbOverviewStore(db);
+  const from = await store.createTopic({ name: "Fatherhood" });
+  const into = await store.createTopic({ name: "Parenting" });
+  const overview = makeOverview({ topicIds: [from.id] });
+  await store.saveOverview(overview);
+  const before = (await readRecordOutbox(db)).length;
+
+  const merge = await store.mergeTopic(from.id, into.id);
+  await store.restoreTopic(merge!);
+  await store.deleteTopic(from.id);
+
+  const written = (await readRecordOutbox(db)).slice(before);
+  assert.deepEqual(
+    written.map(({ kind, id, change }) => ({ kind, id, change })),
+    [
+      { kind: "topic", id: from.id, change: { op: "mergeTopic", into: into.id } },
+      {
+        kind: "topic",
+        id: from.id,
+        change: {
+          op: "restoreTopic",
+          restore: {
+            name: "Fatherhood",
+            description: null,
+            createdAt: from.createdAt,
+            into: into.id,
+            refiled: [overview.id],
+            added: [overview.id],
+          },
+        },
+      },
+      { kind: "topic", id: from.id, change: { op: "delete" } },
+    ],
+  );
+  assert.deepEqual((await store.getOverview(overview.id))?.topicIds, []);
+});

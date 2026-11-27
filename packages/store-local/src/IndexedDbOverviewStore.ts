@@ -20,7 +20,15 @@ import {
   type OverviewId,
   type OverviewQuery,
   type OverviewStore,
+  type PendingWrite,
   type RecordMigration,
+  type Refiling,
+  type TopicMerge,
+  type TopicsFiled,
+  addedOnMerge,
+  refiledOnMerge,
+  refiledOnRestore,
+  restoreRequestOf,
   type StoredRecordRead,
   type SyncedRecordKind,
   type UnreadableRecord,
@@ -242,6 +250,82 @@ export class IndexedDbOverviewStore implements OverviewStore {
     const record = stampStoredRecord(topic, CURRENT_TOPIC_SCHEMA_VERSION, now);
     await this.#write(TOPICS_STORE, record, "topic", topic.id, now, { op: "replace", record });
     return topic;
+  }
+
+  async renameTopic(id: TopicId, name: string) {
+    const raw = await this.#read(TOPICS_STORE, id);
+    const read = raw === undefined ? null : readStoredRecord(raw, Topic, TOPIC_MIGRATIONS);
+    if (read === null || read.status === "unreadable") {
+      return;
+    }
+    const now = new Date();
+    await this.#write(TOPICS_STORE, stampStoredRecord({ ...read.record, name }, CURRENT_TOPIC_SCHEMA_VERSION, now), "topic", id, now, {
+      op: "topic",
+      patch: { name },
+    });
+  }
+
+  async mergeTopic(from: TopicId, into: TopicId) {
+    const topics = await this.listTopics();
+    const topic = topics.find((candidate) => candidate.id === from);
+    if (topic === undefined || from === into || !topics.some((candidate) => candidate.id === into)) {
+      return null;
+    }
+    const filed = await this.#filed();
+    const refilings = refiledOnMerge(filed, from, into);
+    await this.#refileAndJournal(refilings, (topicsStore) => topicsStore.delete(from), {
+      kind: "topic",
+      id: from,
+      change: { op: "mergeTopic", into },
+    });
+    return { topic, into, refiled: refilings.map(({ id }) => id), added: addedOnMerge(filed, from, into) };
+  }
+
+  async restoreTopic(merge: TopicMerge) {
+    const now = new Date();
+    const record = stampStoredRecord(merge.topic, CURRENT_TOPIC_SCHEMA_VERSION, now);
+    await this.#refileAndJournal(refiledOnRestore(await this.#filed(), merge), (topicsStore) => topicsStore.put(record), {
+      kind: "topic",
+      id: merge.topic.id,
+      change: { op: "restoreTopic", restore: restoreRequestOf(merge) },
+    });
+  }
+
+  async deleteTopic(id: TopicId) {
+    if (!(await this.listTopics()).some((topic) => topic.id === id)) {
+      return;
+    }
+    await this.#refileAndJournal(refiledOnMerge(await this.#filed(), id, null), (topicsStore) => topicsStore.delete(id), {
+      kind: "topic",
+      id,
+      change: { op: "delete" },
+    });
+  }
+
+  async #filed(): Promise<TopicsFiled[]> {
+    return (await this.listOverviews()).map(({ id, topicIds }) => ({ id, topicIds }));
+  }
+
+  async #refileAndJournal(
+    refilings: readonly Refiling[],
+    changeTopic: (topicsStore: IDBObjectStore) => void,
+    write: Omit<PendingWrite, "updatedAt">,
+  ): Promise<void> {
+    const now = new Date();
+    const transaction = this.#db.transaction([TOPICS_STORE, OVERVIEWS_STORE, ...JOURNALLED_STORES], "readwrite");
+    const overviews = transaction.objectStore(OVERVIEWS_STORE);
+    for (const { id, topicIds } of refilings) {
+      const migrated = migrateStoredRecord(await promisifyRequest<unknown>(overviews.get(id)), OVERVIEW_MIGRATIONS);
+      if (migrated.status === "migrated") {
+        overviews.put(stampStoredRecord({ ...migrated.record, topicIds }, CURRENT_OVERVIEW_SCHEMA_VERSION, now));
+      }
+    }
+    changeTopic(transaction.objectStore(TOPICS_STORE));
+    const journaled = await appendPendingWrite(transaction, { ...write, updatedAt: now.toISOString() });
+    await promisifyTransaction(transaction);
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 
   async getOverviewState(overviewId: OverviewId) {

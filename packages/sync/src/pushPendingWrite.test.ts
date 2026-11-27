@@ -446,3 +446,36 @@ for (const code of ["video_already_held", "capture_already_held"] as const) {
     assert.deepEqual(outcome, { result: "superseded" });
   });
 }
+
+test("a topic's rename, merge, undo and delete each go to their own route", async () => {
+  const api = new ScriptedSyncApi();
+  const topic = (change: OutboxEntry["change"]) => entry({ kind: "topic", id: "t", change });
+  const restore = { name: "Fatherhood", description: null, createdAt: AT, into: "k", refiled: ["o"], added: ["o"] };
+
+  const outcomes = [
+    await pushPendingWrite(api, topic({ op: "topic", patch: { name: "Fatherhood" } }), 1, storage),
+    await pushPendingWrite(api, topic({ op: "mergeTopic", into: "k" }), 2, storage),
+    await pushPendingWrite(api, topic({ op: "restoreTopic", restore }), null, storage),
+    await pushPendingWrite(api, topic({ op: "delete" }), 3, storage),
+  ];
+
+  assert.deepEqual(
+    outcomes.map(({ result }) => result),
+    ["written", "gone", "sent", "gone"],
+  );
+  assert.deepEqual(api.calls, [
+    { method: "updateTopic", args: ["t", { name: "Fatherhood" }, AT] },
+    { method: "mergeTopic", args: ["t", "k", AT] },
+    { method: "restoreTopic", args: ["t", restore, AT] },
+    { method: "deleteTopic", args: ["t"] },
+  ]);
+});
+
+test("a merge into a topic deleted elsewhere is dropped, so the next pull puts the server's topics back", async () => {
+  const api = new ScriptedSyncApi();
+  api.failOnce("mergeTopic", { code: "not_found" });
+
+  const outcome = await pushPendingWrite(api, entry({ kind: "topic", id: "t", change: { op: "mergeTopic", into: "k" } }), 1, storage);
+
+  assert.equal(outcome.result, "gone");
+});

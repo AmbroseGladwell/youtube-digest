@@ -13,6 +13,10 @@ export interface SyncApi {
   setOverviewState(id: string, patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   deleteOverview(id: string): Promise<WrittenRecord | null>;
   createTopic(record: Record<string, unknown>): Promise<WrittenRecord>;
+  updateTopic(id: string, patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
+  mergeTopic(id: string, into: string, updatedAt: string): Promise<void>;
+  restoreTopic(id: string, restore: Record<string, unknown>, updatedAt: string): Promise<void>;
+  deleteTopic(id: string): Promise<WrittenRecord | null>;
   updateSettings(patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   saveFollowedPlaylist(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
   deleteFollowedPlaylist(id: string): Promise<WrittenRecord | null>;

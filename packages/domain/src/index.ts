@@ -233,6 +233,7 @@ export * from "./analyticsPlatform.js";
 export * from "./normaliseTag.js";
 export * from "./TagAliases.js";
 export * from "./TopicAliases.js";
+export * from "./TopicMerge.js";
 export * from "./withTagAlias.js";
 export * from "./retagged.js";
 export * from "./tagUsage.js";

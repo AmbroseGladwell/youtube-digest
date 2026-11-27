@@ -75,6 +75,14 @@ const send = async (
       return written(await api.updateSettings(change.patch, entry.updatedAt));
     case "project":
       return written(await api.updateProject(entry.id, change.patch, entry.updatedAt));
+    case "topic":
+      return written(await api.updateTopic(entry.id, change.patch, entry.updatedAt));
+    case "mergeTopic":
+      await api.mergeTopic(entry.id, change.into, entry.updatedAt);
+      return { result: "gone" };
+    case "restoreTopic":
+      await api.restoreTopic(entry.id, change.restore, entry.updatedAt);
+      return { result: "sent" };
     case "member": {
       const [projectId = "", overviewId = ""] = entry.id.split(":");
       const { addedBy, ...sent } = change.change;
@@ -190,6 +198,8 @@ const deleteFor = (api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | nu
       return api.deleteChat(entry.id);
     case "capture":
       return api.deleteCapture(entry.id);
+    case "topic":
+      return api.deleteTopic(entry.id);
     default:
       return api.deleteOverview(entry.id);
   }

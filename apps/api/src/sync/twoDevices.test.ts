@@ -768,3 +768,79 @@ test("pausing the queue on one device pauses it on the other", async () => {
   assert.equal((await phone.settings.get()).queuePaused, true);
   await testApp.close();
 });
+
+test("two devices that each make the same topic before syncing end up with one, holding both overviews", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  await laptop.sync();
+  await phone.sync();
+  const onLaptop = makeOverview({ source: distinctVideo() });
+  const onPhone = makeOverview({ source: distinctVideo() });
+  await laptop.overviews.saveOverview(onLaptop);
+  await phone.overviews.saveOverview(onPhone);
+  const laptopCooking = await laptop.overviews.createTopic({ name: "Cooking" });
+  testApp.clock.advance(1000);
+  const phoneCooking = await phone.overviews.createTopic({ name: "cooking" });
+  await laptop.overviews.setOverviewTopics(onLaptop.id, [laptopCooking.id]);
+  await phone.overviews.setOverviewTopics(onPhone.id, [phoneCooking.id]);
+
+  await laptop.sync();
+  await phone.sync();
+  await laptop.sync();
+
+  for (const device of [laptop, phone]) {
+    assert.deepEqual(
+      (await device.overviews.listTopics()).map(({ id }) => id),
+      [laptopCooking.id],
+    );
+    assert.deepEqual((await device.overviews.getOverview(onLaptop.id))?.topicIds, [laptopCooking.id]);
+    assert.deepEqual((await device.overviews.getOverview(onPhone.id))?.topicIds, [laptopCooking.id]);
+  }
+  await testApp.close();
+});
+
+test("a topic renamed, merged, undone and deleted on one device reads the same on the other", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  const from = await laptop.overviews.createTopic({ name: "Fatherhod" });
+  const into = await laptop.overviews.createTopic({ name: "Parenting" });
+  const overview = makeOverview({ source: distinctVideo(), topicIds: [from.id] });
+  await laptop.overviews.saveOverview(overview);
+  await laptop.sync();
+  await phone.sync();
+
+  await laptop.overviews.renameTopic(from.id, "Fatherhood");
+  const merge = await laptop.overviews.mergeTopic(from.id, into.id);
+  await laptop.sync();
+  await phone.sync();
+  const mergedOnPhone = {
+    topics: await phone.overviews.listTopics(),
+    topicIds: (await phone.overviews.getOverview(overview.id))?.topicIds,
+  };
+
+  await laptop.overviews.restoreTopic(merge!);
+  await laptop.sync();
+  await phone.sync();
+  const restoredOnPhone = await phone.overviews.listTopics();
+
+  await laptop.overviews.deleteTopic(from.id);
+  await laptop.sync();
+  await phone.sync();
+
+  assert.deepEqual(mergedOnPhone, { topics: [into], topicIds: [into.id] });
+  assert.deepEqual(
+    restoredOnPhone.map(({ id, name }) => ({ id, name })).sort((left, right) => left.name.localeCompare(right.name)),
+    [
+      { id: from.id, name: "Fatherhood" },
+      { id: into.id, name: "Parenting" },
+    ],
+  );
+  assert.deepEqual(await phone.overviews.listTopics(), [into]);
+  assert.deepEqual((await phone.overviews.getOverview(overview.id))?.topicIds, []);
+  assert.deepEqual(await laptop.overviews.listTopics(), [into]);
+  await testApp.close();
+});

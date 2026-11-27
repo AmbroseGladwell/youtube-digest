@@ -768,3 +768,28 @@ test("folding an overview into the account's copy puts the copy in the duplicate
   const memberWrites = (await readOutbox(db)).filter((entry) => entry.kind === "projectMember").map(({ id }) => id);
   assert.deepEqual(memberWrites, [projectMemberId(project.id, theirs.id)]);
 });
+
+test("a merge's tombstone pulled after Undo put the topic back here leaves it, until the undo is pushed", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const store = new IndexedDbOverviewStore(db);
+  const from = await store.createTopic({ name: "Fatherhood" });
+  const into = await store.createTopic({ name: "Parenting" });
+  const merge = await store.mergeTopic(from.id, into.id);
+  await store.restoreTopic(merge!);
+
+  await storage.applyChanges([change({ kind: "topic", id: from.id, rev: 2, seq: 3, updatedAt: null, deleted: true })], 3);
+
+  assert.ok((await store.listTopics()).some((topic) => topic.id === from.id));
+});
+
+test("a topic's tombstone with no undo waiting removes it", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const store = new IndexedDbOverviewStore(db);
+  const topic = await store.createTopic({ name: "Fatherhood" });
+
+  await storage.applyChanges([change({ kind: "topic", id: topic.id, rev: 2, seq: 3, updatedAt: null, deleted: true })], 3);
+
+  assert.deepEqual(await store.listTopics(), []);
+});
