@@ -70,10 +70,17 @@ try {
   process.exit(1);
 }
 const applied = await runMigrations(sql, {
-  before: migrationSteps((folds) => {
-    for (const fold of folds) {
-      logger.info(apiLogLines.startup.duplicateOverviewsFolded(fold));
-    }
+  before: migrationSteps({
+    overviews: (folds) => {
+      for (const fold of folds) {
+        logger.info(apiLogLines.startup.duplicateOverviewsFolded(fold));
+      }
+    },
+    topics: (folds) => {
+      for (const fold of folds) {
+        logger.info(apiLogLines.startup.duplicateTopicsFolded(fold));
+      }
+    },
   }),
 });
 const transcriptService = config.transcriptService === null ? null : createTranscriptServiceSetup(config.transcriptService);

@@ -63,7 +63,7 @@ permanently undated.
 | `OverviewState` | yes | yes | **constantly** — read, favourite, tags | **no date at all** |
 | `Settings` | yes | yes | whenever settings are edited | **no date at all** |
 | `Overview` | yes | yes | once — topic filing | `savedAt`, at creation |
-| `Topic` | yes | yes | **never**, today | `createdAt` |
+| `Topic` | yes | yes | rename, and the description a fold keeps (OV-10) | `createdAt` |
 | `StoredTranscript` | **no** | **no** | on refetch | `fetchedAt` |
 
 **The rows are in order of how much the field earns its place, and the order is the opposite
@@ -84,15 +84,12 @@ longer bookkeeping on this record: it is the field that answers *edited when*, o
 the one a reader would expect to sort their library by. The ranking below is a statement about
 what the records do now, not about which of them will end up caring most.
 
-**`Topic` is stamped for the rule rather than for today's value, and that is a deliberate
-trade.** There is no rename and no delete: `createTopic` and `listTopics` are the entire topic
-surface, and the reader's "edit topics" control edits an *overview's* topic ids, not the topic.
-So a topic's `updatedAt` is identical to its `createdAt`, always, until a rename exists. It is
-stamped anyway because *every synced record carries one, caches do not* is a rule with no
-per-type judgement in it, where the alternative is a judgement that has to be remade every time
-a record type gains a write path — and the day a topic rename lands is the day every topic
-written before it becomes permanently undated. One key on a record created a handful of times
-per library is the cheaper side of that bet.
+**`Topic` was stamped for the rule rather than for its value at the time, and the bet paid.**
+Until OV-10 there was no rename and no delete, so a topic's `updatedAt` always equalled its
+`createdAt`. It was stamped anyway because *every synced record carries one, caches do not* is
+a rule with no per-type judgement in it. OV-10 (27 Nov 2026) gave topics their write paths
+(rename, merge, delete: `topic-filing.md`, "Managing topics"), and every topic written before
+then already had a date to compare against.
 
 **The transcript row is not an omission.** A transcript is not a per-user record that two
 devices could hold different versions of — it is YouTube's own caption track, identical for

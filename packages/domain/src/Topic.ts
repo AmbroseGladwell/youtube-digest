@@ -9,4 +9,10 @@ export const Topic = z.object({
 });
 export type Topic = z.infer<typeof Topic>;
 
+export const TopicPatch = z
+  .object({ name: z.string().trim().min(1), description: z.string().nullable() })
+  .partial()
+  .strict();
+export type TopicPatch = z.infer<typeof TopicPatch>;
+
 export const sameTopicName = (left: string, right: string): boolean => left.trim().toLocaleLowerCase() === right.trim().toLocaleLowerCase();

@@ -15,6 +15,7 @@ import { DEFAULT_TIMER_SOUND, TimerSound } from "./TimerSound.js";
 import { DEFAULT_PLAN, Plan } from "./Plan.js";
 import { MilestoneMarks } from "./Milestone.js";
 import { TagAliases } from "./TagAliases.js";
+import { TopicAliases } from "./TopicAliases.js";
 import { LearnedItems } from "./LearnedItem.js";
 import { DEFAULT_PLAYLIST_ORDER, PlaylistOrder } from "./PlaylistOrder.js";
 import { DEFAULT_PLAYLIST_PACE, PlaylistPace } from "./PlaylistPace.js";
@@ -79,6 +80,8 @@ export const Settings = z.object({
   analyticsOptOutChangedAt: z.iso.datetime().nullable().catch(null),
   // Replaced whole, so an undo can take an alias away (docs/features/tag-reuse.md).
   tagAliases: TagAliases.catch({}),
+  // Written by the server as topics merge or go: docs/features/topic-filing.md, "Aliases".
+  topicAliases: TopicAliases.catch({}),
   // On, a failing own key fails rather than sending the transcript via ours (docs/architecture/tiers.md).
   onlyMyKey: z.boolean().catch(false),
   // On the account, so pausing on one device pauses every one (docs/features/capture-queue.md).
@@ -122,6 +125,7 @@ export const DEFAULT_SETTINGS: Settings = {
   analyticsOptOut: false,
   analyticsOptOutChangedAt: null,
   tagAliases: {},
+  topicAliases: {},
   onlyMyKey: false,
   queuePaused: false,
   defaultPlaylistPace: DEFAULT_PLAYLIST_PACE,

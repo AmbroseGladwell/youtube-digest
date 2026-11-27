@@ -89,7 +89,7 @@ test("per account and video the earliest-made overview is kept even when it arri
   );
 
   const folds: unknown[] = [];
-  await runMigrations(sql, { before: migrationSteps((folded) => folds.push(...folded)) });
+  await runMigrations(sql, { before: migrationSteps({ overviews: (folded) => folds.push(...folded) }) });
 
   assert.deepEqual(folds, [{ accountId: ACCOUNT, videoId: "twice", kept: earlier.id, folded: [later.id] }]);
   const records = await live(sql);
@@ -128,7 +128,7 @@ test("an account holding one overview per video is left exactly as it was, and t
   const before = await live(sql);
 
   const folds: unknown[] = [];
-  await runMigrations(sql, { before: migrationSteps((folded) => folds.push(...folded)) });
+  await runMigrations(sql, { before: migrationSteps({ overviews: (folded) => folds.push(...folded) }) });
 
   assert.deepEqual(folds, []);
   assert.deepEqual(await live(sql), before);
@@ -151,7 +151,7 @@ test("the same video held by two accounts is two overviews, and a tombstoned cop
   await sql.query("update records set deleted = true, body = null, updated_at = null where id = $1", [deleted.id]);
 
   const folds: unknown[] = [];
-  await runMigrations(sql, { before: migrationSteps((folded) => folds.push(...folded)) });
+  await runMigrations(sql, { before: migrationSteps({ overviews: (folded) => folds.push(...folded) }) });
 
   assert.deepEqual(folds, []);
   assert.equal((await live(sql)).filter((record) => !record.deleted).length, 1);

@@ -145,8 +145,9 @@ the one it set out to sign out, so a sign-in finished during its last cycle is n
 **What onboarding asked goes first** (`moveAnswersInto`, OV-46): every topic the no-account
 library holds, with its description, whether or not an overview is sorted under it yet, then
 About you and the voice where the account has none (no About you, the default voice); the
-account's own win. They are cleared here once moved. Topics stay, since there is no deleting
-a topic, and finding one by name again is harmless.
+account's own win. They are cleared here once moved. Topics stay in the no-account library,
+since finding one by name again is harmless, and one the account made meanwhile on another
+device is folded on the server (`topic-filing.md`, "Same-name topics fold on the server").
 
 **It waits for the account's first pull.** `LibraryMoveRuntime` runs once the open library
 is the signed-in account's and its sync has completed a cycle (`lastSyncedAt`), so "the

@@ -66,11 +66,15 @@ This is the one place a viewport is read in JavaScript (`useIsPhone`) rather tha
 Both entry points look for an existing topic of the same name before making one, comparing
 with `sameTopicName` (trimmed, case-insensitive).
 
-Nothing in the app renames or deletes a topic, so a duplicate is permanent: two "cooking"
-entries in the filter panel, each holding some of the cooking notes, with no way back. The
-picker hides its create row as soon as the typed name matches a topic, so the guard is
-rarely reached from the UI — it is there because the two entry points can race, and
-because a name that differs only in case or spacing should not make a second topic.
+The picker hides its create row as soon as the typed name matches a topic, so the guard is
+rarely reached from the UI. It is there because the two entry points can race, and because a
+name that differs only in case or spacing should not make a second topic.
+
+**It only knows this database.** Two libraries that have not synced yet (the web app and the
+extension panel, two devices, or the move on sign-in before a topic made elsewhere arrives)
+each find nothing and each make one. That is how a real library came to hold three topics of
+one name with one overview each (OV-10). The server folds them: see "Same-name
+topics fold on the server" below.
 
 ## Creating is not optimistic
 
@@ -108,7 +112,72 @@ rail's dialog and the picker's own create row make topics without.
 - **The model's suggested topic.** `filingSection` still asks for one and the schema still
   carries it, but nothing reads it back: `assembleOverview` drops it, and it is not on the
   `Overview` record. Accepting a suggestion is its own piece of work, not this one.
-- **Renaming, deleting, or merging topics.** The reason find-or-create matters above.
 - **A focus trap on the desktop popover.** Escape and an outside click close it, and the
   search field takes focus when it opens, but focus is not held inside it the way
   `showModal()` holds it in the two dialogs.
+
+## Managing topics (OV-10)
+
+Topics can be renamed, merged and deleted. The server does the work, so a merge or delete is
+one write from the device, and every overview it touches is re-filed in the same transaction.
+
+| Route | What it does |
+|---|---|
+| `PUT /topics/:id { name?, description?, updatedAt }` | Renames. A blank name is refused. A name another live topic has is then folded, as below, so renaming onto a name in use is a merge into the earlier topic. |
+| `POST /topics/:id/merge { into, updatedAt }` | Files every overview under `:id` under `into` instead, once, records the alias, and tombstones `:id`. `into` must be live. Answers `{ refiled, added }`: the overviews it changed, and those it gave `into` to (the rest already had it). |
+| `POST /topics/:id/restore { name, description, createdAt, into, refiled, added, updatedAt }` | Undoes a merge: see "Undoing a merge". |
+| `DELETE /topics/:id` | Unfiles it from every overview (one with no other topic becomes Unsorted), aliases it to nothing, and tombstones it. A second delete is a 204. |
+
+All three are `foldTopicInto` underneath: re-file, alias, tombstone. A device that has not
+pulled yet sees the topic go and its overviews change as ordinary changes; nothing new is
+needed on the client to receive them.
+
+**Delete confirms first; merge doesn't, and offers Undo** (owner, 27 Nov 2026). A delete
+says how many overviews the topic holds before it goes. A merge happens at once and shows an
+Undo toast, as Manage tags does. No validation dashboard: the owner counts this as polish
+(`CLAUDE.md`, habit 6), so it sends events but has none of its own.
+
+The screens are not built yet. The owner chose logic first and a Claude Design round after
+(27 Nov 2026), mirroring Manage tags (`tag-reuse.md`, 84j–84n). Until then, these routes have
+no caller in the app.
+
+## Same-name topics fold on the server
+
+After `POST /topics` and after a rename, `foldSameNameTopics` looks for live topics in the
+account whose names match by `sameTopicName`'s rule (trimmed, case-insensitive). The earliest
+`createdAt` is kept (then the lowest seq); each other one is folded into it with
+`foldTopicInto`. The kept topic takes a later one's description when it has none, since
+onboarding's starter topics carry one and a reader-made duplicate does not.
+
+Topics made before this existed are folded once, by migration step 51 (`foldDuplicateTopics`),
+which logs `api.startup.duplicateTopicsFolded` with the ids kept and folded and how many
+overviews were re-filed. Never the names.
+
+## Aliases
+
+`Settings.topicAliases` maps a merged topic's id to the topic it went into, and a deleted one's
+to `null`. The server writes it, and the client never needs to. It exists for the late write:
+a device offline during a merge or a fold still has filings under the old id in its outbox, and
+pushes them afterwards. `PUT /overviews/:id/topics` and `POST /overviews` resolve `topicIds`
+through the aliases first (`resolveTopicIds`), so the filing lands on the kept topic, or is
+dropped for a deleted one, instead of pointing at a tombstone.
+
+Unlike `tagAliases` it merges one level deep, like `milestones`, so a whole-map write from a
+stale device can't drop an alias the server just added. The one removal, an Undo, is the
+server's own write and replaces the map rather than merging into it. It is one step deep
+(`withTopicAlias`): merging the kept topic later repoints everything that pointed at it.
+
+## Undoing a merge
+
+The merge answers which overviews it re-filed and which it gave the kept topic to, and the
+client keeps the topic it merged away. Undo sends them back to `POST /topics/:id/restore`, which
+in one transaction makes the topic again under its own id, removes its alias, puts it back on
+every re-filed overview, and takes the kept topic off the ones the merge added it to. An
+overview deleted in the meantime is left alone. The topic comes back under the name and
+description the client sends, so undoing a rename onto a taken name brings back the old name,
+not a same-name pair.
+
+**Not covered:** a `POST /topics` resent after its topic was deleted (an acknowledgement lost
+in between) makes it again, since a tombstone is replaced like an absent record. That needs a
+lost acknowledgement and a delete in the window between, and the reader can delete it again.
+
