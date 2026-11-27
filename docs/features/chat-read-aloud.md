@@ -125,7 +125,7 @@ boot when it had stopped. Each call pays what it adds to that timeline:
 - a call while the machine idles pays only how much later the machine now stops;
 - a warm-up pays the boot, `MODEL_LOAD_SECONDS` (5) of loading and the idle.
 
-On Modal (OV-423) the same timeline has no boot (the container answers only once Kokoro has loaded) and a 20 s
+On Modal (OV-423) the same timeline has no boot (the container answers only once Kokoro has loaded) and a 5 s
 idle, its scale-down window, priced at `TTS_MODAL_DOLLARS_PER_HOUR`; a play that falls back pays each host for its own
 part. So two plays back to back don't both pay the idle, and an answer's later chunks pay only their
 own speaking time. Seconds become dollars at `TTS_DOLLARS_PER_MACHINE_HOUR`, a Fly secret
@@ -183,7 +183,7 @@ app-wide.
   with `own`): title "Chat answer", the overview's title, the project's name or "Your
   library" as artist, the overview's image as artwork; play, pause, and previous and next
   track step a sentence. No scrubber.
-- **Warming:** hovering or focusing a control warms the voice, at most every 20 seconds.
+- **Warming:** hovering or focusing a control warms the voice, at most every 20 seconds. A warm-up is our cost, recorded as `chat-warm`/`chat-warm-modal`, never the reader's usage (owner, 27 Nov 2026): on Modal one cost about 3 questions' worth, mostly the idle after it, and many are never followed by a play.
 - **The meter** is fetched again after a play ends, so it moves as it does after a question.
 - **Analytics:** `chat.readAloud.started`, `.paused`, `.resumed`, `.completed`, `.stopped`,
   `.failed` and `.refused`, each with plan, scope and (but `refused`) voice and sentences;

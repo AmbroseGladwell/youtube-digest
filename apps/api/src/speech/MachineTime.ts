@@ -14,7 +14,7 @@ export const FLY_MACHINE: MachineModel = {
   idleSeconds: IDLE_EXIT_SECONDS,
   warmLoadSeconds: MODEL_LOAD_SECONDS,
 };
-export const MODAL_CONTAINER: MachineModel = { startSeconds: 0, idleSeconds: 20, warmLoadSeconds: 0 };
+export const MODAL_CONTAINER: MachineModel = { startSeconds: 0, idleSeconds: 5, warmLoadSeconds: 0 };
 
 export interface MachineCharge {
   seconds: number;

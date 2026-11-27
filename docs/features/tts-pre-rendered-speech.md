@@ -165,7 +165,7 @@ afterwards (`modal app stop overview-tts-spike`).
 `services/tts/modal_app.py` runs the same service (`create_app`, `/render/stream`, `/health`) on a Modal GPU:
 
 - **GPUs, in order:** T4, then an A10, then an L4, so a slow L4 never holds a reader up.
-- **Containers:** one render per container (`@modal.concurrent(max_inputs=1)`), staying up 20 s after its last request.
+- **Containers:** one render per container (`@modal.concurrent(max_inputs=1)`), staying up 5 s after its last request (20 s at first: the first real plays, 27 Nov, paid more for that idle than for speaking).
 - **Kokoro on the GPU:** `KokoroSynthesiser(providers=["CUDAExecutionProvider", …])`. A container where Kokoro didn't land on the GPU refuses to start rather than render slowly.
 - **Token:** every request needs `Authorization: Bearer <TTS_TOKEN>`, the Modal secret named after the app.
 - **Apps:** `overview-tts` for dev and `overview-tts-prod` for production, each deployed by `task deploy:tts:modal [ENV=prod]`. That puts the Bitwarden project's `TTS_TOKEN` into the secret, deploys, and checks that a call without the token gets 401.
@@ -197,7 +197,7 @@ With `TTS_MODAL_URL` set, both the live lane and the render queue ask Modal firs
   - Chat plays are charged per host at that host's price: Fly keeps the `chat` and `chat-warm` details, and Modal's are `chat-modal` and `chat-warm-modal`.
   - A render on Modal is charged to the account that asked for it as `narration-modal`, for the dashboards only, with no allowance.
   - Renders on Fly stay part of its fixed bill.
-  - Modal's machine time is the request plus its 20 s scale-down, with no boot charge, since the container answers only once loaded.
+  - Modal's machine time is the request plus its 5 s scale-down, with no boot charge, since the container answers only once loaded.
   - Each render's `done` event names the card it ran on (`gpu`, from `nvidia-smi`), so an A10 or L4 standing in for a T4 is priced at its own list price (`gpuDollarsPerHour`); `TTS_MODAL_DOLLARS_PER_HOUR` is only for a render that names none.
 
 ## The spoken script
