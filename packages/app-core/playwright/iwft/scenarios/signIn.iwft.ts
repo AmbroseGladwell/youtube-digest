@@ -468,6 +468,51 @@ test.describe("signing in from the extension", () => {
   });
 });
 
+test.describe("opening the web app from the extension", () => {
+  test("signed out, the menu offers the web app of the server it was built for", async ({ launcher }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER });
+
+    const menu = await launcher.appShell.accountMenu.open();
+
+    await menu.verifyItemsRead(["Sign in", "Create account", "Open the web app", "Settings"]);
+    await menu.verifyOpensWebAppAt(`${SERVER}/`);
+  });
+
+  test("while a code is awaited, the menu still offers the web app", async ({ launcher }) => {
+    await launcher.launch({ sync: true, surface: "extension", defaultApiUrl: SERVER, pendingSignIn: waitingForCode() });
+
+    const menu = await launcher.appShell.accountMenu.open();
+
+    await menu.verifyItemsRead(["Enter code", "Open the web app", "Settings"]);
+  });
+
+  test("signed in, the menu opens the web app of the account's own server in a new tab", async ({ launcher, backendSimulator }) => {
+    const other = "https://staging.sync.test";
+    await launcher.launch({
+      sync: true,
+      surface: "extension",
+      defaultApiUrl: SERVER,
+      syncConnection: { ...SIGNED_IN_BY_COOKIE, apiUrl: other },
+    });
+    const menu = await launcher.appShell.accountMenu.open();
+    await menu.verifyItemsRead([
+      "Get Overview Plus 50 overviews a month on us",
+      "Open the web app",
+      "Settings",
+      "Plan",
+      "Send feedback",
+      "Sign out",
+    ]);
+    await menu.verifyOpensWebAppAt(`${other}/`);
+
+    await menu.chooseOpenWebApp();
+
+    await test.expect
+      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "app.accountMenu.itemChosen"))
+      .toEqual([{ name: "app.accountMenu.itemChosen", props: { item: "openWebApp" } }]);
+  });
+});
+
 test.describe("connecting the extension from the web app", () => {
   test("the menu leads to a code for the extension, and no email is sent", async ({ launcher, backendSimulator }) => {
     await launcher.launch({ sync: true, syncConnection: SIGNED_IN_BY_COOKIE });

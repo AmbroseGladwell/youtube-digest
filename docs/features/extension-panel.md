@@ -48,7 +48,10 @@ extension panel").
 **Opening (15a, then 205a and 205f).** The masthead is the brand slot, `+ New` and the
 account menu — the phone's bar, and still no nav. Below it, what the tab holds: one offer
 card giving "Source · Kind" and the title for a video and a page alike, then `Create
-overview` and what is left this month. No headline and no standfirst while there is
+overview` and what is left this month. The account menu always holds **Open the web app**,
+signed in, signed out or waiting for a code: a link to the home of the account's server (the
+build's own server when there is no account yet) in a new tab, just above Settings. The web
+never shows it. No headline and no standfirst while there is
 something to take; with nothing on the tab they come back, with Recent under them.
 
 `Create overview` is live when there is something in front of the panel and an overview

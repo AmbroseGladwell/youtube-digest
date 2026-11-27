@@ -21,6 +21,7 @@ import { useFeedbackBox } from "../../../feedback/FeedbackContext.js";
 import { GetPlusMenuItem } from "../../../plus/components/GetPlusMenuItem/GetPlusMenuItem.js";
 import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
 import { usePlan } from "../../../plus/usePlan.js";
+import { useKnownApiUrl } from "../../../sync/useKnownApiUrl.js";
 
 const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
@@ -47,6 +48,7 @@ export const AccountMenu = () => {
   const [open, setOpen] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);
   const { plan } = usePlan();
+  const apiUrl = useKnownApiUrl();
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
@@ -124,6 +126,24 @@ export const AccountMenu = () => {
       <StrokeIcon name={icon} size={16} />
       {label}
     </button>
+  );
+
+  const webApp = surface === "extension" && apiUrl !== null && (
+    <a
+      role="menuitem"
+      className={styles.item}
+      href={new URL(Routes.home(), apiUrl).href}
+      target="_blank"
+      rel="noopener"
+      onClick={() => {
+        analytics.app.accountMenu.itemChosen({ item: "openWebApp" });
+        close(false);
+      }}
+      data-testid={accountMenuTestIds.openWebAppItem}
+    >
+      <StrokeIcon name="openOut" size={16} />
+      Open the web app
+    </a>
   );
 
   const signedOutAtServer = sync.status.phase === "signedOut";
@@ -219,6 +239,7 @@ export const AccountMenu = () => {
             go(Routes.connectExtension()),
             accountMenuTestIds.connectExtensionItem,
           )}
+        {webApp}
         {settings}
         {item("creditCard", "Plan", "plan", go(Routes.settingsSection("plan")), accountMenuTestIds.planItem)}
         {feedback !== null &&
@@ -246,6 +267,7 @@ export const AccountMenu = () => {
         </div>
         {item("puzzle", "Enter code", "enterCode", go(Routes.signIn()), accountMenuTestIds.enterCodeItem)}
         <div role="separator" className={styles.separator} />
+        {webApp}
         {settings}
       </>
     );
@@ -255,6 +277,7 @@ export const AccountMenu = () => {
         {item("signIn", "Sign in", "signIn", go(Routes.signIn()), accountMenuTestIds.signInItem)}
         {item("userPlus", "Create account", "createAccount", go(Routes.createAccount()), accountMenuTestIds.createAccountItem)}
         <div role="separator" className={styles.separator} />
+        {webApp}
         {settings}
       </>
     );
