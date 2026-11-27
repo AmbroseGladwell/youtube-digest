@@ -72,8 +72,8 @@ name that differs only in case or spacing should not make a second topic.
 
 **It only knows this database.** Two libraries that have not synced yet (the web app and the
 extension panel, two devices, or the move on sign-in before a topic made elsewhere arrives)
-each find nothing and each make one. That is how the owner's library came to hold three
-"Fatherhood" topics with one overview each (OV-10). The server folds them: see "Same-name
+each find nothing and each make one. That is how a real library came to hold three topics of
+one name with one overview each (OV-10). The server folds them: see "Same-name
 topics fold on the server" below.
 
 ## Creating is not optimistic
