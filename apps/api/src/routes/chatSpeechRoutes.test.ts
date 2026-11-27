@@ -145,3 +145,37 @@ test("without a voice the server says read aloud is unavailable", async (t) => {
 
   assert.equal((await speak()).statusCode, 503);
 });
+
+test("with Modal in front, a play runs there and is charged at Modal's price under its own detail", async (t) => {
+  const { testApp, account, speak } = await setUp(t, { dollarsPerMachineHour: 3.6, modalSpeech: { dollarsPerHour: 7.2 } });
+
+  assert.equal((await speak()).statusCode, 200);
+
+  assert.equal(testApp.narrator.requests.length, 0);
+  assert.equal(testApp.modalNarrator.requests.length, 2);
+  const costs = await testApp.sql.query<{ detail: string; quantity: string; dollars: string }>(
+    "select detail, quantity::text, round(dollars::numeric, 3)::text as dollars from account_costs where account_id = $1",
+    [account.accountId],
+  );
+  assert.deepEqual(costs, [{ detail: "chat-modal", quantity: "20", dollars: "0.040" }]);
+});
+
+test("when Modal fails before a line, the play falls back to the Fly pool and is charged there", async (t) => {
+  const { testApp, account, speak } = await setUp(t, { dollarsPerMachineHour: 3.6, modalSpeech: { dollarsPerHour: 7.2 } });
+  testApp.modalNarrator.failNext("TTS answered 502");
+
+  const events = eventsOf((await speak()).payload);
+
+  assert.deepEqual(
+    events.map((event) => event.type),
+    ["sentences", "audio", "audio", "done"],
+  );
+  assert.equal(testApp.narrator.requests.length, 1);
+  const details = await testApp.sql.query<{ detail: string }>("select detail from account_costs where account_id = $1 order by detail", [
+    account.accountId,
+  ]);
+  assert.deepEqual(
+    details.map(({ detail }) => detail),
+    ["chat", "chat-modal"],
+  );
+});

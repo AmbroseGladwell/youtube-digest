@@ -73,12 +73,24 @@ numbers to move as real failures arrive.
 ## Sections
 
 Blocks are walked in order and a heading starts a section, keeping its id or a descendant's as
-`anchor`. A heading ahead of any text that repeats the title is the headline and is dropped; the
+`anchor`. A link inside the heading to that same anchor that holds an icon (`svg` or `img`) is a
+permalink, and its text, such as a hidden "Copy link to heading", is left out of the heading
+(OV-422: Vercel, nextjs.org, Linear). A self-link without an icon is often the heading itself,
+wrapped in a link (Tailwind, MDN, jvns.ca), so it stays; and if dropping the icon link leaves
+nothing, the heading keeps all its text. A heading ahead of any text that repeats the title is the headline and is dropped; the
 match is loose because `<title>` usually adds the site's name. If the blocks hold under half the
 article's words, a page built out of something else, the whole text becomes one section. Whether
 a section can be linked to when it has no id is the note's question (text fragments), not this
 one's. Headings Readability keeps vary: of the real articles measured, BBC stories came back as
 one section.
+
+## Headings Readability drops
+Readability removes an `h1` or `h2` whose class or id scores as clutter ("scroll", "share",
+"hidden", "meta" and so on). Utility classes trip it: Tailwind's `scroll-mt-24` on every heading
+cost an expo.dev post 7 of its 8 sections, and kept the eighth only because its id contained
+"content", which scores as a positive (OV-422). So a heading carrying an anchor id, its own or a
+descendant's, loses its class in the clone Readability reads. Its id still counts, so a heading
+named `sidebar` or `related` still goes.
 
 ## The picture
 

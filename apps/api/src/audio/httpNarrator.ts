@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { REQUEST_ID_HEADER } from "@overview/domain";
-import type { NarrationSegment, Narrator } from "./Narrator.js";
+import type { NarrationSegment, Narrator, SpeechHost } from "./Narrator.js";
 
 const RENDER_TIMEOUT_MS = 10 * 60 * 1000;
 const WARM_TIMEOUT_MS = 30 * 1000;
@@ -26,6 +26,7 @@ const StreamEvent = z.discriminatedUnion("type", [
     synthesisSeconds: z.number().nonnegative(),
     audioBase64: z.string().min(1),
     segments: z.array(Segment),
+    gpu: z.string().min(1).nullable().optional(),
   }),
   z.object({ type: z.literal("error"), error: z.object({ code: z.string(), message: z.string() }) }),
 ]);
@@ -54,24 +55,40 @@ const ndjsonLines = async function* (body: ReadableStream<Uint8Array>): AsyncGen
 };
 
 // The service streams one event a line: docs/features/tts-pre-rendered-speech.md, "Streaming".
-export const createHttpNarrator = (baseUrl: string, fetchImpl: typeof fetch = fetch): Narrator => {
+export interface HttpNarratorOptions {
+  host?: SpeechHost;
+  token?: string | null;
+}
+
+export const createHttpNarrator = (
+  baseUrl: string,
+  fetchImpl: typeof fetch = fetch,
+  { host = "fly", token = null }: HttpNarratorOptions = {},
+): Narrator => {
   const root = baseUrl.replace(/\/+$/, "");
+  const send: typeof fetch = (url, init) =>
+    fetchImpl(
+      url,
+      token === null ? init : { ...init, headers: { ...(init?.headers as Record<string, string>), authorization: `Bearer ${token}` } },
+    );
   return {
     async warm(requestId) {
-      const response = await fetchImpl(`${root}/health`, {
+      const response = await send(`${root}/health`, {
         headers: { [REQUEST_ID_HEADER]: requestId },
         signal: AbortSignal.timeout(WARM_TIMEOUT_MS),
       });
       if (!response.ok) {
         throw new Error(`TTS answered ${response.status} to a warm-up`);
       }
+      return host;
     },
-    async narrate(request, requestId, onLine) {
-      const response = await fetchImpl(`${root}/render/stream`, {
+    async narrate(request, requestId, onLine, signal) {
+      const response = await send(`${root}/render/stream`, {
         method: "POST",
         headers: { "content-type": "application/json", [REQUEST_ID_HEADER]: requestId },
         body: JSON.stringify(request),
-        signal: AbortSignal.timeout(RENDER_TIMEOUT_MS),
+        signal:
+          signal === undefined ? AbortSignal.timeout(RENDER_TIMEOUT_MS) : AbortSignal.any([signal, AbortSignal.timeout(RENDER_TIMEOUT_MS)]),
       });
       if (!response.ok || response.body === null) {
         const body: unknown = await response.json().catch(() => null);
@@ -103,6 +120,9 @@ export const createHttpNarrator = (baseUrl: string, fetchImpl: typeof fetch = fe
           synthesisSeconds: event.synthesisSeconds,
           audio: Buffer.from(event.audioBase64, "base64"),
           trailingSegments: decoded(event.segments),
+          host,
+          fellBack: false,
+          gpu: event.gpu ?? null,
         };
       }
       throw new Error("TTS stopped before the render finished");

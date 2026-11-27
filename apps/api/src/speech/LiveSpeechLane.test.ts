@@ -15,6 +15,7 @@ const heldNarrator = () => {
     warms: 0,
     async warm() {
       narrator.warms += 1;
+      return "fly" as const;
     },
     narrate(request) {
       asked.push(request.lines.join(" "));
@@ -30,6 +31,9 @@ const heldNarrator = () => {
                   synthesisSeconds: 0.1,
                   audio: Buffer.from(request.lines.join(" ")),
                   trailingSegments: [],
+                  host: "fly",
+                  fellBack: false,
+                  gpu: null,
                 }),
         });
       });
@@ -183,16 +187,17 @@ test("a play's machine time counts the start of a stopped machine once, then onl
   await finishNext(pending);
   await finishNext(pending);
   const { machineSeconds, cold } = await outcome;
+  assert.equal(machineSeconds.modal, 0);
 
   assert.equal(cold, true);
-  assert.equal(machineSeconds, 2 + 1 + 15 + 2);
+  assert.equal(machineSeconds.fly, 2 + 1 + 15 + 2);
 });
 
 test("a warm-up starts the machine only when it isn't already running, and pays for the model loading after it answers", async () => {
   const { narrator } = heldNarrator();
   const lane = laneOf(narrator);
 
-  assert.deepEqual(await lane.warm(), { machineSeconds: 2 + 5 + 15, warmed: true });
-  assert.deepEqual(await lane.warm(), { machineSeconds: 0, warmed: false });
+  assert.deepEqual(await lane.warm(), { machineSeconds: 2 + 5 + 15, warmed: true, host: "fly" });
+  assert.deepEqual(await lane.warm(), { machineSeconds: 0, warmed: false, host: null });
   assert.equal(narrator.warms, 1);
 });

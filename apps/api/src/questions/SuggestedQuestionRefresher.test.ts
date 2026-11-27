@@ -7,6 +7,7 @@ import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
 import { ClaimPairsRepository } from "./ClaimPairsRepository.js";
 import { libraryCandidates, pairKeyOf, projectCandidates } from "./questionCandidates.js";
+import { keptQuestions, type LabelledPair } from "./SuggestedQuestionRefresher.js";
 import { saveSmallLibrary, setUpRefresh, type RefreshSetting } from "./SuggestedQuestionRefresher.testHelper.js";
 import { writeSuggestedQuestions } from "./writeSuggestedQuestions.js";
 
@@ -213,12 +214,13 @@ test("a refresh labels fresh pairs, writes what passes the record's rules, and c
     logger,
     writerReply: {
       questions: [
-        { pair: 1, question: "Could a slow proving schedule say anything about fixing a bedtime?" },
-        { pair: 1, question: "Is there another angle on the very same pair here?" },
-        { pair: 99, question: "Which of these would a founder pick first?" },
-        { pair: 2, question: tooLong },
-        { pair: 3, question: "Rest matters. Does routine matter more?" },
-        { pair: 2, question: "Does a habit cue at bedtime beat more rest for focus?" },
+        { pair: 1, question: "Could a slow proving schedule say anything about fixing a bedtime?", rating: 5 },
+        { pair: 1, question: "Is there another angle on the very same pair here?", rating: 5 },
+        { pair: 99, question: "Which of these would a founder pick first?", rating: 5 },
+        { pair: 2, question: tooLong, rating: 5 },
+        { pair: 3, question: "Rest matters. Does routine matter more?", rating: 5 },
+        { pair: 2, question: "Is rest a habit too?", rating: 3 },
+        { pair: 2, question: "Does a habit cue at bedtime beat more rest for focus?", rating: 4 },
       ],
     },
   });
@@ -237,7 +239,7 @@ test("a refresh labels fresh pairs, writes what passes the record's rules, and c
       .sort()
       .join("|");
   const labelledPairs = setting.labelled().map(pairOf);
-  assert.ok(labelledPairs.length > 0 && labelledPairs.length <= 8);
+  assert.ok(labelledPairs.length > 0 && labelledPairs.length <= 16);
   assert.ok(!labelledPairs.includes("Focus|Slow"), "a pair once asked is never labelled again, even dismissed");
   assert.ok(!labelledPairs.includes("Founders|Habits"));
   assert.equal(setting.writer.requests.length, 1);
@@ -246,7 +248,7 @@ test("a refresh labels fresh pairs, writes what passes the record's rules, and c
   assert.match(system!.content, /found questions like these obvious:\n- Do founders need habits too\?/);
   assert.match(system!.content, /already on show\. Don't repeat their themes:\n- Does memory decide who succeeds a founder\?/);
   assert.match(system!.content, /draws on both overviews of its pair/);
-  assert.match(user!.content, /## Pair 1, for the whole library, which can take 3 \(different view\)/);
+  assert.match(user!.content, /## Pair 1, for the whole library \(different view\)/);
 
   const fed = (await setting.account.changes()).changes.filter(
     (change) => change.kind === "suggestedQuestion" && change.body !== undefined && !change.deleted,
@@ -275,6 +277,29 @@ test("a refresh labels fresh pairs, writes what passes the record's rules, and c
     { plan: done.plan, status: done.status, library: done.library, projects: done.projects, written: done.questionsWritten },
     { plan: "plus", status: "started", library: true, projects: 0, written: 2 },
   );
+  assert.ok(Number(done.candidates) >= labelledPairs.length);
+  assert.deepEqual(
+    {
+      real: done.labelsReal,
+      stretch: done.labelsStretch,
+      notConnected: done.labelsNotConnected,
+      failed: done.labelsFailed,
+      toWriter: done.pairsToWriter,
+      returned: done.writerReturned,
+      dropped: done.dropped,
+      skippedOnWrite: done.skippedOnWrite,
+    },
+    {
+      real: labelledPairs.length,
+      stretch: 0,
+      notConnected: 0,
+      failed: 0,
+      toWriter: Math.min(labelledPairs.length, 6),
+      returned: 7,
+      dropped: { badPair: 1, textLimits: 1, notOneSentence: 1, lowRating: 1, samePair: 1, noRoom: 0 },
+      skippedOnWrite: 0,
+    },
+  );
   const logged = JSON.stringify(refreshLines);
   for (const forbidden of ["Focus", "bedtime", library.newest, library.linked]) {
     assert.ok(!logged.includes(forbidden), `the log line carries ${forbidden}`);
@@ -296,4 +321,64 @@ test("a writer that fails leaves no questions, marks the refresh failed and logs
   assert.equal(lines.filter((line) => line.logCode === "api.questions.refreshFailed").length, 1);
   const costs = await new AccountCostsRepository(setting.testApp.sql).of({ accountId: setting.account.accountId });
   assert.ok(costs.some((cost) => cost.area === "questions" && cost.detail === "write-failed"));
+});
+
+const librarySlots = (slots: number) => ({ scopeKey: "library", scope: LIBRARY, slots });
+
+const labelledPair = (slots: LabelledPair["slots"], first: string, second: string, topics: string[]): LabelledPair => ({
+  slots,
+  candidate: { first, second, firstPosition: 1, secondPosition: 1, similarity: 0.5, origin: "closest" },
+  label: { relation: "builds_on", verdict: "real", reason: "One idea carries over." },
+  topics,
+});
+
+test("kept questions are the best rated that clear the bar, a new topic before a better one on a topic taken", () => {
+  const slots = librarySlots(2);
+  const kept = [
+    labelledPair(slots, "a", "b", ["sleep"]),
+    labelledPair(slots, "c", "d", ["sleep"]),
+    labelledPair(slots, "e", "f", ["money"]),
+    labelledPair(slots, "g", "h", ["focus"]),
+  ];
+  const { questions, dropped } = keptQuestions(
+    {
+      questions: [
+        { pair: 4, question: "Could focus rules shape a savings plan?", rating: 3 },
+        { pair: 3, question: "Does a money rule carry over to sleep?", rating: 4 },
+        { pair: 2, question: "Which of two bedtimes wins for memory?", rating: 5 },
+        { pair: 1, question: "Do naps and fixed bedtimes pull against each other?", rating: 5 },
+      ],
+    },
+    kept,
+  );
+
+  assert.deepEqual(
+    questions.map((question) => question.overviewIds),
+    [
+      ["c", "d"],
+      ["e", "f"],
+    ],
+  );
+  assert.equal(dropped.lowRating, 1);
+  assert.equal(dropped.noRoom, 1);
+});
+
+test("a topic already on show in the scope gives way to one that isn't", () => {
+  const slots = librarySlots(1);
+  const kept = [labelledPair(slots, "a", "b", ["sleep"]), labelledPair(slots, "c", "d", ["money"])];
+  const { questions } = keptQuestions(
+    {
+      questions: [
+        { pair: 1, question: "Do naps and fixed bedtimes pull against each other?", rating: 5 },
+        { pair: 2, question: "Does a money rule carry over to habits?", rating: 4 },
+      ],
+    },
+    kept,
+    new Map([["library", ["sleep"]]]),
+  );
+
+  assert.deepEqual(
+    questions.map((question) => question.overviewIds),
+    [["c", "d"]],
+  );
 });

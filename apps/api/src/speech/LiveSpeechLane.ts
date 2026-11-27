@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { narrationLanguage, type NarrationVoice } from "@overview/domain";
-import type { Narration, Narrator } from "../audio/Narrator.js";
-import { MachineTime, MODEL_LOAD_SECONDS } from "./MachineTime.js";
+import type { Narration, Narrator, SpeechHost } from "../audio/Narrator.js";
+import { FLY_MACHINE, MachineTime, MODAL_CONTAINER } from "./MachineTime.js";
 
 export interface LiveSpeechPlay {
   voice: NarrationVoice;
@@ -11,8 +11,12 @@ export interface LiveSpeechPlay {
   onChunk: (index: number, narration: Narration | null) => Promise<void>;
 }
 
+export type HostSeconds = Record<SpeechHost, number>;
+
 export interface LiveSpeechOutcome {
-  machineSeconds: number;
+  machineSeconds: HostSeconds;
+  fellBack: boolean;
+  modalGpu: string | null;
   cold: boolean;
   spoken: number;
   skipped: number;
@@ -23,6 +27,7 @@ export interface LiveSpeechOutcome {
 export interface LiveSpeechWarmUp {
   machineSeconds: number;
   warmed: boolean;
+  host: SpeechHost | null;
 }
 
 export interface LiveSpeechLaneOptions {
@@ -47,7 +52,7 @@ export class LiveSpeechLane {
   #waiting: Waiting[] = [];
   #busy = 0;
   #turns = 0;
-  #time = new MachineTime();
+  #times: Record<SpeechHost, MachineTime> = { fly: new MachineTime(FLY_MACHINE), modal: new MachineTime(MODAL_CONTAINER) };
 
   constructor(options: LiveSpeechLaneOptions) {
     this.#options = options;
@@ -59,7 +64,16 @@ export class LiveSpeechLane {
         play,
         next: 0,
         turn: 0,
-        outcome: { machineSeconds: 0, cold: false, spoken: 0, skipped: 0, dropped: 0, queueWaitSeconds: 0 },
+        outcome: {
+          machineSeconds: { fly: 0, modal: 0 },
+          fellBack: false,
+          modalGpu: null,
+          cold: false,
+          spoken: 0,
+          skipped: 0,
+          dropped: 0,
+          queueWaitSeconds: 0,
+        },
         queuedAt: this.#options.clock(),
         firstClaimedAt: null,
         finish,
@@ -71,15 +85,17 @@ export class LiveSpeechLane {
 
   async warm(): Promise<LiveSpeechWarmUp> {
     const { narrator, slots, clock } = this.#options;
-    if (this.#busy >= slots || this.#time.isWarm(clock())) {
-      return { machineSeconds: 0, warmed: false };
+    const now = clock();
+    if (this.#busy >= slots || this.#times.fly.isWarm(now) || this.#times.modal.isWarm(now)) {
+      return { machineSeconds: 0, warmed: false, host: null };
     }
     this.#busy += 1;
     const startedAt = clock();
     try {
-      await narrator.warm(randomUUID());
-      const loadedBy = new Date(Math.max(clock().getTime(), startedAt.getTime() + MODEL_LOAD_SECONDS * 1000));
-      return { machineSeconds: this.#time.charge(startedAt, loadedBy).seconds, warmed: true };
+      const host = await narrator.warm(randomUUID());
+      const time = this.#times[host];
+      const loadedBy = new Date(Math.max(clock().getTime(), startedAt.getTime() + time.warmLoadSeconds * 1000));
+      return { machineSeconds: time.charge(startedAt, loadedBy).seconds, warmed: true, host };
     } finally {
       this.#busy -= 1;
       this.#pump();
@@ -143,9 +159,15 @@ export class LiveSpeechLane {
         async () => {},
       )
       .catch(() => null);
-    const charge = this.#time.charge(startedAt, clock());
-    waiting.outcome.machineSeconds += charge.seconds;
-    waiting.outcome.cold ||= index === 0 && charge.cold;
+    if (narration !== null) {
+      const charge = this.#times[narration.host].charge(startedAt, clock());
+      waiting.outcome.machineSeconds[narration.host] += charge.seconds;
+      waiting.outcome.cold ||= index === 0 && charge.cold;
+      waiting.outcome.fellBack ||= narration.fellBack;
+      if (narration.host === "modal" && narration.gpu !== null) {
+        waiting.outcome.modalGpu = narration.gpu;
+      }
+    }
     if (narration === null) {
       waiting.outcome.skipped += 1;
     } else {

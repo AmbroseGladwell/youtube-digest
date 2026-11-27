@@ -160,6 +160,45 @@ T4 kept warm (about $9 a day for 16 hours) isn't worth it yet.
 Run it again from `services/tts/` with the Modal token from `overview-dev`: `modal deploy modal_kokoro_spike.py`,
 then `python modal_kokoro_spike.py --only t4 --cold 3`. Results go to `.local/tts-benchmark/ov421/`. Stop the app
 afterwards (`modal app stop overview-tts-spike`).
+## On Modal (OV-423)
+
+`services/tts/modal_app.py` runs the same service (`create_app`, `/render/stream`, `/health`) on a Modal GPU:
+
+- **GPUs, in order:** T4, then an A10, then an L4, so a slow L4 never holds a reader up.
+- **Containers:** one render per container (`@modal.concurrent(max_inputs=1)`), staying up 20 s after its last request.
+- **Kokoro on the GPU:** `KokoroSynthesiser(providers=["CUDAExecutionProvider", …])`. A container where Kokoro didn't land on the GPU refuses to start rather than render slowly.
+- **Token:** every request needs `Authorization: Bearer <TTS_TOKEN>`, the Modal secret named after the app.
+- **Apps:** `overview-tts` for dev and `overview-tts-prod` for production, each deployed by `task deploy:tts:modal [ENV=prod]`. That puts the Bitwarden project's `TTS_TOKEN` into the secret, deploys, and checks that a call without the token gets 401.
+
+Measured through its HTTPS endpoint from London, 26 Nov 2026 (dev app):
+
+| | First line | Whole response |
+|---|---|---|
+| A sentence (4.9 s of audio), warm | 1.29 s | 1.38 s |
+| A sentence, cold | 6.56 s | 6.65 s |
+| A full note (274.5 s of audio), streamed | 1.05 s | 26.7 s (10x playback) |
+| 5 three-sentence chunks at once, warm | 0.7 s, 1.9 s, 3.1 s, 4.1 s, 5.3 s | |
+
+- **The endpoint adds about 0.7 s** to a warm sentence over calling the function directly (0.55 s). That's the trip from London to Modal's US region and its web routing.
+- **A whole note streams through without a cut.**
+- **Five readers at once queued on one warm container** instead of starting four more. Modal's autoscaler waits before adding containers, and the service renders one request at a time. Rendering several at once on one GPU, or keeping a spare container while busy (`buffer_containers`), is for when concurrency is real.
+
+### The API on Modal first
+
+With `TTS_MODAL_URL` set, both the live lane and the render queue ask Modal first (`speechNarrators`, `createFallbackNarrator`):
+
+- **Fly takes over when Modal is too slow:** no first line from Modal within 10 s for a chat chunk, or 30 s for a render. That's usually no GPU yet; a cold T4 answers in 6–9 s.
+- **Fly also takes over when Modal fails before its first line.** A failure after a line is a failure: the chunk is skipped, or the render is retried as before.
+- **A reader who stops is never sent to Fly.**
+- **Near the usage limit, Modal is skipped:** once Modal's metered spend this month reaches `TTS_MODAL_MONTHLY_DOLLARS` (`ModalSpendGuard`, rechecked every minute), everything goes to Fly until the month turns. That spend is speech (`-modal` details) and speech-to-text together.
+- **Warm-ups go to whichever host is in front.**
+- **Logging:** each fallback logs `speech fell back to fly` with the lane and the reason. `audio rendered` carries the `host` and whether it `fellBack`.
+- **Costs per host:**
+  - Chat plays are charged per host at that host's price: Fly keeps the `chat` and `chat-warm` details, and Modal's are `chat-modal` and `chat-warm-modal`.
+  - A render on Modal is charged to the account that asked for it as `narration-modal`, for the dashboards only, with no allowance.
+  - Renders on Fly stay part of its fixed bill.
+  - Modal's machine time is the request plus its 20 s scale-down, with no boot charge, since the container answers only once loaded.
+  - Each render's `done` event names the card it ran on (`gpu`, from `nvidia-smi`), so an A10 or L4 standing in for a T4 is priced at its own list price (`gpuDollarsPerHour`); `TTS_MODAL_DOLLARS_PER_HOUR` is only for a render that names none.
 
 ## The spoken script
 

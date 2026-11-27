@@ -187,6 +187,7 @@ def create_app(
                                 "synthesisSeconds": round(synthesis_seconds, 2),
                                 "audioBase64": base64.b64encode(audio).decode("ascii"),
                                 "segments": _segments(event.segments),
+                                "gpu": getattr(synthesiser, "gpu", None),
                             }
                         )
             except Exception as error:

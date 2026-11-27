@@ -37,6 +37,10 @@ const ConfigEnv = z
     TTS_CONCURRENCY: z.coerce.number().int().positive().default(5),
     TTS_LIVE_SLOTS: z.coerce.number().int().nonnegative().default(1),
     TTS_DOLLARS_PER_MACHINE_HOUR: z.coerce.number().positive().optional(),
+    TTS_MODAL_URL: z.url().optional(),
+    TTS_MODAL_TOKEN: z.string().min(32).optional(),
+    TTS_MODAL_DOLLARS_PER_HOUR: z.coerce.number().positive().optional(),
+    TTS_MODAL_MONTHLY_DOLLARS: z.coerce.number().positive().optional(),
     AUDIO_DIR: z.string().min(1).optional(),
     R2_ACCOUNT_ID: z
       .string()
@@ -88,6 +92,10 @@ const ConfigEnv = z
     OTEL_EXPORTER_OTLP_PROTOCOL: z.string().optional(),
     OTEL_SERVICE_NAME: z.string().min(1).optional(),
     OTEL_RESOURCE_ATTRIBUTES: z.string().optional(),
+  })
+  .refine((env) => env.TTS_MODAL_URL === undefined || (env.TTS_URL !== undefined && env.TTS_MODAL_TOKEN !== undefined), {
+    path: ["TTS_MODAL_URL"],
+    message: "requires TTS_MODAL_TOKEN, and TTS_URL for the Fly pool it falls back to",
   })
   .refine((env) => env.MIN_SUPPORTED_CLIENT_VERSION <= CLIENT_VERSION, {
     path: ["MIN_SUPPORTED_CLIENT_VERSION"],
@@ -142,11 +150,19 @@ export type OurKeyConfig = {
   dailyChatMessages: number;
 } | null;
 
+export interface ModalSpeechConfig {
+  url: string;
+  token: string;
+  dollarsPerHour: number | null;
+  monthlyDollars: number | null;
+}
+
 export type AudioConfig = {
   ttsUrl: string;
   concurrency: number;
   liveSlots: number;
   dollarsPerMachineHour: number | null;
+  modal: ModalSpeechConfig | null;
   store: AudioStoreConfig;
 } | null;
 
@@ -226,6 +242,15 @@ export const loadConfig = (env: Record<string, string | undefined> = process.env
             concurrency: data.TTS_CONCURRENCY,
             liveSlots: Math.min(data.TTS_LIVE_SLOTS, data.TTS_CONCURRENCY - 1),
             dollarsPerMachineHour: data.TTS_DOLLARS_PER_MACHINE_HOUR ?? null,
+            modal:
+              data.TTS_MODAL_URL === undefined
+                ? null
+                : {
+                    url: data.TTS_MODAL_URL,
+                    token: data.TTS_MODAL_TOKEN!,
+                    dollarsPerHour: data.TTS_MODAL_DOLLARS_PER_HOUR ?? null,
+                    monthlyDollars: data.TTS_MODAL_MONTHLY_DOLLARS ?? null,
+                  },
             store:
               data.R2_BUCKET === undefined
                 ? { kind: "file", dir: data.AUDIO_DIR! }

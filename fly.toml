@@ -24,6 +24,9 @@ primary_region = "lhr"
   # Narration: the private TTS pool over Flycast, one render per machine, into the private R2
   # bucket (docs/architecture/deploy.md, "The TTS service"; the two R2 keys are secrets).
   TTS_URL = "http://the-overview-tts.flycast"
+  # Kokoro on a Modal T4, asked first for chat and narration, the pool above behind it, deployed by
+  # `task deploy:tts:modal ENV=prod`; its token is TTS_TOKEN in overview-prod (OV-423).
+  TTS_MODAL_URL = "https://theoverviewapp--overview-tts-prod-speaker-web.modal.run"
   # Production's speech-to-text app on Modal, deployed by `task deploy:stt`; its token is STT_TOKEN
   # in overview-prod (docs/features/speech-to-text.md, "Switching it on").
   STT_URL = "https://theoverviewapp--overview-stt-prod-jobs.us-east.modal.run"

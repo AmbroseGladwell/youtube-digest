@@ -191,7 +191,7 @@ Found by code from the claim embeddings OV-229 stores (`search-by-meaning.md`), 
 overview's current rev only, and never from the big picture, as measured (`connections.md`). Two
 overviews' distance is their best pair of claims, in pgvector (`ClaimPairsRepository`).
 
-- **Library:** the `RECENT_OVERVIEWS_PAIRED` (20) most recently saved live overviews, and for each,
+- **Library:** the `RECENT_OVERVIEWS_PAIRED` (40, 20 until OV-424) most recently saved live overviews, and for each,
   from its `PARTNERS_LOOKED_AT` (10) closest: its `similarTo` links (`verdict.similarTo`), its
   closest partner sharing no topic, and its closest partner. The three lists are taken in turn,
   `similarTo` first since it was the best source, newest save first, each pair once.
@@ -200,12 +200,21 @@ overviews' distance is their best pair of claims, in pgvector (`ClaimPairsReposi
 - **Never twice.** A pair that has ever had a question in that scope, live, used up or
   tombstoned, is left out. Overviews that are gone are never candidates.
 
-Up to `LIBRARY_PAIRS_LABELLED` (8) library pairs and `PROJECT_PAIRS_LABELLED` (4) per project
-are labelled by Luna (`QUESTION_LABEL_MODEL`, chat's model), with the strict rubric of
+### Spread across topics
+
+`spreadAcrossTopics` picks what is labelled, and later what is kept (OV-424). A pair's topics are
+both overviews' `topicIds`. Walking the list in its own order, it first takes each pair that
+shares no topic with one already taken or with a question already on show in that scope, then
+fills what's left in order. So a library whose recent saves cluster on one subject still offers
+pairs from others, and a better pair on a taken topic still comes in when nothing else is left.
+
+Up to `LIBRARY_PAIRS_LABELLED` (16) library pairs and `PROJECT_PAIRS_LABELLED` (8) per project,
+twice what they were before OV-424, are labelled by Luna (`QUESTION_LABEL_MODEL`, chat's model), with the strict rubric of
 `connections.md` round 2 (`LABEL_PROMPT`), the reader's About you and what was learned
 (`composeReaderContext`, as chat sends it), the names and purposes of their projects, and for a
 project's pair, that project. Only `real` ones are kept, `different_view` and `contradicts`
-first, up to a scope's slots plus `SPARE_PAIRS_PER_SCOPE` (1) so the writer can skip one. The
+first, up to `PAIRS_TO_WRITER_PER_SLOT` (2) per slot, so the writer has twice what a scope
+can take and code keeps the best. The
 measured prompt's "for you" line is left out, since nothing reads it.
 
 ### Writing
@@ -218,7 +227,8 @@ though its wording was preferred where both were good. Labelling stays on Luna.
 
 The prompt (`questionWriterPrompt`) is the measured one (`connections.md`, round 4) plus:
 
-- each pair says how many questions its place can take;
+- at most one question per pair, each rated from 1 to `QUESTION_RATING_MAX` (5) on how glad this
+  reader would be to ask it, with each step described;
 - every question must draw on **both** overviews of its pair, since the obvious ones in the
   owner's review had dropped one;
 - the reader's own questions marked obvious, the `OBVIOUS_EXAMPLES` (4) most recent, as "the
@@ -227,8 +237,11 @@ The prompt (`questionWriterPrompt`) is the measured one (`connections.md`, round
 
 Each pair is sent compactly: its overviews' titles and core claims and the claims the pair met
 on. Code then keeps a question only when its pair number exists, its text passes
-`SuggestedQuestionText` and is one sentence, its pair hasn't a question already in this batch, and
-its scope has room. The rest are written by `writeSuggestedQuestions`, which still skips any
+`SuggestedQuestionText` and is one sentence, it is rated at least `MIN_QUESTION_RATING` (4), and
+its pair hasn't a better-rated question already. From those, best rated first, each scope takes
+what it has room for, spread across topics as above. A slot with nothing good enough stays empty:
+fewer is better than weak (owner, 26 Nov 2026). The rating is the writer's own, which may be
+lenient; the funnel's `lowRating` count and what readers mark show whether the bar holds. The rest are written by `writeSuggestedQuestions`, which still skips any
 whose overviews or project membership went meanwhile.
 
 ### Cost and logging
@@ -241,6 +254,22 @@ the chat allowance.
 `api.questions.refreshed` is logged for every ask with the plan and `status`, and again when a
 started refresh ends, with its `outcome`, whether it filled the library, how many projects, the
 pairs labelled and the questions written. Never a question, a title, an id or a cost.
+
+The ending line also carries the funnel (`RefreshFunnel`, OV-424), so a refresh that fills fewer
+slots than it had says where the rest went:
+
+- `candidates`: fresh pairs found across the scopes filled, before each scope's labelling limit.
+- `labelsReal`, `labelsStretch`, `labelsNotConnected`, and `labelsFailed` for a label call that
+  threw.
+- `pairsToWriter`: the real pairs sent to the writer, up to each scope's slots plus its spare.
+- `writerReturned`: the questions in the writer's reply.
+- `dropped`, by the first rule each failed in `keptQuestions`: `badPair` (no such pair),
+  `textLimits`, `notOneSentence`, `lowRating` (under `MIN_QUESTION_RATING`), `samePair` (a
+  worse-rated second question on a pair), `noRoom` (the scope or the refresh was full).
+- `skippedOnWrite`: kept but skipped by `writeSuggestedQuestions`, because an overview or a
+  membership went meanwhile.
+
+A failed refresh logs what it counted before it threw on `api.questions.refreshFailed`.
 
 ## Slice 3: on the Ask page
 

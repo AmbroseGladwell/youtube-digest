@@ -66,6 +66,24 @@ requests, so it happens on a worker thread.
   `shared-cpu-1x` machine is slower than a laptop; that is what more machines are for
   (`docs/architecture/deploy.md`, "When it's busy").
 
+## Pages that stream in
+React's streaming render (Next.js, among others) sends a loading skeleton first, then the real
+content later in the same response, inside `<div hidden id="S:n">`. An inline script call,
+`$RC("B:n","S:n")`, swaps it into the page: it replaces the skeleton between
+`<template id="B:n">` and its closing `<!--/$-->` comment. `$RS("S:n","P:n")` fills a placeholder
+the same way. A browser runs those scripts; the server never runs a page's scripts. Without the
+swap, the whole article stays `hidden`, Readability skips it, and the reader is told it isn't an
+article (OV-422, an expo.dev post).
+
+So `revealStreamedContent` replays the swaps before `readArticle`, in the order the page calls
+them, taking only the ids those calls name. A part the page never swaps in stays hidden, as it
+would in a browser. The extension doesn't need this: it reads the tab after the scripts have run.
+
+Measured on 38 real pages on 26 Nov 2026, comparing main with this change (news, blogs, recipes,
+docs, Wikipedia and several Next.js sites): the 3 expo.dev posts went from `nothing-readable` to
+read, 31 read exactly as before, and the 4 that changed only gained headings Readability had
+dropped (article-extraction.md, "Headings Readability drops").
+
 ## Being an honest visitor
 
 The fetch says what it is in its `User-Agent`, and doesn't pretend to be a browser. A site that

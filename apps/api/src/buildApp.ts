@@ -27,6 +27,7 @@ import { currentLog, trackCurrentRequest } from "./logs/currentLog.js";
 import type { Mailer } from "./mail/Mailer.js";
 import { AccountCostsRepository } from "./costs/AccountCostsRepository.js";
 import { LiveSpeechLane } from "./speech/LiveSpeechLane.js";
+import { speechNarrators } from "./speech/speechNarrators.js";
 import { ClaimEmbeddingsRepository } from "./meaning/ClaimEmbeddingsRepository.js";
 import type { Embedder } from "./meaning/Embedder.js";
 import { EmbeddingQueue } from "./meaning/EmbeddingQueue.js";
@@ -126,8 +127,15 @@ export interface AudioSetup {
   concurrency: number;
   liveSlots: number;
   dollarsPerMachineHour: number | null;
+  modal?: ModalSpeechSetup | null;
   // Off in tests, which drain the queue themselves rather than race a background worker.
   runWorkers: boolean;
+}
+
+export interface ModalSpeechSetup {
+  narrator: Narrator;
+  dollarsPerHour: number | null;
+  monthlyDollars: number | null;
 }
 
 export interface TranscriptServiceSetup {
@@ -238,22 +246,26 @@ export const buildApp = async ({
   const urls = oauthUrls(config.appUrl);
   const audioRenders = new AudioRendersRepository(sql);
   const shares = new SharesRepository(sql, clock);
+  const speechHosts = audio === null ? null : speechNarrators({ audio, sql, clock, log: app.log });
   const audioQueue =
-    audio === null
+    audio === null || speechHosts === null
       ? null
       : new AudioRenderQueue({
           renders: audioRenders,
           clock,
           log: app.log,
           ...audio,
+          narrator: speechHosts.renders,
+          costs: new AccountCostsRepository(sql),
+          modalDollarsPerHour: audio.modal?.dollarsPerHour ?? null,
           concurrency: Math.max(1, audio.concurrency - audio.liveSlots),
         });
   const chatSpeech =
-    audio === null || audio.liveSlots === 0
+    audio === null || speechHosts === null || audio.liveSlots === 0
       ? null
       : {
-          lane: new LiveSpeechLane({ narrator: audio.narrator, slots: audio.liveSlots, clock }),
-          dollarsPerMachineHour: audio.dollarsPerMachineHour,
+          lane: new LiveSpeechLane({ narrator: speechHosts.chat, slots: audio.liveSlots, clock }),
+          prices: { fly: audio.dollarsPerMachineHour, modal: audio.modal?.dollarsPerHour ?? null },
         };
   app.decorate("audioQueue", audioQueue);
   const claimEmbeddings = new ClaimEmbeddingsRepository(sql);

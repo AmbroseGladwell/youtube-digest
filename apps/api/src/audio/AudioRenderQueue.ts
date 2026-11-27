@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 import { apiLogLines, narrationLanguage, NarrationVoice, redactErrorMessage } from "@overview/domain";
 import type { AudioRendersRepository } from "./AudioRendersRepository.js";
 import type { AudioStore } from "./AudioStore.js";
-import type { NarrationSegment, Narrator } from "./Narrator.js";
+import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
+import { MachineTime, MODAL_CONTAINER } from "../speech/MachineTime.js";
+import { hostPrice, speechDetail, speechDollars } from "../speech/speechCost.js";
+import type { NarrationSegment, Narrator, SpeechHost } from "./Narrator.js";
+import type { AccountId } from "../auth/AccountId.js";
 
 export const MAX_RENDER_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [30_000, 120_000];
@@ -25,11 +29,14 @@ export interface AudioRenderQueueOptions {
   concurrency: number;
   log: RenderLog;
   runWorkers: boolean;
+  costs?: AccountCostsRepository | null;
+  modalDollarsPerHour?: number | null;
 }
 
 export class AudioRenderQueue {
   #options: AudioRenderQueueOptions;
   #active = 0;
+  #modalTime = new MachineTime(MODAL_CONTAINER);
 
   constructor(options: AudioRenderQueueOptions) {
     this.#options = options;
@@ -72,6 +79,23 @@ export class AudioRenderQueue {
     }
   }
 
+  // Renders on Fly are its fixed bill (docs/architecture/spend.md); a render on Modal costs the account that asked.
+  async #recordCost(requestedBy: AccountId | null, host: SpeechHost, gpu: string | null, startedAt: Date, readyAt: Date): Promise<void> {
+    const { costs, modalDollarsPerHour = null, log } = this.#options;
+    const price = hostPrice({ fly: null, modal: modalDollarsPerHour }, host, gpu);
+    if (host !== "modal" || costs === undefined || costs === null || price === null) {
+      return;
+    }
+    const seconds = this.#modalTime.charge(startedAt, readyAt).seconds;
+    const payer = requestedBy === null ? "signed-out" : { accountId: requestedBy };
+    await costs.recordOrLog(
+      readyAt,
+      payer,
+      { area: "speech", detail: speechDetail("narration", host), quantity: seconds, dollars: speechDollars(seconds, price) },
+      log,
+    );
+  }
+
   async #renderNext(): Promise<boolean> {
     const { renders, narrator, store, clock, log } = this.#options;
     const claimedAt = clock();
@@ -91,6 +115,7 @@ export class AudioRenderQueue {
     const lineStarts: number[] = [];
     const segmentSeconds: number[] = [];
     const firstAudio: { at: Date | null } = { at: null };
+    const startedAt = clock();
     const keepSegments = async (segments: NarrationSegment[]) => {
       for (const segment of segments) {
         await store.putSegment(job.key, segment.index, segment.audio);
@@ -115,6 +140,7 @@ export class AudioRenderQueue {
       await store.put(job.key, narration.audio);
       const readyAt = clock();
       await renders.markReady(job.key, narration.lineStartsSeconds, narration.durationSeconds, segmentSeconds, readyAt);
+      await this.#recordCost(job.requestedBy, narration.host, narration.gpu, startedAt, readyAt);
       log.info(
         apiLogLines.audio.rendered({
           ...entry,
@@ -122,6 +148,8 @@ export class AudioRenderQueue {
           audioSeconds: narration.durationSeconds,
           bytes: narration.audio.byteLength,
           segments: segmentSeconds.length,
+          host: narration.host,
+          fellBack: narration.fellBack,
           requestToFirstAudioSeconds: firstAudio.at === null ? null : (firstAudio.at.getTime() - job.requestedAt.getTime()) / 1000,
           requestToReadySeconds: (readyAt.getTime() - job.requestedAt.getTime()) / 1000,
         }),

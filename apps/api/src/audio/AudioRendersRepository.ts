@@ -20,6 +20,7 @@ export interface AudioRender {
   lineStartsSeconds: number[] | null;
   durationSeconds: number | null;
   segmentSeconds: number[] | null;
+  requestedBy: AccountId | null;
 }
 
 interface AudioRenderRow {
@@ -34,10 +35,11 @@ interface AudioRenderRow {
   line_starts: number[] | null;
   duration_seconds: number | null;
   segment_seconds: number[] | null;
+  requested_by: string | null;
 }
 
 const COLUMNS =
-  "key, voice, render_version, lines, status, priority, attempts, requested_at, line_starts, duration_seconds, segment_seconds";
+  "key, voice, render_version, lines, status, priority, attempts, requested_at, line_starts, duration_seconds, segment_seconds, requested_by";
 
 const fromRow = (row: AudioRenderRow): AudioRender => ({
   key: row.key,
@@ -51,6 +53,7 @@ const fromRow = (row: AudioRenderRow): AudioRender => ({
   lineStartsSeconds: row.line_starts,
   durationSeconds: row.duration_seconds === null ? null : Number(row.duration_seconds),
   segmentSeconds: row.segment_seconds,
+  requestedBy: row.requested_by as AccountId | null,
 });
 
 export interface EnqueueAudio {

@@ -1,7 +1,13 @@
 [
   {
     "id": "e511b5dd-ee36-40bc-9d76-82c2f459d8d4",
-    "tags": ["claude-code", "personal-knowledge-management", "automation", "self-hosting", "ai-agents"],
+    "tags": [
+      "claude-code",
+      "personal-knowledge-management",
+      "automation",
+      "self-hosting",
+      "ai-agents"
+    ],
     "thin": false,
     "source": {
       "id": "Zs3faMCDYNs",
@@ -161,7 +167,11 @@
   },
   {
     "id": "277aa6b8-d4c3-4c9e-90c5-89816985e021",
-    "tags": ["sleep", "evolution", "neuroscience"],
+    "tags": [
+      "sleep",
+      "evolution",
+      "neuroscience"
+    ],
     "thin": false,
     "source": {
       "id": "d2c07f9df12741a187f9c610667d5f88",
@@ -211,7 +221,13 @@
         "leftOut": "It leaves out Tobler's recollections of ridicule, the history of brain-wave recording and examples contrasting sleep duration across species.",
         "chapterIndexes": []
       },
-      "keyPointChapters": [0, 1, 0, 2, 2]
+      "keyPointChapters": [
+        0,
+        1,
+        0,
+        2,
+        2
+      ]
     },
     "savedAt": "2026-11-04T22:04:21.997Z",
     "selling": {
@@ -262,7 +278,12 @@
   },
   {
     "id": "7fb0cd11-cbc6-4ec8-a397-b56264fadc7c",
-    "tags": ["caribbean-food", "chicken", "rice-and-peas", "plantain"],
+    "tags": [
+      "caribbean-food",
+      "chicken",
+      "rice-and-peas",
+      "plantain"
+    ],
     "thin": true,
     "recipe": {
       "steps": [
@@ -366,7 +387,12 @@
   },
   {
     "id": "4a22a604-7460-49f7-b4c3-93e4c38aa293",
-    "tags": ["urban-planning", "disaster-recovery", "climate-resilience", "community-engagement"],
+    "tags": [
+      "urban-planning",
+      "disaster-recovery",
+      "climate-resilience",
+      "community-engagement"
+    ],
     "thin": false,
     "source": {
       "id": "efb330dcd9f6b6a99072292e0806ffdb",
@@ -443,7 +469,14 @@
         "leftOut": "It leaves out Imren’s escape and bereavement accounts, architectural renderings, the reporter’s park walk and further details of international rebuilding schemes.",
         "chapterIndexes": []
       },
-      "keyPointChapters": [0, null, null, null, 4, null]
+      "keyPointChapters": [
+        0,
+        null,
+        null,
+        null,
+        4,
+        null
+      ]
     },
     "savedAt": "2026-11-04T22:24:20.796Z",
     "selling": {
@@ -498,7 +531,14 @@
   },
   {
     "id": "abcf75bf-3894-4721-9845-153f4e16a2b4",
-    "tags": ["compound-interest", "investing", "savings-rate", "sequence-risk", "retirement-planning", "fees-and-tax"],
+    "tags": [
+      "compound-interest",
+      "investing",
+      "savings-rate",
+      "sequence-risk",
+      "retirement-planning",
+      "fees-and-tax"
+    ],
     "thin": false,
     "source": {
       "id": "Jab_QOxKEO4",
@@ -643,7 +683,13 @@
   },
   {
     "id": "8d6760f0-7abd-432a-a84f-92a6ff6fe4a6",
-    "tags": ["ai-coding", "ai-agents", "ai-workflows", "burnout", "product-design"],
+    "tags": [
+      "ai-coding",
+      "ai-agents",
+      "ai-workflows",
+      "burnout",
+      "product-design"
+    ],
     "thin": false,
     "source": {
       "id": "89c8baa8c00d43ec0a1e2adec670d77c",
@@ -727,9 +773,19 @@
         "answer": "partial",
         "reason": "The firsthand workflow and failure accounts are worth inspecting before changing your own review process. They show what the extra throughput actually costs, rather than treating it as free productivity.",
         "leftOut": "It leaves out the detailed project inventory, charts of pull request timing and review ratios, sample generated summaries, review screenshots and migration guardrail examples.",
-        "chapterIndexes": [1, 2]
+        "chapterIndexes": [
+          1,
+          2
+        ]
       },
-      "keyPointChapters": [1, null, 2, null, null, 6]
+      "keyPointChapters": [
+        1,
+        null,
+        2,
+        null,
+        null,
+        6
+      ]
     },
     "savedAt": "2026-11-04T21:58:35.505Z",
     "selling": {
@@ -787,115 +843,209 @@
     "watchAnyway": null
   },
   {
-    "id": "fb277911-5816-46f2-9d52-b95aa8b09f3b",
-    "tags": ["uk-politics", "emergency-preparedness", "household-supplies"],
+    "id": "bd266f97-2489-466f-af4a-e2d6f636f50c",
+    "tags": [
+      "randomness",
+      "cryptography",
+      "quantum-physics",
+      "monte-carlo",
+      "minecraft"
+    ],
     "thin": false,
     "source": {
-      "id": "MaIFGhaKF_s",
-      "url": "https://www.youtube.com/watch?v=MaIFGhaKF_s",
+      "id": "uXuQF_PPg5U",
+      "url": "https://www.youtube.com/watch?v=uXuQF_PPg5U",
       "kind": "youtube",
-      "title": "Why is the UK telling people to stockpile? | BBC News",
-      "channel": "BBC News",
-      "durationMs": 453000,
-      "description": "Major retailers have reported a big rise in sales of tinned food, bottled water, wind up radios and batteries, after the government launched its 'be ready' campaign.\n\nThe government is urging people to stock up on enough for three days in case of a crisis - like extreme weather or a cyber-attack. \n\nThe security minister's defended the campaign, arguing that our European neighbours seem better prep",
-      "publishedAt": "2026-10-27T20:30:37.000Z",
-      "thumbnailUrl": "https://i.ytimg.com/vi/MaIFGhaKF_s/sddefault.jpg"
+      "title": "Randomness is a lie. Let me explain",
+      "channel": "Veritasium",
+      "durationMs": 2328000,
+      "description": "Is anything random? Sponsored by Hostinger. Go to https://hostinger.com/veritasium and use code VERITASIUM for an additional 10% off.\n\nFor more on Bell tests, watch our video - https://www.youtube.com/watch?v=NIk_0AW5hFU\n\nYou can also check out Matthew Bolan’s video on the maths behind his Minecraft exploit here -  https://www.youtube.com/watch?v=5Icj5TNmBUI\n\nTo see the random numbers produced by ",
+      "publishedAt": "2026-11-18T20:29:44.000Z",
+      "thumbnailUrl": "https://i.ytimg.com/vi_webp/uXuQF_PPg5U/sddefault.webp"
     },
-    "savedAt": "2026-11-04T09:12:27.931Z",
+    "savedAt": "2026-11-21T01:29:31.365Z",
     "selling": {
-      "type": "none",
-      "detail": "No product, sponsor or paid service is pitched; retailers appear as sources for sales figures.",
+      "type": "sponsor_or_affiliate",
+      "detail": "Hostinger sponsors a website-builder demonstration and offers an additional 10% discount with the creator's code. The creator also promotes the paid Elements of Truth game, Snatoms kits and Patreon, plus a free newsletter and digital game.",
       "compromisesContent": false
     },
     "verdict": {
       "dubious": false,
-      "novelty": "common_knowledge",
-      "reasoning": "Keeping a modest emergency reserve is standard preparedness advice. The retailer figures are timely reporting, not a new method or substantive finding about risk, and the European comparisons are asserted rather than demonstrated.",
+      "novelty": "fresh_angle",
+      "reasoning": "The distinctions between simulation generators, cryptographic generators and physical entropy are standard knowledge in computing and physics. The concrete certification and publication workflow adds a less familiar application, and the discussion preserves the assumptions behind its strongest claims.",
       "similarTo": [],
-      "standsOut": null,
+      "standsOut": {
+        "text": "A laboratory workflow turns at least 820 certified bits of unpredictability into 512 published random bits.",
+        "range": {
+          "endMs": 2223000,
+          "startMs": 2071440
+        }
+      },
       "dubiousClaims": []
     },
     "chapters": [
       {
-        "endMs": 156852,
-        "title": "Why the government is encouraging preparation",
+        "endMs": 109290,
+        "title": "The suspicious casino winning streaks",
         "startMs": 0,
-        "summary": "The report introduces the campaign and explains the government's concerns about extreme weather, power cuts and hostile-state cyberattacks."
+        "summary": "Gamblers record slot-machine spins, leave and return to win by pressing at unusually precise moments. The mystery introduces the distinction between computer-generated outcomes and genuine randomness."
       },
       {
-        "endMs": 238572,
-        "title": "What households should keep",
-        "startMs": 156852,
-        "summary": "The official 3-day supply recommendation is followed by a prepper's food and water stores, garden and emphasis on practical knowledge."
+        "endMs": 343140,
+        "title": "Solitaire inspires nuclear simulations",
+        "startMs": 109290,
+        "summary": "Ulam's question about winning solitaire becomes a way to estimate neutron chain reactions. Sampling paths using measured probabilities makes an otherwise overwhelming calculation manageable."
       },
       {
-        "endMs": 385015,
-        "title": "Retail sales and public reactions",
-        "startMs": 238572,
-        "summary": "Retailers report increased demand for emergency supplies. Public responses range from existing preparation to scepticism, affordability concerns and anxiety."
+        "endMs": 606690,
+        "title": "Middle-square numbers and their traps",
+        "startMs": 343140,
+        "summary": "Von Neumann supplies computer-generated numbers by repeatedly squaring a seed and keeping its middle digits. Short cycles expose the limitations of this early Monte Carlo tool."
       },
       {
-        "endMs": 448895,
-        "title": "No specific threat and European comparisons",
-        "startMs": 385015,
-        "summary": "Dan Jarvis denies that an imminent threat prompted the campaign. The report closes by arguing that Britain trails other European countries in preparedness."
+        "endMs": 708074,
+        "title": "Finding diamonds beneath river clay",
+        "startMs": 606690,
+        "summary": "Bolan demonstrates an older Minecraft exploit by locating a clay patch and digging at a predictable offset. The demonstration raises the question of how separate resources become mathematically linked."
+      },
+      {
+        "endMs": 941520,
+        "title": "Linear generators hide geometric patterns",
+        "startMs": 708074,
+        "summary": "Modular arithmetic produces long sequences with simple rules. RANDU's outputs reveal conspicuous planes, while Java's better parameters make the same underlying structure harder to see."
+      },
+      {
+        "endMs": 1125000,
+        "title": "Related seeds and recoverable internal state",
+        "startMs": 941520,
+        "summary": "Related Minecraft seeds explain the diamond exploit, and exposed Java outputs allow state recovery. Newer Minecraft versions changed generators to remove the particular vulnerability."
+      },
+      {
+        "endMs": 1187370,
+        "title": "The website builder sponsorship",
+        "startMs": 1125000,
+        "summary": "Hostinger pitches website and application creation using plain-language prompts, with optional custom code and a discount offer."
+      },
+      {
+        "endMs": 1399500,
+        "title": "How the casino operation worked",
+        "startMs": 1187370,
+        "summary": "A Russian team reverse engineers slot machines and predicts favorable moments from recorded spins. Timed phone vibrations help gamblers act on those predictions, leading to fraud convictions."
+      },
+      {
+        "endMs": 1581480,
+        "title": "Cryptographic generators still need physical seeds",
+        "startMs": 1399500,
+        "summary": "Secret-key algorithms make prediction impractical even when their design is public. Hardware noise and lava-lamp images provide unpredictable starting material."
+      },
+      {
+        "endMs": 1797630,
+        "title": "From predictable coins to entangled photons",
+        "startMs": 1581480,
+        "summary": "Classical mechanics motivates a stronger definition of randomness. Researchers generate entangled photon pairs and guide them into optical fibers for separated measurements."
+      },
+      {
+        "endMs": 1925010,
+        "title": "Bell tests certify unpredictability conditionally",
+        "startMs": 1797630,
+        "summary": "Separated detectors choose measurement angles and produce correlated results that violate Bell's inequality. The certification needs initial randomness and depends on independent choices and blocked communication."
+      },
+      {
+        "endMs": 2071440,
+        "title": "Quasars and the independence loophole",
+        "startMs": 1925010,
+        "summary": "Ancient quasar light constrains possible coordination between settings and outcomes. Laboratory security presents a different problem, requiring protected measurement choices and explicit experimental assumptions."
+      },
+      {
+        "endMs": 2268150,
+        "title": "Extracting and publishing certified random bits",
+        "startMs": 2071440,
+        "summary": "A biased-coin example explains why raw unpredictability needs extraction. Researchers condense certified entropy into usable bits and publish a verifiable randomness beacon."
+      },
+      {
+        "endMs": 2325713,
+        "title": "Trivia game promotion and outtakes",
+        "startMs": 2268150,
+        "summary": "The closing promotion offers Elements of Truth, a science trivia game with confidence-based scoring. Minecraft outtakes follow."
       }
     ],
-    "coreClaim": "The UK government wants households to hold 3 days of emergency supplies against power cuts, extreme weather and cyberattacks, while explicitly denying that the campaign responds to a specific or imminent threat.",
-    "inOneLine": "A news report combining correspondents, ministerial statements and public reactions to the UK's 3-day emergency supplies campaign.",
+    "coreClaim": "Deterministic generators can produce useful or cryptographically secure pseudorandom numbers, but certifying genuine unpredictability requires physical measurements, Bell tests and explicit assumptions about independence and signaling.",
+    "inOneLine": "Gregor Čavlović combines historical storytelling, Minecraft demonstrations and laboratory visits to explain random number generation, casino exploits and quantum unpredictability.",
     "keyPoints": [
       {
-        "text": "The government's stated concerns are disruption from extreme weather and hostile-state cyberattacks, particularly against electricity infrastructure. Recent storm-related power cuts illustrate the practical risk.",
+        "text": "Monte Carlo methods estimate complex behavior by sampling possible outcomes rather than calculating every possibility. Stanislaw Ulam applied this idea to neutron chain reactions, using measured interaction probabilities to guide simulated paths.",
         "range": {
-          "endMs": 158932,
-          "startMs": 56360
+          "endMs": 343140,
+          "startMs": 109290
         }
       },
       {
-        "text": "The Be Ready campaign recommends keeping 3 days of food, water and medication, alongside blankets, cash and a battery-powered radio.",
+        "text": "A deterministic generator reproduces the same sequence from the same seed, which can still be useful for simulation. Von Neumann's middle-square method illustrates the danger of short cycles: every 4-digit starting value eventually falls into one of 8 traps.",
         "range": {
-          "endMs": 182332,
-          "startMs": 156852
+          "endMs": 605540,
+          "startMs": 343140
         }
       },
       {
-        "text": "Prepper Sarah Malloy stresses knowing how to use stored ingredients rather than merely accumulating them. Her supplies include staple foods, stored water and purification tablets.",
+        "text": "Long periods and patternless appearances do not guarantee independent or unpredictable outputs. RANDU's consecutive triples occupy just 15 planes, while Java's generator exposes enough information in 2 consecutive 32-bit outputs to recover its 48-bit internal state by testing 65,536 possibilities.",
+        "range": null
+      },
+      {
+        "text": "Matthew Bolan's Minecraft diamond exploit uses related starting seeds for clay and diamond placement, so clay reveals where to dig without knowing the world seed. The trick applies to older versions; the ore generator was changed after the flaw was reported around version 1.18.",
         "range": {
-          "endMs": 239932,
-          "startMs": 180972
+          "endMs": 1103730,
+          "startMs": 941520
         }
       },
       {
-        "text": "Retailers reported sharp sales increases after the announcement. Maplin's torch sales rose 284%, Iceland's tinned products rose 40%, and Robert Dyas's radios rose 160%, although the comparison periods differ.",
+        "text": "The casino scheme reportedly reconstructed slot-machine behavior from recorded spins despite the machines using the much more complex Mersenne Twister. A phone vibration compensated for reaction time, helping gamblers press at favorable moments, although it did not guarantee a win.",
         "range": {
-          "endMs": 280494,
-          "startMs": 238572
+          "endMs": 1386180,
+          "startMs": 1198017
         }
       },
       {
-        "text": "Public reactions include concern about affordability and fear that officials anticipate an emergency. Security minister Dan Jarvis explicitly denies any specific or imminent threat and says the campaign aligns Britain with established practice elsewhere.",
+        "text": "Cryptographically secure generators make recovering a secret seed or predicting outputs computationally impractical, rather than abandoning deterministic rules. They still require unpredictable starting material, commonly supplied by physical electrical fluctuations; Cloudflare also uses images of lava lamps.",
         "range": {
-          "endMs": 419015,
-          "startMs": 329094
+          "endMs": 1580110,
+          "startMs": 1465170
+        }
+      },
+      {
+        "text": "Bell-test correlations can certify unpredictability when measurement choices are independent and the stations cannot communicate during measurement. Distant quasar light pushes possible prior coordination billions of years backward without eliminating it; the laboratory system also assumes secure recording, accurate timing and protection from interference.",
+        "range": {
+          "endMs": 2071440,
+          "startMs": 1797630
+        }
+      },
+      {
+        "text": "Certified unpredictability is not automatically a usable stream of balanced, independent bits. The laboratory certifies at least 820 bits of unpredictability in its raw measurements, extracts 512 bits, and publishes them with information for tracing and verifying their generation.",
+        "range": {
+          "endMs": 2264968,
+          "startMs": 2071440
         }
       }
     ],
+    "bigPicture": "Random numbers serve different purposes in scientific simulations, games and encryption, so looking patternless is not the same as being secure. Beneath those engineering problems lies a physics question: can an outcome be unpredictable in principle, rather than merely difficult to calculate? Nuclear simulations and casino fraud supply the practical cases, while Bell tests expose the assumptions behind claims of genuine randomness.",
     "howToApply": {
       "items": [
-        "Check your household's food, drinking water and medication supplies against the campaign's 3-day recommendation, and buy only what is missing.",
-        "Keep blankets, some cash and a working battery-powered radio together where everyone in the household can find them.",
-        "Practise preparing a meal from your stored ingredients using equipment that would still work during a power cut."
+        "When reviewing an AI-generated automation script that creates passwords or access tokens, check that it uses the language's cryptographically secure generator rather than its general-purpose random function."
       ]
     },
     "watchAnyway": {
       "range": null,
       "answer": "no",
-      "reason": "The useful content is a short supplies checklist and the minister's reassurance about imminent threats. Neither requires the interviews or footage."
+      "reason": "The exploits, geometric patterns and laboratory certification can all be understood from a written explanation. The demonstrations illustrate the reasoning rather than supplying evidence unavailable in words."
     }
   },
   {
     "id": "3be0656c-610a-48b6-9f8e-3b7fdafd5e2a",
-    "tags": ["lasagne", "chicken", "butternut-squash", "pesto"],
+    "tags": [
+      "lasagne",
+      "chicken",
+      "butternut-squash",
+      "pesto"
+    ],
     "thin": true,
     "recipe": {
       "steps": [
@@ -957,5 +1107,580 @@
     "keyPoints": [],
     "howToApply": null,
     "watchAnyway": null
+  },
+  {
+    "id": "afeea2b4-9a77-4ec1-95e5-4eded6932f59",
+    "tags": [
+      "neuroscience",
+      "attention",
+      "music-therapy",
+      "pain",
+      "memory"
+    ],
+    "thin": false,
+    "source": {
+      "id": "49d39401807f246eb5287a17eece27f1",
+      "guid": "e73171a4-d7ec-11f1-8452-2fb830ef8774",
+      "kind": "podcast",
+      "title": "How Music Can Be Medicine, with Dr. Dan Levitin",
+      "feedUrl": "https://feeds.megaphone.fm/sciencevs",
+      "pageUrl": null,
+      "audioUrl": "https://chrt.fm/track/15E3G4/traffic.megaphone.fm/GLT7785136744.mp3",
+      "imageUrl": "https://megaphone-images.spotifycdn.com/podcasts/f521b120-2c30-11e6-b5f3-63ee984ee1a4/image/e7470287efbfa0aff068175bb6c31805.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+      "showName": "Science Vs",
+      "durationMs": 1999000,
+      "sharedFrom": "https://podcasts.apple.com/us/podcast/how-music-can-be-medicine-with-dr-dan-levitin/id1051557000?i=1000800020696",
+      "publishedAt": "2026-11-05T10:00:00.000Z"
+    },
+    "savedAt": "2026-11-21T00:57:30.597Z",
+    "selling": {
+      "type": "sponsor_or_affiliate",
+      "detail": "Levitin’s book, I Heard There Was a Secret Chord, is promoted at the opening and close. Advertisements pitch Chase Sapphire Reserve, Tremfya, Zepbound, OLLY supplements, ADT home security and Abercrombie clothing.",
+      "compromisesContent": false
+    },
+    "verdict": {
+      "dubious": true,
+      "novelty": "common_knowledge",
+      "reasoning": "This is a broad introduction to established music neuroscience and rehabilitation ideas, not a new method or a detailed presentation of original results. Its useful distinctions between symptom relief and treatment sit alongside an incorrect dismissal of metronome cueing.",
+      "similarTo": [],
+      "standsOut": null,
+      "dubiousClaims": [
+        {
+          "basis": "contradictsSettled",
+          "claim": "A metronome should do it. But no, it doesn't.",
+          "reason": "Metronome-based rhythmic auditory cueing can improve gait in Parkinson’s disease, so musical engagement is not necessary for an external beat to help.",
+          "startMs": 1677070
+        }
+      ]
+    },
+    "chapters": [
+      {
+        "endMs": 332380,
+        "title": "Introducing the musician turned neuroscientist",
+        "startMs": 750,
+        "summary": "Zuckerman introduces Levitin and his book. He recalls learning clarinet and feeling most himself when playing music."
+      },
+      {
+        "endMs": 657310,
+        "title": "Brain activity, imagery and restorative breaks",
+        "startMs": 332380,
+        "summary": "The discussion covers rhythmic synchronisation, Sting’s architectural musical imagery and Levitin’s inability to visualise voluntarily. It then turns to attention and using music during breaks."
+      },
+      {
+        "endMs": 949200,
+        "title": "Mood and pain relief",
+        "startMs": 657310,
+        "summary": "Levitin discusses neurotransmitters, ice-water pain experiments and endogenous opioids. Personal preference matters, and he acknowledges that music’s analgesic effect is limited and has several possible mechanisms."
+      },
+      {
+        "endMs": 1531950,
+        "title": "Musical memories and Alzheimer’s",
+        "startMs": 949200,
+        "summary": "Melody, rhyme and associations with particular life periods help explain musical recall. Familiar songs may support connection and engagement in dementia without changing disease progression."
+      },
+      {
+        "endMs": 1706130,
+        "title": "Using rhythm to support walking",
+        "startMs": 1531950,
+        "summary": "Music can supply timing cues when Parkinson’s disrupts movement. Levitin describes gait training and argues that musical engagement adds something a bare beat cannot provide."
+      },
+      {
+        "endMs": 1846480,
+        "title": "Why Mozart does not raise intelligence",
+        "startMs": 1706130,
+        "summary": "The Mozart effect is challenged through its narrow outcome measure and weak comparison condition. Classical music is not presented as inherently more therapeutic than other genres."
+      },
+      {
+        "endMs": 1958530,
+        "title": "Music heard before birth",
+        "startMs": 1846480,
+        "summary": "The conversation distinguishes fetal responses to sound from later musical recognition. Studies involve different ways of delivering music and infants’ preferences for songs heard before birth."
+      },
+      {
+        "endMs": 2259310,
+        "title": "Stage shocks and a bird wheel",
+        "startMs": 1958530,
+        "summary": "Closing questions cover an electrical shock during a performance, a favourite genetics book title and a homemade rotating bird feeder. The interview ends with another mention of Levitin’s book."
+      }
+    ],
+    "coreClaim": "Personally meaningful music can support mood, reduce pain and help some people with dementia or movement disorders, but these benefits do not make it a cure or a replacement for medication.",
+    "inOneLine": "Wendy Zuckerman interviews neuroscientist and musician Dan Levitin about music’s effects on mood, pain, memory and movement, alongside claims about intelligence.",
+    "keyPoints": [
+      {
+        "text": "Levitin recommends music as a restorative break rather than background stimulation during work. He says that when his attention flags, 5 to 10 minutes of music or meditation refreshes him more usefully than another coffee or checking social media.",
+        "range": {
+          "endMs": 657310,
+          "startMs": 519780
+        }
+      },
+      {
+        "text": "Enjoyed music can improve mood and increase pain tolerance. Levitin attributes part of its pain relief to endogenous opioids, but says distraction also matters, their relative contributions remain unresolved, and the effect is smaller than pharmaceutical pain relief.",
+        "range": {
+          "endMs": 949200,
+          "startMs": 657310
+        }
+      },
+      {
+        "text": "Melody and rhyme provide mutually reinforcing memory cues. Songs repeatedly heard during a particular period also become bound to its people, places and experiences, helping explain why hearing an old song can retrieve much more than its lyrics.",
+        "range": {
+          "endMs": 1090380,
+          "startMs": 949200
+        }
+      },
+      {
+        "text": "Familiar teenage music can reconnect some people with Alzheimer’s to autobiographical memories without curing or slowing the disease. Levitin reports that 20 minutes can sometimes improve engagement for roughly a week, but gives no study details for that duration.",
+        "range": {
+          "endMs": 1256980,
+          "startMs": 1090380
+        }
+      },
+      {
+        "text": "Rhythmic music can provide an external timing cue for walking in Parkinson’s disease rather than repair damaged basal ganglia. Levitin describes practice at someone’s natural walking tempo, but also claims that a metronome does not work because it lacks engagement.",
+        "range": {
+          "endMs": 1733740,
+          "startMs": 1531950
+        }
+      },
+      {
+        "text": "Listening to Mozart does not make people generally smarter. The original comparison involved a narrow paper-folding task and an inactive control group, while Levitin stresses that classical music has no universal therapeutic advantage over music someone actually likes.",
+        "range": {
+          "endMs": 1875920,
+          "startMs": 1706130
+        }
+      },
+      {
+        "text": "Prenatal exposure can leave a later preference for particular music, according to a study Levitin describes comparing familiar songs with unheard tracks by the same artist. That finding concerns recognition, not evidence that prenatal music increases intelligence.",
+        "range": {
+          "endMs": 1991840,
+          "startMs": 1846480
+        }
+      }
+    ],
+    "bigPicture": "Feeling better after a song is different from treating a disease, so the question is which musical effects have useful medical applications and what their limits are. Related questions concern why old songs remain memorable and whether musical exposure benefits intelligence or leaves memories before birth.",
+    "howToApply": {
+      "items": [
+        "When your attention flags while working, pause for 5 to 10 minutes of music you enjoy instead of checking social media.",
+        "Choose music for a mood lift by personal preference rather than assuming classical music will work better."
+      ]
+    },
+    "watchAnyway": {
+      "range": null,
+      "answer": "no",
+      "reason": "The scientific explanations and practical distinctions survive perfectly well in writing. The brief singing and personal anecdotes do not add enough to make hearing the interview necessary."
+    }
+  },
+  {
+    "id": "bd7d502f-cb3b-4303-a040-0d5c73721c01",
+    "tags": [
+      "neuroscience",
+      "attention",
+      "meditation",
+      "creativity",
+      "digital-distraction"
+    ],
+    "thin": false,
+    "source": {
+      "id": "dd4d37cb48be89d99f107d5275d4eb01",
+      "guid": "adf5f08c-d64c-11f1-948c-cbb961e9771e",
+      "kind": "podcast",
+      "title": "Access the Sublime & Live Your Best Life | Robert Greene",
+      "feedUrl": "https://feeds.megaphone.fm/hubermanlab",
+      "pageUrl": "https://www.hubermanlab.com/episode/access-the-sublime-and-live-your-best-life-robert-greene",
+      "audioUrl": "https://traffic.megaphone.fm/SCIM2047624040.mp3",
+      "imageUrl": "https://megaphone-images.spotifycdn.com/podcasts/042e6144-725e-11ec-a75d-c38f702aecad/image/ee4f0b7b466ca35620792970d9bce2d2.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+      "showName": "Huberman Lab",
+      "durationMs": 8320000,
+      "sharedFrom": "https://open.spotify.com/episode/2aUhzkwxi8hQt72b2kxdXS",
+      "publishedAt": "2026-11-02T09:00:00.000Z"
+    },
+    "savedAt": "2026-11-21T00:37:23.049Z",
+    "selling": {
+      "type": "sponsor_or_affiliate",
+      "detail": "Paid sponsor reads promote David protein bars, Eight Sleep, AG1, LMNT and Function, with offers or referral links. Greene’s forthcoming book, usually called The Law of the Sublime here, and his earlier books are also promoted, alongside Huberman’s free newsletter and social channels.",
+      "compromisesContent": false
+    },
+    "verdict": {
+      "dubious": false,
+      "novelty": "fresh_angle",
+      "reasoning": "Most of the advice repackages familiar ideas from mindfulness, flow, awe and existential psychology. His account of adapting creative work to disability supplies a distinctive practical angle, but the neuroscience comparisons do not establish the broader philosophical claims.",
+      "similarTo": [],
+      "standsOut": {
+        "text": "Greene’s handwritten composition and delayed transcription workflow after his stroke.",
+        "range": {
+          "endMs": 4263199,
+          "startMs": 4077760
+        }
+      },
+      "dubiousClaims": []
+    },
+    "chapters": [
+      {
+        "endMs": 521200,
+        "title": "What Greene means by the sublime",
+        "startMs": 0,
+        "summary": "The opening introduces Greene’s work and defines the sublime as an unsettling, pleasurable expansion beyond familiar experience. He distinguishes it from success, power and routine enjoyment."
+      },
+      {
+        "endMs": 941600,
+        "title": "A stroke brings wonder closer",
+        "startMs": 521200,
+        "summary": "Greene describes abandoning plans for exotic adventures after his stroke. His hospital view and backyard become examples of extraordinary experience within ordinary surroundings."
+      },
+      {
+        "endMs": 1386640,
+        "title": "Attention and self-remembering",
+        "startMs": 941600,
+        "summary": "Accounts of altered perception lead to Gurdjieff’s attention exercise and Ouspensky’s reported experiences. Greene presents meditation as another route that does not require drugs."
+      },
+      {
+        "endMs": 1797200,
+        "title": "Perceptual filters and invented meaning",
+        "startMs": 1386640,
+        "summary": "Huberman discusses sensory adaptation and asks whether heightened perception merely assigns importance to trivial things. Greene answers through Cézanne’s attention to landscapes and the emotional character of perception."
+      },
+      {
+        "endMs": 2348960,
+        "title": "Space, childhood and subjective time",
+        "startMs": 1797200,
+        "summary": "The discussion moves from close detail and expansive vistas to the felt passage of time. Nabokov’s childhood memories support Greene’s image of experiencing time from inside a river."
+      },
+      {
+        "endMs": 2645280,
+        "title": "Mortality changes the experience of time",
+        "startMs": 2348960,
+        "summary": "Huberman recalls his dying adviser’s heightened appreciation of small details. Greene discusses life reviews, altered time and both positive and frightening near-death experiences."
+      },
+      {
+        "endMs": 3013599,
+        "title": "Animals and unfamiliar rhythms",
+        "startMs": 2645280,
+        "summary": "Aquariums introduce the value of unpredictable observation. An octopus relationship, dogs and plants become examples of entering rhythms different from one’s usual human schedule."
+      },
+      {
+        "endMs": 3304000,
+        "title": "Fragmented attention versus slow mastery",
+        "startMs": 3013599,
+        "summary": "Social media’s pace is contrasted with gradual learning and independent thought. Eileen Gu and John Elway illustrate the proposed relationship between slow preparation and apparently fast performance."
+      },
+      {
+        "endMs": 3813839,
+        "title": "Having experiences versus reporting them",
+        "startMs": 3304000,
+        "summary": "Concert filming and outdoor adventures raise the problem of living for an audience. Greene contrasts social performance with encounters beyond human affairs, while preserving a role for scientific technology."
+      },
+      {
+        "endMs": 4077760,
+        "title": "Following music from the inside",
+        "startMs": 3813839,
+        "summary": "Greene describes following individual notes, patterns and emotional movement in music. Music and film illustrate immersion that differs from recording or evaluating an experience for others."
+      },
+      {
+        "endMs": 4592159,
+        "title": "Handwriting, dictation and embodied thought",
+        "startMs": 4077760,
+        "summary": "Greene explains his handwritten drafting and transcription process. The discussion widens to pens, cuttlefish ink, gesture, language and the ways bodily metaphors shape thought."
+      },
+      {
+        "endMs": 5011840,
+        "title": "Looking for a life’s task",
+        "startMs": 4592159,
+        "summary": "Childhood fascinations, outside expectations and disliked work become clues to vocational direction. Greene describes a slow process of memory exploration and journaling rather than a quick revelation."
+      },
+      {
+        "endMs": 5335040,
+        "title": "Emotional changes after the stroke",
+        "startMs": 5011840,
+        "summary": "Greene describes increased emotional intensity and empathy after his stroke. He explains why physical restriction pushed him toward a version of transcendence accessible without wealth or travel."
+      },
+      {
+        "endMs": 5822480,
+        "title": "Intensity, mastery and creative flow",
+        "startMs": 5335040,
+        "summary": "Questions about unusually intense lives lead to 50 Cent, scientific careers and prodigies. Greene connects mastery with absorption, inspiration and temporary loss of the usual sense of self."
+      },
+      {
+        "endMs": 6437040,
+        "title": "Love, vulnerability and distrust",
+        "startMs": 5822480,
+        "summary": "Greene presents love as physical and spiritual connection requiring exposure to hurt. The conversation moves into social cynicism, hostility between the sexes and his masculine-and-feminine account of the psyche."
+      },
+      {
+        "endMs": 6988000,
+        "title": "Religion and the need for transcendence",
+        "startMs": 6437040,
+        "summary": "Mortality awareness frames a discussion of religion’s historical role and its decline. Pasolini’s Gospel film prompts a distinction between spiritual ideals and their distortion into division."
+      },
+      {
+        "endMs": 7306880,
+        "title": "Science and technology as sources of wonder",
+        "startMs": 6988000,
+        "summary": "Speculation about other worlds and discoveries about ancient birds illustrate scientific awe. Greene contrasts humanity’s capacity for discovery and connection with the darker development of the internet."
+      },
+      {
+        "endMs": 7842480,
+        "title": "Avoiding numbness and restoring the senses",
+        "startMs": 7306880,
+        "summary": "Huberman describes steering between drama and numbing out. Greene uses the story of Dersu Uzala to argue for sensory intelligence, then returns to accessible encounters with nature."
+      },
+      {
+        "endMs": 8186960,
+        "title": "Possible books on invisible influences",
+        "startMs": 7842480,
+        "summary": "Greene considers a shorter book about unseen forces and emerging trends. He also describes a possible novel exploring the psychology behind technological alienation."
+      },
+      {
+        "endMs": 8302275,
+        "title": "Book links and closing promotions",
+        "startMs": 8186960,
+        "summary": "The closing directs listeners to Greene’s books, sponsors, social channels and the free newsletter."
+      }
+    ],
+    "coreClaim": "Greene argues that deliberately slowing attention and loosening habitual self-concern can make ordinary perception, creative work and relationships feel transcendent, without requiring drugs, travel or exceptional circumstances.",
+    "inOneLine": "Andrew Huberman interviews Robert Greene about attention, awe, mortality, creative work and love as routes to a richer experience of ordinary life.",
+    "keyPoints": [
+      {
+        "text": "Greene defines the sublime as an encounter beyond familiar experience that combines discomfort with pleasure. Unlike a pleasant diversion, it unsettles the boundaries of what feels possible or real.",
+        "range": {
+          "endMs": 464080,
+          "startMs": 229040
+        }
+      },
+      {
+        "text": "The case for finding transcendence close to home rests heavily on Greene’s experience after his stroke. Unable to pursue planned adventures, he found unfamiliar beauty in his hospital window view and backyard, although the initial intensity faded.",
+        "range": {
+          "endMs": 793279,
+          "startMs": 521200
+        }
+      },
+      {
+        "text": "Greene uses Gurdjieff and Ouspensky’s accounts of sustained attention to argue that ordinary perception can become unusually vivid without drugs. Huberman connects this to sensory adaptation, but the mystical account is an anecdote, not an experimental demonstration of the proposed practice.",
+        "range": {
+          "endMs": 1485520,
+          "startMs": 1091760
+        }
+      },
+      {
+        "text": "Subjective time is a major part of the argument, not just visual beauty. Childhood memories and near-death accounts illustrate how experience can feel expanded or densely packed, although Greene explicitly acknowledges that near-death experiences can also be terrifying.",
+        "range": {
+          "endMs": 2574640,
+          "startMs": 1797200
+        }
+      },
+      {
+        "text": "Greene argues that fragmented attention makes people easier to influence and undermines the slow learning required for mastery. His octopus example also suggests that attending to another species can change one’s felt rhythm of life, but that interpretation rests on a personal account.",
+        "range": {
+          "endMs": 3306480,
+          "startMs": 2713520
+        }
+      },
+      {
+        "text": "Experiencing something and preparing to report it are different activities that can interfere with each other. The criticism is not of technology itself, since telescope images can inspire awe, but of letting an imagined audience organize the experience.",
+        "range": {
+          "endMs": 4065760,
+          "startMs": 3304000
+        }
+      },
+      {
+        "text": "Greene says handwriting his book after losing normal use of his left hand changed both his pace and his thinking. Dictation helped with transcription later, but replacing composition with dictation felt less expressive to him.",
+        "range": {
+          "endMs": 4263199,
+          "startMs": 4077760
+        }
+      },
+      {
+        "text": "Greene treats early, unprompted fascinations and recurring frustrations as clues to vocational fit. This comes from his own clear childhood attraction to words and his informal work helping others, rather than evidence that everyone has a single discoverable calling.",
+        "range": {
+          "endMs": 5013840,
+          "startMs": 4592159
+        }
+      },
+      {
+        "text": "Mastery and love become related forms of transcendence in Greene’s account because both can reduce self-consciousness. He portrays deep love as a combination of physical attraction and spiritual connection that requires vulnerability, and criticizes hostility between men and women through a masculine-and-feminine model of the psyche.",
+        "range": {
+          "endMs": 6440080,
+          "startMs": 5582239
+        }
+      },
+      {
+        "text": "Greene sees mortality awareness as a source of the human demand for transcendence, and religious decline as a contributor to modern disconnection. He offers science, art and sensory engagement as possible secular sources of meaning, then closes with tentative book ideas about invisible influences and technology-driven alienation.",
+        "range": {
+          "endMs": 8097440,
+          "startMs": 6437040
+        }
+      }
+    ],
+    "bigPicture": "Familiarity makes much of daily life disappear from awareness, raising the question of whether richer experience requires extraordinary events or a different relationship to ordinary ones. Greene’s stroke and resulting physical limitations are the central personal case. Other substantial threads concern finding vocational direction in childhood interests, accepting vulnerability in love, and recovering a sense of transcendence without necessarily returning to organized religion.",
+    "howToApply": {
+      "items": [
+        "In an existing artificial intelligence workflow, identify which parts require your firsthand judgment before deciding what to delegate.",
+        "Compare one idea you developed yourself with an assistant-generated version, noting differences in your understanding rather than only speed or polish."
+      ]
+    },
+    "sourceSteps": {
+      "items": [
+        {
+          "text": "Focus closely on an ordinary object while telling yourself that you are experiencing it now and will remember it later.",
+          "range": {
+            "endMs": 1262000,
+            "startMs": 1193360
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Repeat the self-remembering exercise daily, returning attention when it wanders; Greene’s example describes difficulty after 30 seconds and practice continuing for months.",
+          "range": {
+            "endMs": 1303280,
+            "startMs": 1222640
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Use meditation as another way to explore attention without drugs; Greene describes meditating every morning, with sessions of 40 minutes.",
+          "range": null,
+          "dubiousReason": null
+        },
+        {
+          "text": "Experiment with temporal detail by closely watching espresso pour, or by lying outside and watching clouds pass; sustained close observation cannot occupy your whole day.",
+          "range": {
+            "endMs": 1988240,
+            "startMs": 1935919
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Imagine time as a river, place yourself inside it, and attend to the physical feeling of its flow rather than watching it pass from outside.",
+          "range": {
+            "endMs": 2351280,
+            "startMs": 2237680
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "If you have a dog, observe its rhythm and consider how it experiences time rather than assuming your own time experience is universal.",
+          "range": {
+            "endMs": 2878880,
+            "startMs": 2848640
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Experiment with a phone-free weekend, sleeping without the phone in your room, or avoiding it for the first 30 minutes of the day.",
+          "range": {
+            "endMs": 3076559,
+            "startMs": 3057119
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Try handwriting a draft, then recopy and revise it by hand, allowing the slower process to change how you think.",
+          "range": {
+            "endMs": 3486799,
+            "startMs": 3419520
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Consider climbing a mountain as an encounter with geological age, height and a world beyond human social concerns.",
+          "range": {
+            "endMs": 3628559,
+            "startMs": 3589440
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Use technology to explore otherwise inaccessible discoveries, such as telescope images, without turning the encounter into a performance for followers.",
+          "range": {
+            "endMs": 3719599,
+            "startMs": 3654880
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Listen to instrumental music by following individual notes, patterns, progression and emotional effects, returning when your attention wanders.",
+          "range": {
+            "endMs": 3919760,
+            "startMs": 3813839
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "When watching a film, especially one from another period, imagine being inside its world rather than observing yourself having the experience.",
+          "range": {
+            "endMs": 3997520,
+            "startMs": 3956400
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Separate experiencing an event from deciding how to report or share it afterward.",
+          "range": {
+            "endMs": 4065760,
+            "startMs": 4037599
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Once a handwritten draft feels ready, transcribe it, print it for handwritten edits, then dictate the revision and make final corrections.",
+          "range": {
+            "endMs": 4121279,
+            "startMs": 4090400
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Recall your earliest memories of spontaneous excitement, distinguishing interests that felt genuinely yours from those encouraged by parents, teachers or career expectations.",
+          "range": {
+            "endMs": 4904960,
+            "startMs": 4810080
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Identify work and situations that repeatedly repel or frustrate you, and examine what that discomfort suggests about poor fit.",
+          "range": {
+            "endMs": 4997600,
+            "startMs": 4901440
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Journal about yourself and explore childhood memories over time; Greene says discovering these patterns can require days or weeks rather than an immediate answer.",
+          "range": {
+            "endMs": 5013840,
+            "startMs": 4984159
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "During your morning reflection, imagine walking between drama and numbing out, using that image to resist being pulled into either.",
+          "range": {
+            "endMs": 7373840,
+            "startMs": 7306880
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Keep your phone out of the room while working or relating to others, or put it in a drawer when it becomes tempting.",
+          "range": {
+            "endMs": 7479280,
+            "startMs": 7452080
+          },
+          "dubiousReason": null
+        },
+        {
+          "text": "Attend to sound, smell and sight in a natural setting, whether a desert, mountain, ocean or backyard, letting its particular sensory qualities occupy your attention.",
+          "range": {
+            "endMs": 7711280,
+            "startMs": 7625040
+          },
+          "dubiousReason": null
+        }
+      ]
+    },
+    "watchAnyway": {
+      "range": null,
+      "answer": "no",
+      "reason": "The personal accounts give the ideas texture, but their substance survives in writing. The conversation offers reflection and anecdotes rather than a demonstration that requires hearing the exchange."
+    }
   }
 ]

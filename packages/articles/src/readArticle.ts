@@ -9,12 +9,23 @@ const MOST_WORDS_IN_A_PAYWALL_TEASER = 400;
 const FEWEST_WORDS_TO_READ_WITHOUT_MARKUP = 500;
 const MOST_WORDS_PER_SENTENCE_OF_PROSE = 60;
 
+const ANCHORED_HEADINGS = ":is(h1, h2, h3, h4, h5, h6):is([id], :has([id]))";
+
+// Why: docs/features/article-extraction.md, "Headings Readability drops".
+const cloneForReadability = (document: Document): Document => {
+  const clone = document.cloneNode(true) as Document;
+  for (const heading of clone.querySelectorAll(ANCHORED_HEADINGS)) {
+    heading.removeAttribute("class");
+  }
+  return clone;
+};
+
 const wordsPerSentence = (text: string): number => wordCount(text) / Math.max(text.match(/[.!?]["”’)]?(\s|$)/g)?.length ?? 1, 1);
 
 // Readability takes the document apart as it reads, and this one is the page in the reader's tab.
 export const readArticle = (document: Document, pageUrl: string): ArticleRead => {
   const metadata = articleMetadata(document, pageUrl);
-  const parsed = new Readability(document.cloneNode(true) as Document).parse();
+  const parsed = new Readability(cloneForReadability(document)).parse();
   const body = document.implementation.createHTMLDocument("").body;
   body.innerHTML = parsed?.content ?? "";
   const recipe = pageRecipe(document);
