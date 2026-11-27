@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { feedDurationSeconds, readFeedEpisode, type FeedItem } from "./readFeedEpisode.js";
+import { feedDurationSeconds } from "../feeds/feedValues.js";
+import { readFeedEpisode, type FeedItem } from "./readFeedEpisode.js";
 import { feedOf, FEED_ITEM_NEWEST, FEED_ITEM_OLDER } from "./podcastFeedFixtures.testHelper.js";
 
 const inPieces = async function* (text: string, size = 7): AsyncGenerator<string> {
