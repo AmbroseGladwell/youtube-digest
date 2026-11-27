@@ -5,6 +5,7 @@ import type { AskOwner } from "@overview/sync";
 import { Routes } from "../../app/Routes.js";
 import { CONVERSATION_STATE } from "../reader/util/conversationFromLocation.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
+import { usePlan } from "../plus/usePlan.js";
 import { chatKeys } from "./chatKeys.js";
 import { useDeleteChatMutation } from "./mutations/useDeleteChatMutation.js";
 import { useAskChatsQuery } from "./queries/askChatsQuery.js";
@@ -27,6 +28,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
   const scope = askScopeOf(owner);
   const navigate = useNavigate();
   const analytics = useAnalytics();
+  const { plan } = usePlan();
   const stored = useAskChatsQuery().data ?? [];
   const asking = useAskOver(owner);
   const deleteChat = useDeleteChatMutation();
@@ -82,7 +84,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
     }
     setPinned((current) => [...current, item]);
     setRemoved((current) => current.filter((id) => id !== item.id));
-    analytics.ask.chat.sourcePinned({ scope, kind: item.kind });
+    analytics.ask.chat.sourcePinned({ scope, kind: item.kind, plan });
   };
   const unpin = (id: string) => {
     setPinned((current) => current.filter((item) => item.id !== id));
