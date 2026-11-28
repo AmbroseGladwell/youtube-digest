@@ -588,6 +588,11 @@ export const apiLogLines = coded("api", {
       "unchecked feeds forgotten",
       "Stored feeds no follower had checked in 90 days were deleted; `count` is how many.",
     ),
+    followLimitReached: line(
+      "warn",
+      "feed follow limit reached",
+      "Following one more feed was refused: the account already follows `limit`. The app stops at the limit first, so this is a device that didn't. Never the feed.",
+    ),
   },
 });
 

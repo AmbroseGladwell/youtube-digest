@@ -174,6 +174,7 @@ export class InMemorySyncStorage implements SyncStorage {
         case "projectMember":
         case "suggestedQuestion":
         case "capture":
+        case "followedFeed":
           break;
       }
     }

@@ -22,7 +22,14 @@ export interface WriteOperation {
   sourceKey?: string | null;
   heldBy?: readonly RecordKind[];
   requires?: ReadonlyArray<{ kind: RecordKind; id: string }>;
-  decide: (current: StoredRecord | null, held: StoredRecord | null, required: Array<StoredRecord | null>) => WriteDecision;
+  // Counted under the account's lock, so two writes at once can't both pass a limit.
+  countsLive?: RecordKind;
+  decide: (
+    current: StoredRecord | null,
+    held: StoredRecord | null,
+    required: Array<StoredRecord | null>,
+    liveCount: number,
+  ) => WriteDecision;
 }
 
 export interface ChangesPage {
@@ -58,12 +65,13 @@ export class RecordsRepository {
   async #write(accountId: AccountId, operations: WriteOperation[]): Promise<Array<WriteOutcome | null>> {
     return this.#sql.transaction(async (tx) => {
       const outcomes: Array<WriteOutcome | null> = [];
-      for (const { kind, id, sourceKey, heldBy = OVERVIEWS_HOLD, requires = [], decide } of operations) {
+      for (const { kind, id, sourceKey, heldBy = OVERVIEWS_HOLD, requires = [], countsLive, decide } of operations) {
         const seq = await allocateSeq(tx, accountId);
         const current = await this.#get(tx, accountId, kind, id);
         const held = sourceKey == null ? null : await this.#liveHolderOf(tx, accountId, sourceKey, id, heldBy);
         const required = await Promise.all(requires.map((other) => this.#get(tx, accountId, other.kind, other.id)));
-        const decision = decide(current, held, required);
+        const liveCount = countsLive === undefined ? 0 : await this.#countLive(tx, accountId, countsLive);
+        const decision = decide(current, held, required, liveCount);
         if (decision.action === "nothing") {
           outcomes.push(null);
           continue;
@@ -188,6 +196,14 @@ export class RecordsRepository {
       [accountId, sourceKey, exceptId, kinds],
     );
     return rows[0] === undefined ? null : storedRecordFromRow(rows[0]);
+  }
+
+  async #countLive(tx: SqlClient, accountId: AccountId, kind: RecordKind): Promise<number> {
+    const rows = await tx.query<{ count: number }>(
+      `select count(*)::int as count from records where account_id = $1 and kind = $2 and not deleted`,
+      [accountId, kind],
+    );
+    return rows[0]?.count ?? 0;
   }
 
   async #get(tx: SqlClient, accountId: AccountId, kind: RecordKind, id: string): Promise<StoredRecord | null> {

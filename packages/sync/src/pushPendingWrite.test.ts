@@ -447,6 +447,40 @@ for (const code of ["video_already_held", "capture_already_held"] as const) {
   });
 }
 
+test("a followed feed goes to POST /followed-feeds, its unfollow to DELETE /followed-feeds/:id, and a second device's follow replaces", async () => {
+  const api = new ScriptedSyncApi();
+  const record = { id: "f", schemaVersion: 1, updatedAt: AT };
+  api.failOnce("saveFollowedFeed", { code: "already_exists", details: { rev: 4 } });
+
+  const saved = await pushPendingWrite(api, entry({ kind: "followedFeed", id: "f", change: { op: "replace", record } }), null, storage);
+  const deleted = await pushPendingWrite(api, entry({ kind: "followedFeed", id: "f", change: { op: "delete" } }), 5, storage);
+
+  assert.deepEqual(saved, { result: "written", rev: 1 });
+  assert.deepEqual(deleted, { result: "gone" });
+  assert.deepEqual(
+    api.calls.map((call) => [call.method, call.args[1]]),
+    [
+      ["saveFollowedFeed", null],
+      ["saveFollowedFeed", 4],
+      ["deleteFollowedFeed", undefined],
+    ],
+  );
+});
+
+test("a follow past the limit is superseded, to be forgotten here", async () => {
+  const api = new ScriptedSyncApi();
+  api.failOnce("saveFollowedFeed", { code: "feed_limit_reached", details: { limit: 50 } });
+
+  const outcome = await pushPendingWrite(
+    api,
+    entry({ kind: "followedFeed", change: { op: "replace", record: { id: "f" } } }),
+    null,
+    storage,
+  );
+
+  assert.deepEqual(outcome, { result: "superseded" });
+});
+
 test("a topic's rename, merge, undo and delete each go to their own route", async () => {
   const api = new ScriptedSyncApi();
   const topic = (change: OutboxEntry["change"]) => entry({ kind: "topic", id: "t", change });

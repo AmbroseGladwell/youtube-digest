@@ -209,6 +209,11 @@ source saved without an overview. A device writes it whole with `POST /api/captu
 deletes it with `DELETE /api/captures/:id`. One live overview or capture per source; an
 overview written under a capture's id tombstones it (`kept-links.md`).
 
+`followedFeed`, added at client version 33, is a feed the reader follows. A device writes it
+whole with `POST /api/followed-feeds` and unfollows with `DELETE /api/followed-feeds/:id`. Its
+id is the hash of the feed's address, and an account follows at most 50
+(`followed-feeds.md`, "Following").
+
 ## Rejected alternatives
 
 - **Per-kind tables.** Above.

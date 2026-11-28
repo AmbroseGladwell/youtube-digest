@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-27";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-28";
 
 const UNITED_STATES = "United States";
 
@@ -106,14 +106,22 @@ const sections: readonly LegalSection[] = [
           theme and accent colour, which sections an overview shows, whether new overviews are put in your projects, whether questions to
           ask next are answered here or open in an assistant and which one, the About you sentence that personalises overviews, whether you
           have been asked for it again after onboarding, and what we have learned from your overviews, the tags you have merged, the
-          playlists you follow, the videos from them waiting to be made and whether you paused that queue, the links you kept to be made
-          when our server can fetch them again, the running total of time saved with its milestones, and when you last put away each offer
-          of a paid plan, so it stays away on every device.
+          playlists you follow, the podcasts, blogs and YouTube channels whose feeds you follow, the videos from those playlists waiting to
+          be made and whether you paused that queue, the links you kept to be made when our server can fetch them again, the running total
+          of time saved with its milestones, and when you last put away each offer of a paid plan, so it stays away on every device.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
           so every device you sign in on reads the same library. We read it only to serve it back to you, to search it for you, to render
           narration, to serve a link you chose to share, and to answer an assistant you connected.
+        </p>
+        <p>
+          <strong>Following a feed.</strong> When you follow a podcast, a blog or a YouTube channel, or look at one before following it, our
+          server reads its feed for you, never your device. It keeps one copy of each feed, shared by everyone who follows it: the feed's
+          title, site and image, and its latest entries' titles, links, dates, lengths and short descriptions. That copy is linked to no
+          account, is read again at most every 30 minutes and only when someone who follows it opens the app, and is deleted once nobody has
+          checked it for 90 days. Who follows a feed is in your own library, as above. The publisher sees our server's address, never yours,
+          and we don't record a feed's address in our logs.
         </p>
         <p>
           <strong>Searching by meaning.</strong> With an account, we send each overview's big picture, claim and key points to OpenAI in the
@@ -630,7 +638,7 @@ const sections: readonly LegalSection[] = [
             ],
             [
               "YouTube (Google)",
-              "answers our server's requests for a playlist's videos, and its searches for a podcast episode's video",
+              "answers our server's requests for a playlist's videos and a followed channel's feed, and its searches for a podcast episode's video",
               "varies",
             ],
           ]}
@@ -699,6 +707,7 @@ const sections: readonly LegalSection[] = [
             "the codes 15 minutes, as hashes; the change itself with the account",
           ],
           ["Your library and settings", "until you delete the overview or the account"],
+          ["The shared copy of a feed someone follows, with no account on it", "until nobody has checked it for 90 days"],
           ["Your conversations", "until you delete the conversation, the overview or project it belongs to, or the account"],
           [
             "Suggested questions, when you last opened each chat they are for, and when they were written",

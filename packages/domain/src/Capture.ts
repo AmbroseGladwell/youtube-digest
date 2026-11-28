@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { OverviewId, SourceKey } from "./Brands.js";
+import { FeedOrigin } from "./FeedOrigin.js";
 import { PlaylistOrigin } from "./PlaylistOrigin.js";
 import { QueuedCaptureProblem, QueuedCaptureStatus } from "./QueuedCapture.js";
 import { Source } from "./Source.js";
@@ -10,7 +11,7 @@ export const CAPTURE_CLAIMS_PATH = "/capture-claims";
 export const CaptureWait = z.enum(["turn", "server", "extension", "reset"]);
 export type CaptureWait = z.infer<typeof CaptureWait>;
 
-export const CaptureSurface = z.enum(["web", "phone", "panel", "playlist"]);
+export const CaptureSurface = z.enum(["web", "phone", "panel", "playlist", "feed"]);
 export type CaptureSurface = z.infer<typeof CaptureSurface>;
 
 const CaptureBase = z.object({
@@ -27,6 +28,8 @@ const CaptureBase = z.object({
   addedAt: z.iso.datetime().nullable().catch(null),
   playlistIndex: z.number().int().nonnegative().nullable().catch(null),
   chosenAt: z.iso.datetime().nullable().catch(null),
+  // Feed entries only: docs/features/followed-feeds.md, "Entries".
+  fromFeed: FeedOrigin.nullish().catch(null),
 });
 
 export const KeptCapture = CaptureBase.extend({

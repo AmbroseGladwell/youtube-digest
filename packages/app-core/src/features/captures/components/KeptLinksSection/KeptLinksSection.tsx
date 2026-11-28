@@ -14,6 +14,7 @@ const FROM: Record<CaptureSurface, string> = {
   phone: "From your phone",
   panel: "From the extension",
   playlist: "From a playlist",
+  feed: "From a feed you follow",
 };
 
 const RESET_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });

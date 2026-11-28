@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { makeFollowedPlaylist, makeOverview, makeProject, makeQueuedCapture, makeStoredTranscript } from "@overview/store-conformance";
+import {
+  makeFollowedFeed,
+  makeFollowedPlaylist,
+  makeOverview,
+  makeProject,
+  makeQueuedCapture,
+  makeStoredTranscript,
+} from "@overview/store-conformance";
 import {
   CURRENT_SCHEMA_VERSIONS,
   DEFAULT_SETTINGS,
@@ -15,6 +22,7 @@ import {
 } from "@overview/domain";
 import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
 import { IndexedDbCaptureStore } from "./IndexedDbCaptureStore.js";
+import { IndexedDbFollowedFeedStore } from "./IndexedDbFollowedFeedStore.js";
 import { IndexedDbFollowedPlaylistStore } from "./IndexedDbFollowedPlaylistStore.js";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { IndexedDbProjectStore } from "./IndexedDbProjectStore.js";
@@ -22,6 +30,7 @@ import { IndexedDbSettingsStore } from "./IndexedDbSettingsStore.js";
 import { IndexedDbSyncStorage } from "./IndexedDbSyncStorage.js";
 import { IndexedDbTranscriptStore } from "./IndexedDbTranscriptStore.js";
 import {
+  CAPTURES_STORE,
   OUTBOX_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
@@ -529,6 +538,56 @@ test("another device unfollowing takes this device's check and waiting videos wi
     (await queue.listQueue()).map((queued) => queued.videoId),
     ["failed"],
   );
+});
+
+test("a pulled feed is followed on this device too, and enrolling journals one followed before", async () => {
+  const pulledInto = await openEnrolledDatabase();
+  const feed = makeFollowedFeed();
+  await new IndexedDbSyncStorage(pulledInto, { now }).applyChanges([change({ kind: "followedFeed", id: feed.id, body: { ...feed } })], 4);
+  const enrolling = await openTestDatabase();
+  await new IndexedDbFollowedFeedStore(enrolling).saveFollowed(feed);
+  const storage = new IndexedDbSyncStorage(enrolling, { now });
+
+  await storage.enrol();
+
+  assert.deepEqual(await new IndexedDbFollowedFeedStore(pulledInto).listFollowed(), [feed]);
+  assert.deepEqual(
+    (await recordsPending(storage)).map(({ kind, id, change: { op } }) => [kind, id, op]),
+    [["followedFeed", feed.id, "replace"]],
+  );
+});
+
+test("another device unfollowing a feed takes this device's check and the feed's waiting entries with it", async () => {
+  const db = await openEnrolledDatabase();
+  const followed = new IndexedDbFollowedFeedStore(db);
+  const feed = makeFollowedFeed();
+  const kept = (id: string, overrides: Record<string, unknown>) => ({
+    id,
+    sourceKey: id,
+    url: `https://blog.example/${id}`,
+    keptAt: feed.followedAt,
+    keptFrom: "feed",
+    captureReason: null,
+    stage: "kept",
+    source: null,
+    waitingFor: "turn",
+    resumesAt: null,
+    fromFeed: { id: feed.id, kind: feed.kind, title: feed.title },
+    schemaVersion: CURRENT_SCHEMA_VERSIONS.capture,
+    ...overrides,
+  });
+  const waiting = randomUUID();
+  const failed = randomUUID();
+  const elsewhere = randomUUID();
+  await followed.saveCheck({ feedId: feed.id, seenEntryIds: ["a"], checkedAt: feed.followedAt });
+  await putRaw(db, CAPTURES_STORE, kept(waiting, {}));
+  await putRaw(db, CAPTURES_STORE, kept(failed, { queueStatus: "failed", problem: "noCaptions" }));
+  await putRaw(db, CAPTURES_STORE, kept(elsewhere, { keptFrom: "web", fromFeed: null }));
+
+  await new IndexedDbSyncStorage(db, { now }).applyChanges([change({ kind: "followedFeed", id: feed.id, deleted: true })], 5);
+
+  assert.equal(await followed.getCheck(feed.id), null);
+  assert.deepEqual((await new IndexedDbCaptureStore(db).listCaptures()).map(({ id }) => id).sort(), [failed, elsewhere].sort());
 });
 
 test("a cursor pulled before this client knew every kind starts again from the beginning, once", async () => {
