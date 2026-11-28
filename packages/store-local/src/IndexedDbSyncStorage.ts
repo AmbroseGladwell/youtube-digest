@@ -4,6 +4,7 @@ import {
   AskedQuestions,
   DEFAULT_OVERVIEW_STATE,
   DEFAULT_SETTINGS,
+  FOLLOWED_FEED_MIGRATIONS,
   FOLLOWED_PLAYLIST_MIGRATIONS,
   OVERVIEW_MIGRATIONS,
   OVERVIEW_STATE_MIGRATIONS,
@@ -63,6 +64,8 @@ import {
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   PLAYLIST_CHECKS_STORE,
+  FEED_CHECKS_STORE,
+  FOLLOWED_FEEDS_STORE,
   SETTINGS_KEY,
   SETTINGS_STORE,
   SYNC_CURSOR_KEY,
@@ -90,6 +93,7 @@ const RECORD_STORES: Record<SyncedRecordKind, string> = {
   chat: CHATS_STORE,
   suggestedQuestion: SUGGESTED_QUESTIONS_STORE,
   capture: CAPTURES_STORE,
+  followedFeed: FOLLOWED_FEEDS_STORE,
 };
 
 const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
@@ -103,6 +107,7 @@ const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
   chat: "id",
   suggestedQuestion: "id",
   capture: "id",
+  followedFeed: "id",
 };
 
 const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
@@ -116,6 +121,7 @@ const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
   chat: CHAT_MIGRATIONS,
   suggestedQuestion: SUGGESTED_QUESTION_MIGRATIONS,
   capture: CAPTURE_MIGRATIONS,
+  followedFeed: FOLLOWED_FEED_MIGRATIONS,
 };
 
 // What every library that pulled before the cursor's kinds were kept was pulled with.
@@ -124,7 +130,7 @@ const KINDS_BEFORE_THEY_WERE_KEPT: readonly string[] = ["overview", "overviewSta
 const BOOKKEEPING_STORES = [OUTBOX_STORE, SYNC_REVISIONS_STORE, SYNC_META_STORE];
 const EVERY_STORE = [...Object.values(RECORD_STORES), ...BOOKKEEPING_STORES];
 // What a followed playlist left on this device, which goes when another device unfollows it.
-const FOLLOWING_STORES = [PLAYLIST_CHECKS_STORE, CAPTURE_QUEUE_STORE];
+const FOLLOWING_STORES = [PLAYLIST_CHECKS_STORE, CAPTURE_QUEUE_STORE, FEED_CHECKS_STORE];
 const ENROLMENT_STORES = [...EVERY_STORE, TRANSCRIPTS_STORE];
 
 export interface IndexedDbSyncStorageOptions {
@@ -210,6 +216,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
     const states = promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEW_STATES_STORE).getAll());
     const topics = promisifyRequest<unknown[]>(transaction.objectStore(TOPICS_STORE).getAll());
     const followed = promisifyRequest<unknown[]>(transaction.objectStore(FOLLOWED_PLAYLISTS_STORE).getAll());
+    const feeds = promisifyRequest<unknown[]>(transaction.objectStore(FOLLOWED_FEEDS_STORE).getAll());
     const projects = promisifyRequest<unknown[]>(transaction.objectStore(PROJECTS_STORE).getAll());
     const members = promisifyRequest<unknown[]>(transaction.objectStore(PROJECT_MEMBERS_STORE).getAll());
     const settings = promisifyRequest<unknown>(transaction.objectStore(SETTINGS_STORE).get(SETTINGS_KEY));
@@ -219,6 +226,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
       ...(await overviews).flatMap((raw) => wholeRecordWrite("overview", raw, "savedAt", now)),
       ...(await topics).flatMap((raw) => wholeRecordWrite("topic", raw, "createdAt", now)),
       ...(await followed).flatMap((raw) => wholeRecordWrite("followedPlaylist", raw, "followedAt", now)),
+      ...(await feeds).flatMap((raw) => wholeRecordWrite("followedFeed", raw, "followedAt", now)),
       ...(await projects).flatMap((raw) => wholeRecordWrite("project", raw, "createdAt", now)),
       ...(await members).flatMap((raw) => memberWrite(raw, now)),
       ...(await states).flatMap((raw) => stateWrite(raw, now)),
@@ -432,6 +440,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
         if (change.kind === "followedPlaylist") {
           await forgetFollowing(transaction, change.id);
         }
+        if (change.kind === "followedFeed") {
+          await forgetFeedFollowing(transaction, change.id);
+        }
         if (change.kind === "overview") {
           await forgetMembers(transaction, MEMBERS_BY_OVERVIEW_INDEX, change.id);
         }
@@ -506,7 +517,7 @@ const writtenAt = (raw: Record<string, unknown>, creationKey: string | null, now
 };
 
 const wholeRecordWrite = (
-  kind: "overview" | "topic" | "followedPlaylist" | "project",
+  kind: "overview" | "topic" | "followedPlaylist" | "followedFeed" | "project",
   raw: unknown,
   creationKey: string,
   now: Date,
@@ -613,6 +624,18 @@ const forgetFollowing = async (transaction: IDBTransaction, playlistId: string):
     const parsed = QueuedCapture.safeParse(raw);
     if (parsed.success && parsed.data.status === "waiting" && parsed.data.fromPlaylist.id === playlistId) {
       queue.delete(parsed.data.videoId);
+    }
+  }
+};
+
+const forgetFeedFollowing = async (transaction: IDBTransaction, feedId: string): Promise<void> => {
+  transaction.objectStore(FEED_CHECKS_STORE).delete(feedId);
+  const captures = transaction.objectStore(CAPTURES_STORE);
+  for (const raw of await promisifyRequest<unknown[]>(captures.getAll())) {
+    const capture = readable("capture", raw);
+    const fromFeed = capture?.fromFeed as { id?: unknown } | null | undefined;
+    if (capture?.stage === "kept" && (capture.queueStatus ?? "waiting") === "waiting" && fromFeed?.id === feedId) {
+      captures.delete(capture.id as string);
     }
   }
 };

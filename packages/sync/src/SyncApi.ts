@@ -22,6 +22,8 @@ export interface SyncApi {
   deleteFollowedPlaylist(id: string): Promise<WrittenRecord | null>;
   saveCapture(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
   deleteCapture(id: string): Promise<WrittenRecord | null>;
+  saveFollowedFeed(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
+  deleteFollowedFeed(id: string): Promise<WrittenRecord | null>;
   createProject(record: Record<string, unknown>): Promise<WrittenRecord>;
   updateProject(id: string, patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   deleteProject(id: string): Promise<WrittenRecord | null>;

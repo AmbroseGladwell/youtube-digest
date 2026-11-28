@@ -20,3 +20,10 @@ export type SourceKey = VideoId;
 // The value of a link's list= parameter (docs/features/playlists.md).
 export const PlaylistId = z.string().min(1).brand("PlaylistId");
 export type PlaylistId = z.infer<typeof PlaylistId>;
+
+// A hash of the feed's address, so two devices following one feed write one record (docs/features/followed-feeds.md).
+export const FeedId = z
+  .string()
+  .regex(/^[0-9a-f]{64}$/)
+  .brand("FeedId");
+export type FeedId = z.infer<typeof FeedId>;

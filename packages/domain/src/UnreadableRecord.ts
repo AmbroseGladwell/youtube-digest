@@ -13,7 +13,8 @@ export type UnreadableRecordKind =
   | "projectMember"
   | "chat"
   | "suggestedQuestion"
-  | "capture";
+  | "capture"
+  | "followedFeed";
 
 export interface UnreadableRecord {
   kind: UnreadableRecordKind;

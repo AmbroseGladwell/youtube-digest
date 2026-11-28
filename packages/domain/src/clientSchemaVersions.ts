@@ -20,6 +20,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -35,6 +36,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -50,6 +52,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -65,6 +68,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -80,6 +84,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -95,6 +100,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -110,6 +116,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -125,6 +132,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -140,6 +148,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -155,6 +164,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -170,6 +180,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -185,6 +196,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -200,6 +212,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -215,6 +228,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -230,6 +244,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -245,6 +260,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -260,6 +276,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -275,6 +292,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -290,6 +308,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -305,6 +324,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -320,6 +340,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 0,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -335,6 +356,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 1,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -350,6 +372,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 1,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -365,6 +388,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 2,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -380,6 +404,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 3,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -395,6 +420,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 4,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -410,6 +436,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 5,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -425,6 +452,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 6,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -440,6 +468,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 7,
       suggestedQuestion: 0,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -455,6 +484,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 7,
       suggestedQuestion: 1,
       capture: 0,
+      followedFeed: 0,
     },
   },
   {
@@ -470,6 +500,7 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 7,
       suggestedQuestion: 1,
       capture: 1,
+      followedFeed: 0,
     },
   },
   {
@@ -485,6 +516,23 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       chat: 8,
       suggestedQuestion: 1,
       capture: 1,
+      followedFeed: 0,
+    },
+  },
+  {
+    clientVersion: 33,
+    schemaVersions: {
+      overview: 19,
+      overviewState: 1,
+      topic: 1,
+      settings: 3,
+      followedPlaylist: 3,
+      project: 1,
+      projectMember: 2,
+      chat: 8,
+      suggestedQuestion: 1,
+      capture: 2,
+      followedFeed: 1,
     },
   },
 ];

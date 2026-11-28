@@ -8,9 +8,9 @@ as with a YouTube playlist (`playlists.md`, "Pasting a link"). New items arrive 
 (`capture-queue.md`, "Waiting on a pace"). Nothing is fetched, transcribed or written until
 the reader chooses one, and then it's made like any other link of its kind and counts once.
 
-**Built so far:** reading a feed (slice 1), and the stored copy, the limits and the two
-routes (slice 2). The follow record, the check that fills the queue, and the screens follow
-in later slices of the same card.
+**Built so far:** reading a feed (slice 1); the stored copy, the limits and the two routes
+(slice 2); the synced follow record and a capture's feed (slice 3, server and sync). The
+check that fills the queue, and the screens, follow in later slices of the same card.
 
 ## Decisions
 
@@ -135,6 +135,46 @@ Both are signed in only, and never log the link, the feed or an entry (`api.feed
 Not yet looked up from a link: an Apple or Spotify show link (OV-106's directories find its
 feed, in the slice that recognises links on paste), and a YouTube `@handle` link, which is
 read as a page; whether YouTube serves that page to our server is still to check.
+
+## Following
+
+A followed feed is a synced record of its own kind, `followedFeed` (`FollowedFeed`,
+followed-feed schema 1, `CLIENT_VERSION` 33, V0053, IndexedDB version 11), so every
+signed-in device follows the same feeds. It holds the feed's address, its label (`kind`),
+title, site and image as last read, when it was followed, its pace, its order and
+`unavailable` (`gone`) once a check finds the feed gone for good.
+
+- **Its id is the SHA-256 of the feed's address** (`feedIdOf`, hex). Two devices following
+  one feed write one record, and the second is told to replace it rather than follow twice,
+  as a playlist's natural id does. A hash rather than the address itself, because a route's
+  parameter is capped at 100 characters and feed addresses run longer. The server refuses an
+  id that isn't the hash of the record's `feedUrl`.
+- **The pace** is a playlist's (`PlaylistPace`), defaulting to *Only when I choose*
+  (`DEFAULT_FEED_PACE`). **The order** is *Newest first* (`DEFAULT_FEED_ORDER`) or *Oldest
+  first*: a feed has no order of its own to keep, and since a source keeps its newest
+  entries, newest first is the default.
+- `POST /api/followed-feeds` writes it whole, create-only without `If-Match` and replace with
+  it; `DELETE /api/followed-feeds/:id` tombstones it. A client before version 33 is never
+  sent one (`sync-api.md`, "A kind a client was built before").
+- **50 feeds** (`MOST_FEEDS_FOLLOWED`). Following one more is refused with
+  `409 feed_limit_reached` and the limit, counted under the account's lock so two follows at
+  once can't both pass (`countsLive` on the write). A feed already followed can still change,
+  and unfollowing frees a place. The app stops at the limit first, so the refusal is a
+  device that didn't: its push is `superseded` and its follow forgotten
+  (`api.feeds.followLimitReached`).
+- What a device has seen of a feed is its own, never synced (`FollowedFeedCheck`, the
+  `feedChecks` store), as a playlist's is.
+- **Another device unfollowing** takes this device's check, and the feed's entries still
+  waiting, with it when the tombstone is pulled (`IndexedDbSyncStorage.applyChanges`).
+  Entries being made, or needing attention, stay.
+
+## Entries
+
+An entry waiting for the reader is a `kept` capture (`kept-links.md`) with `keptFrom: "feed"`,
+`waitingFor: "turn"` and `fromFeed`, the feed's id, label and title (`FeedOrigin`, capture
+schema 2). Like `fromPlaylist`, it is on the capture so it outlives unfollowing. A client
+before version 33 holds a capture written at schema 2 as one it can't read yet, until it
+updates (`record-migrations.md`).
 
 ## Finding a site's feed
 

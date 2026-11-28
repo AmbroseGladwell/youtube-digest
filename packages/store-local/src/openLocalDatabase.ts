@@ -4,6 +4,8 @@ import {
   DATABASE_NAME,
   DATABASE_VERSION,
   FOLLOWED_PLAYLISTS_STORE,
+  FOLLOWED_FEEDS_STORE,
+  FEED_CHECKS_STORE,
   CHATS_BY_OVERVIEW_INDEX,
   CHATS_BY_PROJECT_INDEX,
   CHATS_STORE,
@@ -107,6 +109,12 @@ export const openLocalDatabase = (options: OpenLocalDatabaseOptions = {}): Promi
       }
       if (!db.objectStoreNames.contains(CAPTURES_STORE)) {
         db.createObjectStore(CAPTURES_STORE, { keyPath: "id" }).createIndex(CAPTURES_BY_SOURCE_INDEX, "sourceKey");
+      }
+      if (!db.objectStoreNames.contains(FOLLOWED_FEEDS_STORE)) {
+        db.createObjectStore(FOLLOWED_FEEDS_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(FEED_CHECKS_STORE)) {
+        db.createObjectStore(FEED_CHECKS_STORE, { keyPath: "feedId" });
       }
     };
 

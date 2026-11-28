@@ -47,6 +47,7 @@ import { SuggestedQuestionRefresher } from "./questions/SuggestedQuestionRefresh
 import { RecordsRepository } from "./records/RecordsRepository.js";
 import { audioRoutes } from "./routes/audioRoutes.js";
 import { changesRoutes } from "./routes/changesRoutes.js";
+import { followedFeedRoutes } from "./routes/followedFeedRoutes.js";
 import { followedPlaylistRoutes } from "./routes/followedPlaylistRoutes.js";
 import { overviewRoutes } from "./routes/overviewRoutes.js";
 import { overviewUsageRoutes } from "./routes/overviewUsageRoutes.js";
@@ -374,6 +375,7 @@ export const buildApp = async ({
       meaningSearchRoutes(api, meaningSearch);
       transcriptSearchRoutes(api, { passages: new TranscriptPassagesRepository(sql), records, transcripts });
       followedPlaylistRoutes(api, records);
+      followedFeedRoutes(api, records);
       projectRoutes(api, records);
       suggestedQuestionRoutes(api, records, questionRefresher);
       captureRoutes(api, { records, transcripts, saves: captureSaves, claims: captureClaims, sql, clock });

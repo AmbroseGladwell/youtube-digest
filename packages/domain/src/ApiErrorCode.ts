@@ -8,6 +8,7 @@ export const API_ERROR_CODES = {
   video_already_held: 409,
   capture_already_held: 409,
   claimed_elsewhere: 409,
+  feed_limit_reached: 409,
   link_invalid: 410,
   record_newer_than_client: 409,
   revision_mismatch: 412,

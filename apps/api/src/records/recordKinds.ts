@@ -4,7 +4,9 @@ import {
   Capture,
   CHAT_MIGRATIONS,
   Chat,
+  FOLLOWED_FEED_MIGRATIONS,
   FOLLOWED_PLAYLIST_MIGRATIONS,
+  FollowedFeed,
   FollowedPlaylist,
   OVERVIEW_MIGRATIONS,
   OVERVIEW_STATE_MIGRATIONS,
@@ -40,4 +42,5 @@ export const RECORD_KINDS: Record<RecordKind, RecordKindConfig> = {
   chat: { schema: Chat, migrations: CHAT_MIGRATIONS },
   suggestedQuestion: { schema: SuggestedQuestion, migrations: SUGGESTED_QUESTION_MIGRATIONS },
   capture: { schema: Capture, migrations: CAPTURE_MIGRATIONS },
+  followedFeed: { schema: FollowedFeed, migrations: FOLLOWED_FEED_MIGRATIONS },
 };

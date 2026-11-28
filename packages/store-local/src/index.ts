@@ -5,6 +5,7 @@ export * from "./IndexedDbOverviewStore.js";
 export * from "./IndexedDbSettingsStore.js";
 export * from "./IndexedDbTranscriptStore.js";
 export * from "./IndexedDbFollowedPlaylistStore.js";
+export * from "./IndexedDbFollowedFeedStore.js";
 export * from "./IndexedDbProjectStore.js";
 export * from "./IndexedDbChatStore.js";
 export * from "./IndexedDbSuggestedQuestionStore.js";

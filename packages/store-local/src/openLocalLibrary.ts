@@ -1,6 +1,7 @@
 import { IndexedDbCaptureStore } from "./IndexedDbCaptureStore.js";
 import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
 import { IndexedDbChatStore } from "./IndexedDbChatStore.js";
+import { IndexedDbFollowedFeedStore } from "./IndexedDbFollowedFeedStore.js";
 import { IndexedDbFollowedPlaylistStore } from "./IndexedDbFollowedPlaylistStore.js";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { IndexedDbProjectStore } from "./IndexedDbProjectStore.js";
@@ -16,6 +17,7 @@ export interface LocalLibrary {
   settingsStore: IndexedDbSettingsStore;
   transcriptStore: IndexedDbTranscriptStore;
   followedPlaylistStore: IndexedDbFollowedPlaylistStore;
+  followedFeedStore: IndexedDbFollowedFeedStore;
   captureQueueStore: IndexedDbCaptureQueueStore;
   projectStore: IndexedDbProjectStore;
   chatStore: IndexedDbChatStore;
@@ -40,6 +42,7 @@ export const openLocalLibrary = async ({ accountId, ...options }: OpenLocalLibra
     settingsStore: new IndexedDbSettingsStore(db, { onJournaled: syncStorage.notifyJournaled }),
     transcriptStore: new IndexedDbTranscriptStore(db),
     followedPlaylistStore: new IndexedDbFollowedPlaylistStore(db, { onJournaled: syncStorage.notifyJournaled }),
+    followedFeedStore: new IndexedDbFollowedFeedStore(db, { onJournaled: syncStorage.notifyJournaled }),
     captureQueueStore: new IndexedDbCaptureQueueStore(db, captureStore),
     projectStore: new IndexedDbProjectStore(db, { onJournaled: syncStorage.notifyJournaled }),
     chatStore: new IndexedDbChatStore(db, { onJournaled: syncStorage.notifyJournaled }),

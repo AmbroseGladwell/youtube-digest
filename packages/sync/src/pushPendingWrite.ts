@@ -60,6 +60,8 @@ const send = async (
           return createOnce(() => api.createProject(change.record));
         case "capture":
           return saveCapture(api, change.record, knownRev);
+        case "followedFeed":
+          return saveFollowedFeed(api, change.record, knownRev);
         default:
           return createOverview(api, change.record, knownRev);
       }
@@ -174,6 +176,18 @@ const saveCapture = async (api: SyncApi, record: Record<string, unknown>, knownR
   }
 };
 
+// Past the limit the app stops at first, so it's a device that didn't: forget its follow (docs/features/followed-feeds.md).
+const saveFollowedFeed = async (api: SyncApi, record: Record<string, unknown>, knownRev: number | null): Promise<PushOutcome> => {
+  try {
+    return await replaceWithRetry((ifMatch) => api.saveFollowedFeed(record, ifMatch), knownRev);
+  } catch (error) {
+    if (isSyncRequestError(error) && error.code === "feed_limit_reached") {
+      return { result: "superseded" };
+    }
+    throw error;
+  }
+};
+
 const reserve = async (api: SyncApi, overviewId: string): Promise<PushOutcome | null> => {
   try {
     await api.reserveOverview(overviewId);
@@ -198,6 +212,8 @@ const deleteFor = (api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | nu
       return api.deleteChat(entry.id);
     case "capture":
       return api.deleteCapture(entry.id);
+    case "followedFeed":
+      return api.deleteFollowedFeed(entry.id);
     case "topic":
       return api.deleteTopic(entry.id);
     default:
