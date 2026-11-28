@@ -31,6 +31,7 @@ import { InMemoryProjectStore } from "../src/features/projects/types/InMemoryPro
 import { InMemoryChatStore } from "../src/features/chats/types/InMemoryChatStore.testHelper.js";
 import { InMemorySuggestedQuestionStore } from "../src/features/chats/types/InMemorySuggestedQuestionStore.testHelper.js";
 import { InMemoryCaptureStore } from "../src/features/captures/types/InMemoryCaptureStore.testHelper.js";
+import { InMemoryFollowedFeedStore } from "../src/features/feeds/types/InMemoryFollowedFeedStore.testHelper.js";
 import { deleteLocalLibrary, openLocalLibrary } from "@overview/store-local";
 import type {} from "./network/iwftWindow.testHelper.js";
 
@@ -39,6 +40,7 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const settingsStore = new InMemorySettingsStore();
   const transcriptStore = new InMemoryTranscriptStore();
   const followedPlaylistStore = new InMemoryFollowedPlaylistStore();
+  const followedFeedStore = new InMemoryFollowedFeedStore();
   const captureQueueStore = new InMemoryCaptureQueueStore();
   const projectStore = new InMemoryProjectStore();
   const chatStore = new InMemoryChatStore();
@@ -46,13 +48,14 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const captureStore = new InMemoryCaptureStore();
   overviewStore.onSaved = (overview) => captureStore.removeCapture(overview.id);
   const syncStorage = syncAvailable
-    ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore, chatStore)
+    ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore, chatStore, followedFeedStore)
     : null;
   return {
     overviewStore,
     settingsStore,
     transcriptStore,
     followedPlaylistStore,
+    followedFeedStore,
     captureQueueStore,
     captureStore,
     projectStore,
@@ -106,6 +109,12 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   }
   for (const check of hooksConfig?.seedPlaylistChecks ?? []) {
     followedPlaylistStore.seedCheck(check);
+  }
+  for (const feed of hooksConfig?.seedFollowedFeeds ?? []) {
+    seeded.followedFeedStore.seedFollowed(feed);
+  }
+  for (const check of hooksConfig?.seedFeedChecks ?? []) {
+    seeded.followedFeedStore.seedCheck(check);
   }
   await captureQueueStore.enqueue(hooksConfig?.seedQueue ?? []);
   for (const capture of hooksConfig?.seedCaptures ?? []) {

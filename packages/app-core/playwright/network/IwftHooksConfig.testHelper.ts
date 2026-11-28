@@ -3,6 +3,8 @@ import type { IwftArticlePagesConfig } from "./IwftArticlePages.testHelper.js";
 import type { SignedOutTrial } from "../../src/features/signedOutTrial/types/SignedOutTrial.js";
 import type { AnalyticsConsent } from "../../src/features/analyticsConsent/types/AnalyticsConsent.js";
 import type {
+  FollowedFeed,
+  FollowedFeedCheck,
   FollowedPlaylist,
   Overview,
   OverviewState,
@@ -36,6 +38,8 @@ export interface IwftHooksConfig {
   seedSettings?: Partial<Settings>;
   seedFollowedPlaylists?: FollowedPlaylist[];
   seedPlaylistChecks?: PlaylistCheck[];
+  seedFollowedFeeds?: FollowedFeed[];
+  seedFeedChecks?: FollowedFeedCheck[];
   seedQueue?: QueuedCapture[];
   seedCaptures?: Capture[];
   seedProjects?: Project[];

@@ -9,8 +9,9 @@ as with a YouTube playlist (`playlists.md`, "Pasting a link"). New items arrive 
 the reader chooses one, and then it's made like any other link of its kind and counts once.
 
 **Built so far:** reading a feed (slice 1); the stored copy, the limits and the two routes
-(slice 2); the synced follow record and a capture's feed (slice 3, server and sync). The
-check that fills the queue, and the screens, follow in later slices of the same card.
+(slice 2); the synced follow record and a capture's feed (slice 3, server and sync); the
+check on opening that fills the queue (slice 3, the device). Making each kind, the daily paces
+and the screens follow in later slices of the same card.
 
 ## Decisions
 
@@ -175,6 +176,37 @@ An entry waiting for the reader is a `kept` capture (`kept-links.md`) with `kept
 schema 2). Like `fromPlaylist`, it is on the capture so it outlives unfollowing. A client
 before version 33 holds a capture written at schema 2 as one it can't read yet, until it
 updates (`record-migrations.md`).
+
+## Checking on opening
+
+Each time the app opens, signed in, every followed feed is asked about once, in one
+`POST /api/feeds/check`, including one that arrives with a pull after opening (`useFeedCheck`,
+`checkFollowedFeeds`). Signed out, nothing is checked. For each feed our server answers:
+
+- **What's new** is what this device hasn't seen (`FollowedFeedCheck`, `newFeedEntries`), as
+  for a playlist. A device checking a feed it has never checked, one followed on another
+  device, takes what came out after the feed was followed, and marks everything seen.
+- **Never twice.** An entry whose source the library or any capture already holds is left
+  out: its key is the one its overview will have (`feedEntrySourceKey`): a video's bare id,
+  `podcast:` and the hash of the feed and guid for an episode, `web:` and the hash of the page
+  for a post. An entry with nothing to make (a video with no id, a post with no page) is left
+  out too. Two devices that keep the same entry before syncing fold into one on the server
+  (`kept-links.md`, "One live item per source").
+- **The newest 20** (`MOST_WAITING_PER_FEED`, `keptNewest`). New and waiting entries are put
+  newest first by the feed's date, and only the first 20 are kept: older arrivals aren't
+  written, and older waiting ones are removed. An entry the reader chose, or one that failed,
+  is never removed and doesn't count. How many went is the `feedEntriesDropped` client
+  warning.
+- **The record follows the feed.** A changed label, title, site or image is written back for
+  every device, and so is `unavailable: "gone"` when our copy says the feed is gone, or `null`
+  when it reads again.
+- **Failing.** A feed that fails (`busy`, `unreachable`, …), or a check that fails whole, is
+  the `feedCheckFailed` client warning, and nothing is written.
+
+**Entries are never made by themselves here.** Every other kept capture without a playlist
+is a kept link, made as soon as it can be (`kept-links.md`, "Kept links"), so a feed's entries
+are left out of kept links (`keptLinksQuery`). Making one, and the daily paces, come with the
+next slice.
 
 ## Finding a site's feed
 

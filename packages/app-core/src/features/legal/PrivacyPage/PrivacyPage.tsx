@@ -679,9 +679,9 @@ const sections: readonly LegalSection[] = [
         <p>
           <strong>Strictly necessary</strong>, because the app can't work without it: your library and its transcripts, in the browser's
           database; any API keys you added; your settings; your sign-in state, and in the extension the server it talks to; where you got to
-          in each transcript; which of a followed playlist's videos this device has seen; when you chose to keep a project the app asked
-          about after it was left alone; feedback you closed without sending; and, before you have an account, the trial token that lets us
-          read your first link.
+          in each transcript; which of a followed playlist's videos, and of a followed feed's entries, this device has seen; when you chose
+          to keep a project the app asked about after it was left alone; feedback you closed without sending; and, before you have an
+          account, the trial token that lets us read your first link.
         </p>
         <p>
           <strong>Analytics only</strong>, and deleted when you say no: your answer to the analytics question, the date you gave it, and,

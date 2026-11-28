@@ -42,5 +42,6 @@ export * from "./fetchErrorsApi.js";
 export * from "./parseStackFrames.js";
 export * from "./toClientError.js";
 export * from "./fetchPodcastApi.js";
+export * from "./fetchFeedApi.js";
 export * from "./fetchTikTokApi.js";
 export * from "./fetchSocialApi.js";

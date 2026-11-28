@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { API_ERROR_CODES } from "./ApiErrorCode.js";
 import { RequestId } from "./RequestId.js";
+import { FeedReadFailure } from "./FeedSnapshot.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
 import { ModelId } from "./ModelId.js";
 import { PlaylistPace } from "./PlaylistPace.js";
@@ -73,6 +74,24 @@ export const ClientWarning = z.discriminatedUnion("name", [
       outcome: z.enum(["private", "gone", "failed"]),
       requestId: RequestId.optional(),
       apiErrorCode: z.string().max(64).optional(),
+      at: z.iso.datetime(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("feedCheckFailed"),
+      // docs/features/followed-feeds.md, "Checking on opening".
+      outcome: z.union([FeedReadFailure, z.literal("failed")]),
+      requestId: RequestId.optional(),
+      apiErrorCode: z.string().max(64).optional(),
+      at: z.iso.datetime(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("feedEntriesDropped"),
+      // Past MOST_WAITING_PER_FEED, the oldest unmade go: docs/features/followed-feeds.md, "Entries".
+      dropped: z.number().int().positive(),
       at: z.iso.datetime(),
     })
     .strict(),
