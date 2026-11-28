@@ -71,6 +71,7 @@ describe("checking followed feeds on opening", () => {
       fromFeed: { id: feed.id, kind: "podcast", title: "The History Show" },
       sourceKey: sourceKey({ kind: "podcast", id: await podcastSourceId({ feedUrl: FEED_URL, guid: "ep-2" }) }),
       addedAt: day(27),
+      source: { kind: "podcast", feedUrl: FEED_URL, guid: "ep-2", showName: "The History Show", durationMs: 3_600_000 },
     });
     expect((await followedFeedStore.getCheck(feed.id))?.seenEntryIds).toEqual(["ep-2", "ep-1"]);
   });

@@ -2,7 +2,9 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import {
   apiLogLines,
+  EpisodeInFeed,
   parsePodcastLink,
+  PODCAST_READ_PATH,
   TRIAL_TOKEN_HEADER,
   type Plan,
   type PodcastRead,
@@ -30,7 +32,7 @@ import type { ServiceCaller } from "../transcripts/ServiceTranscripts.js";
 import type { TrialsRepository } from "../usage/TrialsRepository.js";
 import { reserveTrialRead } from "../usage/reserveTrialRead.js";
 
-const ReadBody = z.object({ url: z.string().min(1).max(2048) });
+const ReadBody = z.union([z.object({ url: z.string().min(1).max(2048) }), EpisodeInFeed]);
 const TranscriptBody = z
   .object({
     feedUrl: z.url().max(2048),
@@ -68,7 +70,7 @@ interface ResolvedTranscript {
 type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<ResolvedTranscript>;
 
 export interface PodcastRoutesOptions {
-  readEpisode: (link: string) => Promise<PodcastRead>;
+  readEpisode: (ask: string | EpisodeInFeed) => Promise<PodcastRead>;
   resolveTranscript: ResolveTranscript;
   checkTranscript: (request: PodcastTranscriptCheckRequest) => Promise<PodcastTranscriptCheck>;
   // Speech-to-text on our GPU host; absent, no episode is transcribed and none is offered.
@@ -105,17 +107,17 @@ export const podcastRoutes = (
   };
 
   app.post(
-    "/podcasts/read",
+    PODCAST_READ_PATH,
     {
       config: { optionalSession: true },
       preHandler: rateLimitHook(rateLimits.podcastReadPerAddress, (request) => request.clientAddress, clock),
     },
     async (request, reply): Promise<PodcastRead> => {
-      const { url } = parseOrThrow(ReadBody, request.body, "The podcast link");
+      const body = parseOrThrow(ReadBody, request.body, "The podcast link");
       await reserveTrialRead(request, reply, { trials, clock });
       const startedAt = clock().getTime();
-      const read = await readEpisode(url);
-      const platform = parsePodcastLink(url)?.platform ?? "none";
+      const read = await readEpisode("url" in body ? body.url : body);
+      const platform = "url" in body ? (parsePodcastLink(body.url)?.platform ?? "none") : "feed";
       request.log.info(
         apiLogLines.podcasts.read({
           linkFrom: read.status === "read" ? read.episode.linkFrom : platform,

@@ -1,13 +1,20 @@
-import { paceDailyLimit, type PlaylistId, type PlaylistOrder, type PlaylistPace, type QueuedCapture } from "@overview/domain";
+import {
+  paceDailyLimit,
+  queueOriginOf,
+  type PlaylistOrder,
+  type PlaylistPace,
+  type QueueOrigin,
+  type QueuedCapture,
+} from "@overview/domain";
 import { orderInASentence } from "../../playlists/util/orderCopy.js";
 import { paceInASentence } from "../../playlists/util/paceCopy.js";
 import { resetDate } from "../../newOverview/util/usageLine.js";
 
-type PaceOf = (playlistId: PlaylistId) => PlaylistPace;
-type OrderOf = (playlistId: PlaylistId) => PlaylistOrder;
+type PaceOf = (originId: string) => PlaylistPace;
+type OrderOf = (originId: string) => PlaylistOrder;
 
-const onlyPlaylist = (captures: readonly QueuedCapture[]): QueuedCapture["fromPlaylist"] | null => {
-  const playlists = [...new Map(captures.map((capture) => [capture.fromPlaylist.id, capture.fromPlaylist])).values()];
+const onlyPlaylist = (captures: readonly QueuedCapture[]): QueueOrigin | null => {
+  const playlists = [...new Map(captures.map((capture) => [queueOriginOf(capture).id, queueOriginOf(capture)])).values()];
   return playlists.length === 1 ? playlists[0]! : null;
 };
 

@@ -9,6 +9,9 @@ overview while the app is closed (`docs/architecture/v1-architecture-decisions.m
 open: it makes them one at a time, each playlist in the order the reader chose for it, while
 it is.
 
+Since OV-219 (28 Nov 2026) a followed feed's entries wait in this queue too, under their feed,
+with its pace and order; how each kind is made is `followed-feeds.md`, "One queue".
+
 ## One queue on every device
 
 Since OV-358 (24 Nov 2026) the queue syncs. Each waiting video is a `capture` record

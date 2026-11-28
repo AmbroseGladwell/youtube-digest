@@ -14,6 +14,7 @@ import { SourceSteps } from "./SourceSteps.js";
 import { WatchAnyway } from "./WatchAnyway.js";
 import { Chapters } from "./Chapter.js";
 import { MadeOn } from "./MadeOn.js";
+import { FeedOrigin } from "./FeedOrigin.js";
 import { PlaylistOrigin } from "./PlaylistOrigin.js";
 
 export interface RecipeShapeNote {
@@ -45,6 +46,8 @@ export const Overview = z
     captureReason: z.string().nullable(),
     // Null for an overview the reader asked for one video at a time (docs/features/playlists.md).
     fromPlaylist: PlaylistOrigin.nullable(),
+    // The feed a followed entry came from: docs/features/followed-feeds.md, "Making an entry".
+    fromFeed: FeedOrigin.nullish().catch(null),
     // Null before keys were recorded, and when saved from a share (docs/architecture/tiers.md).
     madeOn: MadeOn.nullable(),
     // From one of Start's samples, so not the reader's first: docs/features/onboarding.md, "Try a sample".

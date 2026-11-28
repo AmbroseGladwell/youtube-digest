@@ -63,3 +63,13 @@ test("the check, a transcription asked for and asked after each go to their own 
     ["https://overview.example/api/podcasts/transcription", `https://overview.example/api/podcasts/transcription/${waiting.id}`],
   );
 });
+
+test("an entry of a followed feed is read by its feed and guid", async () => {
+  const { sent, fetch } = answering(200, { status: "failed", reason: "not-found", showName: null });
+  const api = createFetchPodcastApi({ baseUrl: "https://overview.example", fetch });
+  const ask = { feedUrl: "https://feeds.example/show.xml", guid: "ep-guid" };
+
+  await api.readInFeed(ask);
+
+  assert.deepEqual(sent, [{ url: "https://overview.example/api/podcasts/read", body: ask }]);
+});

@@ -49,6 +49,7 @@ export const PRIVATE_OVERVIEW_FIELDS = [
   "captureReason",
   "topicIds",
   "fromPlaylist",
+  "fromFeed",
   "madeOn",
   "fromSample",
   "followUpQuestions",

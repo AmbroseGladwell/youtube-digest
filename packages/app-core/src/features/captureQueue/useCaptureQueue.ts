@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { PlaylistId, PlaylistOrder, PlaylistPace, PlaylistUnavailable, QueuedCapture, VideoId } from "@overview/domain";
+import {
+  queueOriginOf,
+  type PlaylistOrder,
+  type PlaylistPace,
+  type PlaylistUnavailable,
+  type QueuedCapture,
+  type VideoId,
+} from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
@@ -11,7 +18,6 @@ import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
 import type { NewOverviewRun } from "../newOverview/types/NewOverviewRun.js";
 import { useGenerationReadiness } from "../newOverview/useGenerationReadiness.js";
-import { useRunOverviewGeneration } from "../newOverview/useRunOverviewGeneration.js";
 import { generationKeys } from "../newOverview/generationKeys.js";
 import { useOverviewUsageQuery } from "../newOverview/queries/overviewUsageQuery.js";
 import { useLimitMessage } from "../newOverview/useLimitMessage.js";
@@ -27,6 +33,8 @@ import { readableEntries } from "../overviews/types/LibraryEntry.js";
 import { transcriptKeys } from "../transcripts/transcriptKeys.js";
 import { playlistKeys } from "../playlists/playlistKeys.js";
 import { useFollowedPlaylistsQuery } from "../playlists/queries/followedPlaylistsQuery.js";
+import { useFollowedFeedsQuery } from "../feeds/queries/followedFeedsQuery.js";
+import { useQueuedMaker } from "./useQueuedMaker.js";
 import { usePlaylistApi } from "../playlists/usePlaylistApi.js";
 import { capturesFor } from "../playlists/util/capturesFor.js";
 import { knownVideoIds, libraryVideoIds } from "../playlists/util/knownVideoIds.js";
@@ -81,9 +89,10 @@ export interface CaptureQueueController {
   ready: QueuedCapture[];
   tomorrow: QueuedCapture[];
   forYou: QueuedCapture[];
-  paceOf: (playlistId: PlaylistId) => PlaylistPace;
-  orderOf: (playlistId: PlaylistId) => PlaylistOrder;
-  madeToday: (playlistId: PlaylistId) => number;
+  // By the playlist's or feed's id: docs/features/followed-feeds.md, "One queue".
+  paceOf: (originId: string) => PlaylistPace;
+  orderOf: (originId: string) => PlaylistOrder;
+  madeToday: (originId: string) => number;
   attention: QueuedCapture[];
   making: QueueMaking | null;
   strip: CaptureQueueStrip | null;
@@ -112,7 +121,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
   const reporter = useErrorReporter();
   const playlistApi = usePlaylistApi();
   const { apiKeys } = useApiKeys();
-  const generate = useRunOverviewGeneration(apiKeys);
+  const makeQueued = useQueuedMaker(apiKeys);
   const readiness = useGenerationReadiness();
   const accountNeeded = readiness.accountNeeded;
   const needsKey = !readiness.ready && !accountNeeded;
@@ -129,6 +138,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
   const youTubeFetch = useYouTubeFetch();
   const queue = useCaptureQueueQuery();
   const followed = useFollowedPlaylistsQuery();
+  const feeds = useFollowedFeedsQuery();
   const overviews = useOverviewsWithStateQuery();
 
   const [preferences, setPreferences] = useState(() => readCaptureQueuePreferences(accountId));
@@ -179,14 +189,22 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     [preferences.chosenToday, today],
   );
   const paces = useMemo(
-    () => new Map<string, PlaylistPace>((followed.data ?? []).map(({ playlist }) => [playlist.id, playlist.pace])),
-    [followed.data],
+    () =>
+      new Map<string, PlaylistPace>([
+        ...(followed.data ?? []).map(({ playlist }) => [playlist.id, playlist.pace] as const),
+        ...(feeds.data ?? []).map((feed) => [feed.id, feed.pace] as const),
+      ]),
+    [followed.data, feeds.data],
   );
   const orders = useMemo(
-    () => new Map<string, PlaylistOrder>((followed.data ?? []).map(({ playlist }) => [playlist.id, playlist.order])),
-    [followed.data],
+    () =>
+      new Map<string, PlaylistOrder>([
+        ...(followed.data ?? []).map(({ playlist }) => [playlist.id, playlist.order] as const),
+        ...(feeds.data ?? []).map((feed) => [feed.id, feed.order] as const),
+      ]),
+    [followed.data, feeds.data],
   );
-  const orderOf = useCallback((playlistId: PlaylistId) => orders.get(playlistId) ?? "oldestFirst", [orders]);
+  const orderOf = useCallback((originId: string) => orders.get(originId) ?? "oldestFirst", [orders]);
   const waiting = useMemo(
     () =>
       inQueueOrder(
@@ -204,23 +222,23 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
       ),
     [overviews.data, chosenToday, now],
   );
-  const paceOf = useCallback((playlistId: PlaylistId) => paces.get(playlistId) ?? "asTheyCome", [paces]);
+  const paceOf = useCallback((originId: string) => paces.get(originId) ?? "asTheyCome", [paces]);
   waitingCount.current = waiting.length;
-  const madeToday = useCallback((playlistId: PlaylistId) => madeTodayCounts.get(playlistId) ?? 0, [madeTodayCounts]);
+  const madeToday = useCallback((originId: string) => madeTodayCounts.get(originId) ?? 0, [madeTodayCounts]);
   const paced = pacedQueue(
     waiting,
-    (capture) => paceOf(capture.fromPlaylist.id),
-    (capture) => madeToday(capture.fromPlaylist.id),
+    (capture) => paceOf(queueOriginOf(capture).id),
+    (capture) => madeToday(queueOriginOf(capture).id),
   );
 
   // Warned once a day for each playlist that has made all its pace allows.
   const reachedPace = useRef(new Set<string>());
-  const stillMaking = new Set(paced.ready.map((capture) => capture.fromPlaylist.id));
-  const pacedPlaylists = [...new Set(paced.tomorrow.map((capture) => capture.fromPlaylist.id))]
+  const stillMaking = new Set(paced.ready.map((capture) => queueOriginOf(capture).id));
+  const pacedPlaylists = [...new Set(paced.tomorrow.map((capture) => queueOriginOf(capture).id))]
     .filter((playlistId) => !stillMaking.has(playlistId))
     .join(" ");
   useEffect(() => {
-    for (const playlistId of pacedPlaylists === "" ? [] : (pacedPlaylists.split(" ") as PlaylistId[])) {
+    for (const playlistId of pacedPlaylists === "" ? [] : pacedPlaylists.split(" ")) {
       const reached = `${today} ${playlistId}`;
       if (reachedPace.current.has(reached)) {
         continue;
@@ -230,7 +248,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
         name: "captureQueuePaced",
         pace: paceOf(playlistId),
         madeToday: madeToday(playlistId),
-        waiting: paced.tomorrow.filter((capture) => capture.fromPlaylist.id === playlistId).length,
+        waiting: paced.tomorrow.filter((capture) => queueOriginOf(capture).id === playlistId).length,
       });
     }
   }, [pacedPlaylists, today]);
@@ -366,8 +384,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
       };
       setMaking({ capture, run });
       try {
-        await generate(capture.url, {
-          fromPlaylist: capture.fromPlaylist,
+        await makeQueued(capture, {
           isCancelled: () => cancelled.current === capture.videoId,
           onProgress: (progress) =>
             setMaking((current) =>
@@ -406,7 +423,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
         setMaking(null);
       }
     },
-    [overviewStore, captureQueueStore, generate, queryClient, refresh, reporter, savePreferences, accountId, claimApi, holder],
+    [overviewStore, captureQueueStore, makeQueued, queryClient, refresh, reporter, savePreferences, accountId, claimApi, holder],
   );
 
   const resumedVia = useRef<ResumedVia>("reset");
@@ -511,7 +528,8 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     hold === null &&
     countsKnown &&
     queue.isSuccess &&
-    followed.isSuccess;
+    followed.isSuccess &&
+    feeds.isSuccess;
   useEffect(() => {
     if (canMake && next !== null) {
       void make(next);
@@ -616,7 +634,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
         tomorrow: paced.tomorrow.length,
         forYou: {
           waiting: paced.forYou.length,
-          playlists: [...new Set(paced.forYou.map((capture) => capture.fromPlaylist.title))],
+          playlists: [...new Set(paced.forYou.map((capture) => queueOriginOf(capture).title))],
         },
         failed,
         skipped: attention.length - failed,

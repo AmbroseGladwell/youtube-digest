@@ -24,6 +24,7 @@ import {
   type Overview,
   type OverviewStore,
   type PodcastEpisode,
+  type FeedOrigin,
   type PlaylistOrigin,
   type ProjectId,
   type ProjectStore,
@@ -118,6 +119,7 @@ export interface RunOverviewGenerationOptions {
   // Read as the record is written, not when the run starts: the reason is typed while the run goes.
   captureReason?: (() => string) | undefined;
   fromPlaylist?: PlaylistOrigin | undefined;
+  fromFeed?: FeedOrigin | undefined;
   onTagged?: ((tagging: TaggingCounts) => void) | undefined;
   onPersonalised?: ((personalised: boolean) => void) | undefined;
   // A video's kind, already checked before the account (OV-327), so writing skips its own check.
@@ -396,6 +398,7 @@ const keptOnRegeneration = (previous: Overview) => ({
   topicIds: previous.topicIds,
   tags: previous.tags,
   fromPlaylist: previous.fromPlaylist,
+  ...(previous.fromFeed ? { fromFeed: previous.fromFeed } : {}),
   ...(previous.fromSample ? { fromSample: previous.fromSample } : {}),
 });
 
@@ -513,6 +516,7 @@ const writeOverview = async (
     ...(previous === null ? {} : keptOnRegeneration(previous)),
     ...(options.captureReason ? { captureReason: captureReasonFromDraft(options.captureReason()) } : {}),
     ...(options.fromPlaylist ? { fromPlaylist: options.fromPlaylist } : {}),
+    ...(options.fromFeed ? { fromFeed: options.fromFeed } : {}),
   };
   const save = () => deps.overviewStore.saveOverview(saved);
   await (stopwatch ? stopwatch.time("save", save) : save());

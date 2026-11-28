@@ -106,9 +106,10 @@ const sections: readonly LegalSection[] = [
           theme and accent colour, which sections an overview shows, whether new overviews are put in your projects, whether questions to
           ask next are answered here or open in an assistant and which one, the About you sentence that personalises overviews, whether you
           have been asked for it again after onboarding, and what we have learned from your overviews, the tags you have merged, the
-          playlists you follow, the podcasts, blogs and YouTube channels whose feeds you follow, the videos from those playlists waiting to
-          be made and whether you paused that queue, the links you kept to be made when our server can fetch them again, the running total
-          of time saved with its milestones, and when you last put away each offer of a paid plan, so it stays away on every device.
+          playlists you follow, the podcasts, blogs and YouTube channels whose feeds you follow, the videos, episodes and posts from them
+          waiting to be made, which playlist or feed each overview came from, and whether you paused that queue, the links you kept to be
+          made when our server can fetch them again, the running total of time saved with its milestones, and when you last put away each
+          offer of a paid plan, so it stays away on every device.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,

@@ -1,13 +1,14 @@
-import type { PlaylistId, PlaylistOrder, QueuedCapture } from "@overview/domain";
+import { queueOriginOf, type PlaylistOrder, type QueuedCapture } from "@overview/domain";
 import { inPlaylistOrder } from "../../playlists/util/inPlaylistOrder.js";
 
-// Why each playlist keeps its places: docs/features/playlists.md, "An order for each playlist".
-export const inQueueOrder = (waiting: readonly QueuedCapture[], orderOf: (playlistId: PlaylistId) => PlaylistOrder): QueuedCapture[] => {
-  const places = new Map<PlaylistId, number[]>();
+// Why each playlist or feed keeps its places: docs/features/playlists.md, "An order for each playlist".
+export const inQueueOrder = (waiting: readonly QueuedCapture[], orderOf: (originId: string) => PlaylistOrder): QueuedCapture[] => {
+  const places = new Map<string, number[]>();
   waiting.forEach((capture, place) => {
-    const taken = places.get(capture.fromPlaylist.id);
+    const { id } = queueOriginOf(capture);
+    const taken = places.get(id);
     if (taken === undefined) {
-      places.set(capture.fromPlaylist.id, [place]);
+      places.set(id, [place]);
     } else {
       taken.push(place);
     }

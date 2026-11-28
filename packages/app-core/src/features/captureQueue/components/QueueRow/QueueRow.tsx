@@ -1,4 +1,4 @@
-import type { QueuedCapture } from "@overview/domain";
+import { queueOriginOf, type QueuedCapture } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./QueueRow.module.scss";
 import { queueRowTestIds } from "./QueueRowTestIds.js";
@@ -117,7 +117,7 @@ export const QueueRow = ({
           {showFrom && (
             <>
               <span aria-hidden="true">·</span>
-              <span>From {capture.fromPlaylist.title}</span>
+              <span>From {queueOriginOf(capture).title}</span>
             </>
           )}
         </span>

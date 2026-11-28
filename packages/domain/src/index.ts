@@ -110,6 +110,7 @@ export * from "./followedFeedMigrations.js";
 export * from "./FollowedFeedStore.js";
 export * from "./feedIdOf.js";
 export * from "./QueuedCapture.js";
+export * from "./queueOriginOf.js";
 export * from "./CaptureQueueStore.js";
 export * from "./SharedNote.js";
 export * from "./SharedOverview.js";

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EpisodeNeedsTranscribingError } from "../../podcasts/api/EpisodeNeedsTranscribingError.js";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { SyncRequestError } from "@overview/sync";
 import { NoTranscriptSourceError } from "../../transcripts/api/NoTranscriptSourceError.js";
@@ -11,6 +12,11 @@ const ladderEnding = (last: TranscriptFetchError) =>
   ]);
 
 describe("queueProblemOf", () => {
+  it("names an episode that needs transcribing, so it waits for the reader to choose it", () => {
+    const none = new TranscriptFetchError("no transcript", { failure: "no-captions", sourceId: "service" });
+    expect(queueProblemOf(new EpisodeNeedsTranscribingError(none))).toBe("needsTranscribing");
+  });
+
   it("the month's limit is the queue's to wait at until the month resets, not the video's failure", () => {
     const spent = new SyncRequestError("too_many_requests", 429, "spent", { quota: "ours", resetsOn: "2026-11-01" });
     expect(queueProblemOf(spent)).toBe("monthSpent");

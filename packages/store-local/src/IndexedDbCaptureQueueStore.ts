@@ -17,16 +17,17 @@ const keptFor = (queued: QueuedCapture, id: OverviewId): KeptCapture => ({
   sourceKey: queued.videoId,
   url: queued.url,
   keptAt: queued.queuedAt,
-  keptFrom: "playlist",
+  keptFrom: queued.fromPlaylist === null ? "feed" : "playlist",
   captureReason: null,
   title: queued.title,
   thumbnailUrl: queued.thumbnailUrl,
   fromPlaylist: queued.fromPlaylist,
+  fromFeed: queued.fromFeed ?? null,
   addedAt: queued.addedAt,
   playlistIndex: queued.playlistIndex,
   chosenAt: queued.chosenAt,
   stage: "kept",
-  source: null,
+  source: queued.source ?? null,
   waitingFor: "turn",
   resumesAt: null,
   queueStatus: queued.status,
@@ -34,7 +35,7 @@ const keptFor = (queued: QueuedCapture, id: OverviewId): KeptCapture => ({
 });
 
 const queuedOf = (capture: Capture): QueuedCapture[] => {
-  if (capture.stage !== "kept" || capture.fromPlaylist === null) {
+  if (capture.stage !== "kept" || (capture.fromPlaylist === null && capture.fromFeed == null)) {
     return [];
   }
   return [
@@ -44,6 +45,8 @@ const queuedOf = (capture: Capture): QueuedCapture[] => {
       title: capture.title ?? "",
       thumbnailUrl: capture.thumbnailUrl,
       fromPlaylist: capture.fromPlaylist,
+      ...(capture.fromFeed == null ? {} : { fromFeed: capture.fromFeed }),
+      ...(capture.source === null ? {} : { source: capture.source }),
       queuedAt: capture.keptAt,
       status: capture.queueStatus,
       problem: capture.problem,
@@ -101,8 +104,9 @@ export class IndexedDbCaptureQueueStore implements CaptureQueueStore {
   async removeWaiting(fromPlaylist?: PlaylistId): Promise<void> {
     await this.#moveDeviceQueue();
     for (const capture of await this.#captures.listCaptures()) {
-      const waiting = capture.stage === "kept" && capture.fromPlaylist !== null && capture.queueStatus === "waiting";
-      if (waiting && (fromPlaylist === undefined || capture.fromPlaylist!.id === fromPlaylist)) {
+      const queued = capture.stage === "kept" && (capture.fromPlaylist !== null || capture.fromFeed != null);
+      const waiting = queued && capture.stage === "kept" && capture.queueStatus === "waiting";
+      if (waiting && (fromPlaylist === undefined || capture.fromPlaylist?.id === fromPlaylist)) {
         await this.#captures.removeCapture(capture.id);
       }
     }

@@ -1,4 +1,11 @@
-import { parsePodcastLink, PodcastEpisode, type PodcastLinkFrom, type PodcastRead, type PodcastReadFailure } from "@overview/domain";
+import {
+  parsePodcastLink,
+  PodcastEpisode,
+  type EpisodeInFeed,
+  type PodcastLinkFrom,
+  type PodcastRead,
+  type PodcastReadFailure,
+} from "@overview/domain";
 import { episodeKeywords } from "@overview/transcripts";
 import type { createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js";
 import { readBodyText } from "../publicWeb/createPublicWebFetch.js";
@@ -234,7 +241,15 @@ export const createPodcastReader = ({
     return episodeFrom(meta.feedUrl, read, "page", null);
   };
 
-  return async function readPodcastEpisode(link: string): Promise<PodcastRead> {
+  // An entry of a followed feed: docs/features/followed-feeds.md, "Making an entry".
+  const fromFeedEntry = async ({ feedUrl, guid }: EpisodeInFeed): Promise<PodcastRead> =>
+    episodeFrom(feedUrl, await readFeed(feedUrl, (item) => feedItemGuid(item) === guid), "feed", null);
+
+  return async function readPodcastEpisode(ask: string | EpisodeInFeed): Promise<PodcastRead> {
+    if (typeof ask !== "string") {
+      return fromFeedEntry(ask).catch(() => failed("no-answer"));
+    }
+    const link = ask;
     try {
       let parsed = parsePodcastLink(link);
       if (parsed?.platform === "spotify-short") {

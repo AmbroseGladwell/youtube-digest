@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { PlaylistId, VideoId, type PlaylistPace, type QueuedCapture } from "@overview/domain";
+import { PlaylistId, queueOriginOf, VideoId, type PlaylistPace, type QueuedCapture } from "@overview/domain";
+import { makeFollowedFeed } from "../../feeds/types/FeedFactory.testHelper.js";
 import { makeQueuedCapture } from "../../playlists/types/PlaylistFactory.testHelper.js";
 import { pacedQueue } from "./pacedQueue.js";
 
@@ -17,8 +18,9 @@ const from = (fromPlaylist: typeof PSYCHOLOGY, count: number, start: number, ove
     }),
   );
 
-const paces = (byPlaylist: Record<string, PlaylistPace>) => (capture: QueuedCapture) => byPlaylist[capture.fromPlaylist.id] ?? "asTheyCome";
-const made = (byPlaylist: Record<string, number>) => (capture: QueuedCapture) => byPlaylist[capture.fromPlaylist.id] ?? 0;
+const paces = (byPlaylist: Record<string, PlaylistPace>) => (capture: QueuedCapture) =>
+  byPlaylist[capture.fromPlaylist!.id] ?? "asTheyCome";
+const made = (byPlaylist: Record<string, number>) => (capture: QueuedCapture) => byPlaylist[capture.fromPlaylist!.id] ?? 0;
 const ids = (captures: QueuedCapture[]) => captures.map((capture) => capture.videoId);
 
 describe("pacedQueue", () => {
@@ -87,5 +89,22 @@ describe("pacedQueue", () => {
 
     expect(ids(paced.ready)).toEqual([saved[0]!.videoId, saved[2]!.videoId, ...ids(others)]);
     expect(ids(paced.forYou)).toEqual([saved[1]!.videoId]);
+  });
+
+  it("paces a feed's entries by the feed, beside a playlist's", () => {
+    const feed = makeFollowedFeed();
+    const entries = [1, 2, 3].map((index) =>
+      makeQueuedCapture({
+        videoId: VideoId.parse(`feedentry${index}`),
+        fromPlaylist: null,
+        fromFeed: { id: feed.id, kind: feed.kind, title: feed.title },
+      }),
+    );
+    const byOrigin = (capture: QueuedCapture): PlaylistPace => (queueOriginOf(capture).id === feed.id ? "oneADay" : "asTheyCome");
+
+    const paced = pacedQueue([...entries, ...from(PSYCHOLOGY, 1, 0)], byOrigin, () => 0);
+
+    expect(ids(paced.ready)).toEqual(["feedentry1", "psycvideo00"]);
+    expect(ids(paced.tomorrow)).toEqual(["feedentry2", "feedentry3"]);
   });
 });

@@ -167,6 +167,17 @@ test("a known entry older than the newest held doesn't stop reading, since the f
   assert.equal(feed.entriesRead, 3);
 });
 
+test("an episode with no guid is named by its audio, as the podcast reader names it, and a post by its page", async () => {
+  const episode =
+    '<item><title>No guid</title><link>https://show.example/ep</link><enclosure url="https://cdn.show.example/ep.mp3" type="audio/mpeg"/></item>';
+  const post = "<item><title>A post</title><link>https://blog.example/post</link></item>";
+  const feed = listingOf(await read(rssOf(episode, post)));
+  assert.deepEqual(
+    feed.entries.map((entry) => entry.id),
+    ["https://cdn.show.example/ep.mp3", "https://blog.example/post"],
+  );
+});
+
 test("an entry with nothing to open is left out", async () => {
   const feed = listingOf(await read(rssOf("<item><title>Just a title</title><guid>g</guid></item>", NEWSLETTER_EPISODE)));
   assert.deepEqual(
