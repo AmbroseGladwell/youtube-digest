@@ -1,5 +1,6 @@
 import { sharePath, sharePreview, type SharedNote } from "@overview/domain";
 import { escapeHtml } from "./escapeHtml.js";
+import { OG_TITLE } from "../podcasts/pageMeta.js";
 
 export interface SharePageHeadInput {
   note: SharedNote;
@@ -22,7 +23,7 @@ export const sharePageHead = ({ note, token, appUrl, hasNarration }: SharePageHe
     meta("name", "description", description),
     meta("property", "og:type", "article"),
     meta("property", "og:site_name", "The Overview"),
-    meta("property", "og:title", title),
+    meta("property", OG_TITLE, title),
     meta("property", "og:description", description),
     meta("property", "og:url", url),
     meta("property", "og:image", `${url}/card.png`),

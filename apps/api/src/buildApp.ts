@@ -66,7 +66,7 @@ import { FeedsRepository } from "./feeds/FeedsRepository.js";
 import { socialRoutes } from "./routes/socialRoutes.js";
 import { tiktokRoutes } from "./routes/tiktokRoutes.js";
 import { accountPlan } from "./auth/accountPlan.js";
-import { createPodcastReader } from "./podcasts/createPodcastReader.js";
+import { createPodcastReader, createShowFeedFinder, type ShowFeed } from "./podcasts/createPodcastReader.js";
 import type { SocialPostReader } from "./social/createSocialPostReader.js";
 import type { TikTokReader } from "./tiktok/createTikTokReader.js";
 import { createPodcastTranscripts } from "./podcasts/createPodcastTranscripts.js";
@@ -181,6 +181,7 @@ export interface BuildAppOptions {
   meaning?: MeaningSetup | null;
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
   readPodcastEpisode?: ((ask: string | EpisodeInFeed) => Promise<PodcastRead>) | undefined;
+  showFeedOf?: ((link: string) => Promise<ShowFeed | null>) | undefined;
   podcastWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
   feedWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
   podcastIndex?: ShowDirectory | null;
@@ -236,6 +237,7 @@ export const buildApp = async ({
   podcastIndex = null,
   youTubeEpisodes = null,
   readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb, appleBudget: APPLE_BUDGET, podcastIndex }),
+  showFeedOf = createShowFeedFinder({ fetchPublicWeb: podcastWeb, appleBudget: APPLE_BUDGET, podcastIndex }),
   tiktokReader = null,
   socialReader = null,
 }: BuildAppOptions): Promise<FastifyInstance> => {
@@ -380,7 +382,7 @@ export const buildApp = async ({
       suggestedQuestionRoutes(api, records, questionRefresher);
       captureRoutes(api, { records, transcripts, saves: captureSaves, claims: captureClaims, sql, clock });
       playlistRoutes(api, { reader: playlistReader, clock });
-      feedRoutes(api, { reader: createFeedReader({ feeds: new FeedsRepository(sql), fetchPublicWeb: feedWeb, clock }), clock });
+      feedRoutes(api, { reader: createFeedReader({ feeds: new FeedsRepository(sql), fetchPublicWeb: feedWeb, clock, showFeedOf }), clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
       const transcriptions =

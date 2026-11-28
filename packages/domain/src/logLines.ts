@@ -581,7 +581,7 @@ export const apiLogLines = coded("api", {
     lookedUp: line(
       "info",
       "feed looked up",
-      "A pasted link was turned into a feed to preview; `via` is how (feed, page, channel), `outcome` found or why not, and `ms` how long it took. Never the link.",
+      "A pasted link was turned into a feed to preview; `via` is how (feed, page, channel, show), `outcome` found or why not, and `ms` how long it took. Never the link.",
     ),
     forgotten: line(
       "info",

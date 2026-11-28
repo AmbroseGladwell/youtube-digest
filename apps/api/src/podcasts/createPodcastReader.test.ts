@@ -4,7 +4,7 @@ import { Response } from "undici";
 import type { PodcastRead } from "@overview/domain";
 import type { PublicWebAnswer } from "../publicWeb/createPublicWebFetch.js";
 import type { ShowDirectory } from "./appleDirectory.js";
-import { createPodcastReader } from "./createPodcastReader.js";
+import { createPodcastReader, createShowFeedFinder } from "./createPodcastReader.js";
 import { feedOf, FEED_ITEM_NEWEST, FEED_ITEM_OLDER } from "./podcastFeedFixtures.testHelper.js";
 
 type Answer = { body: string; type: string; url?: string } | "missing" | "down";
@@ -59,7 +59,11 @@ const readerOver = (web: Record<string, Answer>, podcastIndex: ShowDirectory | n
       response: new Response(answer.body, { headers: { "content-type": answer.type } }),
     };
   };
-  return { read: createPodcastReader({ fetchPublicWeb, podcastIndex }), asked };
+  return {
+    read: createPodcastReader({ fetchPublicWeb, podcastIndex }),
+    showFeed: createShowFeedFinder({ fetchPublicWeb, podcastIndex }),
+    asked,
+  };
 };
 
 const episodeOf = (read: PodcastRead) => {
@@ -305,4 +309,23 @@ test("a feed that isn't one is unreadable", async () => {
     [FEED_URL]: html("<html><body>Gone</body></html>"),
   });
   assert.deepEqual(await read(APPLE_EPISODE), { status: "failed", reason: "feed-unreadable", showName: "A Show & Friends" });
+});
+
+test("an Apple show link finds its feed in Apple's directory, and one with none says so", async () => {
+  const { showFeed } = readerOver({ [LOOKUP]: json({ results: [appleShow()] }) });
+  const { showFeed: noFeed } = readerOver({ [LOOKUP]: json({ results: [appleShow(null)] }) });
+
+  assert.deepEqual(await showFeed("https://podcasts.apple.com/gb/podcast/a-show/id42"), { status: "found", feedUrl: FEED_URL });
+  assert.deepEqual(await noFeed("https://podcasts.apple.com/gb/podcast/a-show/id42"), { status: "noPublicFeed" });
+});
+
+test("a Spotify show link is matched by its exact name to a show in the directory, and an episode link isn't a show", async () => {
+  const showPage = html(`<html><head><meta property="og:title" content="A Show &amp; Friends"></head><body></body></html>`);
+  const { showFeed } = readerOver({
+    "https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g": showPage,
+    [SEARCH]: json({ results: [appleShow()] }),
+  });
+
+  assert.deepEqual(await showFeed("https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g"), { status: "found", feedUrl: FEED_URL });
+  assert.equal(await showFeed(APPLE_EPISODE), null);
 });

@@ -2,8 +2,8 @@ export type PodcastLink =
   | { platform: "apple"; showId: string; episodeId: string }
   | { platform: "spotify"; episodeId: string }
   | { platform: "spotify-short"; url: string }
-  | { platform: "apple-show" }
-  | { platform: "spotify-show" }
+  | { platform: "apple-show"; showId: string }
+  | { platform: "spotify-show"; showId: string }
   | { platform: "page"; url: string };
 
 const APPLE_HOSTS = new Set(["podcasts.apple.com", "itunes.apple.com"]);
@@ -15,7 +15,7 @@ const spotifyPath = (segments: readonly string[]): PodcastLink | null => {
   const parts = segments[0]?.startsWith("intl-") ? segments.slice(1) : segments;
   const [type, id] = parts;
   if (type === "show") {
-    return { platform: "spotify-show" };
+    return id !== undefined && SPOTIFY_ID.test(id) ? { platform: "spotify-show", showId: id } : null;
   }
   if (type === "episode" && id !== undefined && SPOTIFY_ID.test(id)) {
     return { platform: "spotify", episodeId: id };
@@ -48,7 +48,7 @@ export const parsePodcastLink = (link: string): PodcastLink | null => {
     if (showId === undefined) {
       return null;
     }
-    return episodeId !== null && /^\d+$/.test(episodeId) ? { platform: "apple", showId, episodeId } : { platform: "apple-show" };
+    return episodeId !== null && /^\d+$/.test(episodeId) ? { platform: "apple", showId, episodeId } : { platform: "apple-show", showId };
   }
   if (SPOTIFY_HOSTS.has(host)) {
     return spotifyPath(segments);

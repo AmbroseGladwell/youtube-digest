@@ -2,6 +2,7 @@ import { apiLogLines, type FeedEntry, type FeedFreshness, type FeedRead, type Fe
 import type { FastifyBaseLogger } from "fastify";
 import { decodedChunks } from "../podcasts/fetchFeedEpisode.js";
 import { readBodyText, type createPublicWebFetch, type PublicWebAnswer } from "../publicWeb/createPublicWebFetch.js";
+import type { ShowFeed } from "../podcasts/createPodcastReader.js";
 import { feedKindOf, youTubeChannelIdOfFeed } from "./feedKindOf.js";
 import { feedLinksInPage } from "./feedLinksInPage.js";
 import type { FeedsRepository, StoredFeed } from "./FeedsRepository.js";
@@ -44,6 +45,8 @@ export interface FeedReaderOptions {
   clock: () => Date;
   limits?: FeedLimits;
   sleep?: (ms: number) => Promise<void>;
+  // A podcast's show link, found in the podcast directories (docs/features/followed-feeds.md, "Following from a link").
+  showFeedOf?: (link: string) => Promise<ShowFeed | null>;
 }
 
 export interface FeedReader {
@@ -120,6 +123,7 @@ export const createFeedReader = ({
   clock,
   limits = FEED_LIMITS,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  showFeedOf = async () => null,
 }: FeedReaderOptions): FeedReader => {
   const inFlight = new Map<string, Promise<Read>>();
   const fetchTimes: number[] = [];
@@ -313,7 +317,7 @@ export const createFeedReader = ({
 
   const lookUp = async (link: string, log: FastifyBaseLogger): Promise<FeedRead> => {
     const startedAt = clock().getTime();
-    const logged = (via: "feed" | "page" | "channel", answer: FeedRead): FeedRead => {
+    const logged = (via: "feed" | "page" | "channel" | "show", answer: FeedRead): FeedRead => {
       log.info(
         apiLogLines.feeds.lookedUp({
           via,
@@ -323,6 +327,10 @@ export const createFeedReader = ({
       );
       return answer;
     };
+    const show = await showFeedOf(link);
+    if (show !== null) {
+      return logged("show", show.status === "found" ? await read(show.feedUrl, log) : { status: "failed", reason: show.status });
+    }
     const feedUrl = canonicalFeedUrl(link);
     if (feedUrl === null) {
       return logged("feed", { status: "failed", reason: "notAFeed" });
