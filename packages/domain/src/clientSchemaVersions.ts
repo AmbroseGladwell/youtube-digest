@@ -535,6 +535,22 @@ export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
       followedFeed: 1,
     },
   },
+  {
+    clientVersion: 34,
+    schemaVersions: {
+      overview: 20,
+      overviewState: 1,
+      topic: 1,
+      settings: 3,
+      followedPlaylist: 3,
+      project: 1,
+      projectMember: 2,
+      chat: 8,
+      suggestedQuestion: 1,
+      capture: 2,
+      followedFeed: 1,
+    },
+  },
 ];
 
 export const schemaVersionsForClient = (clientVersion: number): SchemaVersions => {

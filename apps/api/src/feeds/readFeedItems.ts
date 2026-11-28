@@ -95,7 +95,9 @@ const entryKindOf = (youTubeVideoId: string | null, audioUrl: string | null): Fe
 
 const entryOf = (draft: EntryDraft): FeedEntry | null => {
   const youTubeVideoId = draft.youTubeVideoId ?? youTubeVideoIdOf(draft.pageUrl);
-  const id = draft.guid ?? draft.pageUrl ?? draft.audioUrl;
+  const kind = entryKindOf(youTubeVideoId, draft.audioUrl);
+  // An episode with no guid is named by its audio, as feedItemGuid names it, so both readers agree on its key.
+  const id = draft.guid ?? (kind === "episode" ? draft.audioUrl : null) ?? draft.pageUrl ?? draft.audioUrl;
   if (id === null || (draft.pageUrl === null && draft.audioUrl === null && youTubeVideoId === null)) {
     return null;
   }
@@ -103,7 +105,7 @@ const entryOf = (draft: EntryDraft): FeedEntry | null => {
   const text = firstOf(draft.texts, SHORT_TEXT_TAGS) ?? firstOf(draft.texts, LONG_TEXT_TAGS);
   return {
     id,
-    kind: entryKindOf(youTubeVideoId, draft.audioUrl),
+    kind,
     title: draft.title,
     pageUrl: draft.pageUrl,
     publishedAt: date === undefined ? null : feedDate(date),

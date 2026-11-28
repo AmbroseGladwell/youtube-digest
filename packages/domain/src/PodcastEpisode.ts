@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { SourceKey } from "./Brands.js";
 
-export const PodcastLinkFrom = z.enum(["apple", "spotify", "page"]);
+export const PodcastLinkFrom = z.enum(["apple", "spotify", "page", "feed"]);
 export type PodcastLinkFrom = z.infer<typeof PodcastLinkFrom>;
 
 export const PodcastTranscriptLink = z.object({
@@ -37,3 +37,9 @@ export const podcastSourceId = async ({ feedUrl, guid }: Pick<PodcastEpisode, "f
   const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
   return hex.slice(0, 32) as SourceKey;
 };
+
+export const PODCAST_READ_PATH = "/podcasts/read";
+
+// Read from its own feed, as a followed feed's entry is: docs/features/followed-feeds.md, "Making an entry".
+export const EpisodeInFeed = z.object({ feedUrl: z.url().max(2048), guid: z.string().min(1).max(2048) });
+export type EpisodeInFeed = z.infer<typeof EpisodeInFeed>;

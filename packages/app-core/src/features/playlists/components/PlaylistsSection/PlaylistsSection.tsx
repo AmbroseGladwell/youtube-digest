@@ -76,7 +76,7 @@ export const PlaylistsSection = () => {
   }, [overviews.data]);
 
   const waitingFrom = (playlistId: string) =>
-    (queue.data ?? []).filter((capture) => capture.status === "waiting" && capture.fromPlaylist.id === playlistId).length;
+    (queue.data ?? []).filter((capture) => capture.status === "waiting" && capture.fromPlaylist?.id === playlistId).length;
 
   const lookUp = (event: FormEvent) => {
     event.preventDefault();

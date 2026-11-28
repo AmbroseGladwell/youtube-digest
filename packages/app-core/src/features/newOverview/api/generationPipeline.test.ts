@@ -251,6 +251,7 @@ describe("regenerating", () => {
       tags: ["my-own-tag"],
       savedAt: "2026-01-02T03:04:05.000Z",
       fromPlaylist: { id: "PLsavedtalks", title: "Saved talks" } as Overview["fromPlaylist"],
+      fromFeed: { id: "a".repeat(64), kind: "podcast", title: "The History Show" } as Overview["fromFeed"],
       coreClaim: "The old claim.",
     });
     hold(previous);
@@ -265,6 +266,7 @@ describe("regenerating", () => {
       tags: ["my-own-tag"],
       savedAt: "2026-01-02T03:04:05.000Z",
       fromPlaylist: previous.fromPlaylist,
+      fromFeed: previous.fromFeed,
     });
     expect(saved[0]!.coreClaim).not.toBe("The old claim.");
   });

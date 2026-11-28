@@ -13,7 +13,7 @@ export const useUnfollowPlaylistMutation = () => {
     mutationKey: playlistKeys.all,
     mutationFn: async (playlistId) => {
       const waitingRemoved = (await captureQueueStore.listQueue()).filter(
-        (capture) => capture.status === "waiting" && capture.fromPlaylist.id === playlistId,
+        (capture) => capture.status === "waiting" && capture.fromPlaylist?.id === playlistId,
       ).length;
       await captureQueueStore.removeWaiting(playlistId);
       await followedPlaylistStore.unfollow(playlistId);

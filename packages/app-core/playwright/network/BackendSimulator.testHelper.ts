@@ -356,6 +356,7 @@ export class BackendSimulator {
   #socialTranscriptionAsks: string[] = [];
   #podcastWords: StoredTranscript | null = null;
   #podcastReads: string[] = [];
+  #podcastFeedReads: Array<{ feedUrl: string; guid: string }> = [];
   #videoReads: string[] = [];
   #videoAnswer: VideoRead | null = null;
   #podcastReadsHeld: Array<() => void> | null = null;
@@ -1186,7 +1187,12 @@ export class BackendSimulator {
     });
 
     await this.#page.route("**/api/podcasts/read", async (route) => {
-      this.#podcastReads.push((route.request().postDataJSON() as { url: string }).url);
+      const asked = route.request().postDataJSON() as { url: string } | { feedUrl: string; guid: string };
+      if ("url" in asked) {
+        this.#podcastReads.push(asked.url);
+      } else {
+        this.#podcastFeedReads.push(asked);
+      }
       const held = this.#podcastReadsHeld;
       if (held !== null) {
         await new Promise<void>((answer) => held.push(answer));
@@ -2048,6 +2054,7 @@ export class BackendSimulator {
       }
     },
     reads: (): string[] => [...this.#podcastReads],
+    feedReads: (): Array<{ feedUrl: string; guid: string }> => [...this.#podcastFeedReads],
     transcriptAsks: (): Array<{ feedUrl: string; guid: string }> => [...this.#podcastTranscriptAsks],
     checkSays: (check: TranscriptCheck): void => {
       this.#podcastCheck = check;

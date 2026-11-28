@@ -26,7 +26,7 @@ class InMemoryCaptureQueueStore implements CaptureQueueStore {
 
   async removeWaiting(fromPlaylist?: PlaylistId) {
     for (const [videoId, capture] of this.#queue) {
-      if (capture.status === "waiting" && (fromPlaylist === undefined || capture.fromPlaylist.id === fromPlaylist)) {
+      if (capture.status === "waiting" && (fromPlaylist === undefined || capture.fromPlaylist?.id === fromPlaylist)) {
         this.#queue.delete(videoId);
       }
     }

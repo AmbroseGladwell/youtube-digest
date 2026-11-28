@@ -1,5 +1,5 @@
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from "fastify";
-import { REQUEST_ID_HEADER, type Plan, type PodcastRead, type ShareToken } from "@overview/domain";
+import { REQUEST_ID_HEADER, type EpisodeInFeed, type Plan, type PodcastRead, type ShareToken } from "@overview/domain";
 import type { AccountId } from "./auth/AccountId.js";
 import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
@@ -180,7 +180,7 @@ export interface BuildAppOptions {
   ourKey?: OurKeySetup | null;
   meaning?: MeaningSetup | null;
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
-  readPodcastEpisode?: ((link: string) => Promise<PodcastRead>) | undefined;
+  readPodcastEpisode?: ((ask: string | EpisodeInFeed) => Promise<PodcastRead>) | undefined;
   podcastWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
   feedWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
   podcastIndex?: ShowDirectory | null;

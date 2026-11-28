@@ -159,6 +159,11 @@ const version19 = {
   schemaVersion: 19,
 };
 
+const version20 = {
+  ...version19,
+  schemaVersion: 20,
+};
+
 // Curated, not harvested, so every field at each version is exercised (docs/features/record-migrations.md).
 export const OVERVIEW_CORPUS: ReadonlyMap<number, unknown> = new Map<number, unknown>([
   [1, version1],
@@ -180,4 +185,5 @@ export const OVERVIEW_CORPUS: ReadonlyMap<number, unknown> = new Map<number, unk
   [17, version17],
   [18, version18],
   [19, version19],
+  [20, version20],
 ]);

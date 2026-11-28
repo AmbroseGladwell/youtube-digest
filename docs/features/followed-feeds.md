@@ -10,8 +10,9 @@ the reader chooses one, and then it's made like any other link of its kind and c
 
 **Built so far:** reading a feed (slice 1); the stored copy, the limits and the two routes
 (slice 2); the synced follow record and a capture's feed (slice 3, server and sync); the
-check on opening that fills the queue (slice 3, the device). Making each kind, the daily paces
-and the screens follow in later slices of the same card.
+check on opening that fills the queue (slice 3, the device); one queue for playlists and feeds,
+making each kind, and the daily paces (slice 3, making). The screens follow in later slices of
+the same card.
 
 ## Decisions
 
@@ -203,10 +204,43 @@ Each time the app opens, signed in, every followed feed is asked about once, in 
 - **Failing.** A feed that fails (`busy`, `unreachable`, …), or a check that fails whole, is
   the `feedCheckFailed` client warning, and nothing is written.
 
-**Entries are never made by themselves here.** Every other kept capture without a playlist
-is a kept link, made as soon as it can be (`kept-links.md`, "Kept links"), so a feed's entries
-are left out of kept links (`keptLinksQuery`). Making one, and the daily paces, come with the
-next slice.
+**Entries are never made as kept links.** Every other kept capture without a playlist is a
+kept link, made as soon as it can be (`kept-links.md`, "Kept links"), so a feed's entries are
+left out of kept links (`keptLinksQuery`). They're the queue's, below.
+
+**An entry's key.** An episode with no guid is named by its audio file, as the podcast reader
+names it (`feedItemGuid`), so the two readers agree on its key. An episode also keeps its feed
+and guid on the capture (`source`, a `PodcastSource`), which is what it's read again by.
+
+## One queue
+
+A feed's entries wait in the same queue as a playlist's videos (`capture-queue.md`). A queued
+entry has either `fromPlaylist` or `fromFeed` (`QueuedCapture`), and `queueOriginOf` gives the
+queue the one id and title it groups, paces and orders them by. So a feed's pace and order work
+as a playlist's do: *Up to 5 a day* and *Up to 1 a day* make that many of a feed's entries a day
+by themselves, *As they come* makes them all, and *Only when I choose* makes none until chosen;
+Make now and Choose → Make N now work across playlists and feeds. "Made today" counts a feed's
+overviews by the feed (`madeTodayByPlaylist`, `Overview.fromFeed`). Clear queue clears a feed's
+waiting entries too.
+
+## Making an entry
+
+`useQueuedMaker` makes each entry its own way (`queuedKindOf`):
+
+| The entry | Made |
+|---|---|
+| a YouTube video | from its link, as a playlist's video is |
+| an episode | read again by its feed and guid (`POST /api/podcasts/read` `{ feedUrl, guid }`), then as any episode |
+| a post | read on our server (`POST /api/articles/read`), on every surface |
+
+**Transcribing only when chosen.** An episode whose words can't be found otherwise needs
+transcribing, which uses the reader's hours. Made by a pace, it isn't transcribed: it stops at
+`needsTranscribing` ("This episode needs transcribing, which uses your hours. Make it now to
+transcribe it.") and waits for the reader. Made because the reader chose it, it's transcribed.
+
+**The overview names the feed** (`Overview.fromFeed`, the feed's id, label and title; overview
+schema 20, `CLIENT_VERSION` 34), for the From line, as `fromPlaylist` names a playlist. It
+survives unfollowing and a regeneration, and a shared copy never carries it.
 
 ## Finding a site's feed
 

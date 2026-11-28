@@ -622,7 +622,7 @@ const forgetFollowing = async (transaction: IDBTransaction, playlistId: string):
   const queue = transaction.objectStore(CAPTURE_QUEUE_STORE);
   for (const raw of await promisifyRequest<unknown[]>(queue.getAll())) {
     const parsed = QueuedCapture.safeParse(raw);
-    if (parsed.success && parsed.data.status === "waiting" && parsed.data.fromPlaylist.id === playlistId) {
+    if (parsed.success && parsed.data.status === "waiting" && parsed.data.fromPlaylist?.id === playlistId) {
       queue.delete(parsed.data.videoId);
     }
   }

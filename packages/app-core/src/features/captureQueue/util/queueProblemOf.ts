@@ -2,6 +2,7 @@ import type { QueuedCaptureProblem } from "@overview/domain";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { isSyncRequestError } from "@overview/sync";
 import { monthResetOf } from "../../newOverview/util/monthReset.js";
+import { EpisodeNeedsTranscribingError } from "../../podcasts/api/EpisodeNeedsTranscribingError.js";
 import { NoTranscriptSourceError } from "../../transcripts/api/NoTranscriptSourceError.js";
 import { resumesAtFrom } from "../../transcripts/util/resumeTime.js";
 import type { QueueHold, QueueHoldReason } from "../types/QueueHold.js";
@@ -45,6 +46,9 @@ const fetchErrorOf = (error: unknown): TranscriptFetchError | null => {
 export const queueProblemOf = (error: unknown): QueueProblem => {
   if (monthSpentResetOf(error) !== null) {
     return "monthSpent";
+  }
+  if (error instanceof EpisodeNeedsTranscribingError) {
+    return "needsTranscribing";
   }
   const fetchError = fetchErrorOf(error);
   if (fetchError?.failure === "daily-cap") {

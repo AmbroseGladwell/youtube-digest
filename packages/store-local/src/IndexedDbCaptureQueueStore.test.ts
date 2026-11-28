@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { defineCaptureQueueStoreConformanceSuite, makeQueuedCapture } from "@overview/store-conformance";
-import { CURRENT_SCHEMA_VERSIONS, OverviewId, VideoId } from "@overview/domain";
+import { CURRENT_SCHEMA_VERSIONS, FeedId, OverviewId, VideoId } from "@overview/domain";
 import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
 import { IndexedDbCaptureStore } from "./IndexedDbCaptureStore.js";
 import { IndexedDbSyncStorage } from "./IndexedDbSyncStorage.js";
@@ -64,7 +64,7 @@ test("what this device queued before the queue synced joins it once, and the old
   assert.equal(await readRaw(db, CAPTURE_QUEUE_STORE, queued.videoId), undefined);
 });
 
-test("only playlist videos waiting in line are the queue's: a kept link is not", async () => {
+test("only playlist videos and feed entries waiting in line are the queue's: a kept link is not", async () => {
   const db = await openTestDatabase();
   await new IndexedDbCaptureStore(db).saveCapture({
     id: OverviewId.parse(randomUUID()),
@@ -88,4 +88,55 @@ test("only playlist videos waiting in line are the queue's: a kept link is not",
   });
 
   assert.deepEqual(await queueOn(db).listQueue(), []);
+});
+
+test("a feed's entry joins the queue with its feed and its episode, and goes back as a capture from the feed", async () => {
+  const db = await openTestDatabase();
+  const captures = new IndexedDbCaptureStore(db);
+  const fromFeed = { id: FeedId.parse("b".repeat(64)), kind: "podcast" as const, title: "The History Show" };
+  const source = {
+    kind: "podcast" as const,
+    id: VideoId.parse("0123456789abcdef0123456789abcdef"),
+    feedUrl: "https://show.example/feed.xml",
+    guid: "ep-1",
+    title: "Episode 1",
+    showName: "The History Show",
+    publishedAt: null,
+    durationMs: 3_600_000,
+    audioUrl: "https://cdn.show.example/ep-1.mp3",
+    pageUrl: null,
+    imageUrl: null,
+    sharedFrom: "https://show.example/ep-1",
+  };
+  await captures.saveCapture({
+    id: OverviewId.parse(randomUUID()),
+    sourceKey: VideoId.parse("podcast:0123456789abcdef0123456789abcdef"),
+    url: "https://show.example/ep-1",
+    keptAt: "2026-11-28T09:00:00.000Z",
+    keptFrom: "feed",
+    captureReason: null,
+    title: "Episode 1",
+    thumbnailUrl: null,
+    fromPlaylist: null,
+    fromFeed,
+    addedAt: null,
+    playlistIndex: null,
+    chosenAt: null,
+    stage: "kept",
+    source,
+    waitingFor: "turn",
+    resumesAt: null,
+    queueStatus: "waiting",
+    problem: null,
+  });
+  const queue = queueOn(db);
+
+  const [queued] = await queue.listQueue();
+  await queue.saveQueued({ ...queued!, chosenAt: "2026-11-28T10:00:00.000Z" });
+
+  assert.deepEqual([queued?.fromFeed, queued?.source], [fromFeed, source]);
+  assert.deepEqual(
+    (await captures.listCaptures()).map((capture) => [capture.keptFrom, capture.fromFeed, capture.source, capture.chosenAt]),
+    [["feed", fromFeed, source, "2026-11-28T10:00:00.000Z"]],
+  );
 });

@@ -7,6 +7,7 @@ export const createTrialPodcastApi = (options: Omit<ApiRequesterOptions, "token"
     withTrialToken(options, (trialToken) => call(createFetchPodcastApi({ ...options, trialToken })));
   return {
     read: (url) => on((api) => api.read(url)),
+    readInFeed: (ask) => on((api) => api.readInFeed(ask)),
     transcript: (ask) => on((api) => api.transcript(ask)),
     checkTranscript: (ask) => on((api) => api.checkTranscript(ask)),
     transcribe: (ask) => on((api) => api.transcribe(ask)),

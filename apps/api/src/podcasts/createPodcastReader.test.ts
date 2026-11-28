@@ -81,6 +81,19 @@ test("an Apple link finds its episode's guid in Apple's directory, then the epis
   assert.equal(episode.transcripts.length, 2);
 });
 
+test("an entry of a followed feed is read straight from that feed by its guid, with nothing asked of a directory", async () => {
+  const { read, asked } = readerOver({ [FEED_URL]: xml(feedOf(FEED_ITEM_NEWEST, FEED_ITEM_OLDER)) });
+  const episode = episodeOf(await read({ feedUrl: FEED_URL, guid: "older-guid" }));
+  assert.equal(episode.audioUrl, "https://media.example/ep1.mp3");
+  assert.equal(episode.linkFrom, "feed");
+  assert.deepEqual(asked, [FEED_URL]);
+  assert.deepEqual(await read({ feedUrl: FEED_URL, guid: "not-in-it" }), {
+    status: "failed",
+    reason: "not-found",
+    showName: "A Show & Friends",
+  });
+});
+
 test("an Apple episode too old for the directory's newest 200 says so, and Apple's own page is never read", async () => {
   const { read, asked } = readerOver({
     [LOOKUP]: json({ results: [appleShow(), appleEpisode(1002, "newest-guid", "Episode 2", "2026-11-12T10:00:00Z")] }),

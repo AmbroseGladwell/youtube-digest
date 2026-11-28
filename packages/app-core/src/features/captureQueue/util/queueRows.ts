@@ -1,4 +1,5 @@
-import type { PlaylistOrigin, PlaylistPace, QueuedCapture } from "@overview/domain";
+import type { PlaylistPace, QueueOrigin, QueuedCapture } from "@overview/domain";
+import { queueOriginOf } from "@overview/domain";
 import { resumeTimeText } from "../../transcripts/util/resumeTime.js";
 import type { CaptureQueueController } from "../useCaptureQueue.js";
 import type { QueueRowState } from "../components/QueueRow/QueueRow.js";
@@ -46,7 +47,7 @@ export const waitingRows = (
 };
 
 export interface PacedGroup {
-  playlist: PlaylistOrigin;
+  playlist: QueueOrigin;
   pace: PlaylistPace;
   madeToday: number;
   captures: QueuedCapture[];
@@ -58,9 +59,10 @@ export const pacedGroups = (
 ): PacedGroup[] => {
   const groups = new Map<string, PacedGroup>();
   for (const capture of captures) {
-    const { id } = capture.fromPlaylist;
+    const origin = queueOriginOf(capture);
+    const { id } = origin;
     const group = groups.get(id) ?? {
-      playlist: capture.fromPlaylist,
+      playlist: origin,
       pace: queue.paceOf(id),
       madeToday: queue.madeToday(id),
       captures: [],
@@ -81,7 +83,7 @@ export const attentionSummary = (attention: QueuedCapture[]): string => {
 
 const playlistNames = (captures: readonly QueuedCapture[]) =>
   new Intl.ListFormat("en-GB", { style: "long", type: "conjunction" }).format([
-    ...new Set(captures.map((capture) => capture.fromPlaylist.title)),
+    ...new Set(captures.map((capture) => queueOriginOf(capture).title)),
   ]);
 
 export interface PacedSummary {
@@ -95,7 +97,7 @@ export const pacedSummary = (queue: Pick<CaptureQueueController, "tomorrow" | "f
     tomorrow:
       reached === null
         ? null
-        : `${reached} ${new Set(queue.tomorrow.map((capture) => capture.fromPlaylist.id)).size === 1 ? "has" : "have"} reached today’s pace`,
+        : `${reached} ${new Set(queue.tomorrow.map((capture) => queueOriginOf(capture).id)).size === 1 ? "has" : "have"} reached today’s pace`,
     forYou: queue.forYou.length === 0 ? null : `From ${playlistNames(queue.forYou)}`,
   };
 };

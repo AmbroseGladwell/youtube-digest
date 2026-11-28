@@ -179,6 +179,9 @@ const fillFollowUpQuestionsAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
+// Additive: an overview made from a followed feed names it (docs/features/followed-feeds.md).
+const allowFeedOrigins: RecordMigration = { newSchemaVersion: 20 };
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -198,6 +201,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillSourceStepsAddedAfterTheFirstNotes,
   allowArticleResources,
   fillFollowUpQuestionsAddedAfterTheFirstNotes,
+  allowFeedOrigins,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

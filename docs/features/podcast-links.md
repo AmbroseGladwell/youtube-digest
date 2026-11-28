@@ -129,7 +129,9 @@ is asked directly, within 10 seconds and 5 MB.
 
 ## The route
 
-`POST /api/podcasts/read` takes `{ url }` and answers with a `PodcastRead`: the episode, or the
+`POST /api/podcasts/read` takes `{ url }`, or `{ feedUrl, guid }` for a followed feed's entry
+(`linkFrom: "feed"`, read straight from that feed: `followed-feeds.md`, "Making an entry"), and
+answers with a `PodcastRead`: the episode, or the
 reason it couldn't be read, and the show's name where it is known. An account reads without
 counting; signed out, onboarding's trial token reads it as one of its reads (`onboarding.md`,
 "Any kind of link"). It is limited to 120

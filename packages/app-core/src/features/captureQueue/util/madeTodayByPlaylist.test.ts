@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PlaylistId, VideoId } from "@overview/domain";
 import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeFollowedFeed } from "../../feeds/types/FeedFactory.testHelper.js";
 import { madeTodayByPlaylist, nextLocalMidnight } from "./madeTodayByPlaylist.js";
 
 const PSYCHOLOGY = { id: PlaylistId.parse("PLpsychology"), title: "Psychology" };
@@ -47,5 +48,16 @@ describe("madeTodayByPlaylist", () => {
 describe("nextLocalMidnight", () => {
   it("is the start of the reader's next day", () => {
     expect(nextLocalMidnight(NOW)).toEqual(new Date(2026, 9, 27, 0, 0));
+  });
+
+  it("counts a feed's overviews by the feed, as a playlist's are counted by the playlist", () => {
+    const feed = makeFollowedFeed();
+    const fromFeed = makeOverview({
+      savedAt: localIso(10),
+      fromPlaylist: null,
+      fromFeed: { id: feed.id, kind: feed.kind, title: feed.title },
+    });
+
+    expect(madeTodayByPlaylist([fromFeed], new Set(), NOW).get(feed.id)).toBe(1);
   });
 });

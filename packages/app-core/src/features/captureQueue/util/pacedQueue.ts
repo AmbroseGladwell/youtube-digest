@@ -1,4 +1,4 @@
-import { paceDailyLimit, type PlaylistPace, type QueuedCapture } from "@overview/domain";
+import { paceDailyLimit, queueOriginOf, type PlaylistPace, type QueuedCapture } from "@overview/domain";
 
 export interface PacedQueue {
   ready: QueuedCapture[];
@@ -27,7 +27,7 @@ export const pacedQueue = (
       forYou.push(capture);
       continue;
     }
-    const playlistId = capture.fromPlaylist.id;
+    const playlistId = queueOriginOf(capture).id;
     const taken = takenToday.get(playlistId) ?? madeToday(capture);
     if (limit !== null && taken >= limit) {
       tomorrow.push(capture);
