@@ -3,6 +3,7 @@ import type {
   CaptureQueueStore,
   CaptureStore,
   ChatStore,
+  FollowedFeedStore,
   FollowedPlaylistStore,
   OverviewStore,
   ProjectStore,
@@ -17,6 +18,7 @@ export interface Stores {
   settingsStore: SettingsStore;
   transcriptStore: TranscriptStore;
   followedPlaylistStore: FollowedPlaylistStore;
+  followedFeedStore: FollowedFeedStore;
   captureQueueStore: CaptureQueueStore;
   captureStore: CaptureStore;
   projectStore: ProjectStore;

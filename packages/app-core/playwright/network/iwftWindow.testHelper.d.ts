@@ -16,6 +16,7 @@ import type { InMemoryProjectStore } from "../../src/features/projects/types/InM
 import type { InMemoryChatStore } from "../../src/features/chats/types/InMemoryChatStore.testHelper.js";
 import type { InMemorySuggestedQuestionStore } from "../../src/features/chats/types/InMemorySuggestedQuestionStore.testHelper.js";
 import type { InMemoryFollowedPlaylistStore } from "../../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
+import type { InMemoryFollowedFeedStore } from "../../src/features/feeds/types/InMemoryFollowedFeedStore.testHelper.js";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
 import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
@@ -31,6 +32,7 @@ declare global {
       settingsStore: InMemorySettingsStore;
       transcriptStore: InMemoryTranscriptStore;
       followedPlaylistStore: InMemoryFollowedPlaylistStore;
+      followedFeedStore: InMemoryFollowedFeedStore;
       captureQueueStore: InMemoryCaptureQueueStore;
       captureStore: InMemoryCaptureStore;
       projectStore: InMemoryProjectStore;

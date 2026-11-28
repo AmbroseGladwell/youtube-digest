@@ -1,5 +1,6 @@
 import {
   Chat,
+  FollowedFeed,
   FollowedPlaylist,
   Overview,
   OverviewState,
@@ -19,6 +20,7 @@ import {
   sourceKey,
 } from "@overview/domain";
 import type { InMemoryFollowedPlaylistStore } from "../../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
+import type { InMemoryFollowedFeedStore } from "../../src/features/feeds/types/InMemoryFollowedFeedStore.testHelper.js";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
 import type { InMemoryChatStore } from "../../src/features/chats/types/InMemoryChatStore.testHelper.js";
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
@@ -38,6 +40,7 @@ export class InMemorySyncStorage implements SyncStorage {
   private readonly transcriptStore: InMemoryTranscriptStore;
   private readonly followedPlaylistStore: InMemoryFollowedPlaylistStore;
   private readonly chatStore: InMemoryChatStore;
+  private readonly followedFeedStore: InMemoryFollowedFeedStore | null;
 
   constructor(
     overviewStore: InMemoryOverviewStore,
@@ -45,12 +48,14 @@ export class InMemorySyncStorage implements SyncStorage {
     transcriptStore: InMemoryTranscriptStore,
     followedPlaylistStore: InMemoryFollowedPlaylistStore,
     chatStore: InMemoryChatStore,
+    followedFeedStore: InMemoryFollowedFeedStore | null = null,
   ) {
     this.overviewStore = overviewStore;
     this.settingsStore = settingsStore;
     this.transcriptStore = transcriptStore;
     this.followedPlaylistStore = followedPlaylistStore;
     this.chatStore = chatStore;
+    this.followedFeedStore = followedFeedStore;
   }
 
   async isEnrolled() {
@@ -146,6 +151,9 @@ export class InMemorySyncStorage implements SyncStorage {
         if (change.kind === "followedPlaylist") {
           await this.followedPlaylistStore.unfollow(change.id as never);
         }
+        if (change.kind === "followedFeed") {
+          await this.followedFeedStore?.unfollow(change.id as never);
+        }
         if (change.kind === "chat") {
           await this.chatStore.deleteChat(change.id);
         }
@@ -173,8 +181,10 @@ export class InMemorySyncStorage implements SyncStorage {
         case "project":
         case "projectMember":
         case "suggestedQuestion":
-        case "capture":
         case "followedFeed":
+          this.followedFeedStore?.seedFollowed(FollowedFeed.parse(change.body));
+          break;
+        case "capture":
           break;
       }
     }

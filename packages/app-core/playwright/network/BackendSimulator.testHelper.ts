@@ -26,6 +26,10 @@ import {
   type AnalyticsEventBatch,
   type SharedPageEventBatch,
   type ClientErrorBatch,
+  type FeedId,
+  type FeedRead,
+  type FollowedFeed,
+  type FollowedFeedCheck,
   type FollowedPlaylist,
   type PlaylistCheck,
   type PlaylistLookup,
@@ -389,6 +393,9 @@ export class BackendSimulator {
   #transcriptMatches = new Map<string, TranscriptSearchResponse["matches"]>();
   #seedFollowed: FollowedPlaylist[] = [];
   #seedChecks: PlaylistCheck[] = [];
+  #feedReads = new Map<string, FeedRead>();
+  #seedFollowedFeeds: FollowedFeed[] = [];
+  #seedFeedChecks: FollowedFeedCheck[] = [];
   #seedQueue: QueuedCapture[] = [];
   #seedProjects: Project[] = [];
   #seedProjectMembers: ProjectMember[] = [];
@@ -437,6 +444,8 @@ export class BackendSimulator {
     seedTranscripts: this.#seedTranscripts,
     seedFollowedPlaylists: this.#seedFollowed,
     seedPlaylistChecks: this.#seedChecks,
+    seedFollowedFeeds: this.#seedFollowedFeeds,
+    seedFeedChecks: this.#seedFeedChecks,
     seedQueue: this.#seedQueue,
     seedCaptures: this.#seedCaptures,
     seedProjects: this.#seedProjects,
@@ -893,6 +902,20 @@ export class BackendSimulator {
         }),
       });
     });
+
+    await this.#page.route("**/api/feeds/check", (route) =>
+      this.#respond(route, EndpointKey.FEED_CHECK, {
+        onDefault: () => {
+          const { feedUrls } = route.request().postDataJSON() as { feedUrls: string[] };
+          const feeds = feedUrls.map((feedUrl) => ({
+            feedUrl,
+            read: this.#feedReads.get(feedUrl) ?? { status: "failed" as const, reason: "missing" as const },
+          }));
+          return { status: 200, body: { feeds } };
+        },
+        onError: () => ({ status: 429, body: { error: { code: "too_many_requests", message: "Simulated: checked too often" } } }),
+      }),
+    );
 
     await this.#page.route("**/api/playlists/*", (route) =>
       this.#respond(route, EndpointKey.PLAYLIST_LOOKUP, {
@@ -2242,6 +2265,20 @@ export class BackendSimulator {
     },
     listFollowed: () => this.#page.evaluate(() => window.__iwftStores__.followedPlaylistStore.listFollowed()),
     listQueue: () => this.#page.evaluate(() => window.__iwftStores__.captureQueueStore.listQueue()),
+  };
+
+  feeds = {
+    seedRead: (feedUrl: string, read: FeedRead): void => {
+      this.#feedReads.set(feedUrl, read);
+    },
+    seedFollowed: (feed: FollowedFeed): void => {
+      this.#seedFollowedFeeds.push(feed);
+    },
+    seedCheck: (check: FollowedFeedCheck): void => {
+      this.#seedFeedChecks.push(check);
+    },
+    listFollowed: () => this.#page.evaluate(() => window.__iwftStores__.followedFeedStore.listFollowed()),
+    getCheck: (feedId: FeedId) => this.#page.evaluate((id) => window.__iwftStores__.followedFeedStore.getCheck(id), feedId),
   };
 
   transcriptStore = {

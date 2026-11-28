@@ -305,6 +305,8 @@ an id, or a provider's model id as its own listing names it:
 | `narrationFellBack` | the player moved to the pacer because the render failed or didn't match the note, or because asking for it failed. A signed-out reader's pacer isn't a warning | `reason` (`renderFailed`, `requestFailed`), the failed call's `requestId` and `apiErrorCode` |
 | `signOutSyncGaveUp` | signing out, the last sync ran past its ten seconds and the reader was signed out anyway. Sent before the session ends, so it carries the account (`docs/features/account-libraries.md`) | `pending`, `stuck` |
 | `playlistCheckFailed` | a followed playlist could not be checked for new videos on opening (`docs/features/playlists.md`) | `outcome`, `requestId`, `apiErrorCode` |
+| `feedCheckFailed` | a followed feed could not be checked for new entries on opening, or the whole check failed (`docs/features/followed-feeds.md`) | `outcome`, `requestId`, `apiErrorCode` |
+| `feedEntriesDropped` | a check left out or removed a feed's oldest unmade entries past the newest 20 (`docs/features/followed-feeds.md`) | `dropped` |
 | `queuedCaptureFailed` | a video the queue took from a playlist could not be made (`docs/features/capture-queue.md`, "Needs attention") | `problem` |
 | `captureQueueHeld` | the queue stopped asking and waited at a limit (`docs/features/capture-queue.md`, "Waiting at a limit") | `reason` (`serverCap` or `serverBusy`), `waiting`, `resumesInSeconds` |
 | `captureQueueResumed` | the queue carried on after waiting at a limit | `reason`, `waiting`, `via` (`reset` or `extension`) |

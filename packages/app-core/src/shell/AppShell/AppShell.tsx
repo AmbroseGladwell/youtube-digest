@@ -38,6 +38,7 @@ import { useHistoryTrail } from "./useHistoryTrail.js";
 import { CaptureQueueProvider } from "../../features/captureQueue/CaptureQueueContext.js";
 import { KeptLinksProvider } from "../../features/captures/KeptLinksContext.js";
 import { useKeptLinks } from "../../features/captures/useKeptLinks.js";
+import { useFeedCheck } from "../../features/feeds/useFeedCheck.js";
 import { useCaptureQueue } from "../../features/captureQueue/useCaptureQueue.js";
 import { navigationDirection, shouldAnimateNavigation } from "../../util/viewTransitions.js";
 import styles from "./AppShell.module.scss";
@@ -120,6 +121,7 @@ export const AppShell = () => {
   const readerRunActive = readerRun !== null && readerRun.overview === null && readerRun.error === null;
   const captureQueue = useCaptureQueue({ readerRunActive });
   const keptLinks = useKeptLinks({ busy: readerRunActive });
+  useFeedCheck();
 
   const [headBackLink, setHeadBackLink] = useState<HeadBackLink | null>(null);
   const handoff = useMemo(() => ({ register: setHeadBackLink }), []);

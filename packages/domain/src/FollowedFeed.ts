@@ -11,6 +11,9 @@ export type FeedOrder = z.infer<typeof FeedOrder>;
 export const DEFAULT_FEED_PACE: PlaylistPace = "whenChosen";
 export const DEFAULT_FEED_ORDER: FeedOrder = "newestFirst";
 
+// The newest this many wait for the reader; older ones drop off (docs/features/followed-feeds.md, "Entries").
+export const MOST_WAITING_PER_FEED = 20;
+
 export const FeedUnavailable = z.enum(["gone"]);
 export type FeedUnavailable = z.infer<typeof FeedUnavailable>;
 
