@@ -1,3 +1,4 @@
+import type { ShowFeed } from "../podcasts/createPodcastReader.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { FeedRead, FeedSnapshot } from "@overview/domain";
@@ -25,7 +26,7 @@ interface Setup {
   log: ReturnType<typeof recordingLogger>;
 }
 
-const setUp = async (limits: Partial<FeedLimits> = {}): Promise<Setup> => {
+const setUp = async (limits: Partial<FeedLimits> = {}, showFeedOf?: (link: string) => Promise<ShowFeed | null>): Promise<Setup> => {
   const sql = createPgliteSqlClient(await createMigratedTestPglite());
   const web = makeFakeFeedWeb();
   const clock = {
@@ -43,6 +44,7 @@ const setUp = async (limits: Partial<FeedLimits> = {}): Promise<Setup> => {
       clock.advance(ms);
       await new Promise((resolve) => setImmediate(resolve));
     },
+    ...(showFeedOf === undefined ? {} : { showFeedOf }),
   });
   return { web, sql, clock, reader, log: recordingLogger() };
 };
@@ -219,6 +221,22 @@ test("a page's feed is found and read, and a page with none says so", async () =
 
   assert.deepEqual(idsOf(await reader.lookUp("https://letter.example/p/1#top", log.logger)), ["p10"]);
   assert.deepEqual(await reader.lookUp("https://plain.example/", log.logger), { status: "failed", reason: "noFeedOnPage" });
+});
+
+test("a podcast's show link reads the feed the directories name, and a show with no public feed says so", async () => {
+  const shows: Record<string, ShowFeed> = {
+    "https://podcasts.apple.com/gb/podcast/a-show/id42": { status: "found", feedUrl: FEED },
+    "https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g": { status: "noPublicFeed" },
+  };
+  const { web, reader, log } = await setUp({}, async (link) => shows[link] ?? null);
+  web.answers.set(FEED, { body: feedWith(10) });
+
+  assert.deepEqual(idsOf(await reader.lookUp("https://podcasts.apple.com/gb/podcast/a-show/id42", log.logger)), ["p10"]);
+  assert.deepEqual(await reader.lookUp("https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g", log.logger), {
+    status: "failed",
+    reason: "noPublicFeed",
+  });
+  assert.ok(log.lines.some((line) => line.msg === "feed looked up" && line.via === "show" && line.outcome === "found"));
 });
 
 test("a YouTube channel link reads the channel's own feed, labelled as a channel", async () => {

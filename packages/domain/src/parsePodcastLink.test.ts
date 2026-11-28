@@ -16,7 +16,10 @@ test("an Apple episode link carries the show's id and the episode's", () => {
 });
 
 test("an Apple link with no episode is a show, not an episode", () => {
-  assert.deepEqual(parsePodcastLink("https://podcasts.apple.com/us/podcast/the-daily/id1200361736"), { platform: "apple-show" });
+  assert.deepEqual(parsePodcastLink("https://podcasts.apple.com/us/podcast/the-daily/id1200361736"), {
+    platform: "apple-show",
+    showId: "1200361736",
+  });
 });
 
 test("a Spotify episode is found in a share link, a regional link and the app's own address", () => {
@@ -31,7 +34,10 @@ test("Spotify's short links are followed later, since only the redirect says whi
 });
 
 test("a Spotify show, or anything Spotify that isn't an episode, is not read as one", () => {
-  assert.deepEqual(parsePodcastLink("https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g"), { platform: "spotify-show" });
+  assert.deepEqual(parsePodcastLink("https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g"), {
+    platform: "spotify-show",
+    showId: "3IM0lmZxpFAY7CwMuv9H4g",
+  });
   assert.equal(parsePodcastLink("https://open.spotify.com/track/3Ma0w3NWINtFGibeApfhgE"), null);
   assert.equal(parsePodcastLink("https://open.spotify.com/episode/too-short"), null);
 });

@@ -1,6 +1,8 @@
 import { Parser } from "htmlparser2";
 import { ATOM_TYPE, RSS_TYPE } from "../feeds/feedValues.js";
 
+export const OG_TITLE = "og:title";
+
 export interface PageMeta {
   meta: ReadonlyMap<string, string>;
   feedUrl: string | null;

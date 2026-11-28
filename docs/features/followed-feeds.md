@@ -134,9 +134,19 @@ Both are signed in only, and never log the link, the feed or an entry (`api.feed
 - `POST /api/feeds/check` `{ feedUrls }`: up to 50 followed feeds, each answered once, in the
   order asked, four at a time. 30 an hour per account.
 
-Not yet looked up from a link: an Apple or Spotify show link (OV-106's directories find its
-feed, in the slice that recognises links on paste), and a YouTube `@handle` link, which is
-read as a page; whether YouTube serves that page to our server is still to check.
+**A podcast's show link** (`showFeedOf`, `createShowFeedFinder` beside the podcast reader) is
+tried first:
+
+- an Apple show link (`podcasts.apple.com/…/id42`, no `?i=`) reads Apple's directory for the
+  show's feed;
+- a Spotify show link (`open.spotify.com/show/…`) reads the show's name from its page
+  (`og:title`), then takes a show of exactly that name from Podcast Index, then Apple's
+  directory, as an episode link does;
+- a show with no public feed, a Spotify exclusive most likely, answers `noPublicFeed`; a
+  directory or page that doesn't answer, `unreachable`. Logged as `via: "show"`.
+
+A YouTube `@handle` or `/c/` link is read as a page, whose head names the channel's feed;
+whether YouTube serves that page to our server is still to check against production.
 
 ## Following
 

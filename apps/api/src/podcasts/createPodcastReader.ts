@@ -11,7 +11,7 @@ import type { createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js"
 import { readBodyText } from "../publicWeb/createPublicWebFetch.js";
 import { appleDirectory, type DirectoryShow, type ShowDirectory } from "./appleDirectory.js";
 import { callBudget, type CallBudgetOptions } from "./callBudget.js";
-import { pageMeta, type PageMeta } from "./pageMeta.js";
+import { OG_TITLE, pageMeta, type PageMeta } from "./pageMeta.js";
 import { feedItemGuid, fetchFeedEpisode, MOST_FEED_BYTES, type FeedRead } from "./fetchFeedEpisode.js";
 import type { FeedItem } from "./readFeedEpisode.js";
 import { episodeTitleKey, pickEpisode, sameEpisode, type EpisodeFacts } from "./sameEpisode.js";
@@ -57,12 +57,10 @@ export interface FetchedPodcastPage {
   isFeed: boolean;
 }
 
-export const createPodcastReader = ({
-  fetchPublicWeb,
-  mostFeedBytes = MOST_FEED_BYTES,
-  appleBudget,
-  podcastIndex = null,
-}: PodcastReaderOptions) => {
+// A show link's own feed, for following it: docs/features/followed-feeds.md, "Following from a link".
+export type ShowFeed = { status: "found"; feedUrl: string } | { status: "noPublicFeed" } | { status: "unreachable" };
+
+const podcastSources = ({ fetchPublicWeb, mostFeedBytes = MOST_FEED_BYTES, appleBudget, podcastIndex = null }: PodcastReaderOptions) => {
   const fetchPage = async (link: string): Promise<FetchedPodcastPage | { failure: PodcastReadFailure }> => {
     const answer = await fetchPublicWeb(link, { accept: HTML });
     if (answer.status === "failed") {
@@ -228,7 +226,7 @@ export const createPodcastReader = ({
     }
     const meta: PageMeta = pageMeta(page.html, page.url);
     const pageUrls = [page.url, meta.canonicalUrl, meta.meta.get("og:url") ?? null];
-    const titles = [meta.meta.get("og:title") ?? null, meta.title].filter((title): title is string => title !== null);
+    const titles = [meta.meta.get(OG_TITLE) ?? null, meta.title].filter((title): title is string => title !== null);
     if (meta.feedUrl === null) {
       return fromDirectorySearch(titles);
     }
@@ -245,7 +243,41 @@ export const createPodcastReader = ({
   const fromFeedEntry = async ({ feedUrl, guid }: EpisodeInFeed): Promise<PodcastRead> =>
     episodeFrom(feedUrl, await readFeed(feedUrl, (item) => feedItemGuid(item) === guid), "feed", null);
 
-  return async function readPodcastEpisode(ask: string | EpisodeInFeed): Promise<PodcastRead> {
+  const showFeedFromDirectories = async (showName: string): Promise<ShowFeed> => {
+    const showKey = episodeTitleKey(showName);
+    for (const showDirectory of podcastIndex === null ? [directory] : [podcastIndex, directory]) {
+      const show = (await showDirectory.searchShows(showName).catch(() => [])).find(
+        (candidate) => episodeTitleKey(candidate.showName) === showKey && candidate.feedUrl !== null,
+      );
+      if (show?.feedUrl != null) {
+        return { status: "found", feedUrl: show.feedUrl };
+      }
+    }
+    return { status: "noPublicFeed" };
+  };
+
+  const showFeed = async (link: string): Promise<ShowFeed | null> => {
+    const parsed = parsePodcastLink(link);
+    try {
+      if (parsed?.platform === "apple-show") {
+        const listing = await directory.showWithEpisodes(parsed.showId);
+        return listing?.show.feedUrl == null ? { status: "noPublicFeed" } : { status: "found", feedUrl: listing.show.feedUrl };
+      }
+      if (parsed?.platform === "spotify-show") {
+        const page = await fetchPage(`https://open.spotify.com/show/${parsed.showId}`);
+        if ("failure" in page) {
+          return { status: "unreachable" };
+        }
+        const name = pageMeta(page.html, page.url).meta.get(OG_TITLE) ?? null;
+        return name === null ? { status: "noPublicFeed" } : await showFeedFromDirectories(name);
+      }
+      return null;
+    } catch {
+      return { status: "unreachable" };
+    }
+  };
+
+  const readPodcastEpisode = async (ask: string | EpisodeInFeed): Promise<PodcastRead> => {
     if (typeof ask !== "string") {
       return fromFeedEntry(ask).catch(() => failed("no-answer"));
     }
@@ -274,4 +306,10 @@ export const createPodcastReader = ({
       return failed("no-answer");
     }
   };
+
+  return { readEpisode: readPodcastEpisode, showFeed };
 };
+
+export const createPodcastReader = (options: PodcastReaderOptions) => podcastSources(options).readEpisode;
+
+export const createShowFeedFinder = (options: PodcastReaderOptions) => podcastSources(options).showFeed;

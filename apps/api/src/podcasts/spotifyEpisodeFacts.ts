@@ -1,5 +1,6 @@
 import type { PageMeta } from "./pageMeta.js";
 import type { EpisodeFacts } from "./sameEpisode.js";
+import { OG_TITLE } from "./pageMeta.js";
 
 export interface SpotifyEpisodeFacts extends EpisodeFacts {
   title: string;
@@ -10,7 +11,7 @@ const SHOW_IN_DESCRIPTION = /^Listen to this episode from (.+?) on Spotify\./;
 const SHOW_IN_OG_DESCRIPTION = /^(.+?) · Episode$/;
 
 export const spotifyEpisodeFacts = ({ meta }: PageMeta): SpotifyEpisodeFacts | null => {
-  const title = meta.get("og:title");
+  const title = meta.get(OG_TITLE);
   if (title === undefined || title === "") {
     return null;
   }

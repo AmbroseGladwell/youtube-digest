@@ -39,7 +39,7 @@ export const FeedSnapshot = z.object({
 });
 export type FeedSnapshot = z.infer<typeof FeedSnapshot>;
 
-export const FeedReadFailure = z.enum(["unreachable", "closed", "missing", "notAFeed", "noFeedOnPage", "busy"]);
+export const FeedReadFailure = z.enum(["unreachable", "closed", "missing", "notAFeed", "noFeedOnPage", "noPublicFeed", "busy"]);
 export type FeedReadFailure = z.infer<typeof FeedReadFailure>;
 
 export const FeedRead = z.discriminatedUnion("status", [
